@@ -1,0 +1,24 @@
+{
+  "name": "@vallrand/tess",
+  "version": "0.0.1",
+  "description": "Idle Demo",
+  "type": "module",
+  "scripts": {
+    "pack_textures": "node ./tasks/pack-texture.js ./source/textures ./build/assets",
+    "pack_meshes": "node ./tasks/pack-mesh.js ./source ./build/assets/models.bin ./demo/manifest.json",
+    "pack_vfx": "node ./tasks/pack-sprite.js ./source/vfx ./build/assets ./demo/manifest.json",
+    "build": "webpack -p",
+    "start": "webpack serve --mode development"
+  },
+  "author": "WV",
+  "license": "MIT",
+  "devDependencies": {
+    "pngjs": "^6.0.0",
+    "raw-loader": "^4.0.2",
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}

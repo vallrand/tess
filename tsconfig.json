@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "./build",
+        "target": "es5",
+        "moduleResolution": "node",
+        "lib": ["esnext", "dom"],
+        "sourceMap": false,
+        "declaration": false,
+        "esModuleInterop": true,
+        "allowJs": true,
+        "resolveJsonModule": true,
+        "typeRoots": ["./node_modules/@types"],
+        "paths": {
+          "*": ["*","modules/*"]
+        }
+    },
+    "include": [
+      "demo"
+    ],
+    "exclude": [
+        "node_modules"
+      ]
+  }

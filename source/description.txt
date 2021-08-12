@@ -1,0 +1,55 @@
+--tesseract--
+0: empty - death animation 520
+b: open - collect 1356
+
+1: machinegun 540
+2: railgun 666
+3: minelayer 1252
+4: dark matter gun 1068
+5: repair station 1280
+6: EMP 980
+7: auger mining 2041
+8: shield ? 2656
+9: homing missiles 1500
+
+hangar 2084
+
+--desert--
+1: scarab 364
+2: obelisk 1400
+3: tarantula 2218 a/b
+4: monolith 2243
+--plains--
+5: stingray 796 (melee diagonal)
+6: locust 2146 (aoe-shield front-immune)
+7: isopod 981
+8: decapod 1212
+
+--matrix--
+X |1 2 3 4 6 8 9
+1 |+ + + + + + +
+2 |- - 0 + + 0 +
+3a|0 0 + + + 0 +
+3b|+ + 0 - 0 0 +
+4 |+ + 0 - + 0 +
+5 |0 0 + - + + +
+6 |0 + 0 + + 0 0
+7 |+ + + + + + +
+8 |- - + + - 0 +
+
+== FORMAT ==
+1 - heightmap / bump
+3 - ambient occlusion / lightness
+4 - material index
+per material = emission + roughness
+materials:
+0 white - bright light glow
+1 red - glow electronics
+2 cyan - tube connector
+3 purple - metal pipe/construction
+4 grey - metallic surface
+5 blue - disk/stubs/detailed electronics
+6 green - frame tech/cylinders/outside
+7 yellow - plane tech/inside coating
+
+

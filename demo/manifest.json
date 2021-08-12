@@ -1,0 +1,2203 @@
+{
+  "format": [
+    [
+      {
+        "name": "index",
+        "size": 1,
+        "type": 5123
+      },
+      {
+        "name": "position",
+        "size": 3,
+        "type": 5126,
+        "normalized": false,
+        "stride": 24,
+        "offset": 0
+      },
+      {
+        "name": "normal",
+        "size": 3,
+        "type": 5122,
+        "normalized": true,
+        "stride": 24,
+        "offset": 12
+      },
+      {
+        "name": "uv",
+        "size": 2,
+        "type": 5123,
+        "normalized": true,
+        "stride": 24,
+        "offset": 20
+      }
+    ],
+    [
+      {
+        "name": "index",
+        "size": 1,
+        "type": 5123
+      },
+      {
+        "name": "position",
+        "size": 3,
+        "type": 5126,
+        "normalized": false,
+        "stride": 32,
+        "offset": 0
+      },
+      {
+        "name": "normal",
+        "size": 3,
+        "type": 5122,
+        "normalized": true,
+        "stride": 32,
+        "offset": 12
+      },
+      {
+        "name": "uv",
+        "size": 2,
+        "type": 5123,
+        "normalized": true,
+        "stride": 32,
+        "offset": 20
+      },
+      {
+        "name": "joint",
+        "size": 4,
+        "type": 5121,
+        "normalized": false,
+        "stride": 32,
+        "offset": 24
+      },
+      {
+        "name": "weight",
+        "size": 4,
+        "type": 5121,
+        "normalized": true,
+        "stride": 32,
+        "offset": 28
+      }
+    ]
+  ],
+  "buffer": [
+    "assets/models.bin"
+  ],
+  "texture": [
+    "assets/dock.png",
+    "assets/cube_0.png",
+    "assets/cube_1.png",
+    "assets/cube_2.png",
+    "assets/cube_3.png",
+    "assets/cube_x.png",
+    "assets/cube_4.png",
+    "assets/cube_5.png",
+    "assets/cube_6.png",
+    "assets/cube_7.png",
+    "assets/cube_8.png",
+    "assets/scarab.png",
+    "assets/tarantula.png",
+    "assets/obelisk.png",
+    "assets/monolith.png",
+    "assets/stingray.png",
+    "assets/locust.png",
+    "assets/decapod.png",
+    "assets/isopod.png",
+    "assets/_0.png"
+  ],
+  "model": [
+    {
+      "name": "dock",
+      "format": 1,
+      "texture": 0,
+      "vertices": {
+        "byteOffset": 24700,
+        "byteLength": 192800
+      },
+      "indices": {
+        "byteOffset": 2,
+        "byteLength": 24696
+      },
+      "inverseBindPose": {
+        "byteOffset": 217504,
+        "byteLength": 384
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "frame",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "rod",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "handle",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "pump",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_0",
+      "format": 1,
+      "texture": 1,
+      "vertices": {
+        "byteOffset": 223916,
+        "byteLength": 58240
+      },
+      "indices": {
+        "byteOffset": 217890,
+        "byteLength": 6024
+      },
+      "inverseBindPose": {
+        "byteOffset": 282160,
+        "byteLength": 512
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "gun",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "magazine",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            -0.1,
+            0.7,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "barrel",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.4,
+            0.7,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "cover_11",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0.6,
+            2,
+            -0.6
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_10",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0.6,
+            2,
+            0.6
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_00",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            -0.6,
+            2,
+            0.6
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_01",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            -0.6,
+            2,
+            -0.6
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_1",
+      "format": 1,
+      "texture": 2,
+      "vertices": {
+        "byteOffset": 290128,
+        "byteLength": 65952
+      },
+      "indices": {
+        "byteOffset": 282674,
+        "byteLength": 7452
+      },
+      "inverseBindPose": {
+        "byteOffset": 356084,
+        "byteLength": 576
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "cover_left",
+          "position": [
+            0,
+            0.8,
+            -1.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp_left",
+          "position": [
+            -0.5,
+            1.2,
+            -0.2
+          ],
+          "parent": 1
+        },
+        {
+          "name": "cover_right",
+          "position": [
+            0,
+            0.8,
+            1.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp_right",
+          "position": [
+            -0.5,
+            1.2,
+            0.2
+          ],
+          "parent": 3
+        },
+        {
+          "name": "gun",
+          "position": [
+            -0.4,
+            0.7,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.7,
+            0.7,
+            0
+          ],
+          "parent": 5
+        },
+        {
+          "name": "bridge",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.3,
+            0.8,
+            0
+          ],
+          "parent": 5
+        },
+        {
+          "name": "slide",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 5
+        }
+      ]
+    },
+    {
+      "name": "cube_2",
+      "format": 1,
+      "texture": 3,
+      "vertices": {
+        "byteOffset": 371604,
+        "byteLength": 149728
+      },
+      "indices": {
+        "byteOffset": 356662,
+        "byteLength": 14940
+      },
+      "inverseBindPose": {
+        "byteOffset": 521336,
+        "byteLength": 448
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            1,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            1,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_front",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            1,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            -1,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_3",
+      "format": 1,
+      "texture": 4,
+      "vertices": {
+        "byteOffset": 533536,
+        "byteLength": 95904
+      },
+      "indices": {
+        "byteOffset": 521786,
+        "byteLength": 11748
+      },
+      "inverseBindPose": {
+        "byteOffset": 629444,
+        "byteLength": 384
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cap",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.7,
+            4.4,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "lamp_bottom",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "lamp_top",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            3,
+            0
+          ],
+          "parent": 1
+        }
+      ]
+    },
+    {
+      "name": "death",
+      "format": 1,
+      "texture": 5,
+      "vertices": {
+        "byteOffset": 635880,
+        "byteLength": 66848
+      },
+      "indices": {
+        "byteOffset": 629830,
+        "byteLength": 6048
+      },
+      "inverseBindPose": {
+        "byteOffset": 702732,
+        "byteLength": 512
+      },
+      "armature": [
+        {
+          "name": "part_100",
+          "position": [
+            1.6,
+            -0.6,
+            1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_110",
+          "position": [
+            1.6,
+            -0.6,
+            -1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_101",
+          "position": [
+            1.6,
+            2.6,
+            1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_111",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            1.6,
+            2.6,
+            -1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_000",
+          "position": [
+            -1.6,
+            -0.6,
+            1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_010",
+          "position": [
+            -1.6,
+            -0.6,
+            -1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_001",
+          "position": [
+            -1.6,
+            2.6,
+            1.6
+          ],
+          "parent": -1
+        },
+        {
+          "name": "part_011",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            -1.6,
+            2.6,
+            -1.6
+          ],
+          "parent": -1
+        }
+      ]
+    },
+    {
+      "name": "cube_open",
+      "format": 1,
+      "texture": 5,
+      "vertices": {
+        "byteOffset": 719592,
+        "byteLength": 135648
+      },
+      "indices": {
+        "byteOffset": 703246,
+        "byteLength": 16344
+      },
+      "inverseBindPose": {
+        "byteOffset": 855244,
+        "byteLength": 320
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            2,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            2,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_front",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "position": [
+            1,
+            2,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "position": [
+            -1,
+            2,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_4",
+      "format": 1,
+      "texture": 6,
+      "vertices": {
+        "byteOffset": 868284,
+        "byteLength": 100128
+      },
+      "indices": {
+        "byteOffset": 855566,
+        "byteLength": 12714
+      },
+      "inverseBindPose": {
+        "byteOffset": 968416,
+        "byteLength": 448
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "gun",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.6,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            1,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp_left",
+          "rotation": [
+            0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0.5,
+            0.5,
+            1
+          ],
+          "parent": 3
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            1,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "lamp_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            -0.5,
+            0.5,
+            1
+          ],
+          "parent": 5
+        }
+      ]
+    },
+    {
+      "name": "mine",
+      "format": 0,
+      "texture": 7,
+      "vertices": {
+        "byteOffset": 969996,
+        "byteLength": 6528
+      },
+      "indices": {
+        "byteOffset": 968866,
+        "byteLength": 1128
+      }
+    },
+    {
+      "name": "cube_5",
+      "format": 1,
+      "texture": 7,
+      "vertices": {
+        "byteOffset": 990712,
+        "byteLength": 136384
+      },
+      "indices": {
+        "byteOffset": 976526,
+        "byteLength": 14184
+      },
+      "inverseBindPose": {
+        "byteOffset": 1127100,
+        "byteLength": 512
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_01",
+          "position": [
+            -1,
+            0.5,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_00",
+          "position": [
+            -1,
+            0.5,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_11",
+          "position": [
+            1,
+            0.5,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_10",
+          "position": [
+            1,
+            0.5,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cage",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 5
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            -1,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_6",
+      "format": 1,
+      "texture": 8,
+      "vertices": {
+        "byteOffset": 1151628,
+        "byteLength": 217248
+      },
+      "indices": {
+        "byteOffset": 1127614,
+        "byteLength": 24012
+      },
+      "inverseBindPose": {
+        "byteOffset": 1368880,
+        "byteLength": 512
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            0,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cap",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 3
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 4
+        },
+        {
+          "name": "side_front",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            -1,
+            0,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_7",
+      "format": 1,
+      "texture": 9,
+      "vertices": {
+        "byteOffset": 1401724,
+        "byteLength": 288480
+      },
+      "indices": {
+        "byteOffset": 1369394,
+        "byteLength": 32328
+      },
+      "inverseBindPose": {
+        "byteOffset": 1690208,
+        "byteLength": 512
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            2.8,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cage",
+          "position": [
+            0,
+            -1.2,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "cap",
+          "position": [
+            0,
+            2.2,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "side_11",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0.7,
+            2.2,
+            -0.7
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_10",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0.7,
+            2.2,
+            0.7
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_01",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            -0.7,
+            2.2,
+            -0.7
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_00",
+          "rotation": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "position": [
+            -0.7,
+            2.2,
+            0.7
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "cube_8",
+      "format": 1,
+      "texture": 10,
+      "vertices": {
+        "byteOffset": 1708700,
+        "byteLength": 149920
+      },
+      "indices": {
+        "byteOffset": 1690722,
+        "byteLength": 17976
+      },
+      "inverseBindPose": {
+        "byteOffset": 1858624,
+        "byteLength": 448
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "top",
+          "position": [
+            0,
+            2.8,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            0,
+            -1.2
+          ],
+          "parent": 1
+        },
+        {
+          "name": "gun_left",
+          "rotation": [
+            0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            1.1,
+            1
+          ],
+          "parent": 2
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            1.2
+          ],
+          "parent": 1
+        },
+        {
+          "name": "gun_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            1.1,
+            1
+          ],
+          "parent": 4
+        },
+        {
+          "name": "cap",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "parent": 1
+        }
+      ]
+    },
+    {
+      "name": "scarab",
+      "format": 1,
+      "texture": 11,
+      "vertices": {
+        "byteOffset": 1863360,
+        "byteLength": 38304
+      },
+      "indices": {
+        "byteOffset": 1859074,
+        "byteLength": 4284
+      },
+      "inverseBindPose": {
+        "byteOffset": 1901668,
+        "byteLength": 256
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "jaw",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0.5,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            0.5,
+            -0.2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            0.5,
+            0.2
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "tarantula",
+      "format": 1,
+      "texture": 12,
+      "vertices": {
+        "byteOffset": 1928856,
+        "byteLength": 243168
+      },
+      "indices": {
+        "byteOffset": 1901926,
+        "byteLength": 26928
+      },
+      "inverseBindPose": {
+        "byteOffset": 2172028,
+        "byteLength": 832
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "leg_01",
+          "rotation": [
+            -0.325914,
+            0.20498,
+            0.20498,
+            0.899859
+          ],
+          "position": [
+            -0.3,
+            0.2,
+            -0.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "foot_01",
+          "rotation": [
+            -0.746041,
+            0.239051,
+            -0.022346,
+            0.62111
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0.994987,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "leg_11",
+          "rotation": [
+            -0.325914,
+            -0.20498,
+            -0.20498,
+            0.899859
+          ],
+          "position": [
+            0.3,
+            0.2,
+            -0.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "foot_11",
+          "rotation": [
+            -0.746041,
+            -0.239051,
+            0.022346,
+            0.62111
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0.994987,
+            0
+          ],
+          "parent": 3
+        },
+        {
+          "name": "leg_00",
+          "rotation": [
+            0.146064,
+            0.356233,
+            0.356233,
+            0.851388
+          ],
+          "position": [
+            -0.3,
+            0.2,
+            0.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "foot_00",
+          "rotation": [
+            0.743794,
+            -0.663601,
+            0.062032,
+            0.050561
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0.994988,
+            0
+          ],
+          "parent": 5
+        },
+        {
+          "name": "leg_10",
+          "rotation": [
+            0.146064,
+            -0.356233,
+            -0.356233,
+            0.851388
+          ],
+          "position": [
+            0.3,
+            0.2,
+            0.3
+          ],
+          "parent": 0
+        },
+        {
+          "name": "foot_10",
+          "rotation": [
+            0.743794,
+            0.663601,
+            -0.062032,
+            0.050561
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            0.994988,
+            0
+          ],
+          "parent": 7
+        },
+        {
+          "name": "gun",
+          "position": [
+            0,
+            2.1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.2,
+            0.7,
+            -0.1
+          ],
+          "parent": 9
+        },
+        {
+          "name": "cage",
+          "position": [
+            0,
+            4.1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            1.2,
+            0
+          ],
+          "parent": 11
+        }
+      ]
+    },
+    {
+      "name": "obelisk",
+      "format": 1,
+      "texture": 13,
+      "vertices": {
+        "byteOffset": 2189736,
+        "byteLength": 151392
+      },
+      "indices": {
+        "byteOffset": 2172862,
+        "byteLength": 16872
+      },
+      "inverseBindPose": {
+        "byteOffset": 2341132,
+        "byteLength": 320
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            0.4,
+            -1
+          ],
+          "parent": -1
+        },
+        {
+          "name": "side_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            0.4,
+            1
+          ],
+          "parent": -1
+        },
+        {
+          "name": "side_front",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "position": [
+            1,
+            0.4,
+            0
+          ],
+          "parent": -1
+        },
+        {
+          "name": "side_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "position": [
+            -1,
+            0.4,
+            0
+          ],
+          "parent": -1
+        }
+      ]
+    },
+    {
+      "name": "mono_turret",
+      "format": 0,
+      "texture": 14,
+      "vertices": {
+        "byteOffset": 2345176,
+        "byteLength": 22200
+      },
+      "indices": {
+        "byteOffset": 2341454,
+        "byteLength": 3720
+      }
+    },
+    {
+      "name": "mono_spawner",
+      "format": 0,
+      "texture": 14,
+      "vertices": {
+        "byteOffset": 2372012,
+        "byteLength": 30048
+      },
+      "indices": {
+        "byteOffset": 2367378,
+        "byteLength": 4632
+      }
+    },
+    {
+      "name": "monolith",
+      "format": 1,
+      "texture": 14,
+      "vertices": {
+        "byteOffset": 2420996,
+        "byteLength": 173024
+      },
+      "indices": {
+        "byteOffset": 2402062,
+        "byteLength": 18930
+      },
+      "inverseBindPose": {
+        "byteOffset": 2594024,
+        "byteLength": 384
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "cover_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            2.7,
+            -1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_right",
+          "rotation": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0,
+            2.7,
+            1
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "position": [
+            -1,
+            2.7,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_front",
+          "rotation": [
+            0.707107,
+            0.707107,
+            0,
+            0
+          ],
+          "position": [
+            1,
+            2.7,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            3.5,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "stingray",
+      "format": 1,
+      "texture": 15,
+      "vertices": {
+        "byteOffset": 2603940,
+        "byteLength": 73856
+      },
+      "indices": {
+        "byteOffset": 2594410,
+        "byteLength": 9528
+      },
+      "inverseBindPose": {
+        "byteOffset": 2677800,
+        "byteLength": 448
+      },
+      "armature": [
+        {
+          "name": "base",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "position": [
+            0,
+            1.3,
+            0
+          ],
+          "parent": -1
+        },
+        {
+          "name": "jaw_left",
+          "position": [
+            -0.5,
+            1.8,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "tail0",
+          "rotation": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "position": [
+            0,
+            -0.3,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "tail1",
+          "position": [
+            0,
+            0.825,
+            0
+          ],
+          "parent": 2
+        },
+        {
+          "name": "tail2",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            0.725,
+            0
+          ],
+          "parent": 3
+        },
+        {
+          "name": "tail3",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            0.725,
+            0
+          ],
+          "parent": 4
+        },
+        {
+          "name": "jaw_right",
+          "position": [
+            0.5,
+            1.8,
+            0
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "locust",
+      "format": 1,
+      "texture": 16,
+      "vertices": {
+        "byteOffset": 2704940,
+        "byteLength": 200800
+      },
+      "indices": {
+        "byteOffset": 2678250,
+        "byteLength": 26688
+      },
+      "inverseBindPose": {
+        "byteOffset": 2905744,
+        "byteLength": 384
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "cage",
+          "position": [
+            -1.3,
+            0.7,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "rod",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 1
+        },
+        {
+          "name": "gun",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "position": [
+            2.5,
+            1.4,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_right",
+          "position": [
+            0.6,
+            0.3,
+            0.2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "cover_left",
+          "position": [
+            0.6,
+            0.3,
+            -0.2
+          ],
+          "parent": 0
+        }
+      ]
+    },
+    {
+      "name": "decapod",
+      "format": 1,
+      "texture": 17,
+      "vertices": {
+        "byteOffset": 2921324,
+        "byteLength": 114688
+      },
+      "indices": {
+        "byteOffset": 2906130,
+        "byteLength": 15192
+      },
+      "inverseBindPose": {
+        "byteOffset": 3036016,
+        "byteLength": 320
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "side_left",
+          "position": [
+            0,
+            0.7,
+            -0.5
+          ],
+          "parent": 0
+        },
+        {
+          "name": "side_right",
+          "position": [
+            0,
+            0.7,
+            0.5
+          ],
+          "parent": 0
+        },
+        {
+          "name": "gun",
+          "position": [
+            0,
+            1.8,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 3
+        }
+      ]
+    },
+    {
+      "name": "isopod",
+      "format": 1,
+      "texture": 18,
+      "vertices": {
+        "byteOffset": 3048424,
+        "byteLength": 92896
+      },
+      "indices": {
+        "byteOffset": 3036338,
+        "byteLength": 12084
+      },
+      "inverseBindPose": {
+        "byteOffset": 3141324,
+        "byteLength": 256
+      },
+      "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
+        {
+          "name": "cover",
+          "rotation": [
+            -0.146447,
+            0.353553,
+            0.353553,
+            0.853554
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            0.4,
+            1.1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "gun",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "position": [
+            0.5,
+            0.7,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            0.7,
+            0
+          ],
+          "parent": 2
+        }
+      ]
+    }
+  ],
+  "decals": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128,
+      "name": "burn_01"
+    }
+  ]
+}
