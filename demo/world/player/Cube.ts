@@ -119,7 +119,7 @@ export class Cube implements IActor {
                     vec3.copy([0,0,0], shield.transform.scale)
                     const _ease = ease.elasticOut(1,0.75)
 
-                    for(let duration = 1000, startTime = this.context.currentTime; true;){
+                    for(let duration = 1.0, startTime = this.context.currentTime; true;){
                         let fraction = (this.context.currentTime - startTime) / duration
                         vec3.lerp(vec3.ZERO, [3,5,3], _ease(Math.min(1, fraction)), shield.transform.scale)
                         shield.transform.frame = 0
@@ -200,7 +200,7 @@ export class Cube implements IActor {
         
         return function*(){
             const movementEase = ease.bounceIn(0.064, 0.8)
-            for(const duration = 640, startTime = this.context.currentTime; true;){
+            for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
                 const fraction = Math.min(1, elapsedTime / duration)
 

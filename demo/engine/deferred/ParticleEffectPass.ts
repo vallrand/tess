@@ -4,16 +4,10 @@ import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { PostEffectPass } from './PostEffectPass'
 import { RenderTexture } from '../Material'
 import { Batch2D } from '../batch'
-import { ParticleSystem } from '../particles'
-
-export interface IEffect {
-    enabled: boolean
-    apply(): void
-}
+import { IEffect } from '../pipeline'
 
 export class ParticleEffectPass implements System {
     public readonly effects: IEffect[] = []
-    public readonly particleSystems: ParticleSystem[] = []
     constructor(private readonly context: Application){
         const gl: WebGL2RenderingContext = context.gl
         
@@ -27,7 +21,6 @@ export class ParticleEffectPass implements System {
         gl.enable(GL.DEPTH_TEST)
         //this.context.get(PostEffectPass).swapRenderTarget()
 
-        for(let i = this.particleSystems.length - 1; i >= 0; i--) this.particleSystems[i].render()
         for(let i = this.effects.length - 1; i >= 0; i--) this.effects[i].apply()
     }
 }

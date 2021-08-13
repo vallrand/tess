@@ -90,7 +90,7 @@ export class MaterialSystem implements System {
         gl.disable(GL.BLEND)
         gl.viewport(0, 0, texture.width, texture.height)
         gl.useProgram(program.target)
-        program.uniforms['uTime'] = this.context.currentTime * 1e-3
+        program.uniforms['uTime'] = this.context.currentTime
 
         let textureIndex = 1
         for(let key in uniforms)

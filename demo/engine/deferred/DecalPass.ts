@@ -9,7 +9,7 @@ import { SpriteMaterial } from '../Sprite'
 import { BoundingVolume } from '../FrustumCulling'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
 import { DecalBatch, IBatchedDecal } from '../batch'
-import { IEffect } from './ParticleEffectPass'
+import { IEffect } from '../pipeline'
 
 export class Decal implements IBatchedDecal {
     index: number = -1

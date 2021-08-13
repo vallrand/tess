@@ -63,7 +63,7 @@ export class Workshop implements IActor {
         if(!this.opened){
             if(!cube) return
             this.opened = true
-            for(const duration = 640, startTime = this.context.currentTime; true;){
+            for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 animations.dock.open(fraction, armature)
                 if(fraction >= 1) break
@@ -71,7 +71,7 @@ export class Workshop implements IActor {
             }
         }else if(!cube){
             this.opened = false
-            for(const duration = 640, startTime = this.context.currentTime; true;){
+            for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 animations.dock.open(1 - fraction, armature)
                 if(fraction >= 1) break
@@ -96,7 +96,7 @@ export class Workshop implements IActor {
                 CubeModule.Shield,
                 CubeModule.Missile
             ]
-            lift: for(const duration = 1000, startTime = this.context.currentTime; true;){
+            lift: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 animations.dock.lift(fraction, armature)
                 vec3.lerp(prevPosition, nextPosition, ease.quadIn(fraction), mesh.transform.position)
@@ -120,7 +120,7 @@ export class Workshop implements IActor {
                 }
                 yield ActionSignal.WaitNextFrame
             }
-            lower: for(const duration = 1000, startTime = this.context.currentTime; true;){
+            lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 animations.dock.lift(1-fraction, armature)
                 vec3.lerp(prevPosition, nextPosition, ease.quadIn(1-fraction), mesh.transform.position)

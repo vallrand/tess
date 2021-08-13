@@ -1,5 +1,5 @@
 import { Application, Factory } from '../../engine/framework'
-import { IEffect } from '../../engine/deferred/ParticleEffectPass'
+import { IEffect } from '../../engine/pipeline'
 import { createSphere } from '../../engine/geometry'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { MeshSystem, MeshBuffer } from '../../engine/Mesh'
@@ -32,7 +32,6 @@ export class ShieldEffect extends Factory<ShieldEffectInstance> implements IEffe
 
         gl.bindVertexArray(this.buffer.vao)
         gl.useProgram(this.program.target)
-        this.program.uniforms['uTime'] = this.context.currentTime
         for(let i = this.list.length - 1; i >= 0; i--){
             this.program.uniforms['uModelMatrix'] = this.list[i].transform.matrix
             gl.drawElements(GL.TRIANGLES, this.buffer.indexCount, GL.UNSIGNED_SHORT, this.buffer.indexOffset)

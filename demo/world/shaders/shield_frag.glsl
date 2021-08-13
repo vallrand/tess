@@ -8,13 +8,15 @@ in vec2 vUV;
 
 layout(location=0) out vec4 fragColor;
 
+uniform GlobalUniforms {
+    vec4 uTime;
+};
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
 uniform mat4 uModelMatrix;
-uniform float uTime;
 uniform sampler2D uPositionBuffer;
 
 #define TAU 6.283185307179586
@@ -62,11 +64,11 @@ void main(){
     float edge = smoothstep(1.0,0.0,NdV)*smoothstep(-0.5,0.0,NdV);
     edge += smoothstep(0.5,0.0,distance);
 
-    float n = fbm(position + vec3(0,0.002 * uTime,0), 4);
+    float n = fbm(position + vec3(0,2.*uTime.x,0), 4);
     vec3 color = vec3(0.0,0.1,0.1);
     color = mix(color, vec3(0.4,0.6,0.6), smoothstep(0.5,0.0,n));
     color = mix(color, vec3(0.6,0.8,0.8), smoothstep(0.2,0.0,n));
-    float wave = smoothstep(0.6,1.0,sin(TAU * (0.2*position.y + 0.5*n) + 0.002 * uTime));
+    float wave = smoothstep(0.6,1.0,sin(TAU * (0.2*position.y + 0.5*n) + 2.*uTime.x));
     color *= mix(edge,1.0,wave);
 
     fragColor = vec4(color,0.1*edge);

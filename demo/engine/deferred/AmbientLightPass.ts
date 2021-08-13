@@ -13,7 +13,7 @@ export class HemisphereLight {
     public update(context: Application){
         if(this.frame) return
         this.frame = context.frame
-        if(!this.uniform) this.uniform = new UniformBlock(context.gl, 4+4+4, UniformBlockBindings.LightUniforms)
+        if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(4+4+4) }, UniformBlockBindings.LightUniforms)
         this.uniform.data.set(this.axis, 0)
         this.uniform.data.set(this.color0, 4)
         this.uniform.data.set(this.color1, 8)

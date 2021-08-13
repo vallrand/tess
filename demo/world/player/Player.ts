@@ -8,7 +8,7 @@ import { CubeTileMap } from './CubeTileMap'
 import { Transform, TransformSystem } from '../../engine/Transform'
 import { DecalPass } from '../../engine/deferred/DecalPass'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
-import { ShieldEffect, GridEffect } from '../effects'
+import { ShieldEffect, GridEffect, EffectLibrary } from '../effects'
 
 export class PlayerSystem implements System {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
@@ -22,6 +22,7 @@ export class PlayerSystem implements System {
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
     public readonly grid: GridEffect
     public readonly shield: ShieldEffect
+    public readonly effects: EffectLibrary = new EffectLibrary(this.context)
 
     constructor(private readonly context: Application){
         this.grid = new GridEffect(this.context, 10)

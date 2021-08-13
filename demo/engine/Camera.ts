@@ -24,17 +24,17 @@ export class CameraSystem {
     constructor(private readonly context: Application){
         this.camera = new PerspectiveCamera()
         this.camera.transform = this.context.get(TransformSystem).create()
-        this.uniform = new UniformBlock(this.context.gl, 4)
+        this.uniform = new UniformBlock(this.context.gl, { byteSize: 4 * 4 })
     }
     update(){
-        this.uniform.data[0] = this.context.currentTime * 1e-3
+        this.uniform.data[0] = this.context.currentTime
         this.uniform.data[1] = this.context.deltaTime
         this.uniform.data[2] = this.context.frame
         this.updatePerspectiveCamera(this.camera)
     }
     private updatePerspectiveCamera(camera: PerspectiveCamera){
         if(camera.frame && camera.frame >= camera.transform.frame) return
-        if(!camera.uniform) camera.uniform = new UniformBlock(this.context.gl, 16+16+4)
+        if(!camera.uniform) camera.uniform = new UniformBlock(this.context.gl, { byteSize: 4*(16+16+4) })
 
         if(!camera.frame){
             camera.aspectRatio = this.context.gl.drawingBufferWidth / this.context.gl.drawingBufferHeight

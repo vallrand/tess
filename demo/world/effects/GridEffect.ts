@@ -10,7 +10,7 @@ export class GridEffect {
     private readonly program: ShaderProgram
     private readonly vao: WebGLVertexArrayObject
     public transform: Transform
-    public enabled: boolean = true
+    public enabled: boolean = !true
     constructor(private readonly context: Application, readonly gridSize: number){
         const { gl } = this.context
         this.program = ShaderProgram(gl, require('../../engine/shaders/volume_vert.glsl'), require('../shaders/grid_frag.glsl'))
@@ -31,7 +31,6 @@ export class GridEffect {
         const { gl } = this.context
         gl.useProgram(this.program.target)
         this.program.uniforms['uModelMatrix'] = this.transform.matrix
-        this.program.uniforms['uTime'] = this.context.currentTime
         gl.bindVertexArray(this.vao)
 
         gl.enable(GL.BLEND)

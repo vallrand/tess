@@ -6,9 +6,11 @@ layout(location=1) out vec4 fragNormal;
 
 uniform sampler2D uPositionBuffer;
 
+uniform GlobalUniforms {
+    vec4 uTime;
+};
 uniform float uGridSize;
 uniform mat4 uModelMatrix;
-uniform float uTime;
 
 #define TAU 6.283185307179586
 
@@ -25,7 +27,7 @@ void main(){
     vec2 uv = (position.xz - center.xz) * uGridSize;
 
     float fade = max(abs(uv.x), abs(uv.y));
-    float grid1 = max(0.0,cos(TAU * (fade - 0.4 * 0.001 * uTime)));
+    float grid1 = max(0.0,cos(TAU * (fade - 0.4 * uTime.x)));
     float grid0 = grid(position.xz,0.5,mix(0.01,0.1,grid1)) * smoothstep(1.0,0.8,fade);
     vec3 color = mix(vec3(0.6,0.9,0.8),vec3(0.8,1.0,1.0), grid1);
 

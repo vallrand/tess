@@ -19,7 +19,7 @@ export class PointLight {
     public update(context: Application){
         if(this.frame && this.frame >= this.transform.frame) return
         this.frame = context.frame
-        if(!this.uniform) this.uniform = new UniformBlock(context.gl, 16+4+1+1, UniformBlockBindings.LightUniforms)
+        if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(16+4+1+1) }, UniformBlockBindings.LightUniforms)
         this.bounds.update(this.transform, this.radius)
         this.uniform.data.set(this.transform?.matrix || mat4.IDENTITY, 0)
         this.uniform.data.set(this.color, 16)

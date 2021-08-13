@@ -1,5 +1,5 @@
 import { GL } from './constants'
-import { UniformBlockBindings, UniformSamplerBindings } from './shared'
+import { GLSLTypeSize, GLSLDataType, UniformBlockBindings, UniformSamplerBindings } from './shared'
 
 export interface ShaderProgram {
     target: WebGLProgram
@@ -13,7 +13,7 @@ export function ShaderProgram(
         if(define[key] == false) continue
         const shaderDefine = `\n#define ${key.toUpperCase()}${define[key] == true ? '' : ' '+define[key]}\n`
         vertex = vertex.replace(/\n/, shaderDefine)
-        fragment = fragment.replace(/\n/, shaderDefine)
+        fragment = fragment?.replace(/\n/, shaderDefine)
     }
     const transformFeedback: string[] = []
     vertex = vertex.replace(/^layout\([^\)]*\) (out \S+ (\S+);)$/igm, (match, line, name) => {
@@ -55,14 +55,18 @@ export function locateUniforms(gl: WebGL2RenderingContext, program: WebGLProgram
         const index = gl.getUniformBlockIndex(program, key)
         if(index != GL.INVALID_INDEX) gl.uniformBlockBinding(program, index, UniformBlockBindings[key])
     }
+    const group: Record<string, any> = Object.create(null)
     for(let i = gl.getProgramParameter(program, GL.ACTIVE_UNIFORM_BLOCKS) - 1; i >= 0; i--){
-        const size = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_DATA_SIZE)
+        const byteSize = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_DATA_SIZE)
         const indices = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)
         const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET)
         const name = gl.getActiveUniformBlockName(program, i)
+        const blockIndices = gl.getActiveUniforms(program, indices, GL.UNIFORM_BLOCK_INDEX)
+        const uniforms: WebGLActiveInfo[] = Array(indices.length)
+        for(let i = 0; i < indices.length; i++) uniforms[i] = gl.getActiveUniform(program, indices[i])
+        group[name] = { byteSize, offsets, uniforms }
     }
 
-    const group: Record<string, any> = Object.create(null)
     for(let i = gl.getProgramParameter(program, GL.ACTIVE_UNIFORMS) - 1; i >= 0; i--){
         const uniform: WebGLActiveInfo = gl.getActiveUniform(program, i)
         const location: WebGLUniformLocation = gl.getUniformLocation(program, uniform.name)
@@ -72,38 +76,31 @@ export function locateUniforms(gl: WebGL2RenderingContext, program: WebGLProgram
             case GL.INT:
             case GL.SAMPLER_2D:
             case GL.SAMPLER_2D_ARRAY:
-                //value = uniform.size > 1 ? new Int32Array(uniform.size) : 0
                 upload = uniform.size > 1 ? gl.uniform1iv.bind(gl, location) : gl.uniform1i.bind(gl, location)
                 break
             case GL.FLOAT:
-                //value = uniform.size > 1 ? new Float32Array(uniform.size) : 0
                 upload = uniform.size > 1 ? gl.uniform1fv.bind(gl, location) : gl.uniform1f.bind(gl, location)
                 break
             case GL.FLOAT_VEC2:
-                //value = new Float32Array(uniform.size * 2)
                 upload = gl.uniform2fv.bind(gl, location)
                 break
             case GL.FLOAT_VEC3:
-                //value = new Float32Array(uniform.size * 3)
                 upload = gl.uniform3fv.bind(gl, location)
                 break
             case GL.FLOAT_VEC4:
-                //value = new Float32Array(uniform.size * 4)
                 upload = gl.uniform4fv.bind(gl, location)
                 break
             case GL.FLOAT_MAT2:
-                //value = new Float32Array(uniform.size * 4)
                 upload = gl.uniformMatrix2fv.bind(gl, location, false)
                 break
             case GL.FLOAT_MAT3:
-                //value = new Float32Array(uniform.size * 9)
                 upload = gl.uniformMatrix3fv.bind(gl, location, false)
                 break
             case GL.FLOAT_MAT4:
-                //value = new Float32Array(uniform.size * 16)
                 upload = gl.uniformMatrix4fv.bind(gl, location, false)
                 break
         }
+        //value = new GLSLDataType[uniform.type](GLSLTypeSize[uniform.type] * uniform.size)
         Object.defineProperty(group, uniform.name.replace(/\[0\]$/,''), { set: upload })
     }
     for(let key in UniformSamplerBindings)
@@ -115,9 +112,21 @@ export class UniformBlock {
     frame: number = 0
     data: Float32Array
     buffer: WebGLBuffer
-    constructor(gl: WebGL2RenderingContext, size: number, location: number = 0){
+    uniforms: Record<string, Float32Array | Int32Array> = Object.create(null)
+    constructor(gl: WebGL2RenderingContext, info: {
+        byteSize: number
+        offsets?: number[]
+        uniforms?: WebGLActiveInfo[]
+    }, location: number = 0){
         this.buffer = gl.createBuffer()
-        this.data = new Float32Array(size)
+        this.data = new Float32Array(info.byteSize / Float32Array.BYTES_PER_ELEMENT)
+        for(let i = info.uniforms?.length - 1; i >= 0; i--){
+            const offset = info.offsets[i]
+            const { type, size, name } = info.uniforms[i]
+            const length = GLSLTypeSize[type] * size
+            const view = new GLSLDataType[type](this.data.buffer, offset, length)
+            this.uniforms[name] = view
+        }
         gl.bindBufferBase(GL.UNIFORM_BUFFER, location, this.buffer)
         gl.bufferData(GL.UNIFORM_BUFFER, this.data.byteLength, GL.DYNAMIC_DRAW)
     }
@@ -126,97 +135,3 @@ export class UniformBlock {
         gl.bufferSubData(GL.UNIFORM_BUFFER, 0, this.data)
     }
 }
-
-
-
-
-
-// export function UniformGroup(gl: WebGL2RenderingContext, program: WebGLProgram){
-    //getActiveUniformBlockName
-//     for(let i = gl.getProgramParameter(program, GL.ACTIVE_UNIFORM_BLOCKS) - 1; i >= 0; i--){
-//         const size = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_DATA_SIZE)
-//         const indices = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)
-//         const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET)
-
-// // const blockIndices = gl.getActiveUniforms(program, indices, gl.UNIFORM_BLOCK_INDEX);
-// //   const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET);
-
-//         console.log(size, indices, offsets)
-//     }
-
-//     for(let i = gl.getProgramParameter(program, GL.ACTIVE_UNIFORMS) - 1; i >= 0; i--){
-//         const uniform = gl.getActiveUniform(program, i)
-//         const location = gl.getUniformLocation(program, uniform.name)
-//         console.log(uniform, location)
-//         if(!location) continue
-
-//     }
-
-//     return function update(values){
-//         //var matrixUniformLocation = gl.getUniformBlockIndex(geoProgram, "Matrices");
-//         //gl.uniformBlockBinding(geoProgram, matrixUniformLocation, 0);
-//     }
-// }
-
-// // const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-// //   const indices = [...Array(numUniforms).keys()];
-// //   const blockIndices = gl.getActiveUniforms(program, indices, gl.UNIFORM_BLOCK_INDEX);
-// //     const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET);
-
-// //   for (let ii = 0; ii < numUniforms; ++ii) {
-// //     const uniformInfo = gl.getActiveUniform(program, ii);
-// //     if (isBuiltIn(uniformInfo)) {
-// //         continue;
-// //     }
-// //     const {name, type, size} = uniformInfo;
-// //     const blockIndex = blockIndices[ii];
-// //     const offset = offsets[ii];
-// //     console.log(
-// //        name, size, glEnumToString(gl, type),
-// //        blockIndex, offset);
-// //   }
-// // }
-
-// // gl.uniform3fv(eyePositionLocation, eyePosition);
-// // gl.uniform1i(positionBufferLocation, 0);
-// // gl.uniform1i(normalBufferLocation, 1);
-// // gl.uniform1i(uVBufferLocation, 2);
-// // gl.uniform1i(textureMapLocation, 3);
-
-// // matrixUniformData.set(boxes[i].modelMatrix);
-// // matrixUniformData.set(boxes[i].mvpMatrix, 16);
-
-// // gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, matrixUniformBuffer);
-// // gl.bufferSubData(gl.UNIFORM_BUFFER, 0, matrixUniformData);
-
-
-// // var matrixUniformData = new Float32Array(32);
-// //         var matrixUniformBuffer = gl.createBuffer();
-// //         gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, matrixUniformBuffer);
-// //         gl.bufferData(gl.UNIFORM_BUFFER, 128, gl.DYNAMIC_DRAW);
-
-// //         matrixUniformData.set(boxes[i].modelMatrix);
-// //                     matrixUniformData.set(boxes[i].mvpMatrix, 16);
-
-// //                     gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, matrixUniformBuffer);
-// //                     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, matrixUniformData);
-
-
-// // const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-// // const indices = [...Array(numUniforms).keys()];
-// // const blockIndices = gl.getActiveUniforms(program, indices, gl.UNIFORM_BLOCK_INDEX);
-// //   const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET);
-
-// // for (let ii = 0; ii < numUniforms; ++ii) {
-// //   const uniformInfo = gl.getActiveUniform(program, ii);
-// //   if (isBuiltIn(uniformInfo)) {
-// //       continue;
-// //   }
-// //   const {name, type, size} = uniformInfo;
-// //   const blockIndex = blockIndices[ii];
-// //   const offset = offsets[ii];
-// //   console.log(
-// //      name, size, glEnumToString(gl, type),
-// //      blockIndex, offset);
-// // }
-// // }

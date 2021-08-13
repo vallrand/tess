@@ -1,90 +1,126 @@
 import { Application } from '../framework'
-import { GL, ShaderProgram, IVertexAttribute, ImageData, UniformBlock, UniformBlockBindings } from '../webgl'
+import { IEffect } from '../pipeline'
+import { GL, ShaderProgram, IVertexAttribute, UniformSamplerBindings } from '../webgl'
 import { MeshBuffer } from '../Mesh'
+import { ParticleEmitter } from './ParticleEmitter'
 
-class ParticleEmitter {
-    public uniform: UniformBlock
+export interface ParticleSystemOptions {
+    limit: number
+    format: IVertexAttribute[]
+    opaque: boolean
+    soft: boolean
 }
 
-export class ParticleSystem {
+export class ParticleSystem<T> implements IEffect {
+    public enabled: boolean = true
     protected index: number = 0
-    protected instances: number = 0
-    private transformRead: WebGLVertexArrayObject[] = []
-    private transformWrite: WebGLTransformFeedback[] = []
+    public instances: number = 0
+    private tfbWrite: WebGLTransformFeedback[] = []
+    private tfbRead: WebGLVertexArrayObject[] = []
     private vao: WebGLVertexArrayObject[] = []
     private buffer: WebGLBuffer[] = []
+    public diffuse: WebGLTexture
+    public gradientRamp: WebGLTexture
     public readonly emitters: ParticleEmitter[] = []
     constructor(
-        protected readonly context: Application,
-        private readonly mesh: MeshBuffer,
-        protected readonly program: ShaderProgram,
-        private readonly format: IVertexAttribute[],
-        private readonly limit: number,
-        protected readonly transform: ShaderProgram
+        protected context: Application,
+        private readonly options: ParticleSystemOptions,
+        private readonly mesh?: MeshBuffer,
+        protected readonly program?: ShaderProgram,
+        protected readonly transform?: ShaderProgram
     ){
         const { gl } = this.context
         for(let i = 0; i < 2; i++){
             this.buffer[i] = gl.createBuffer()
             gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
-            gl.bufferData(GL.ARRAY_BUFFER, limit * format[0].stride, GL.STREAM_COPY)
+            gl.bufferData(GL.ARRAY_BUFFER, options.limit * options.format[0].stride, GL.STREAM_COPY)
 
-            this.transformRead[i] = gl.createVertexArray()
-            gl.bindVertexArray(this.transformRead[i])
-            gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
-            for(let i = 0; i < format.length; i++){
-                gl.enableVertexAttribArray(i)
-                gl.vertexAttribPointer(i, format[i].size, format[i].type, format[i].normalized, format[i].stride, format[i].offset)
+            if(transform){
+                this.tfbWrite[i] = gl.createTransformFeedback()
+                gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, this.tfbWrite[i])
+                gl.bindBufferBase(GL.TRANSFORM_FEEDBACK_BUFFER, 0, this.buffer[i])
+                gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
             }
-            this.transformWrite[i] = gl.createTransformFeedback()
-            gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, this.transformWrite[i])
-            gl.bindBufferBase(GL.TRANSFORM_FEEDBACK_BUFFER, 0, this.buffer[i])
-            gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
-
-            this.vao[i] = gl.createVertexArray()
-            gl.bindVertexArray(this.vao[i])
-            if(this.mesh.ibo) gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.mesh.ibo)
-            gl.bindBuffer(GL.ARRAY_BUFFER, this.mesh.vbo)
-            for(let i = 1; i < this.mesh.format.length; i++){
-                gl.enableVertexAttribArray(i-1)
-                gl.vertexAttribPointer(i-1, this.mesh.format[i].size, this.mesh.format[i].type,
-                    this.mesh.format[i].normalized, this.mesh.format[i].stride, this.mesh.format[i].offset)
+            if(transform && mesh){
+                this.tfbRead[i] = gl.createVertexArray()
+                gl.bindVertexArray(this.tfbRead[i])
+                gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
+                for(let i = 0; i < options.format.length; i++){
+                    const { size, type, normalized, stride, offset } = options.format[i]
+                    gl.enableVertexAttribArray(i)
+                    gl.vertexAttribPointer(i, size, type, normalized, stride, offset)
+                }
+                gl.bindVertexArray(null)
             }
-            gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
-            for(let i = 0; i < format.length; i++){
-                gl.enableVertexAttribArray(i)
-                gl.vertexAttribPointer(i, format[i].size, format[i].type, format[i].normalized, format[i].stride, format[i].offset)
-                gl.vertexAttribDivisor(i-1, 1)
-            }   
-            gl.bindVertexArray(null)        
+            if(mesh){
+                let location = 0
+                this.vao[i] = gl.createVertexArray()
+                gl.bindVertexArray(this.vao[i])
+                gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
+                for(let i = 0; i < options.format.length; i++, location++){
+                    const { size, type, normalized, stride, offset } = options.format[i]
+                    gl.enableVertexAttribArray(location)
+                    gl.vertexAttribPointer(location, size, type, normalized, stride, offset)
+                    gl.vertexAttribDivisor(location, 1)
+                }
+                if(this.mesh.ibo) gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.mesh.ibo)
+                gl.bindBuffer(GL.ARRAY_BUFFER, this.mesh.vbo)
+                for(let i = this.mesh.ibo ? 1 : 0; i < this.mesh.format.length; i++, location++){
+                    const { size, type, normalized, stride, offset } = this.mesh.format[i]
+                    gl.enableVertexAttribArray(location)
+                    gl.vertexAttribPointer(location, size, type, normalized, stride, offset)
+                }
+                gl.bindVertexArray(null)
+            }
+            if(!transform) break
         }
     }
-    render(){
+    public apply(): void {
         const { gl } = this.context
-        if(this.transform){
+        gl.enable(GL.BLEND)
+        gl.blendFuncSeparate(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
+        if(this.options.soft) gl.disable(GL.DEPTH_TEST)
+        else gl.enable(GL.DEPTH_TEST)
+        if(this.options.opaque) gl.enable(GL.CULL_FACE)
+        else gl.disable(GL.CULL_FACE)
+
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
+        gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
+        gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uGradient)
+        gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
+
+        transform: {
+            if(!this.transform) break transform
             gl.useProgram(this.transform.target)
-            gl.bindVertexArray(this.transformRead[this.index])
-            gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, this.transformWrite[this.index ^= 1])
-            gl.enable(GL.RASTERIZER_DISCARD)
+            gl.bindVertexArray(this.tfbRead[this.index])
+            gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, this.tfbWrite[this.index ^= 1])
+            if(this.mesh) gl.enable(GL.RASTERIZER_DISCARD)
             gl.beginTransformFeedback(GL.POINTS)
 
-            this.update()
-            //for(let i = 0; this.emitters.length; i++)
-            //gl.drawArrays(GL.POINTS, 0, count)
+            for(let i = this.instances = 0; i < this.emitters.length; i++)
+                this.instances += this.emitters[i].render(this.context, this.instances)
 
             gl.endTransformFeedback()
-            gl.disable(GL.RASTERIZER_DISCARD)
+            if(this.mesh) gl.disable(GL.RASTERIZER_DISCARD)
             gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
         }
-        gl.useProgram(this.program.target)
-        gl.bindVertexArray(this.vao[this.index])
-
-        //gl.enable(GL.BLEND)
-        //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-        if(this.mesh.ibo) gl.drawElementsInstanced(this.mesh.drawMode, this.mesh.indexCount, GL.UNSIGNED_SHORT, this.mesh.indexOffset, this.instances)
-        else gl.drawArraysInstanced(this.mesh.drawMode, this.mesh.indexOffset, this.mesh.indexCount, this.instances)
+        render: {
+            if(!this.mesh || !this.program) break render
+            gl.useProgram(this.program.target)
+            gl.bindVertexArray(this.vao[this.index])
+            if(this.mesh.ibo) gl.drawElementsInstanced(this.mesh.drawMode, this.mesh.indexCount, GL.UNSIGNED_SHORT, this.mesh.indexOffset, this.instances)
+            else gl.drawArraysInstanced(this.mesh.drawMode, this.mesh.indexOffset, this.mesh.indexCount, this.instances)
+        }
     }
-    update(){
-        
+    public add(options: T): ParticleEmitter {
+        const emitter = new ParticleEmitter(this.context.gl, this.transform)
+        for(let key in options)
+            emitter.uniform.uniforms[key].set(options[key] as any, 0)
+        this.emitters.push(emitter)
+        return emitter
+    }
+    public remove(emitter: ParticleEmitter): void {
+        const index = this.emitters.indexOf(emitter)
+        if(index != -1) this.emitters.splice(index, 1)
     }
 }

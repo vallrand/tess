@@ -1,27 +1,41 @@
-uvec2 wrap2(in vec2 v, float period){return uvec2(v-period*floor(v/period));}
-float hash21(in uvec2 v){
-    uint n = v.x*1597334677U^v.y*3812015801U;
-	n = (n << 13U) ^ n;
-    n = n * (n * n * 15731U + 789221U) + 1376312589U;
-    return float( n & uvec3(0x7fffffffU))/float(0x7fffffff);
+#version 300 es
+precision highp float;
+in vec2 vUV;
+out vec4 fragColor;
+
+vec2 hash22(uvec2 x){
+    x = 1103515245U*((x >> 1U)^(x.yx));
+    uint h32 = 1103515245U*((x.x)^(x.y>>3U));
+    h32 = h32^(h32 >> 16);
+    uvec2 rz = uvec2(h32, h32*48271U);
+    return vec2((rz.xy >> 1) & uvec2(0x7fffffffU))/float(0x7fffffff);
 }
-float noise2D(in vec2 p, in float period){
-    const vec2 e = vec2(0,1);
-    vec2 f = fract(p);
-    p = floor(p);
-    f = f*f*(3.0-2.0*f);
-    return mix(mix(hash21(wrap2(p+e.xx, period)),
-				    hash21(wrap2(p+e.yx, period)), f.x),
-				mix(hash21(wrap2(p+e.xy, period)),
-					hash21(wrap2(p+e.yy, period)), f.x), f.y);
+vec2 hash22(ivec2 x){return 1.-2.*hash22(uvec2(x+0x7fffffff));}
+float noise2D(in vec2 p){
+    ivec2 i = ivec2(floor( p ));
+    vec2 f =       fract( p );
+	vec2 u = f*f*(3.0-2.0*f);
+    return mix( mix( dot( hash22( i+ivec2(0,0) ), f-vec2(0.0,0.0) ), 
+                     dot( hash22( i+ivec2(1,0) ), f-vec2(1.0,0.0) ), u.x),
+                mix( dot( hash22( i+ivec2(0,1) ), f-vec2(0.0,1.0) ), 
+                     dot( hash22( i+ivec2(1,1) ), f-vec2(1.0,1.0) ), u.x), u.y);
 }
-float fbm(in vec2 uv, in float period, in int octaves){
-    float value=0.0,amplitude=0.5;
-    for(int i=0;i<octaves;i++){
-        value += noise2D(uv, period) * amplitude;
-        amplitude*=0.5;
-        period*=2.0;
-        uv*=2.0;
-    }
-    return value;
+float fbm(in vec2 uv, in int octaves) {
+    const mat2 m = mat2(1.6,  1.2, -1.2,  1.6);
+	float total = 0.0, amplitude = 0.5;
+	for(int i=0;i<octaves;i++){
+		total += noise2D(uv) * amplitude;
+		uv = m * uv;
+		amplitude *= 0.5;
+	}
+	return total;
+}
+
+void main(){
+    vec2 uv = vUV;
+
+    float f0 = smoothstep(-0.5,1.0, fbm(uv * 4.0, 4));
+    f0 *= smoothstep(1.0,0.5,length(2.*uv-1.));
+
+	fragColor = vec4(1,1,1,f0);
 }

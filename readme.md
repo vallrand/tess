@@ -49,7 +49,7 @@ https://www.rorydriscoll.com/2012/01/11/derivative-maps/
 https://stackoverflow.com/questions/51988629/bump-mapping-with-javascript-and-glsl
 https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0
 
-
+https://www.shadertoy.com/view/Xt3cDn
 
 circuit
 https://www.shadertoy.com/view/ttVfzR

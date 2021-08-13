@@ -47,6 +47,35 @@ export const VertexDataFormat = {
         { name: 'material', size: 4, type: GL.UNSIGNED_BYTE, normalized: false, stride: 20, offset: 16 }
     ],
     Particle: <IVertexAttribute[]> [
-        { name: 'position', size: 3, type: GL.FLOAT, normalized: false, stride: 0, offset: 0 }
+        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 0 },
+        { name: 'aVelocity', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 16 },
+        { name: 'aAcceleration', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 32 },
+        { name: 'aLifetime', size: 2, type: GL.FLOAT, normalized: false, stride: 64, offset: 48 },
+        { name: 'aSize', size: 2, type: GL.FLOAT, normalized: false, stride: 64, offset: 56 }
     ]
+}
+
+export const GLSLTypeSize = {
+    [GL.INT]: 1,
+    [GL.SAMPLER_2D]: 1,
+    [GL.SAMPLER_2D_ARRAY]: 1,
+    [GL.FLOAT]: 1,
+    [GL.FLOAT_VEC2]: 2,
+    [GL.FLOAT_VEC3]: 3,
+    [GL.FLOAT_VEC4]: 4,
+    [GL.FLOAT_MAT2]: 4,
+    [GL.FLOAT_MAT3]: 9,
+    [GL.FLOAT_MAT4]: 16
+}
+export const GLSLDataType = {
+    [GL.INT]: Int32Array,
+    [GL.SAMPLER_2D]: Int32Array,
+    [GL.SAMPLER_2D_ARRAY]: Int32Array,
+    [GL.FLOAT]: Float32Array,
+    [GL.FLOAT_VEC2]: Float32Array,
+    [GL.FLOAT_VEC3]: Float32Array,
+    [GL.FLOAT_VEC4]: Float32Array,
+    [GL.FLOAT_MAT2]: Float32Array,
+    [GL.FLOAT_MAT3]: Float32Array,
+    [GL.FLOAT_MAT4]: Float32Array
 }
