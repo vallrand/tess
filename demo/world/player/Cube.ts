@@ -2,6 +2,7 @@ import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat, ease } from '../../en
 import { Application } from '../../engine/framework'
 import { MeshSystem, Mesh } from '../../engine/Mesh'
 import { TransformSystem, Transform } from '../../engine/Transform'
+import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/Keyboard'
 import { PointLightPass, PointLight } from '../../engine/deferred/PointLightPass'
 import { TerrainSystem, TerrainChunk } from '../terrain'
@@ -31,6 +32,7 @@ export class Cube implements IActor {
     hash: number = 0
     public transform: Transform
     public readonly meshes: Mesh[] = []
+    public dust: ParticleEmitter
     public state: CubeState = {
         tile: vec2(0, 0),
         side: 0, direction: Direction.Up,
@@ -60,6 +62,15 @@ export class Cube implements IActor {
         light.radius = 12
         light.intensity = 1.0
         vec3.set(1,1,0.8,light.color)
+
+        this.dust = this.context.get(PlayerSystem).effects.dust.add({
+            uOrigin: [0,0,0,0],
+            uLifespan: [0.8,1.2,-0.16,0],
+            uSize: [2,4],
+            uRadius: [0.2,0.4],
+            uForce: [4,8],
+            uTarget: [0,-0.1,0]
+        })
     }
     installModule(side: number, direction: Direction, type: CubeModule){
         if(this.meshes[side]) this.context.get(MeshSystem).delete(this.meshes[side])
@@ -198,7 +209,7 @@ export class Cube implements IActor {
         const pivotOffset = vec3.subtract(nextPosition, pivot, vec3())
         quat.transform(pivot, quat.conjugate(nextRotation, quat()), pivot)
         
-        return function*(){
+        return function*(this: Cube){
             const movementEase = ease.bounceIn(0.064, 0.8)
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
@@ -215,9 +226,22 @@ export class Cube implements IActor {
                 vec3.subtract(rootNode.position, mesh.transform.position, rootNode.position)
                 vec3.add(pivotOffset, rootNode.position, rootNode.position)
                 rootNode.position[1] += mesh.transform.position[1] - nextPosition[1]
+
+                this.dustTrigger(startTime, 0.4, nextPosition)
+
                 if(fraction >= 1) break
                 yield ActionSignal.WaitNextFrame
             }
         }.call(this)
+    }
+    private dustTrigger(startTime: number, threshold: number, position: vec3){
+        const elapsedTime = this.context.currentTime - startTime
+        const prevTime = elapsedTime - this.context.deltaTime
+        if(!(elapsedTime >= threshold && prevTime < threshold)) return
+        vec3.copy(position, this.dust.uniform.uniforms['uOrigin'] as any)
+        vec3.copy(position, this.dust.uniform.uniforms['uTarget'] as any)
+        this.dust.uniform.uniforms['uTarget'][1] -= 0.1
+        this.dust.uniform.frame = 0
+        this.dust.count += 16
     }
 }

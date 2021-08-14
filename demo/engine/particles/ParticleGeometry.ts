@@ -2,11 +2,17 @@ import { GL, createTexture, generateImageData } from '../webgl'
 import { uint8x4 } from '../batch'
 import { MeshBuffer } from '../Mesh'
 
-export function GradientRamp(gl: WebGL2RenderingContext, colors: number[]): WebGLTexture {
-    const length = colors.length / 4
+export function GradientRamp(gl: WebGL2RenderingContext, colors: number[], height: number = 1): WebGLTexture {
+    const data = new Uint8Array(colors.length * 4)
+    for(let i = 0; i < colors.length; i++){
+        data[i * 4 + 0] = (colors[i] >>> 24) & 0xFF
+        data[i * 4 + 1] = (colors[i] >>> 16) & 0xFF
+        data[i * 4 + 2] = (colors[i] >>> 8) & 0xFF
+        data[i * 4 + 3] = (colors[i] >>> 0) & 0xFF
+    }
     return createTexture(gl, {
-        width: colors.length / 4, height: 1, data: new Uint8Array(colors)
-    }, { flipY: false, mipmaps: GL.NONE, filter: GL.LINEAR, wrap: GL.CLAMP_TO_EDGE, type: GL.TEXTURE_2D })
+        width: colors.length / height, height, data
+    }, { flipY: true, mipmaps: GL.NONE, filter: GL.LINEAR, wrap: GL.CLAMP_TO_EDGE, type: GL.TEXTURE_2D })
 }
 
 export class ParticleGeometry {

@@ -23,11 +23,16 @@ uniform sampler2D uPositionBuffer;
 
 void main(void){
 #ifdef POINT
-    vec4 color = texture(uSampler, gl_PointCoord);
+    vec2 uv = gl_PointCoord;
 #else
-    vec4 color = texture(uSampler, vUV);
+    vec2 uv = vUV;
 #endif
-    color *= texture(uGradient, vec2(vLife,color.a));
+    vec4 mask = texture(uSampler, uv);
+    vec4 color = texture(uGradient, vec2(vLife, mask.a));
+#ifdef MASK
+    color.a *= smoothstep(1.0,0.5,length(2.*uv-1.));
+#endif
+
 #ifdef SOFT
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
     vec4 position = texelFetch(uPositionBuffer, fragCoord, 0);

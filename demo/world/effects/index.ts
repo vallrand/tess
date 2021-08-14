@@ -36,7 +36,7 @@ export class EffectLibrary {
             ParticleGeometry.quad(context.gl),
             ShaderProgram(context.gl,
                 require('../../engine/shaders/billboard_vert.glsl'),
-                require('../../engine/shaders/billboard_frag.glsl'), { SPHERICAL: true, SOFT: false }),
+                require('../../engine/shaders/billboard_frag.glsl'), { SPHERICAL: true, SOFT: false, MASK: true }),
             ShaderProgram(context.gl, require('../shaders/dust_vert.glsl'), null, {  })
         )
         this.dust.diffuse = this.context.get(MaterialSystem).addRenderTexture(
@@ -44,27 +44,10 @@ export class EffectLibrary {
             this.context.get(MaterialSystem).fullscreenShader(require('../shaders/clouds_frag.glsl')), {}, 0
         ).target
         this.dust.gradientRamp = GradientRamp(this.context.gl, [
-            0xBF,0xB9,0xaE,0xFF,
-            0xBF,0xB9,0xaE,0xFF,
-            0x54,0x4F,0x46,0xFF,
-            0x00,0x00,0x00,0x00
-        ])
+            0xBFB9AEFF, 0x706A5FFF, 0x544F467F, 0x00000000,
+            0x544F467F, 0x00000000, 0x00000000, 0x00000000
+        ], 2)
         this.context.get(ParticleEffectPass).effects.push(this.dust)
-
-
-
-        const emitter = this.dust.add({
-            uOrigin: [0,0,0,0],
-            uLifespan: [2,2,-0.5,0],
-            uSize: [3,5],
-            uRadius: [0.5,0.5],
-            uForce: [4,6],
-            uTarget: [0,-0.1,0]
-        })
-        window['emitter'] = emitter
-        //)
-        //this.sparks.texture = particleTexture
-        //this.sparks.gradient = ramp()
 
 
 

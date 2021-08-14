@@ -50,6 +50,7 @@ https://stackoverflow.com/questions/51988629/bump-mapping-with-javascript-and-gl
 https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0
 
 https://www.shadertoy.com/view/Xt3cDn
+https://www.shadertoy.com/view/3sKXWh
 
 circuit
 https://www.shadertoy.com/view/ttVfzR

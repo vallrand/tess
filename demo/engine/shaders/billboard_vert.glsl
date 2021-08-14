@@ -29,8 +29,7 @@ mat2 rotate(in float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
 
 void main(){
     vLife = clamp(aLifetime.x / aLifetime.y, 0.0, 1.0);
-    float size = mix(aSize.x, aSize.y, vLife);
-    size *= step(0.,aLifetime.x)*step(aLifetime.x,aLifetime.y);
+    float size = aSize.y * step(0.,aLifetime.x)*step(aLifetime.x,aLifetime.y);
 
 #ifdef POINT
     gl_PointSize = size;

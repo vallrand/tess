@@ -12,6 +12,7 @@ export interface ParticleSystemOptions {
 }
 
 export class ParticleSystem<T> implements IEffect {
+    private readonly pool: ParticleEmitter[] = []
     public enabled: boolean = true
     protected index: number = 0
     public instances: number = 0
@@ -90,7 +91,7 @@ export class ParticleSystem<T> implements IEffect {
         gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
 
         transform: {
-            if(!this.transform) break transform
+            if(!this.transform || !this.emitters.length) break transform
             gl.useProgram(this.transform.target)
             gl.bindVertexArray(this.tfbRead[this.index])
             gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, this.tfbWrite[this.index ^= 1])
@@ -98,14 +99,14 @@ export class ParticleSystem<T> implements IEffect {
             gl.beginTransformFeedback(GL.POINTS)
 
             for(let i = this.instances = 0; i < this.emitters.length; i++)
-                this.instances += this.emitters[i].render(this.context, this.instances)
+                this.instances += this.emitters[i].render(this.context, this.instances, this.options)
 
             gl.endTransformFeedback()
             if(this.mesh) gl.disable(GL.RASTERIZER_DISCARD)
             gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
         }
         render: {
-            if(!this.mesh || !this.program) break render
+            if(!this.mesh || !this.program || !this.instances) break render
             gl.useProgram(this.program.target)
             gl.bindVertexArray(this.vao[this.index])
             if(this.mesh.ibo) gl.drawElementsInstanced(this.mesh.drawMode, this.mesh.indexCount, GL.UNSIGNED_SHORT, this.mesh.indexOffset, this.instances)
@@ -113,7 +114,7 @@ export class ParticleSystem<T> implements IEffect {
         }
     }
     public add(options: T): ParticleEmitter {
-        const emitter = new ParticleEmitter(this.context.gl, this.transform)
+        const emitter = this.pool.pop() || new ParticleEmitter(this.context.gl, this.transform)
         for(let key in options)
             emitter.uniform.uniforms[key].set(options[key] as any, 0)
         this.emitters.push(emitter)
@@ -121,6 +122,8 @@ export class ParticleSystem<T> implements IEffect {
     }
     public remove(emitter: ParticleEmitter): void {
         const index = this.emitters.indexOf(emitter)
-        if(index != -1) this.emitters.splice(index, 1)
+        if(!~index) return
+        this.emitters.splice(index, 1)
+        this.pool.push(emitter)
     }
 }
