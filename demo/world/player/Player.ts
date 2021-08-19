@@ -9,6 +9,8 @@ import { Transform, TransformSystem } from '../../engine/Transform'
 import { DecalPass } from '../../engine/deferred/DecalPass'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { ShieldEffect, GridEffect, EffectLibrary } from '../effects'
+import { CubeModule } from './CubeModules'
+import { TurnBasedSystem } from '../Actor'
 
 export class PlayerSystem implements System {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
@@ -34,7 +36,7 @@ export class PlayerSystem implements System {
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
-        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, 9)
+        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.Railgun)
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0

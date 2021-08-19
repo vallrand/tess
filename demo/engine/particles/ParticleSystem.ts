@@ -7,7 +7,7 @@ import { ParticleEmitter } from './ParticleEmitter'
 export interface ParticleSystemOptions {
     limit: number
     format: IVertexAttribute[]
-    opaque: boolean
+    blend: number
     soft: boolean
 }
 
@@ -19,7 +19,7 @@ export class ParticleSystem<T> implements IEffect {
     private tfbWrite: WebGLTransformFeedback[] = []
     private tfbRead: WebGLVertexArrayObject[] = []
     private vao: WebGLVertexArrayObject[] = []
-    private buffer: WebGLBuffer[] = []
+    protected buffer: WebGLBuffer[] = []
     public diffuse: WebGLTexture
     public gradientRamp: WebGLTexture
     public readonly emitters: ParticleEmitter[] = []
@@ -34,7 +34,7 @@ export class ParticleSystem<T> implements IEffect {
         for(let i = 0; i < 2; i++){
             this.buffer[i] = gl.createBuffer()
             gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[i])
-            gl.bufferData(GL.ARRAY_BUFFER, options.limit * options.format[0].stride, GL.STREAM_COPY)
+            gl.bufferData(GL.ARRAY_BUFFER, options.limit * options.format[0].stride, transform ? GL.STREAM_COPY : GL.DYNAMIC_DRAW)
 
             if(transform){
                 this.tfbWrite[i] = gl.createTransformFeedback()
@@ -53,7 +53,7 @@ export class ParticleSystem<T> implements IEffect {
                 }
                 gl.bindVertexArray(null)
             }
-            if(mesh){
+            if(this.program){
                 let location = 0
                 this.vao[i] = gl.createVertexArray()
                 gl.bindVertexArray(this.vao[i])
@@ -62,14 +62,16 @@ export class ParticleSystem<T> implements IEffect {
                     const { size, type, normalized, stride, offset } = options.format[i]
                     gl.enableVertexAttribArray(location)
                     gl.vertexAttribPointer(location, size, type, normalized, stride, offset)
-                    gl.vertexAttribDivisor(location, 1)
+                    if(this.mesh) gl.vertexAttribDivisor(location, 1)
                 }
-                if(this.mesh.ibo) gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.mesh.ibo)
-                gl.bindBuffer(GL.ARRAY_BUFFER, this.mesh.vbo)
-                for(let i = this.mesh.ibo ? 1 : 0; i < this.mesh.format.length; i++, location++){
-                    const { size, type, normalized, stride, offset } = this.mesh.format[i]
-                    gl.enableVertexAttribArray(location)
-                    gl.vertexAttribPointer(location, size, type, normalized, stride, offset)
+                if(this.mesh){
+                    if(this.mesh.ibo) gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.mesh.ibo)
+                    gl.bindBuffer(GL.ARRAY_BUFFER, this.mesh.vbo)
+                    for(let i = this.mesh.ibo ? 1 : 0; i < this.mesh.format.length; i++, location++){
+                        const { size, type, normalized, stride, offset } = this.mesh.format[i]
+                        gl.enableVertexAttribArray(location)
+                        gl.vertexAttribPointer(location, size, type, normalized, stride, offset)
+                    }
                 }
                 gl.bindVertexArray(null)
             }
@@ -77,13 +79,16 @@ export class ParticleSystem<T> implements IEffect {
         }
     }
     public apply(): void {
+        if(!this.enabled) return
         const { gl } = this.context
         gl.enable(GL.BLEND)
-        gl.blendFuncSeparate(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
+        if(this.options.blend == 1)
+            gl.blendFuncSeparate(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
+        else if(this.options.blend == 2)
+            gl.blendFunc(GL.ONE, GL.ONE)
+        else gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
         if(this.options.soft) gl.disable(GL.DEPTH_TEST)
         else gl.enable(GL.DEPTH_TEST)
-        if(this.options.opaque) gl.enable(GL.CULL_FACE)
-        else gl.disable(GL.CULL_FACE)
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
@@ -91,6 +96,7 @@ export class ParticleSystem<T> implements IEffect {
         gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
 
         transform: {
+            //TODO run emitters first to determine if we need to run TFB
             if(!this.transform || !this.emitters.length) break transform
             gl.useProgram(this.transform.target)
             gl.bindVertexArray(this.tfbRead[this.index])
@@ -106,10 +112,11 @@ export class ParticleSystem<T> implements IEffect {
             gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
         }
         render: {
-            if(!this.mesh || !this.program || !this.instances) break render
+            if(!this.program || !this.instances) break render
             gl.useProgram(this.program.target)
             gl.bindVertexArray(this.vao[this.index])
-            if(this.mesh.ibo) gl.drawElementsInstanced(this.mesh.drawMode, this.mesh.indexCount, GL.UNSIGNED_SHORT, this.mesh.indexOffset, this.instances)
+            if(!this.mesh) gl.drawArrays(GL.POINTS, 0, this.instances)
+            else if(this.mesh.ibo) gl.drawElementsInstanced(this.mesh.drawMode, this.mesh.indexCount, GL.UNSIGNED_SHORT, this.mesh.indexOffset, this.instances)
             else gl.drawArraysInstanced(this.mesh.drawMode, this.mesh.indexOffset, this.mesh.indexCount, this.instances)
         }
     }

@@ -4,7 +4,13 @@ import { GL, UniformBlock } from './webgl'
 import { TransformSystem, Transform } from './Transform'
 import { FrustumCulling } from './FrustumCulling'
 
-export class PerspectiveCamera {
+export interface ICamera {
+    frame: number
+    viewMatrix: mat4
+    projectionMatrix: mat4
+}
+
+export class PerspectiveCamera implements ICamera {
     public frame: number = 0
     public transform: Transform
     public zNear: number = 0.1

@@ -1,5 +1,5 @@
-import { GL, createTexture, generateImageData } from '../webgl'
-import { uint8x4 } from '../batch'
+import { GL, createTexture } from '../webgl'
+import { IEase } from '../math/ease'
 import { MeshBuffer } from '../Mesh'
 
 export function GradientRamp(gl: WebGL2RenderingContext, colors: number[], height: number = 1): WebGLTexture {
@@ -34,20 +34,20 @@ export class ParticleGeometry {
             ]
         }
     }
-    public static stripe(gl: WebGL2RenderingContext, length: number): MeshBuffer {
+    public static stripe(gl: WebGL2RenderingContext, length: number, ease: IEase): MeshBuffer {
         const vbo = gl.createBuffer()
         gl.bindBuffer(GL.ARRAY_BUFFER, vbo)
         const vertexData = new Float32Array(length * 2 * (3+2))
         for(let i = 0; i < length; i++){
             const l = i / (length - 1)
-            vertexData[i * 2 * 5 + 0] = -0.5
+            vertexData[i * 2 * 5 + 0] = -0.5 * ease(l)
             vertexData[i * 2 * 5 + 1] = l
             vertexData[i * 2 * 5 + 2] = 0
 
             vertexData[i * 2 * 5 + 3] = 0
             vertexData[i * 2 * 5 + 4] = l
             
-            vertexData[i * 2 * 5 + 5] = 0.5
+            vertexData[i * 2 * 5 + 5] = 0.5 * ease(l)
             vertexData[i * 2 * 5 + 6] = l
             vertexData[i * 2 * 5 + 7] = 0
 

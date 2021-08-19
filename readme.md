@@ -16,6 +16,7 @@ https://gpfault.net/posts/webgl2-particles.txt.html
 https://www.youtube.com/watch?v=PWjIeJDE7Rc
 https://www.youtube.com/watch?v=OYYZQ1yiXOE
 https://www.youtube.com/watch?v=tYiScgHXcXQ last
+billboard line https://community.khronos.org/t/billboarded-line/37173
 PBR = 
 https://gist.github.com/xDavidLeon/38b392700fbec56162ba
 https://www.jordanstevenstechart.com/physically-based-rendering
@@ -50,7 +51,7 @@ https://stackoverflow.com/questions/51988629/bump-mapping-with-javascript-and-gl
 https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0
 
 https://www.shadertoy.com/view/Xt3cDn
-https://www.shadertoy.com/view/3sKXWh
+https://www.shadertoy.com/view/3sKXWh tileable textures
 
 circuit
 https://www.shadertoy.com/view/ttVfzR
@@ -60,6 +61,8 @@ https://www.shadertoy.com/view/4dVBzz
 https://www.gamedev.net/forums/topic/642794-tileable-fbm-noise/
 https://www.shadertoy.com/view/4lfXDM
 
+hashes https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a
+billboards https://forum.unity.com/threads/billboard-script-flat-spherical-arbitrary-axis-aligned.539481/
 bind gbuffer
 render static geometry
 render skinned geometry

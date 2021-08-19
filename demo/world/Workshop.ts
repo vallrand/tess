@@ -4,7 +4,7 @@ import { TransformSystem } from '../engine/Transform'
 import { MeshSystem, Mesh } from '../engine/Mesh'
 import { KeyboardSystem } from '../engine/Keyboard'
 import { TerrainSystem } from './terrain'
-import { animations } from './animations'
+import { animations } from './animations/animations'
 import { IActor, TurnBasedSystem, ActionSignal } from './Actor'
 import { PlayerSystem, Cube, CubeModule, Direction } from './player'
 

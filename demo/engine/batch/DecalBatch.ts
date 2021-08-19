@@ -2,7 +2,7 @@ import { vec4, mat4 } from '../math'
 import { Transform } from '../Transform'
 import { SpriteMaterial } from '../Sprite'
 import { GL } from '../webgl'
-import { uint8x4 } from './Batch2D'
+import { uintNorm4x8 } from './GeometryBatch'
 
 export interface IBatchedDecal {
     material: SpriteMaterial
@@ -67,7 +67,7 @@ export class DecalBatch {
     }
     render(decal: IBatchedDecal): boolean {
         if(this.instanceOffset + 1 >= this.batchSize) return false
-        const color = uint8x4(decal.color[0], decal.color[1], decal.color[2], decal.color[3])
+        const color = uintNorm4x8(decal.color[0], decal.color[1], decal.color[2], decal.color[3])
 
         this.instanceArray.set(decal.transform?.matrix || mat4.IDENTITY, this.instanceOffset * this.stride + 1)
         this.instanceOffset++

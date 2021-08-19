@@ -6,11 +6,12 @@ import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/Keyboard'
 import { PointLightPass, PointLight } from '../../engine/deferred/PointLightPass'
 import { TerrainSystem, TerrainChunk } from '../terrain'
-import { animations } from '../animations'
+import { animations } from '../animations/animations'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { IActor, TurnBasedSystem, ActionSignal } from '../Actor'
 import { PlayerSystem } from './Player'
 import { cubeModules, CubeModule } from './CubeModules'
+import { activateBeamSkill } from '../animations/skills'
 
 
 export interface CubeState {
@@ -116,6 +117,20 @@ export class Cube implements IActor {
                 }
             }
             switch(state.type){
+                case CubeModule.Railgun: {
+                    if(state.open != 1) break
+                    if(!keys.down('Space')) break
+
+                    const generator = activateBeamSkill(this.context)
+                    for(let duration = 2.0, startTime = this.context.currentTime; true;){
+                        let fraction = (this.context.currentTime - startTime) / duration
+                        animations[moduleSettings.model].activate(fraction, mesh.armature)
+                    
+                        const iterator = generator.next()
+                        if(iterator.done) return iterator.value
+                        else yield iterator.value
+                    }
+                }
                 // case CubeModule.Empty: {
                 // }
                 // case CubeModule.Machinegun: {

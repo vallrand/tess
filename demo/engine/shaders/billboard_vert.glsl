@@ -5,7 +5,7 @@ layout(std140, column_major) uniform;
 layout(location=0) in vec4 aTransform;
 layout(location=1) in vec4 aVelocity;
 layout(location=2) in vec4 aAcceleration;
-layout(location=3) in vec2 aLifetime;
+layout(location=3) in vec3 aLifetime;
 layout(location=4) in vec2 aSize;
 #ifndef POINT
 layout(location=5) in vec3 aPosition;
@@ -13,7 +13,7 @@ layout(location=6) in vec2 aUV;
 out vec2 vUV;
 #endif
 
-out float vLife;
+out vec2 vLife;
 out vec3 vPosition;
 
 uniform GlobalUniforms {
@@ -28,7 +28,7 @@ uniform CameraUniforms {
 mat2 rotate(in float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
 
 void main(){
-    vLife = clamp(aLifetime.x / aLifetime.y, 0.0, 1.0);
+    vLife = vec2(clamp(aLifetime.x / aLifetime.y, 0.0, 1.0), aLifetime.z);
     float size = aSize.y * step(0.,aLifetime.x)*step(aLifetime.x,aLifetime.y);
 
 #ifdef POINT

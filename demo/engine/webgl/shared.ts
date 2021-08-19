@@ -46,12 +46,19 @@ export const VertexDataFormat = {
         { name: 'color', size:4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 20, offset: 12 },
         { name: 'material', size: 4, type: GL.UNSIGNED_BYTE, normalized: false, stride: 20, offset: 16 }
     ],
+    Batched: <IVertexAttribute[]> [
+        { name: 'index', size: 1, type: GL.UNSIGNED_SHORT },
+        { name: 'position', size: 3, type: GL.FLOAT, normalized: false, stride: 24, offset: 0 },
+        { name: 'uv', size: 2, type: GL.UNSIGNED_SHORT, normalized: true, stride: 24, offset: 12 },
+        { name: 'color', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 24, offset: 16 },
+        { name: 'material', size: 4, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 20 }
+    ],
     Particle: <IVertexAttribute[]> [
-        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 0 },
-        { name: 'aVelocity', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 16 },
-        { name: 'aAcceleration', size: 4, type: GL.FLOAT, normalized: false, stride: 64, offset: 32 },
-        { name: 'aLifetime', size: 2, type: GL.FLOAT, normalized: false, stride: 64, offset: 48 },
-        { name: 'aSize', size: 2, type: GL.FLOAT, normalized: false, stride: 64, offset: 56 }
+        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 0 },
+        { name: 'aVelocity', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 16 },
+        { name: 'aAcceleration', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 32 },
+        { name: 'aLifetime', size: 3, type: GL.FLOAT, normalized: false, stride: 68, offset: 48 },
+        { name: 'aSize', size: 2, type: GL.FLOAT, normalized: false, stride: 68, offset: 60 }
     ]
 }
 

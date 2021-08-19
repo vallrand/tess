@@ -1,25 +1,40 @@
-import { vec4 } from '../math'
+import { vec3, vec4 } from '../math'
 import { GL, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
-import { uintNorm4x8, uintNorm2x16 } from './GeometryBatch'
+import { ICamera } from '../Camera'
 
-export interface IBatched2D {
+export const uint8x4 = (r: number, g: number, b: number, a: number): number =>
+(0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | ((0xFF000000 & a) << 24)
+export const uint16x2 = (u: number, v: number): number => 
+(0xFFFF0000 & v << 16) | 0xFFFF & u
+
+export const uintNorm4x8 = (r: number, g: number, b: number, a: number): number =>
+(0xFF * r) | (0xFF * g << 8) | (0xFF * b << 16) | (0xFF * a << 24)
+export const uintNorm2x16 = (u: number, v: number): number => 
+(0xFFFF * v << 16) | 0xFFFF & (0xFFFF * u | 0)
+
+export interface IBatched {
     vertices: Float32Array
     uvs: Float32Array
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
-    material: { texture: WebGLTexture }
+    material: {
+        texture: WebGLTexture
+        tint: vec3
+    }
+    recalculate(frame: number, camera: ICamera): void
 }
-export class Batch2D extends VertexDataBatch {
+
+export class GeometryBatch extends VertexDataBatch {
     public static quadIndices = [0,1,2,0,2,3]
     public readonly textures: WebGLTexture[] = []
     private readonly maxTextures: number
-    constructor(gl: WebGL2RenderingContext, maxVertices: number, maxIndices: number, fixedIndices: number[]){
-        super(gl, VertexDataFormat.Batched2D, maxVertices, maxIndices, fixedIndices)
+    constructor(gl: WebGL2RenderingContext, maxVertices: number, maxIndices: number, fixedIndices?: number[]){
+        super(gl, VertexDataFormat.Batched, maxVertices, maxIndices, fixedIndices)
         this.maxTextures = gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
     }
-    render(geometry: IBatched2D): boolean {
+    render(geometry: IBatched): boolean {
         const { vertices, uvs, indices, colors, material } = geometry
         const indexCount = indices.length, vertexCount = vertices.length >>> 1
         if(this.indexOffset == 0) this.textures.length = 0
@@ -33,7 +48,7 @@ export class Batch2D extends VertexDataBatch {
 
         if(textureIndex == -1) textureIndex = this.textures.push(material.texture) - 1
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
-        const material4 = textureIndex << 24
+        const material4 = uint8x4(material.tint[0], material.tint[1], material.tint[2], textureIndex)
         
         if(!this.fixedIndices) for(let i = 0; i < indexCount; i++)
             this.indexArray[this.indexOffset + i] = indices[i] + this.vertexOffset
@@ -42,11 +57,12 @@ export class Batch2D extends VertexDataBatch {
         const stride = this.format[1].stride >>> 2
         const offset = this.vertexOffset * stride
         for(let i = 0, index = offset; i < vertexCount; i++, index += stride){
-            this.float32View[index + 0] = vertices[2*i+0]
-            this.float32View[index + 1] = vertices[2*i+1]
-            this.uint32View[index + 2] = uintNorm2x16(uvs[2*i], uvs[2*i+1])
-            this.uint32View[index + 3] = colors ? colors[i] : color
-            this.uint32View[index + 4] = material4
+            this.float32View[index + 0] = vertices[3*i+0]
+            this.float32View[index + 1] = vertices[3*i+1]
+            this.float32View[index + 2] = vertices[3*i+2]
+            this.uint32View[index + 3] = uintNorm2x16(uvs[2*i], uvs[2*i+1])
+            this.uint32View[index + 4] = colors ? colors[i] : color
+            this.uint32View[index + 5] = material4
         }
         this.vertexOffset += vertexCount
         return true

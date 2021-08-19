@@ -3,6 +3,7 @@ import { Application, System } from '../framework'
 import { CameraSystem } from '../Camera'
 import { MeshSystem } from '../Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
+import { IEffect } from '../pipeline'
 
 export class DeferredGeometryPass implements System {
     public albedo: WebGLTexture
@@ -11,6 +12,7 @@ export class DeferredGeometryPass implements System {
     public depth: WebGLRenderbuffer
     private gbuffer: WebGLFramebuffer
     private programs: ShaderProgram[]
+    public readonly effects: IEffect[] = []
 
     constructor(private readonly context: Application){
         const gl: WebGL2RenderingContext = context.gl
@@ -79,6 +81,7 @@ export class DeferredGeometryPass implements System {
             gl.bindVertexArray(mesh.buffer.vao)
             gl.drawElements(GL.TRIANGLES, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
         }
+        for(let i = this.effects.length - 1; i >= 0; i--) this.effects[i].apply()
     }
     private allocateGeometryBuffer(gl: WebGL2RenderingContext, width: number, height: number){
         if(!gl.getExtension('EXT_color_buffer_float')) throw new Error('FLOAT color buffer not available')

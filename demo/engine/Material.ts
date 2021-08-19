@@ -1,5 +1,5 @@
 import { vec3, quat, mat4 } from './math'
-import { GL, createTexture, compileProgram, locateUniforms, TextureOptions } from './webgl'
+import { GL, createTexture, compileProgram, locateUniforms, TextureOptions, ShaderProgram } from './webgl'
 import { Application, IProgressHandler, System, Factory, Signal } from './framework'
 import { PostEffectPass } from './deferred/PostEffectPass'
 
@@ -19,11 +19,6 @@ export interface RenderTexture {
     target: WebGLTexture
     type: number
     fbo: WebGLFramebuffer[]
-}
-
-export interface ShaderProgram {
-    target: WebGLProgram
-    uniforms: Record<string, any>
 }
 
 export class MaterialSystem implements System {
@@ -56,10 +51,7 @@ export class MaterialSystem implements System {
         return material
     }
     public fullscreenShader(shader: string): ShaderProgram {
-        const gl: WebGL2RenderingContext = this.context.gl
-        const program = compileProgram(gl, require('./deferred/fullscreen_vert.glsl'), shader)
-        const uniforms = locateUniforms(gl, program)
-        return { target: program, uniforms }
+        return ShaderProgram(this.context.gl, require('./deferred/fullscreen_vert.glsl'), shader)
     }
     public createRenderTexture(width: number, height: number, layers: number = 1, options?: TextureOptions): RenderTexture {
         const gl: WebGL2RenderingContext = this.context.gl

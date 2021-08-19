@@ -14,7 +14,7 @@ export abstract class VertexDataBatch {
         protected readonly format: IVertexAttribute[],
         readonly maxVertices: number,
         readonly maxIndices: number,
-        readonly fixedIndices: number[]
+        readonly fixedIndices?: number[]
     ){
         this.indexArray = new Uint16Array(maxIndices)
         if(fixedIndices) for(let i = 0; i < this.indexArray.length; i++)

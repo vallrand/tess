@@ -4,7 +4,7 @@ precision highp float;
 #ifndef POINT
 in vec2 vUV;
 #endif
-in float vLife;
+in vec2 vLife;
 in vec3 vPosition;
 
 out vec4 fragColor;
@@ -12,6 +12,9 @@ out vec4 fragColor;
 uniform sampler2D uSampler;
 uniform sampler2D uGradient;
 
+uniform GlobalUniforms {
+    vec4 uTime;
+};
 #ifdef SOFT
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
@@ -27,8 +30,20 @@ void main(void){
 #else
     vec2 uv = vUV;
 #endif
-    vec4 mask = texture(uSampler, uv);
-    vec4 color = texture(uGradient, vec2(vLife, mask.a));
+
+#ifdef UV_OFFSET
+    float offsetScale = UV_OFFSET;
+    vec4 color = texture(uSampler, uv - offsetScale * uTime.x + vLife.y);
+    color *= 4.0 * texture(uSampler, 0.5 * uv + 2.0 * offsetScale * uTime.x + vLife.y);
+#else
+    vec4 color = texture(uSampler, uv);
+#endif
+
+#ifdef GRADIENT
+    color = texture(uGradient, vec2(vLife.x, color.a));
+#else
+    color *= 4.*vLife.x*(1.-vLife.x);
+#endif
 #ifdef MASK
     color.a *= smoothstep(1.0,0.5,length(2.*uv-1.));
 #endif

@@ -42,6 +42,12 @@ vec3.cross = (a: vec3, b: vec3, out: vec3): vec3 => {
   
 vec3.magnitudeSquared = (vec: vec3): number => vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]
 vec3.magnitude = (vec: vec3): number => Math.sqrt(vec3.magnitudeSquared(vec))
+vec3.distanceSquared = (a: vec3, b: vec3): number => {
+    const dx = a[0] - b[0]
+    const dy = a[1] - b[1]
+    const dz = a[2] - b[2]
+    return dx*dx + dy*dy + dz*dz
+}
 vec3.normalize = (vec: vec3, out: vec3): vec3 => {
     const x = vec[0], y = vec[1], z = vec[2]
     const lengthSqrt = x*x + y*y + z*z

@@ -18,12 +18,18 @@ export const elasticOut = (amplitude: number, period: number): IEase => {
 
 export const quadIn: IEase = x => x*x
 export const cubicIn: IEase = x => x*x*x
+export const quartIn: IEase = x => x*x*x*x
+export const quintIn: IEase = x => x*x*x*x*x
 
 export const quadOut = flip(quadIn)
 export const cubicOut = flip(cubicIn)
+export const quartOut = flip(quartIn)
+export const quintOut = flip(quintIn)
 
 export const quadInOut = split(0.5, quadIn, quadOut)
 export const cubicInOut = split(0.5, cubicIn, cubicOut)
+export const quartInOut = split(0.5, quartIn, quartOut)
+export const quintInOut = split(0.5, quintIn, quintOut)
 
 export const sineOut: IEase = x => Math.sin(x * 0.5 * Math.PI)
 export const sineIn = flip(sineOut)

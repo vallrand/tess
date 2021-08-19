@@ -1,3 +1,7 @@
+import { Application } from '../../engine/framework'
+import { ActionSignal } from '../Actor'
+import { Cube } from './Cube'
+
 export const enum CubeModule {
     Empty = 0,
     Death = 1,
@@ -14,7 +18,8 @@ export const enum CubeModule {
 }
 
 export const cubeModules: Record<CubeModule, {
-    model: string
+    model?: string
+    activate?: () => Generator<ActionSignal>
 }> = {
     [CubeModule.Empty]: {
         model: 'cube_open'
@@ -26,7 +31,10 @@ export const cubeModules: Record<CubeModule, {
         model: 'cube_0'
     },
     [CubeModule.Railgun]: {
-        model: 'cube_1'
+        model: 'cube_1',
+        activate(this: Cube): Generator<ActionSignal> {
+            return
+        }
     },
     [CubeModule.EMP]: {
         model: 'cube_2'

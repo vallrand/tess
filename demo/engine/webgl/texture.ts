@@ -62,17 +62,3 @@ export function createTexture(
 
     return texture
 }
-
-export function generateImageData(width: number, height: number, sampler: (u: number, v: number) => number): ImageData {
-    const data = new Uint8Array(4 * width * height)
-    for(let x = 0; x < width; x++)
-    for(let y = 0; y < height; y++){
-        const index = 4 * (x + y * width)
-        const rgba = sampler(x / (width - 1), y / (height - 1))
-        data[index + 0] = (rgba >>> 0) & 0xFF
-        data[index + 1] = (rgba >>> 8) & 0xFF
-        data[index + 2] = (rgba >>> 16) & 0xFF
-        data[index + 3] = (rgba >>> 24) & 0xFF
-    }
-    return { data, width, height }
-}

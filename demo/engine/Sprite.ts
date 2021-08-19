@@ -1,4 +1,4 @@
-import { vec2, mat3x2, aabb2, vec4 } from './math'
+import { vec2, mat3x2, aabb2, vec4, vec3 } from './math'
 import { Application, System, Factory } from './framework'
 import { Batch2D, IBatched2D } from './batch'
 import { Transform2D } from './Transform'
@@ -16,9 +16,10 @@ export class SpriteMaterial {
     readonly size: vec2 = vec2()
     readonly uvMatrix: mat3x2 = mat3x2()
     texture: WebGLTexture
+    tint: vec3 = vec3(0, 0, 0)
 }
 
-export class Sprite implements IBatched2D {
+export class Sprite2D implements IBatched2D {
     private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
     private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1]) 
 
@@ -28,7 +29,7 @@ export class Sprite implements IBatched2D {
 
     public readonly vertices: Float32Array = new Float32Array(8)
     public readonly uvs: Float32Array = new Float32Array(8)
-    public readonly indices: Uint16Array = Sprite.quadIndices
+    public readonly indices: Uint16Array = Sprite2D.quadIndices
     public readonly color: vec4 = vec4(1,1,1,1)
     public material: SpriteMaterial
     public transform: Transform2D
@@ -37,7 +38,7 @@ export class Sprite implements IBatched2D {
     public recalculate(frame: number){
         if(!this.material) return
         if(this.frame == 0)
-            this.applyTransform(Sprite.quadUVs, this.material.uvMatrix, this.uvs, 0)
+            this.applyTransform(Sprite2D.quadUVs, this.material.uvMatrix, this.uvs, 0)
         if(this.frame > 0 && this.frame >= this.transform.frame) return
         const transform = this.transform.matrix
 
@@ -76,9 +77,9 @@ export class Sprite implements IBatched2D {
 }
 
 
-export class SpriteSystem extends Factory<Sprite> implements System {
-    constructor(private readonly context: Application){super(Sprite)}
-    public delete(sprite: Sprite): void {
+export class SpriteSystem extends Factory<Sprite2D> implements System {
+    constructor(private readonly context: Application){super(Sprite2D)}
+    public delete(sprite: Sprite2D): void {
         super.delete(sprite)
         sprite.frame = 0
     }

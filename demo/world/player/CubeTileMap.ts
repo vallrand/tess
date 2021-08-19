@@ -3,7 +3,7 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { Batch2D } from '../../engine/batch'
 import { OverlayPass } from '../../engine/deferred/OverlayPass'
-import { Sprite, SpriteMaterial } from '../../engine/Sprite'
+import { Sprite2D, SpriteMaterial } from '../../engine/Sprite'
 import { Transform2D } from '../../engine/Transform'
 import { MaterialSystem, Material } from '../../engine/Material'
 import { Direction, CubeOrientation } from './CubeOrientation'
@@ -47,7 +47,7 @@ export class CubeTileMap {
             filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE
         })
         const sourceSize = vec2(tileSize * gridSize, tileSize * gridSize)
-        const sprite = new Sprite()
+        const sprite = new Sprite2D()
         sprite.transform = new Transform2D()
         sprite.material = new SpriteMaterial()
     
@@ -106,7 +106,7 @@ export class CubeTileMap {
     }
     private prepareBatch(cube: Cube){
         this.tileFaces = this.precomputeTileFaces(cube)
-        const sprite = new Sprite()
+        const sprite = new Sprite2D()
         vec2.set(0.5,0.5,sprite.origin)
         sprite.transform = new Transform2D()
         for(let offset = 0, side = 0; side < 6; side++){

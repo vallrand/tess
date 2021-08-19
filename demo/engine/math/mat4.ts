@@ -149,6 +149,14 @@ mat4.transform = (vec: vec3 | vec4, m: mat4, out: vec4): vec4 => {
     return out
 }
 
+mat4.transformNormal = (vec: vec3, m: mat4, out: vec3): vec3 => {
+    let x = vec[0], y = vec[1], z = vec[2]
+    out[0] = m[0] * x + m[4] * y + m[8] * z
+    out[1] = m[1] * x + m[5] * y + m[9] * z
+    out[2] = m[2] * x + m[6] * y + m[10] * z
+    return out
+}
+
 mat4.orthogonal = (
     left: number, right: number, bottom: number, top: number,
     zNear: number, zFar: number, out: mat4
