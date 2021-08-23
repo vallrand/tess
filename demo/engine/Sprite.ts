@@ -1,5 +1,6 @@
 import { vec2, mat3x2, aabb2, vec4, vec3 } from './math'
 import { Application, System, Factory } from './framework'
+import { ShaderProgram } from './webgl'
 import { Batch2D, IBatched2D } from './batch'
 import { Transform2D } from './Transform'
 
@@ -13,9 +14,10 @@ export class SpriteMaterial {
         out[5] = (frame[1] + 0.5) / size[1]
         return out
     }
-    readonly size: vec2 = vec2()
+    readonly size: vec2 = vec2(0,0)
     readonly uvMatrix: mat3x2 = mat3x2()
     texture: WebGLTexture
+    program?: ShaderProgram
     tint: vec3 = vec3(0, 0, 0)
 }
 

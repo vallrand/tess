@@ -18,7 +18,7 @@ export class MistEffect extends ParticleSystem<void> {
     private frame: number = 0
     constructor(context: Application, amount: number, bounds: aabb3){
         super(
-            context, { limit: amount, soft: false, blend: 1, format: [
+            context, { limit: amount, depthRead: true, depthWrite: false, cull: GL.BACK, blend: 1, format: [
                 { name: 'aTransform', size: 3, type: GL.FLOAT, normalized: false, stride: 12, offset: 0 }
             ] }, null, ShaderProgram(context.gl,
                 require('../shaders/mist_vert.glsl'),

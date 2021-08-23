@@ -85,6 +85,7 @@ export class DeferredGeometryPass implements System {
     }
     private allocateGeometryBuffer(gl: WebGL2RenderingContext, width: number, height: number){
         if(!gl.getExtension('EXT_color_buffer_float')) throw new Error('FLOAT color buffer not available')
+        //if(!gl.getExtension('OES_texture_float_linear')) throw new Error('FLOAT color buffer not available')
         this.position = createTexture(gl, { width, height }, { format: GL.RGBA16F, filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE })
         this.normal = createTexture(gl, { width, height }, { format: GL.RGBA16F, filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE })
         this.albedo = createTexture(gl, { width, height }, { format: GL.RGBA8, filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE })

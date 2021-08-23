@@ -8,7 +8,6 @@ class Monitor {
     private readonly label: HTMLDivElement = document.createElement('div')
     private readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     private readonly ctx: CanvasRenderingContext2D
-    private readonly refreshRate: number
     private prevTimestamp: number = 0
     private timeElapsed: number = 0
     private readonly values: number[] = []
@@ -26,8 +25,6 @@ class Monitor {
         Object.assign(this.canvas, { width: 72, height: 36 })
         this.ctx = this.canvas.getContext('2d', { alpha: false })
         this.ctx.imageSmoothingEnabled = false
-
-        this.refreshRate = options.refreshRate || 1000
         this.update(0)
     }
     private render(){

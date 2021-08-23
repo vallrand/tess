@@ -59,7 +59,7 @@ export class Line implements IBatched {
             this.indices[i*6+5]=i*2+3
         }
         for(let i = length - 1; i >= 0; i--){
-            this.uvs[i*4+0] = this.uvs[i*4+2] = i / (length - 1)
+            this.uvs[i*4+0] = this.uvs[i*4+2] = 1 - i / (length - 1)
             this.uvs[i*4+1] = 0
             this.uvs[i*4+3] = 1
         }

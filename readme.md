@@ -61,8 +61,13 @@ https://www.shadertoy.com/view/4dVBzz
 https://www.gamedev.net/forums/topic/642794-tileable-fbm-noise/
 https://www.shadertoy.com/view/4lfXDM
 
+transparency sorting https://csawesome.runestone.academy/runestone/books/published/learnwebgl2/12_advanced_rendering/04_transparency.html
 hashes https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a
 billboards https://forum.unity.com/threads/billboard-script-flat-spherical-arbitrary-axis-aligned.539481/
+
+align billboards https://www.gamedev.net/forums/topic/696694-stretched-billboard-projected-particles/
+align billboards2 https://gamedev.stackexchange.com/questions/38695/billboarding-aligning-with-velocity-direction
+
 bind gbuffer
 render static geometry
 render skinned geometry

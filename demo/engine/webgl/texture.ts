@@ -5,7 +5,7 @@ export type ImageData = {
     width: number
     height: number
     depth?: number
-    data?: Uint8Array | HTMLImageElement
+    data?: Uint8Array | Float32Array | HTMLImageElement
 }
 
 export interface TextureOptions {
@@ -50,8 +50,11 @@ export function createTexture(
 
     if(type === GL.TEXTURE_2D){
         gl.texStorage2D(type, 1, format, image.width, image.height)
-        if(image.data)
-            gl.texSubImage2D(type, 0, 0, 0, image.width, image.height, GL.RGBA, GL.UNSIGNED_BYTE, image.data as Uint8Array)
+        if(image.data) gl.texSubImage2D(
+            type, 0, 0, 0, image.width, image.height, GL.RGBA,
+            image.data instanceof Float32Array ? GL.FLOAT : GL.UNSIGNED_BYTE,
+            image.data as Uint8Array
+        )
     }else if(type === GL.TEXTURE_2D_ARRAY){
         gl.texStorage3D(type, 1, format, image.width, image.height, image.depth)
         if(image.data)

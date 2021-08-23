@@ -6,7 +6,7 @@ import { ParticleSystem, ParticleGeometry } from '../../engine/particles'
 export class GrassEffect extends ParticleSystem<void> {
     constructor(context: Application){
         super(
-            context, { limit: 1024, soft: false, blend: 0, format: [
+            context, { limit: 1024, depthRead: true, depthWrite: true, cull: GL.NONE, blend: 0, format: [
                 { name: 'aTransform', size: 3, type: GL.FLOAT, normalized: false, stride: 12, offset: 0 }
             ] }, ParticleGeometry.quad(context.gl),
             ShaderProgram(context.gl,

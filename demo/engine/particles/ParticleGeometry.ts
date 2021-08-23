@@ -12,7 +12,42 @@ export function GradientRamp(gl: WebGL2RenderingContext, colors: number[], heigh
     }
     return createTexture(gl, {
         width: colors.length / height, height, data
-    }, { flipY: true, mipmaps: GL.NONE, filter: GL.LINEAR, wrap: GL.CLAMP_TO_EDGE, type: GL.TEXTURE_2D })
+    }, { flipY: true, mipmaps: GL.NONE, filter: GL.LINEAR, wrap: GL.CLAMP_TO_EDGE, type: GL.TEXTURE_2D, format: GL.RGBA8 })
+}
+
+export function AttributeCurveSampler(
+    gl: WebGL2RenderingContext,
+    width: number,
+    attributes: Array<(t: number) => number>
+): WebGLTexture {
+    const height = Math.ceil(attributes.length / 4)
+    const data = new Float32Array(width * height * 4)
+    const step = 1 / (width - 1)
+    for(let y = 0; y < height; y++)
+    for(let x = 0; x < width; x++){
+        const i = x + y * width, t = x * step
+        data[i * 4 + 0] = attributes[y * 4 + 0]?.(t) || 0
+        data[i * 4 + 1] = attributes[y * 4 + 1]?.(t) || 0
+        data[i * 4 + 2] = attributes[y * 4 + 2]?.(t) || 0
+        data[i * 4 + 3] = attributes[y * 4 + 3]?.(t) || 0
+    }
+    return createTexture(gl, {
+        width, height, data
+    }, {
+        format: GL.RGBA16F, filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE,
+        flipY: false, mipmaps: GL.NONE, type: GL.TEXTURE_2D
+    })
+}
+
+export interface ParticleOvertimeAttributes {
+    size0: IEase
+    size1: IEase
+    linear0: IEase
+    linear1: IEase
+    rotational0: IEase
+    rotational1: IEase
+    radial0: IEase
+    radial1: IEase
 }
 
 export class ParticleGeometry {

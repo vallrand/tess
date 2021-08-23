@@ -7,8 +7,10 @@ import { ParticleEmitter } from './ParticleEmitter'
 export interface ParticleSystemOptions {
     limit: number
     format: IVertexAttribute[]
+    depthRead: boolean
+    depthWrite: boolean
+    cull: number
     blend: number
-    soft: boolean
 }
 
 export class ParticleSystem<T> implements IEffect {
@@ -20,8 +22,11 @@ export class ParticleSystem<T> implements IEffect {
     private tfbRead: WebGLVertexArrayObject[] = []
     private vao: WebGLVertexArrayObject[] = []
     protected buffer: WebGLBuffer[] = []
+
     public diffuse: WebGLTexture
     public gradientRamp: WebGLTexture
+    public curveSampler: WebGLTexture
+
     public readonly emitters: ParticleEmitter[] = []
     constructor(
         protected context: Application,
@@ -87,13 +92,16 @@ export class ParticleSystem<T> implements IEffect {
         else if(this.options.blend == 2)
             gl.blendFunc(GL.ONE, GL.ONE)
         else gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
-        if(this.options.soft) gl.disable(GL.DEPTH_TEST)
-        else gl.enable(GL.DEPTH_TEST)
+
+        if(this.options.depthRead) gl.enable(GL.DEPTH_TEST)
+        else gl.disable(GL.DEPTH_TEST)
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
         gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uGradient)
         gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
+        gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uAttributes)
+        gl.bindTexture(GL.TEXTURE_2D, this.curveSampler)
 
         transform: {
             //TODO run emitters first to determine if we need to run TFB

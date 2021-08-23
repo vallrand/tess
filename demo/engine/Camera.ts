@@ -36,6 +36,7 @@ export class CameraSystem {
         this.uniform.data[0] = this.context.currentTime
         this.uniform.data[1] = this.context.deltaTime
         this.uniform.data[2] = this.context.frame
+        this.uniform.data[3] = this.context.currentTime % 1e3
         this.updatePerspectiveCamera(this.camera)
     }
     private updatePerspectiveCamera(camera: PerspectiveCamera){

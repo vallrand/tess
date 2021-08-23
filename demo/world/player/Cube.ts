@@ -121,7 +121,15 @@ export class Cube implements IActor {
                     if(state.open != 1) break
                     if(!keys.down('Space')) break
 
-                    const generator = activateBeamSkill(this.context)
+                    const origin = vec3(0.5,1.5,0)
+                    const target = vec3(10,1.5,0)
+                    const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
+                    quat.transform(origin, rotation, origin)
+                    quat.transform(target, rotation, target)
+                    mat4.transform(origin, this.transform.matrix, origin as any)
+                    mat4.transform(target, this.transform.matrix, target as any)
+
+                    const generator = activateBeamSkill(this.context, origin, target)
                     for(let duration = 2.0, startTime = this.context.currentTime; true;){
                         let fraction = (this.context.currentTime - startTime) / duration
                         animations[moduleSettings.model].activate(fraction, mesh.armature)

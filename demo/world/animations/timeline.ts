@@ -5,20 +5,20 @@ import { Sprite } from '../../engine/batch'
 export function PropertyAnimation<T>(frames: {
     frame: number
     value: T
-    ease?: (value: number) => number
+    ease?: ease.IEase
 }[], lerp?: (prev: T, next: T, fraction: number, out: T) => T, framerate: number = 1){
-    if(frames.length == 1) return (time: number, out: T): T => lerp(frames[0].value, frames[0].value, 0, out)
-    const duration = frames.reduce((max, { frame }) => Math.max(max, frame), 0)
-    const lookup = new Uint8Array(duration + 1)
-    for(let length = lookup.length, i = frames.length - 2; i >= 0; length = frames[i--].frame)
-        for(let j = frames[i].frame; j < length; j++) lookup[j] = i
-    
+    const lastIndex = frames.length - 1
+    let frame = 0
     return (time: number, out: T): T => {
-        time = clamp(framerate * time, 0, duration)
-        const frame = lookup[time | 0]
-        const prev = frames[frame]
-        const next = frames[frame + 1]
-        const fraction = Math.max(0, (time - prev.frame) / (next.frame - prev.frame))
+        time *= framerate
+        while(true)
+            if(frame > 0 && frames[frame].frame > time) frame--
+            else if(frame < lastIndex && frames[frame+1].frame < time) frame++
+            else break
+        if(frame == 0 && frames[0].frame > time) return lerp(out, frames[0].value, 1, out)
+        else if(frame == lastIndex) return lerp(out, frames[lastIndex].value, 1, out)
+        const prev = frames[frame], next = frames[frame + 1]
+        const fraction = clamp((time - prev.frame) / (next.frame - prev.frame), 0, 1)
         return lerp(prev.value, next.value, (next.ease || ease.linear)(fraction), out)
     }
 }
@@ -55,6 +55,6 @@ export const ArmatureAnimation = (tracks: {
 
 export function parseEase(easing: string): ease.IEase {
     if(!easing) return
-    const [ easeFunction, ...params ] = easing.split('|')
+    const [ easeFunction, ...params ] = easing.split(',')
     return params.length ? ease[easeFunction](...params.map(Number)) : ease[easeFunction]
 }

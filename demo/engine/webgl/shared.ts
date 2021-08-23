@@ -11,6 +11,7 @@ export const UniformBlockBindings = {
 export const UniformSamplerBindings = {
     uSampler: 0,
     uGradient: 1,
+    uAttributes: 6,
     uDiffuseMap: 0,
     uNormalMap: 1,
     uPositionBuffer: 2,

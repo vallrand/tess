@@ -1,10 +1,10 @@
 import { vec3, vec4 } from '../math'
-import { GL, VertexDataFormat } from '../webgl'
+import { GL, ShaderProgram, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
 import { ICamera } from '../Camera'
 
 export const uint8x4 = (r: number, g: number, b: number, a: number): number =>
-(0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | ((0xFF000000 & a) << 24)
+(0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | (0xFF000000 & a << 24)
 export const uint16x2 = (u: number, v: number): number => 
 (0xFFFF0000 & v << 16) | 0xFFFF & u
 
@@ -14,12 +14,16 @@ export const uintNorm2x16 = (u: number, v: number): number =>
 (0xFFFF * v << 16) | 0xFFFF & (0xFFFF * u | 0)
 
 export interface IBatched {
+    frame: number
+    index?: number
+    order?: number
     vertices: Float32Array
     uvs: Float32Array
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
     material: {
+        program?: ShaderProgram
         texture: WebGLTexture
         tint: vec3
     }
@@ -46,8 +50,9 @@ export class GeometryBatch extends VertexDataBatch {
             (this.vertexOffset + vertexCount > this.maxVertices)
         ) return false
 
-        if(textureIndex == -1) textureIndex = this.textures.push(material.texture) - 1
+        if(!geometry.color[3]) return true
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
+        if(textureIndex == -1) textureIndex = this.textures.push(material.texture) - 1
         const material4 = uint8x4(material.tint[0], material.tint[1], material.tint[2], textureIndex)
         
         if(!this.fixedIndices) for(let i = 0; i < indexCount; i++)

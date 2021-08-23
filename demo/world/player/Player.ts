@@ -33,6 +33,11 @@ export class PlayerSystem implements System {
 
         this.shield = new ShieldEffect(this.context)
         this.context.get(ParticleEffectPass).effects.push(this.shield)
+
+        window['orbit'] = (speed = 0.1) => setInterval(() => {
+            this.cameraOffset[0] = 4 * Math.sin(speed * performance.now() / 1000)
+            this.cameraOffset[2] = 4 * Math.cos(speed * performance.now() / 1000)
+        }, 10)
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)

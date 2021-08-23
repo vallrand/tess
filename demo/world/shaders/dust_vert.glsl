@@ -51,13 +51,13 @@ void main(){
         vVelocity.xyz = normal * mix(uForce.x, uForce.y, hash(seed+=1U));
         vVelocity.w = .5*mix(-TAU,TAU,hash(seed+=1U));
         vLifetime.x = mix(uLifespan.z, uLifespan.w, hash(seed+=1U));
-        vLifetime.y = mix(uLifespan.x, uLifespan.y, hash(seed+=1U));
+        vLifetime.y = 1.0/mix(uLifespan.x, uLifespan.y, hash(seed+=1U));
         vLifetime.z = random.x;
         vSize.x = mix(uSize.x, uSize.y, hash(seed+=1U));
         vSize.y = 0.0;
     }else{
         vLifetime = vec3(aLifetime.x + uTime.y, aLifetime.y, aLifetime.z);
-        float life = clamp(vLifetime.x / vLifetime.y, 0.0, 1.0);
+        float life = clamp(vLifetime.x * vLifetime.y, 0.0, 1.0);
         float deltaTime = max(0.0,vLifetime.x) - max(0.0,aLifetime.x);
         vAcceleration = aAcceleration;
         vVelocity = aVelocity + vAcceleration * deltaTime;
