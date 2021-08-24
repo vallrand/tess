@@ -3,6 +3,7 @@ precision highp float;
 precision highp int;
 
 in vec2 vUV;
+in vec3 vPosition;
 in vec4 vColor;
 in vec4 vMaterial;
 
@@ -16,6 +17,5 @@ void main(){
     switch(tex){
 #FOR        case #i:color=texture(uSamplers[#i],vUV);break;
     }
-    color *= vColor;
-    fragColor = vec4(color.rgb * color.a, color.a);
+    fragColor = color * vColor;
 }

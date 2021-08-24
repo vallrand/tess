@@ -9,6 +9,7 @@ export class Material {
     normal?: WebGLTexture
     array?: WebGLTexture
     arrayLayers: number
+    program?: ShaderProgram
 }
 
 export interface RenderTexture {

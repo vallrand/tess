@@ -20,7 +20,6 @@ uniform GlobalUniforms {
 uniform EmitterUniforms {
     vec4 uLifespan;
     vec3 uOrigin;
-    vec2 uRotation;
     vec2 uSize;
     vec3 uGravity;
 #if defined(SPHERE) || defined(CIRCLE)
@@ -31,6 +30,11 @@ uniform EmitterUniforms {
 #ifdef TARGETED
     vec2 uForce;
     vec3 uTarget;
+#endif
+#ifdef TRAIL
+    vec2 uLength;
+#else
+    vec2 uRotation;
 #endif
     int uLastID;
 };
@@ -58,8 +62,13 @@ void main(){
     if(gl_VertexID >= uLastID){
         uint seed = uint(gl_VertexID) ^ floatBitsToUint(uTime.z);
         vLifetime.z = uintBitsToFloat(seed);
+#ifdef STATIC
+        vLifetime.x = uTime.x - mix(uLifespan.z, uLifespan.w, hash11(seed+=1U));
+        vLifetime.y = mix(uLifespan.x, uLifespan.y, hash11(seed+=1U));
+#else
         vLifetime.x = mix(uLifespan.z, uLifespan.w, hash11(seed+=1U));
         vLifetime.y = 1.0 / mix(uLifespan.x, uLifespan.y, hash11(seed+=1U));
+#endif
 #if defined(SPHERE)
         float theta = TAU * hash11(seed+=1U);
         float phi = acos(2. * hash11(seed+=1U) - 1.);
@@ -76,7 +85,11 @@ void main(){
 #else
         vTransform.xyz = uOrigin;
 #endif
+#ifdef TRAIL
+        vTransform.w = mix(uLength.x, uLength.y, hash11(seed+=1U));
+#else
         vTransform.w = mix(uRotation.x, uRotation.y, hash11(seed+=1U));
+#endif
 
 #if defined(TARGETED)
         vec3 direction = normalize(vTransform.xyz - uTarget);
@@ -90,6 +103,13 @@ void main(){
         vSize.x = mix(uSize.x, uSize.y, hash11(seed+=1U));
         vSize.y = 0.0;
     }else{
+#ifdef STATIC
+        vLifetime = aLifetime;
+        vTransform = aTransform;
+        vVelocity = aVelocity;
+        vAcceleration = aAcceleration;
+        vSize = aSize;
+#else
         vLifetime = vec3(aLifetime.x + uTime.y, aLifetime.y, aLifetime.z);
         float life = clamp(vLifetime.x * vLifetime.y, 0.0, 1.0);
         float deltaTime = max(0.0,vLifetime.x) - max(0.0,aLifetime.x);
@@ -117,5 +137,6 @@ void main(){
         vVelocity *= mVelocity.xxxy;
         vTransform = aTransform + deltaTime * vVelocity;
         vSize = vec2(aSize.x, mSize * aSize.x);
+#endif
     }
 }

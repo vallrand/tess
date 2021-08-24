@@ -11,10 +11,11 @@ export class Line implements IBatched {
     public vertices: Float32Array = new Float32Array(0)
     public uvs: Float32Array = new Float32Array(0)
     public indices: Uint16Array = new Uint16Array(0)
-    public color: vec4 = vec4(1,1,1,1)
+    public readonly color: vec4 = vec4(1,1,1,1)
     public material: SpriteMaterial
     public path: vec3[]
     public width: number = 1
+    public height: number = 0
     public recalculate(frame: number, camera: ICamera){
         if(this.frame > 0 && this.frame >= camera.frame) return
         this.frame = frame
@@ -25,6 +26,7 @@ export class Line implements IBatched {
         const { forward, normal, tangent } = Line
         vec3.copy(vec3.ZERO, tangent)
         vec3.set(-camera.viewMatrix[2], -camera.viewMatrix[6], -camera.viewMatrix[10], forward)
+        let lengthSquared = 0
         for(let i = 0; i < length; i++){
             const prev = this.path[i]
             const next = this.path[i + 1] || prev
@@ -44,7 +46,9 @@ export class Line implements IBatched {
             this.vertices[i*6+5] = prev[2] + tangent[2]
 
             vec3.copy(normal, tangent)
+            lengthSquared += vec3.distanceSquared(prev, next)
         }
+        this.height = Math.sqrt(lengthSquared) / this.width
     }
     private resize(length: number){
         this.vertices = new Float32Array(length * 2 * 3)

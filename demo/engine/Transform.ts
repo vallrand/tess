@@ -1,4 +1,4 @@
-import { vec2, vec3, quat, mat3x2, mat4 } from './math'
+import { vec2, vec3, quat, mat3x2, mat4, vec4 } from './math'
 import { Application, System, Factory } from './framework'
 
 export class Transform2D {
@@ -39,6 +39,10 @@ export class TransformSystem extends Factory<Transform> implements System {
     public delete(transform: Transform): void {
         super.delete(transform)
         transform.frame = 0
+        transform.parent = null
+        vec3.copy(vec3.ZERO, transform.position)
+        vec3.copy(vec3.ONE, transform.scale)
+        quat.copy(quat.IDENTITY, transform.rotation)
         //TODO detach connected nodes? defer delete untill update loop?
     }
     public update(): void {

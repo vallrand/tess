@@ -11,6 +11,7 @@ import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { ShieldEffect, GridEffect, EffectLibrary } from '../effects'
 import { CubeModule } from './CubeModules'
 import { TurnBasedSystem } from '../Actor'
+import { CubeSkills } from '../skills'
 
 export class PlayerSystem implements System {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
@@ -25,6 +26,7 @@ export class PlayerSystem implements System {
     public readonly grid: GridEffect
     public readonly shield: ShieldEffect
     public readonly effects: EffectLibrary = new EffectLibrary(this.context)
+    public readonly skills = CubeSkills(this.context, this.cube)
 
     constructor(private readonly context: Application){
         this.grid = new GridEffect(this.context, 10)

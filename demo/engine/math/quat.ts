@@ -90,4 +90,22 @@ quat.euler = (x: number, y: number, z: number, order: EulerOrder, out: quat): qu
     return out
 }
 
+quat.rotationTo = (a: vec3, b: vec3, out: quat): quat => {
+    const dot = vec3.dot(a, b)
+    const magnitude = Math.sqrt(vec3.magnitudeSquared(a) * vec3.magnitudeSquared(b))
+    const cosTheta = dot / magnitude
+    if(cosTheta >= 1) return quat.copy(quat.IDENTITY, out)
+    else if(cosTheta <= -1){
+        const x = Math.abs(a[0]), y = Math.abs(a[1]), z = Math.abs(a[2])
+        const orthogonal = x < y ? (x < z ? vec3.AXIS_X : vec3.AXIS_Z) : (y < z ? vec3.AXIS_Y : vec3.AXIS_Z)
+        vec3.cross(a, orthogonal, out as any)
+        vec3.normalize(out as any, out as any)
+        out[3] = 0
+        return out
+    }
+    vec3.cross(a, b, out as any)
+    out[3] = magnitude + dot
+    return quat.normalize(out, out)
+}
+
 quat.IDENTITY = quat()

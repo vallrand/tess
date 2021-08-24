@@ -20,7 +20,6 @@ for(let key in animationData[model]){
         scale?: vec3
         ease: keyof typeof ease
     }[] = animationData[model][key]
-    const duration = frames.reduce((max, frame) => Math.max(max, frame.frame), 0)
     const timelines = []
     for(let i = 0; i < frames.length; i++){
         const { frame, index, position, rotation, scale } = frames[i]
@@ -32,9 +31,9 @@ for(let key in animationData[model]){
     }
     const animation = ArmatureAnimation(timelines.map(({ index, position, scale, rotation }) => ({
         index,
-        position: position.length ? PropertyAnimation<vec3>(position, vec3.lerp, duration) : undefined,
-        scale: scale.length ? PropertyAnimation<vec3>(scale, vec3.lerp, duration) : undefined,
-        rotation: rotation.length ? PropertyAnimation<quat>(rotation, quat.slerp, duration) : undefined
+        position: position.length ? PropertyAnimation<vec3>(position, vec3.lerp, 1) : undefined,
+        scale: scale.length ? PropertyAnimation<vec3>(scale, vec3.lerp, 1) : undefined,
+        rotation: rotation.length ? PropertyAnimation<quat>(rotation, quat.slerp, 1) : undefined
     })).filter(Boolean))
     animations[model] = animations[model] || Object.create(null)
     animations[model][key] = animation

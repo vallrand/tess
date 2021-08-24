@@ -44,7 +44,7 @@ void main(){
     
     float f0 = 2.0*fbm(vec2(0.0, period.y*polar.y), 4, period);
     f0 += smoothstep(1.0, -1.0, polar.x - max(0.0,0.5-f0));
-    float alpha = smoothstep(0.0, 1.0, f0 - polar.x);
+    float alpha = smoothstep(0.0, 1.0, f0 - 1.5*polar.x);
     
-    fragColor = vec4(1,1,1,alpha);
+    fragColor = vec4(1) * alpha;
 }

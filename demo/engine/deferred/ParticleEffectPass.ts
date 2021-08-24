@@ -1,17 +1,18 @@
-import { range, mat3x2, vec4, mat3, vec3 } from '../math'
+import { range, mat3x2, vec4, mat3, vec3, mat4 } from '../math'
 import { Application, System } from '../framework'
-import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import { GL, IVertexAttribute, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { PostEffectPass } from './PostEffectPass'
-import { RenderTexture } from '../Material'
+import { Material, RenderTexture } from '../Material'
 import { GeometryBatch, IBatched, Sprite, Line } from '../batch'
 import { IEffect } from '../pipeline'
 import { CameraSystem } from '../Camera'
+import { Mesh, MeshSystem } from '../Mesh'
 
 export class ParticleEffectPass implements System {
     private static readonly batchSize: number = 1024
     public readonly effects: IEffect[] = []
     private readonly batch: GeometryBatch
-    public readonly list: IBatched[] = []
+    private readonly list: IBatched[] = []
     private readonly program: ShaderProgram
     constructor(private readonly context: Application){
         const gl: WebGL2RenderingContext = context.gl
@@ -24,17 +25,17 @@ export class ParticleEffectPass implements System {
         })
         this.program.uniforms['uSamplers'] = range(maxTextures)
     }
-    public addSprite(): Sprite {
-        const sprite = new Sprite()
-        this.list.push(sprite)
-        return sprite
+    public add(...items: (IBatched | Mesh)[]): void {
+        this.list.push(...items as any)
     }
-    public add(batched: IBatched): void {
-
-    }
-    public remove(batched: IBatched): void {
-        const index = this.list.indexOf(batched)
-        this.list.splice(index, 1)
+    public remove(...items: (IBatched | Mesh)[]): void {
+        for(let i = items.length - 1; i >= 0; i--){
+            const item = items[i]
+            const index = this.list.indexOf(item as any)
+            if(index == -1) continue
+            this.list[index] = this.list[this.list.length - 1]
+            this.list.length--
+        }
     }
     private sort(list: IBatched[], origin: vec3): void {
         for(let length = list.length, j, i = 0; i < length; i++){
@@ -60,21 +61,35 @@ export class ParticleEffectPass implements System {
         let program: ShaderProgram = this.list[this.list.length - 1]?.material.program || this.program
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
-            item.recalculate(this.context.frame, camera)
+            item.recalculate?.(this.context.frame, camera)
             
             const itemProgram = item.material.program || this.program
-            if(itemProgram === program && this.batch.render(item) && i) continue
+            const flush = itemProgram === program && item.vertices && this.batch.render(item)
+            if(flush && i) continue
             if(this.batch.indexOffset){
                 gl.useProgram(program.target)
                 const indexCount = this.batch.indexOffset
                 this.batch.bind()
                 gl.drawElements(GL.TRIANGLES, indexCount, GL.UNSIGNED_SHORT, 0)
             }
-            if(i) i++
+            if(item instanceof Mesh){
+                this.renderMesh(item)
+                continue
+            }
+            if(!flush) i++
             program = itemProgram
         }
         //this.context.get(PostEffectPass).swapRenderTarget()
 
         for(let i = this.effects.length - 1; i >= 0; i--) this.effects[i].apply()
+    }
+    private renderMesh(mesh: Mesh){
+        const { gl } = this.context
+        gl.bindVertexArray(mesh.buffer.vao)
+        gl.useProgram(mesh.material.program.target)
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
+        gl.bindTexture(GL.TEXTURE_2D, mesh.material.diffuse)
+        mesh.material.program.uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
+        gl.drawElements(mesh.buffer.drawMode, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
     }
 }

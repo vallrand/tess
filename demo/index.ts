@@ -17,8 +17,7 @@ import { OverlayPass } from './engine/deferred/OverlayPass'
 
 import { DebugSystem } from './engine/Debug'
 
-
-import { TurnBasedSystem, TerrainSystem, PlayerSystem, OpponentSystem } from './world'
+import { SharedSystem, TurnBasedSystem, TerrainSystem, PlayerSystem, OpponentSystem } from './world'
 import manifest from './manifest.json'
 
 new Application([
@@ -38,6 +37,7 @@ new Application([
     PostEffectPass,
     OverlayPass,
 
+    SharedSystem,
     TurnBasedSystem,
     TerrainSystem,
     PlayerSystem,

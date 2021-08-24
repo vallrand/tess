@@ -17,6 +17,7 @@ uniform CameraUniforms {
 };
 
 out vec2 vUV;
+out vec3 vPosition;
 out vec4 vColor;
 out vec4 vMaterial;
 
@@ -24,5 +25,6 @@ void main(){
     vUV = aUV;
     vColor = aColor;
     vMaterial = aMaterial + vec4(0,0,0,.5);
+    vPosition = aPosition;
     gl_Position = uViewProjectionMatrix * vec4(aPosition, 1.0);
 }

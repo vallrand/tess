@@ -4,6 +4,7 @@ export const shaders = {
     billboard_vert: <string> require('./billboard_vert.glsl'),
     billboard_frag: <string> require('./billboard_frag.glsl'),
     stripe_vert: <string> require('./stripe_vert.glsl'),
-    emitter_vert: <string> require('./emitter_vert.glsl'),
+    particle_vert: <string> require('./particle_vert.glsl'),
     fullscreen_vert: <string> require('./fullscreen_vert.glsl'),
+    geometry_vert: <string> require('./geometry_vert.glsl')
 }

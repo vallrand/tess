@@ -1,13 +1,13 @@
 import { Application } from '../framework'
 import { IEffect } from '../pipeline'
-import { GL, ShaderProgram, IVertexAttribute, UniformSamplerBindings } from '../webgl'
+import { GL, ShaderProgram, IVertexAttribute, UniformSamplerBindings, UniformBlockBindings } from '../webgl'
 import { MeshBuffer } from '../Mesh'
 import { ParticleEmitter } from './ParticleEmitter'
 
 export interface ParticleSystemOptions {
     limit: number
     format: IVertexAttribute[]
-    depthRead: boolean
+    depthTest: number
     depthWrite: boolean
     cull: number
     blend: number
@@ -85,6 +85,10 @@ export class ParticleSystem<T> implements IEffect {
     }
     public apply(): void {
         if(!this.enabled) return
+        if(this.transform) for(let i = this.instances = 0; i < this.emitters.length; i++)
+            this.instances += this.emitters[i].update(this.context, this.instances, this.options)
+        if(!this.instances) return
+
         const { gl } = this.context
         gl.enable(GL.BLEND)
         if(this.options.blend == 1)
@@ -93,7 +97,7 @@ export class ParticleSystem<T> implements IEffect {
             gl.blendFunc(GL.ONE, GL.ONE)
         else gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
 
-        if(this.options.depthRead) gl.enable(GL.DEPTH_TEST)
+        if(this.options.depthTest) gl.enable(GL.DEPTH_TEST)
         else gl.disable(GL.DEPTH_TEST)
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
@@ -104,7 +108,6 @@ export class ParticleSystem<T> implements IEffect {
         gl.bindTexture(GL.TEXTURE_2D, this.curveSampler)
 
         transform: {
-            //TODO run emitters first to determine if we need to run TFB
             if(!this.transform || !this.emitters.length) break transform
             gl.useProgram(this.transform.target)
             gl.bindVertexArray(this.tfbRead[this.index])
@@ -112,15 +115,19 @@ export class ParticleSystem<T> implements IEffect {
             if(this.mesh) gl.enable(GL.RASTERIZER_DISCARD)
             gl.beginTransformFeedback(GL.POINTS)
 
-            for(let i = this.instances = 0; i < this.emitters.length; i++)
-                this.instances += this.emitters[i].render(this.context, this.instances, this.options)
+            for(let i = 0; i < this.emitters.length; i++){
+                const emitter = this.emitters[i]
+                if(!emitter.range[1]) continue
+                emitter.uniform.bind(gl, UniformBlockBindings.EmitterUniforms)
+                gl.drawArrays(GL.POINTS, emitter.range[0], emitter.range[1])
+            }
 
             gl.endTransformFeedback()
             if(this.mesh) gl.disable(GL.RASTERIZER_DISCARD)
             gl.bindTransformFeedback(GL.TRANSFORM_FEEDBACK, null)
         }
         render: {
-            if(!this.program || !this.instances) break render
+            if(!this.program) break render
             gl.useProgram(this.program.target)
             gl.bindVertexArray(this.vao[this.index])
             if(!this.mesh) gl.drawArrays(GL.POINTS, 0, this.instances)

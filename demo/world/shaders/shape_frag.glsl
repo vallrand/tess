@@ -49,5 +49,5 @@ void main(){
     float y0 = mix(pow(1.0-uv.y,8.0), pow(1.0-uv.y,2.0), x1*x1);
     float alpha = smoothstep(0.0, 1.0, x0*y0);
 #endif
-    fragColor = uColor * vec4(1,1,1,alpha);
+    fragColor = uColor * alpha;
 }

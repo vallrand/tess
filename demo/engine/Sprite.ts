@@ -14,11 +14,11 @@ export class SpriteMaterial {
         out[5] = (frame[1] + 0.5) / size[1]
         return out
     }
-    readonly size: vec2 = vec2(0,0)
+    readonly size: vec2 = vec2(1,1)
     readonly uvMatrix: mat3x2 = mat3x2()
     texture: WebGLTexture
     program?: ShaderProgram
-    tint: vec3 = vec3(0, 0, 0)
+    tint: vec3 = vec3(0,0,0)
 }
 
 export class Sprite2D implements IBatched2D {

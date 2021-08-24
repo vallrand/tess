@@ -33,6 +33,7 @@ export function CubicBezier(x1: number, y1: number, x2: number, y2: number, epsi
     return x => fY(fxT(x))
 }
 
+export const stepped: IEase = x => x >= 1 ? 1 : 0
 export const linear: IEase = x => x
 export const bounceIn = (offset: number, fraction: number): IEase => {
     const v0 = 1/(fraction * fraction), v1 = 1/(1-fraction)
