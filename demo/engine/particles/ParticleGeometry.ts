@@ -51,6 +51,7 @@ export interface ParticleOvertimeAttributes {
 }
 
 export class ParticleGeometry {
+    //TODO move elsewhere?
     public static quad(gl: WebGL2RenderingContext): MeshBuffer {
         const vbo = gl.createBuffer()
         gl.bindBuffer(GL.ARRAY_BUFFER, vbo)

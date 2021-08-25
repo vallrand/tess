@@ -3,6 +3,7 @@ import { ICamera } from '../Camera'
 import { IBatched } from './GeometryBatch'
 import { SpriteMaterial } from '../Sprite'
 import { Transform } from '../Transform'
+import { BoundingVolume } from '../FrustumCulling'
 
 export const enum BillboardType {
     None = 0,
@@ -28,6 +29,7 @@ export class Sprite implements IBatched {
     public readonly color: vec4 = vec4(1,1,1,1)
     public material: SpriteMaterial
     public transform: Transform
+    public readonly bounds = new BoundingVolume
     public readonly origin: vec2 = vec2(0.5, 0.5)
 
     public recalculate(frame: number, camera: ICamera){
@@ -35,12 +37,12 @@ export class Sprite implements IBatched {
             this.applyTransform2D(Sprite.quadUVs, this.material.uvMatrix, this.uvs, 0)
 
         if(this.frame > 0 && this.frame >= camera.frame && this.frame >= this.transform.frame) return
-        this.frame = frame
 
         const width = this.material.size[0], height = this.material.size[1]
         const left = -this.origin[0] * width, right = left + width
         const top = -this.origin[1] * height, bottom = top + height
 
+        if(!this.frame || this.frame < this.transform.frame) this.bounds.update(this.transform, Math.max(width, height))
         const transform = this.transform.matrix
         const { normal, tangent } = Sprite
 
@@ -77,6 +79,8 @@ export class Sprite implements IBatched {
         this.vertices[9] = normal[0] * left + tangent[0] * bottom + transform[12]
         this.vertices[10] = normal[1] * left + tangent[1] * bottom + transform[13]
         this.vertices[11] = normal[2] * left + tangent[2] * bottom + transform[14]
+
+        this.frame = frame
     }
     private applyTransform2D(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){
         const a = transform[0], b = transform[1],

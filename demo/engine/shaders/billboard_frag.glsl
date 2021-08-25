@@ -34,7 +34,7 @@ void main(void){
 #ifdef UV_OFFSET
     float offsetScale = UV_OFFSET;
     vec4 color = texture(uSampler, uv - offsetScale * uTime.x + vLife.y);
-    color *= 4.0 * texture(uSampler, 0.5 * uv + 2.0 * offsetScale * uTime.x + vLife.y);
+    color *= 4.0 * texture(uSampler, 2.0 * uv + 2.0 * offsetScale * uTime.x + vLife.y);
 #else
     vec4 color = texture(uSampler, uv);
 #endif
@@ -45,7 +45,7 @@ void main(void){
     color *= 4.*vLife.x*(1.-vLife.x);
 #endif
 #ifdef MASK
-    color.a *= smoothstep(1.0,0.5,length(2.*uv-1.));
+    color *= smoothstep(1.0,0.5,length(2.*uv-1.));
 #endif
 
 #ifdef SOFT

@@ -62,7 +62,7 @@ export class CubeTileMap {
             gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT1, GL.TEXTURE_2D, material.normal, 0)
             gl.drawBuffers([ GL.COLOR_ATTACHMENT0, GL.COLOR_ATTACHMENT1 ])
             this.materials[material.index] = { size: sourceSize, fbo }
-            sprite.material.texture = material.diffuse
+            sprite.material.diffuse = material.diffuse
             vec2.set(i * tileSize, 0, sprite.transform.position)
     
             sprite.transform.recalculate(0)
@@ -71,7 +71,7 @@ export class CubeTileMap {
             this.batch.render(sprite)
 
             const tileMaterial = this.tiles[material.index] = new SpriteMaterial()
-            tileMaterial.texture = tileMap.target
+            tileMaterial.diffuse = tileMap.target
             vec2.set(tileSize, tileSize, tileMaterial.size)
             SpriteMaterial.calculateUVMatrix(
                 aabb2(i * tileSize,0,(i+1)*tileSize,tileSize),

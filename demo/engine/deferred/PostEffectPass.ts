@@ -4,6 +4,7 @@ import { Application, System } from '../framework'
 import { MeshSystem, MeshBuffer } from '../Mesh'
 import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../webgl'
 import { BloomEffect } from './BloomEffect'
+import { DistortionEffect } from './DistortionEffect'
 import { DeferredGeometryPass } from './GeometryPass'
 
 export interface PostEffect {
@@ -20,6 +21,7 @@ export class PostEffectPass implements System {
 
     private readonly program: ShaderProgram
     private readonly bloom: BloomEffect
+    private readonly distortion: DistortionEffect
     public readonly fog = {
         color: vec4(0.2,0.2,0.2,0),
         range: [5,30]
@@ -42,7 +44,9 @@ export class PostEffectPass implements System {
             LINEAR_FOG: true
         })
         this.program.uniforms['uBloomMap'] = UniformSamplerBindings.uNormalMap
+        this.program.uniforms['uDisplacementMap'] = UniformSamplerBindings.uAttributes
         this.bloom = new BloomEffect(this.context)
+        this.distortion = new DistortionEffect(this.context)
     }
     public swapRenderTarget(): void {
         const gl = this.context.gl
@@ -54,6 +58,8 @@ export class PostEffectPass implements System {
     }
     public update(): void {
         const gl: WebGL2RenderingContext = this.context.gl
+        this.distortion.apply(this)
+        
         gl.disable(GL.DEPTH_TEST)
         gl.disable(GL.BLEND)
         gl.disable(GL.CULL_FACE)
@@ -69,6 +75,9 @@ export class PostEffectPass implements System {
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
         gl.bindTexture(GL.TEXTURE_2D, this.bloom.texture)
+
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAttributes)
+        gl.bindTexture(GL.TEXTURE_2D, this.distortion.texture)
 
         this.program.uniforms['uFogColor'] = this.fog.color
         this.program.uniforms['uFogRange'] = this.fog.range

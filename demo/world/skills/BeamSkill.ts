@@ -9,7 +9,7 @@ import { shaders } from '../../engine/shaders'
 import { TransformSystem } from '../../engine/Transform'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { SpriteMaterial } from '../../engine/Sprite'
-import { ParticleEmitter } from '../../engine/particles'
+import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { BatchMesh, BillboardType, Line, Sprite } from '../../engine/batch'
 import { animations } from '../animations'
 import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../animations/timeline'
@@ -45,6 +45,10 @@ const timelineTracks = {
         { frame: 1.2, value: [1,1,1,1], ease: ease.quadOut },
         { frame: 1.4, value: [1,1,1,0], ease: ease.quadIn }
     ], vec4.lerp),
+    'cone.material.domain': PropertyAnimation([
+        { frame: 0.4, value: vec3.ZERO },
+        { frame: 1.5, value: [0xFF,0,0], ease: ease.quartIn }
+    ], vec3.lerp),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [2,2,2] },
         { frame: 1.1, value: [4,4,4], ease: ease.sineOut },
@@ -56,11 +60,11 @@ const timelineTracks = {
         { frame: 1.4, value: [0.5,1,1,0], ease: ease.sineIn }
     ], vec4.lerp),
     'flash.transform.scale': PropertyAnimation([
-            { frame: 1.3, value: [0,0,0] },
-            { frame: 1.8, value: [5,5,5], ease: ease.cubicOut }
-        ], vec3.lerp),
+        { frame: 1.3, value: [0,0,0] },
+        { frame: 1.8, value: [5,5,5], ease: ease.cubicOut }
+    ], vec3.lerp),
     'flash.color': PropertyAnimation([
-        { frame: 1.3, value: [0.7,1,1,0.1] },
+        { frame: 1.3, value: [0.7,1,1,0] },
         { frame: 1.8, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
     'beam.width': PropertyAnimation([
@@ -78,6 +82,7 @@ export class BeamSkill {
     private readonly beam: Line
     private energy: ParticleEmitter
     private sparks: ParticleEmitter
+    private smoke: ParticleEmitter
     private light: PointLight
     private readonly center: Sprite
     private readonly flash: Sprite
@@ -94,24 +99,32 @@ export class BeamSkill {
         this.cone = new BatchMesh(cylinder, true)
         this.cone.material = new SpriteMaterial()
         this.cone.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/converge_frag.glsl'))
-        this.cone.material.texture = SharedSystem.textures.directionalNoise
+        this.cone.material.diffuse = SharedSystem.textures.directionalNoise
+
+        const gradient = GradientRamp(this.context.gl, [
+            0x00000000,0x0f112905,0x1b20400a,0x2b345814,0x4155771e,0x597c9628,0x6c9eae23,0x78b8bf19,0xa7d9da0a,0xf0fafa05
+        ], 1)
 
         this.center = new Sprite()
         this.center.billboard = BillboardType.Sphere
         this.center.material = new SpriteMaterial()
-        this.center.material.program = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
+        this.center.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
+        vec3.set(8, 4, 0, this.center.material.domain)
+        this.center.material.diffuse = gradient
 
         this.beam = new Line()
         this.beam.path = [vec3(), vec3()]
         this.beam.material = new SpriteMaterial()
-        this.beam.material.program = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
+        this.beam.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
+        vec3.set(4, 8, 0, this.beam.material.domain)
+        this.beam.material.diffuse = gradient
 
         const ringMaterial = new SpriteMaterial()
-        ringMaterial.texture = SharedSystem.textures.ring
+        ringMaterial.diffuse = SharedSystem.textures.ring
         vec2.set(2, 2, ringMaterial.size)
 
         const raysMaterial = new SpriteMaterial()
-        raysMaterial.texture = SharedSystem.textures.rays
+        raysMaterial.diffuse = SharedSystem.textures.rays
         vec2.set(2, 2, raysMaterial.size)
 
         this.ring = new Sprite()
@@ -121,6 +134,14 @@ export class BeamSkill {
         this.flash = new Sprite()
         this.flash.billboard = BillboardType.Sphere
         this.flash.material = raysMaterial
+
+        this.smoke = SharedSystem.particles.smoke.add({
+            uOrigin: vec3.ZERO,
+            uLifespan: [1.6,2,-1,0],
+            uRotation: [0,2*Math.PI],
+            uGravity: [0,3.2,0],
+            uSize: [1,3]
+        })
     }
     public *activate(origin: vec3, target: vec3): Generator<ActionSignal> {
         const particleEffects = this.context.get(ParticleEffectPass)
@@ -180,7 +201,8 @@ export class BeamSkill {
                 { frame: 1.6, value: target, ease: ease.cubicOut }
             ], vec3.lerp),
             'energy': EmitterTrigger({ frame: 0, value: 128, origin, target: origin }) as any,
-            'sparks': EmitterTrigger({ frame: 1.2, value: 32, origin, target: vec3.add(origin, [0,-0.4,0], vec3()) }) as any
+            'sparks': EmitterTrigger({ frame: 1.2, value: 32, origin, target: vec3.add(origin, [0,-0.4,0], vec3()) }) as any,
+            'smoke': EmitterTrigger({ frame: 2.5, value: 8, origin }) as any
         })
 
         for(let duration = 3, startTime = this.context.currentTime; true;){

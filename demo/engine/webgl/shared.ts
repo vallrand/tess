@@ -52,7 +52,8 @@ export const VertexDataFormat = {
         { name: 'position', size: 3, type: GL.FLOAT, normalized: false, stride: 24, offset: 0 },
         { name: 'uv', size: 2, type: GL.UNSIGNED_SHORT, normalized: true, stride: 24, offset: 12 },
         { name: 'color', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 24, offset: 16 },
-        { name: 'material', size: 4, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 20 }
+        { name: 'domain', size: 3, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 20 },
+        { name: 'material', size: 1, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 23 }
     ],
     Particle: <IVertexAttribute[]> [
         { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 0 },

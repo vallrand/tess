@@ -24,5 +24,23 @@ export function TextureLibrary(context: Application){
             require('../shaders/directional_noise_frag.glsl'), {  }), {  }, 0
     ).target
 
-    return { ring, rays, directionalNoise, grey: materials.white.diffuse }
+    const cloudNoise = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+
+        }), {
+
+        }, 0
+    ).target
+
+    const sineNoise = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+            SINE: true
+        }), {
+
+        }, 0
+    ).target
+
+    return { ring, rays, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
 }

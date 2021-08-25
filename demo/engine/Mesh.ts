@@ -4,7 +4,7 @@ import { Application, IProgressHandler, loadFile, System, Factory } from './fram
 
 import { Transform } from './Transform'
 import { MaterialSystem, Material } from './Material'
-import { BoundingVolume } from './FrustumCulling'
+import { BoundingVolume, calculateBoundingRadius } from './FrustumCulling'
 
 interface IBufferRange {
     buffer: number
@@ -207,13 +207,4 @@ export class MeshSystem extends Factory<Mesh> implements System {
         mesh.material = this.context.get(MaterialSystem).materials[model.texture]
         return mesh
     }
-}
-
-function calculateBoundingRadius(vertices: Float32Array, stride: number, offset: number): number {
-    let squareRadius = 0
-    for(let i = 0; i < vertices.length; i+=stride){
-        const x = vertices[i + offset + 0], y = vertices[i + offset + 1], z = vertices[i + offset + 2]
-        squareRadius = Math.max(squareRadius, x*x+y*y+z*z)
-    }
-    return Math.sqrt(squareRadius)
 }

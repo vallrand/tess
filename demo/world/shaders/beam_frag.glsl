@@ -3,12 +3,14 @@ precision highp float;
 in vec2 vUV;
 in vec3 vPosition;
 in vec4 vColor;
-in vec4 vMaterial;
+in vec3 vDomain;
+in float vMaterial;
 out vec4 fragColor;
 
 uniform GlobalUniforms {
     vec4 uTime;
 };
+uniform sampler2D uSampler;
 
 #define TAU 6.283185307179586
 float hash13(in vec3 src) {
@@ -46,12 +48,12 @@ float noise3D(in vec3 uv, in vec3 period){
                    mix( hash13(vec3(i0.x,i1.y,i1.z)), 
                         hash13(vec3(i1.x,i1.y,i1.z)),f.x),f.y),f.z);
 }
-float fbm(in vec2 uv, in int octaves, in float seed){
+float fbm(in vec3 uv, in int octaves){
     float total = 0.0, amplitude = 1.0;
     const mat2 r = mat2(1.6, 1.2, -1.2, 1.6);
     for(int i = 0; i < octaves; i++){
-        total += .5*amplitude*noise3D(vec3(uv,seed));
-        uv = r * uv + 100.0;
+        total += .5*amplitude*noise3D(uv);
+        uv.xy = r * uv.xy + 100.0;
         amplitude *= 0.5;
     }
     return total;
@@ -68,27 +70,20 @@ float fbm(in vec3 uv, in int octaves, in vec3 period){
 }
 
 void main(){
-#ifndef RADIAL
     vec2 uv = 2.*vUV-1.;
-    float fade = smoothstep(1.0, 0.8, abs(uv.x));
-    uv.x *= 4.0;
     float time = 4.0*uTime.x;
-    float f0 = 1.-2.*fbm(vec2(2.0,8.0) * uv + vec2(time,0), 4, -.5*time);
-    f0 *= 1.-2.*noise3D(vec3(uv,f0)*vec3(4,2,3)+vec3(time,0,time));
+#ifndef RADIAL
+    float fade = smoothstep(1.0, 0.8, abs(uv.x));
+    float f0 = 1.-2.*fbm(vec3(vDomain.xy * uv + vec2(time,0), -.5*time), 4);
+    f0 *= 1.-2.*noise3D(vec3(vDomain.xy * uv,f0)*vec3(2,0.25,3)+vec3(time,0,time));
     float d0 = abs(uv.y+0.5*f0);
 #else
-    vec2 uv = 2.*vUV-1.;
     float fade = 1.0;
     uv = vec2(atan(uv.y,uv.x)/TAU+.5, length(uv));
-    float time = 4.0*uTime.x;
-    float f0 = 1.-2.*fbm(vec3(8.0,4.0,0.0) * uv.xyy + vec3(0,-time,-.5*time), 4, vec3(8.0,4.0,10));
+    float f0 = 1.-2.*fbm(vec3(vDomain.xy * uv.xy + vec2(0,-time),-.5*time), 4, vec3(vDomain.xy,10));
     float d0 = abs(uv.y+0.5*f0)-0.5*smoothstep(0.1,.0,uv.y);
 #endif
 
-    vec3 color = vec3(0);
-    color = mix(color, vec3(0.1,0.1,0.4), smoothstep(0.8,0.0,d0));
-    color = mix(color, vec3(0.4,0.5,0.6), smoothstep(0.6,0.0,d0));
-    color = mix(color, vec3(0.5,0.8,0.8), smoothstep(0.4,0.0,d0));
-    color = mix(color, vec3(1.0,1.0,1.0), smoothstep(0.1,0.0,d0));
-    fragColor = vColor * vec4(color * fade, 0.5*smoothstep(0.8,1.0,color.b));
+    vec4 color = texture(uSampler, vec2(smoothstep(1.0,-0.25,d0), 0.0));
+    fragColor = vColor * color * fade;
 }

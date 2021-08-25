@@ -5,14 +5,15 @@ precision highp int;
 in vec2 vUV;
 in vec3 vPosition;
 in vec4 vColor;
-in vec4 vMaterial;
+in vec3 vDomain;
+in float vMaterial;
 
 out vec4 fragColor;
 
 uniform sampler2D uSamplers[MAX_TEXTURE_UNITS];
 
 void main(){
-    int tex = int(vMaterial.a);
+    int tex = int(vMaterial);
     vec4 color = vec4(0);
     switch(tex){
 #FOR        case #i:color=texture(uSamplers[#i],vUV);break;

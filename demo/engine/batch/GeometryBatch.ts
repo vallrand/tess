@@ -2,6 +2,7 @@ import { vec3, vec4 } from '../math'
 import { GL, ShaderProgram, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
 import { ICamera } from '../Camera'
+import { BoundingVolume } from '../FrustumCulling'
 
 export const uint8x4 = (r: number, g: number, b: number, a: number): number =>
 (0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | (0xFF000000 & a << 24)
@@ -24,10 +25,11 @@ export interface IBatched {
     colors?: Uint32Array
     material: {
         program?: ShaderProgram
-        texture: WebGLTexture
-        tint: vec3
+        diffuse: WebGLTexture
+        domain: vec3
     }
     recalculate(frame: number, camera: ICamera): void
+    readonly bounds: BoundingVolume
 }
 
 export class GeometryBatch extends VertexDataBatch {
@@ -42,7 +44,7 @@ export class GeometryBatch extends VertexDataBatch {
         const { vertices, uvs, indices, colors, material } = geometry
         const indexCount = indices.length, vertexCount = vertices.length >>> 1
         if(this.indexOffset == 0) this.textures.length = 0
-        let textureIndex = this.textures.indexOf(material.texture)
+        let textureIndex = this.textures.indexOf(material.diffuse)
 
         if(
             (textureIndex == -1 && this.textures.length >= this.maxTextures) ||
@@ -50,10 +52,10 @@ export class GeometryBatch extends VertexDataBatch {
             (this.vertexOffset + vertexCount > this.maxVertices)
         ) return false
 
-        if(!geometry.color[3]) return true
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
-        if(textureIndex == -1) textureIndex = this.textures.push(material.texture) - 1
-        const material4 = uint8x4(material.tint[0], material.tint[1], material.tint[2], textureIndex)
+        if(!color) return true
+        if(textureIndex == -1) textureIndex = this.textures.push(material.diffuse) - 1
+        const material4 = uint8x4(material.domain[0], material.domain[1], material.domain[2], textureIndex)
         
         if(!this.fixedIndices) for(let i = 0; i < indexCount; i++)
             this.indexArray[this.indexOffset + i] = indices[i] + this.vertexOffset

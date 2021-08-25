@@ -4,9 +4,9 @@ import { SpriteMaterial } from '../Sprite'
 import { Transform } from '../Transform'
 import { IBatched } from './GeometryBatch'
 import { IVertexAttribute } from '../webgl'
+import { BoundingVolume, calculateBoundingRadius } from '../FrustumCulling'
 
 export class BatchMesh implements IBatched {
-    private static readonly position: vec3 = vec3()
     public index: number = -1
     public frame: number = 0
     public order: number = 0
@@ -17,6 +17,8 @@ export class BatchMesh implements IBatched {
     public readonly color: vec4 = vec4(1,1,1,1)
     public material: SpriteMaterial
     public transform: Transform
+    private readonly boundingRadius: number
+    public readonly bounds = new BoundingVolume
 
     constructor(geometry: {
         format: IVertexAttribute[]
@@ -36,6 +38,11 @@ export class BatchMesh implements IBatched {
         const length = geometry.vertexArray.byteLength / geometry.format[1].stride
         this.vertices = new Float32Array(length * 3)
         this.uvs = new Float32Array(length * 2)
+        this.boundingRadius = calculateBoundingRadius(
+            geometry.vertexArray,
+            geometry.format[1].stride / Float32Array.BYTES_PER_ELEMENT,
+            geometry.format[1].offset / Float32Array.BYTES_PER_ELEMENT
+        )
     }
 
     public recalculate(frame: number, camera: ICamera){
@@ -43,29 +50,19 @@ export class BatchMesh implements IBatched {
         this.frame = frame
 
         const length = this.vertices.length / 3
-        const position = BatchMesh.position
-        for(let i = length - 1; i >= 0; i--){
-            position[0] = this._vertices[i * 8 + 0]
-            position[1] = this._vertices[i * 8 + 1]
-            position[2] = this._vertices[i * 8 + 2]
-            mat4.transform(position, this.transform.matrix, position as any)
-            this.vertices[i * 3 + 0] = position[0]
-            this.vertices[i * 3 + 1] = position[1]
-            this.vertices[i * 3 + 2] = position[2]
-
-            this.uvs[i * 2 + 0] = this._vertices[i * 8 + 6]
-            this.uvs[i * 2 + 1] = this._vertices[i * 8 + 7]
-        }
-    }
-    public applyTransform(matrix: mat4){
-        const length = this.vertices.length / 3
+        const matrix = this.transform.matrix
         for(let i = length - 1; i >= 0; i--){
             const x = this._vertices[i * 8 + 0]
             const y = this._vertices[i * 8 + 1]
             const z = this._vertices[i * 8 + 2]
-            this._vertices[i * 8 + 0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]
-            this._vertices[i * 8 + 1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]
-            this._vertices[i * 8 + 2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]
+            this.vertices[i * 3 + 0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]
+            this.vertices[i * 3 + 1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]
+            this.vertices[i * 3 + 2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]
+
+            this.uvs[i * 2 + 0] = this._vertices[i * 8 + 6]
+            this.uvs[i * 2 + 1] = this._vertices[i * 8 + 7]
         }
+
+        this.bounds.update(this.transform, this.boundingRadius)
     }
 }

@@ -6,5 +6,6 @@ export const shaders = {
     stripe_vert: <string> require('./stripe_vert.glsl'),
     particle_vert: <string> require('./particle_vert.glsl'),
     fullscreen_vert: <string> require('./fullscreen_vert.glsl'),
-    geometry_vert: <string> require('./geometry_vert.glsl')
+    geometry_vert: <string> require('./geometry_vert.glsl'),
+    noise_frag: <string> require('./noise_frag.glsl')
 }

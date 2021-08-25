@@ -62,7 +62,8 @@ export class ParticleEffectPass implements System {
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
             item.recalculate?.(this.context.frame, camera)
-            
+            if(!camera.culling.cull(item.bounds)) continue
+
             const itemProgram = item.material.program || this.program
             const flush = itemProgram === program && item.vertices && this.batch.render(item)
             if(flush && i) continue

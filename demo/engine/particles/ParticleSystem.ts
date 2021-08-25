@@ -145,7 +145,8 @@ export class ParticleSystem<T> implements IEffect {
     public remove(emitter: ParticleEmitter): void {
         const index = this.emitters.indexOf(emitter)
         if(!~index) return
-        this.emitters.splice(index, 1)
+        this.emitters[index] = this.emitters[this.emitters.length - 1]
+        this.emitters.length--
         this.pool.push(emitter)
     }
 }

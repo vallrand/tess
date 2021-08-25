@@ -16,9 +16,9 @@ export class SpriteMaterial {
     }
     readonly size: vec2 = vec2(1,1)
     readonly uvMatrix: mat3x2 = mat3x2()
-    texture: WebGLTexture
+    diffuse: WebGLTexture
     program?: ShaderProgram
-    tint: vec3 = vec3(0,0,0)
+    domain: vec3 = vec3(0,0,0)
 }
 
 export class Sprite2D implements IBatched2D {
@@ -94,7 +94,7 @@ export class SpriteSystem extends Factory<Sprite2D> implements System {
         const material = new SpriteMaterial()
         SpriteMaterial.calculateUVMatrix(frame, size, material.uvMatrix)
         vec2.set(frame[2] - frame[0], frame[3] - frame[1], material.size)
-        material.texture = texture
+        material.diffuse = texture
         return material
     }
 }

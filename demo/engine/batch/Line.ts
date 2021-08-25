@@ -2,6 +2,7 @@ import { vec3, vec4, mat4 } from '../math'
 import { ICamera } from '../Camera'
 import { IBatched } from './GeometryBatch'
 import { SpriteMaterial } from '../Sprite'
+import { BoundingVolume, calculateBoundingRadius } from '../FrustumCulling'
 
 export class Line implements IBatched {
     private static readonly forward: vec3 = vec3()
@@ -13,6 +14,7 @@ export class Line implements IBatched {
     public indices: Uint16Array = new Uint16Array(0)
     public readonly color: vec4 = vec4(1,1,1,1)
     public material: SpriteMaterial
+    public readonly bounds = new BoundingVolume
     public path: vec3[]
     public width: number = 1
     public height: number = 0
@@ -49,6 +51,7 @@ export class Line implements IBatched {
             lengthSquared += vec3.distanceSquared(prev, next)
         }
         this.height = Math.sqrt(lengthSquared) / this.width
+        this.bounds.fromVertices(this.vertices, 3, 0, frame)
     }
     private resize(length: number){
         this.vertices = new Float32Array(length * 2 * 3)

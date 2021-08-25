@@ -7,10 +7,12 @@ import { KeyboardSystem } from '../../engine/Keyboard'
 import { PointLightPass, PointLight } from '../../engine/deferred/PointLightPass'
 import { TerrainSystem, TerrainChunk } from '../terrain'
 import { animations } from '../animations/animations'
+import { EmitterTrigger } from '../animations/timeline'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { IActor, TurnBasedSystem, ActionSignal } from '../Actor'
 import { PlayerSystem } from './Player'
 import { cubeModules, CubeModule } from './CubeModules'
+import { SharedSystem } from '../shared'
 
 
 export interface CubeState {
@@ -63,13 +65,16 @@ export class Cube implements IActor {
         light.intensity = 1.0
         vec3.set(1,1,0.8,light.color)
 
-        this.dust = this.context.get(PlayerSystem).effects.dust.add({
-            uOrigin: [0,0,0,0],
+        this.dust = SharedSystem.particles.dust.add({
+            uOrigin: [0,0,0],
             uLifespan: [0.8,1.2,-0.16,0],
             uSize: [2,4],
             uRadius: [0.2,0.4],
             uForce: [4,8],
-            uTarget: [0,-0.1,0]
+            uTarget: [0,-0.1,0],
+            uGravity: [0.0, 9.8, 0.0],
+            uRotation: [0, 2 * Math.PI],
+            uAngular: [-Math.PI,Math.PI,0,0],
         })
     }
     installModule(side: number, direction: Direction, type: CubeModule){
@@ -229,6 +234,9 @@ export class Cube implements IActor {
         quat.transform(pivot, quat.conjugate(nextRotation, quat()), pivot)
         
         return function*(this: Cube){
+            const dustTrigger = EmitterTrigger({
+                frame: 0.36, value: 16, origin: nextPosition, target: vec3.add(nextPosition, [0,-0.2,0], vec3())
+            })
             const movementEase = ease.bounceIn(0.064, 0.8)
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
@@ -246,21 +254,11 @@ export class Cube implements IActor {
                 vec3.add(pivotOffset, rootNode.position, rootNode.position)
                 rootNode.position[1] += mesh.transform.position[1] - nextPosition[1]
 
-                this.dustTrigger(startTime, 0.4, nextPosition)
+                dustTrigger(elapsedTime, this.context.deltaTime, this.dust)
 
                 if(fraction >= 1) break
                 yield ActionSignal.WaitNextFrame
             }
         }.call(this)
-    }
-    private dustTrigger(startTime: number, threshold: number, position: vec3){
-        const elapsedTime = this.context.currentTime - startTime
-        const prevTime = elapsedTime - this.context.deltaTime
-        if(!(elapsedTime >= threshold && prevTime < threshold)) return
-        vec3.copy(position, this.dust.uniform.uniforms['uOrigin'] as any)
-        vec3.copy(position, this.dust.uniform.uniforms['uTarget'] as any)
-        this.dust.uniform.uniforms['uTarget'][1] -= 0.1
-        this.dust.uniform.frame = 0
-        this.dust.count += 16
     }
 }

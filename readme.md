@@ -60,6 +60,7 @@ https://www.shadertoy.com/view/tddXWH
 https://www.shadertoy.com/view/4dVBzz
 https://www.gamedev.net/forums/topic/642794-tileable-fbm-noise/
 https://www.shadertoy.com/view/4lfXDM
+foamy water https://www.shadertoy.com/view/llcXW7
 
 transparency sorting https://csawesome.runestone.academy/runestone/books/published/learnwebgl2/12_advanced_rendering/04_transparency.html
 hashes https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a

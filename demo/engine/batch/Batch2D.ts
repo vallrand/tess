@@ -9,7 +9,7 @@ export interface IBatched2D {
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
-    material: { texture: WebGLTexture }
+    material: { diffuse: WebGLTexture }
 }
 export class Batch2D extends VertexDataBatch {
     public static quadIndices = [0,1,2,0,2,3]
@@ -23,7 +23,7 @@ export class Batch2D extends VertexDataBatch {
         const { vertices, uvs, indices, colors, material } = geometry
         const indexCount = indices.length, vertexCount = vertices.length >>> 1
         if(this.indexOffset == 0) this.textures.length = 0
-        let textureIndex = this.textures.indexOf(material.texture)
+        let textureIndex = this.textures.indexOf(material.diffuse)
 
         if(
             (textureIndex == -1 && this.textures.length >= this.maxTextures) ||
@@ -31,7 +31,7 @@ export class Batch2D extends VertexDataBatch {
             (this.vertexOffset + vertexCount > this.maxVertices)
         ) return false
 
-        if(textureIndex == -1) textureIndex = this.textures.push(material.texture) - 1
+        if(textureIndex == -1) textureIndex = this.textures.push(material.diffuse) - 1
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
         const material4 = textureIndex << 24
         

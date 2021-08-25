@@ -11,12 +11,12 @@ export interface SystemType<T extends System> {
 
 export class Application {
     private static readonly timestep = 2 * 1000/60
-    private static timeScale = 1
     private readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     public readonly gl: WebGL2RenderingContext
     private readonly systems: System[] = []
 
     private previousTimestamp: number = 0
+    private timeScale: number = 1
     frame: number = 0
     currentTime: number = 0
     deltaTime: number
@@ -36,7 +36,7 @@ export class Application {
     }
     public get<T extends System>(type: SystemType<T>): T { return this.systems[type.index] as T }
     update = (currentTime: number) => {
-        this.deltaTime = Application.timeScale * 1e-3 * Math.min(Application.timestep, currentTime - this.previousTimestamp)
+        this.deltaTime = this.timeScale * 1e-3 * Math.min(Application.timestep, currentTime - this.previousTimestamp)
         this.previousTimestamp = currentTime
         this.currentTime += this.deltaTime
         this.frame++

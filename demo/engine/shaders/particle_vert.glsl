@@ -36,6 +36,9 @@ uniform EmitterUniforms {
 #else
     vec2 uRotation;
 #endif
+#ifdef ANGULAR
+    vec4 uAngular;
+#endif
     int uLastID;
 };
 
@@ -95,10 +98,14 @@ void main(){
         vec3 direction = normalize(vTransform.xyz - uTarget);
         vVelocity.xyz = normal * mix(uForce.x, uForce.y, hash11(seed+=1U));
 #endif
-        vVelocity.w = 0.0;
-
         vAcceleration.xyz = uGravity;
+#ifdef ANGULAR
+        vVelocity.w = mix(uAngular.x,uAngular.y,hash11(seed+=1U));
+        vAcceleration.w = mix(uAngular.z,uAngular.w,hash11(seed+=1U));
+#else
+        vVelocity.w = 0.0;
         vAcceleration.w = 0.0;
+#endif
 
         vSize.x = mix(uSize.x, uSize.y, hash11(seed+=1U));
         vSize.y = 0.0;

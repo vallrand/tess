@@ -2,6 +2,17 @@ import { vec3, mat4 } from './math'
 import { PerspectiveCamera } from './Camera'
 import { Transform } from './Transform'
 
+export function calculateBoundingRadius(vertices: Float32Array, stride: number, offset: number, center: vec3 = vec3.ZERO): number {
+    let squareRadius = 0
+    for(let i = 0; i < vertices.length; i+=stride){
+        const x = vertices[i + offset + 0] - center[0]
+        const y = vertices[i + offset + 1] - center[1]
+        const z = vertices[i + offset + 2] - center[2]
+        squareRadius = Math.max(squareRadius, x*x+y*y+z*z)
+    }
+    return Math.sqrt(squareRadius)
+}
+
 export class BoundingVolume {
     public frame: number = -1
     public readonly position: vec3 = vec3(0,0,0)
@@ -14,6 +25,17 @@ export class BoundingVolume {
         vec3.set(transform.matrix[12], transform.matrix[13], transform.matrix[14], this.position)
         this.radius = radius * Math.max(this.scale[0], this.scale[1], this.scale[2])
         this.frame = transform.frame
+    }
+    public fromVertices(vertices: Float32Array, stride: number, offset: number, frame: number){
+        vec3.copy(vec3.ZERO, this.position)
+        for(let i = 0; i < vertices.length; i+=stride){
+            this.position[0] += vertices[i + offset + 0]
+            this.position[1] += vertices[i + offset + 1]
+            this.position[2] += vertices[i + offset + 2]
+        }
+        vec3.scale(this.position, stride / vertices.length, this.position)
+        this.radius = calculateBoundingRadius(vertices, stride, offset, this.position)
+        this.frame = frame
     }
 }
 

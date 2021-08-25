@@ -1,4 +1,4 @@
-import { Application, Zero } from '../../engine/framework'
+import { Application, One, Zero } from '../../engine/framework'
 import { vec2, vec3, vec4, ease } from '../../engine/math'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
@@ -48,8 +48,7 @@ export function ParticleLibrary(context: Application){
             size1: x => 1 - ease.quartIn(x),
             linear0: x => 1 - 0.5 * ease.cubicIn(x),
             linear1: x => 1 - 0.5 * ease.cubicIn(x),
-            rotational0: Zero,
-            rotational1: Zero,
+            rotational0: Zero, rotational1: Zero,
             radial0: x => 4 * ease.sineIn(x),
             radial1: x => 4 * ease.sineIn(x),
         })
@@ -88,6 +87,70 @@ export function ParticleLibrary(context: Application){
         0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
     ], 4)
 
-    context.get(ParticleEffectPass).effects.push(energy, sparks)
-    return { energy, sparks }
+    const dust = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uGravity: vec3
+        uRotation: vec2
+        uAngular: vec4
+        uSize: vec2
+        uRadius: vec2
+        uForce: vec2
+        uTarget: vec3
+    }>(
+        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
+            SPHERICAL: true, SOFT: false, MASK: true, GRADIENT: true, UV_OFFSET: 0.2
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            CIRCLE: true, TARGETED: true, LUT: true, ANGULAR: true
+        })
+    )
+    dust.diffuse = SharedSystem.textures.cloudNoise
+    dust.gradientRamp = GradientRamp(context.gl, [
+        0xBFB9AEFF, 0x706A5FFF, 0x1917125f, 0x00000000,
+        0x1917127f, 0x00000000, 0x00000000, 0x00000000
+    ], 2)
+    dust.curveSampler = AttributeCurveSampler(context.gl, 32, 
+        Object.values(<ParticleOvertimeAttributes> {
+            size0: ease.cubicOut, size1: ease.cubicOut,
+            linear0: x => 1 - 0.2 * ease.linear(x),
+            linear1: x => 1 - 0.2 * ease.linear(x),
+            rotational0: x => 1 - 0.2 * ease.linear(x),
+            rotational1: x => 1 - 0.2 * ease.linear(x),
+            radial0: Zero, radial1: Zero,
+        })
+    )
+
+    const smoke = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uGravity: vec3
+        uRotation: vec2
+        uSize: vec2
+    }>(
+        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/smoke_frag.glsl'), {
+            SPHERICAL: true, MASK: true, GRADIENT: true
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, { LUT: true })
+    )
+    smoke.diffuse = SharedSystem.textures.sineNoise
+    smoke.gradientRamp = GradientRamp(context.gl, [
+        0x0A0A1AAF, 0x0E0E107F, 0x1A1A1F3F, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, 0x00000000
+    ], 2)
+    smoke.curveSampler = AttributeCurveSampler(context.gl, 32, 
+        Object.values(<ParticleOvertimeAttributes> {
+            size0: ease.linear, size1: ease.quadOut,
+            linear0: x => 0.98, linear1: x => 0.98,
+            rotational0: Zero, rotational1: Zero,
+            radial0: Zero, radial1: Zero,
+        })
+    )
+
+    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks)
+    return { dust, smoke, energy, sparks }
 }
