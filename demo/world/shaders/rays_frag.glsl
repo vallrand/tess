@@ -42,9 +42,15 @@ void main(){
     vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
     vec2 period = vec2(1000,36);
     
+#ifdef RING
+    float f0 = fbm(vec2(0.0, period.y*polar.y), 4, period);
+    float y0 = mix(0.5,0.75,f0);
+    float alpha = smoothstep(1.0-y0,0.0,abs(polar.x-y0)) * f0 * 1.5;
+#else
     float f0 = 2.0*fbm(vec2(0.0, period.y*polar.y), 4, period);
     f0 += smoothstep(1.0, -1.0, polar.x - max(0.0,0.5-f0));
     float alpha = smoothstep(0.0, 1.0, f0 - 1.5*polar.x);
+#endif
     
     fragColor = vec4(1) * alpha;
 }

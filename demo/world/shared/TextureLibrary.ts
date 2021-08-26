@@ -18,6 +18,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/rays_frag.glsl'), {  }), {  }, 0
     ).target
 
+    const raysRing = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { RING: true }), {  }, 0
+    ).target
+
     const directionalNoise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -42,5 +48,5 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
-    return { ring, rays, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
+    return { ring, rays, raysRing, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
 }

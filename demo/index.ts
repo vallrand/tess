@@ -6,7 +6,6 @@ import { MaterialSystem } from './engine/Material'
 import { MeshSystem } from './engine/Mesh'
 import { SpriteSystem } from './engine/Sprite'
 import { KeyboardSystem } from './engine/Keyboard'
-import { AnimationSystem } from './engine/Animation'
 import { DeferredGeometryPass } from './engine/deferred/GeometryPass'
 import { DecalPass } from './engine/deferred/DecalPass'
 import { PointLightPass } from './engine/deferred/PointLightPass'
@@ -17,12 +16,11 @@ import { OverlayPass } from './engine/deferred/OverlayPass'
 
 import { DebugSystem } from './engine/Debug'
 
-import { SharedSystem, TurnBasedSystem, TerrainSystem, PlayerSystem, OpponentSystem } from './world'
+import { SharedSystem, TurnBasedSystem, TerrainSystem, PlayerSystem, AISystem } from './world'
 import manifest from './manifest.json'
 
 new Application([
     KeyboardSystem,
-    AnimationSystem,
     TransformSystem,
     CameraSystem,
     MaterialSystem,
@@ -41,7 +39,7 @@ new Application([
     TurnBasedSystem,
     TerrainSystem,
     PlayerSystem,
-    OpponentSystem,
+    AISystem,
 
     DebugSystem
 ])

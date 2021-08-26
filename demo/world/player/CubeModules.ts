@@ -7,9 +7,9 @@ export const enum CubeModule {
     Death = 1,
     Machinegun = 2,
     Railgun = 3,
-    EMP = 4,
-    Voidgun = 5,
-    Repair = 6,
+    Repair = 4,
+    EMP = 5,
+    Voidgun = 6,
     Minelayer = 7,
     Auger = 8,
     Shield = 9,
@@ -31,18 +31,15 @@ export const cubeModules: Record<CubeModule, {
         model: 'cube_0'
     },
     [CubeModule.Railgun]: {
-        model: 'cube_1',
-        activate(this: Cube): Generator<ActionSignal> {
-            return
-        }
-    },
-    [CubeModule.EMP]: {
-        model: 'cube_2'
-    },
-    [CubeModule.Voidgun]: {
-        model: 'cube_3'
+        model: 'cube_1'
     },
     [CubeModule.Repair]: {
+        model: 'cube_2'
+    },
+    [CubeModule.EMP]: {
+        model: 'cube_3'
+    },
+    [CubeModule.Voidgun]: {
         model: 'cube_4'
     },
     [CubeModule.Minelayer]: {

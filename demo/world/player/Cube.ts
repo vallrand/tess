@@ -121,20 +121,15 @@ export class Cube implements IActor {
                 }
             }
             switch(state.type){
-                case CubeModule.Railgun: {
+                case CubeModule.Railgun:
+                case CubeModule.EMP:
+                {
                     if(state.open != 1) break
                     if(!keys.down('Space')) break
 
-                    const origin = vec3(0.6,1.5,0)
-                    const target = vec3(20,1.5,0)
                     const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
-                    quat.transform(origin, rotation, origin)
-                    quat.transform(target, rotation, target)
-                    mat4.transform(origin, this.transform.matrix, origin as any)
-                    mat4.transform(target, this.transform.matrix, target as any)
-
-                    const skill = this.context.get(PlayerSystem).skills[CubeModule.Railgun]
-                    for(const generator = skill.activate(origin, target); true;){
+                    const skill = this.context.get(PlayerSystem).skills[state.type]
+                    for(const generator = skill.activate(this.transform.matrix, rotation); true;){
                         const iterator = generator.next()
                         if(iterator.done) return iterator.value
                         else yield iterator.value

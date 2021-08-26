@@ -17,19 +17,19 @@
         ],
         "lift": [
             {"frame":0,"index":1,"position":[0,2,0]},
-            {"frame":2,"index":1,"position":[0,0,0],"ease":"quadIn"},
+            {"frame":0.5,"index":1,"position":[0,0,0],"ease":"quadIn"},
 
-            {"frame":1,"index":2,"position":[0,0.1,0]},
-            {"frame":4,"index":2,"position":[0,1,0],"ease":"sineOut"},
+            {"frame":0.25,"index":2,"position":[0,0.1,0]},
+            {"frame":1,"index":2,"position":[0,1,0],"ease":"sineOut"},
             
             {"frame":0,"index":3,"position":[0,1,0]},
-            {"frame":3,"index":3,"position":[0,0.5,0],"ease":"quadOut"},
+            {"frame":0.75,"index":3,"position":[0,0.5,0],"ease":"quadOut"},
 
             {"frame":0,"index":4,"position":[0,0,0]},
-            {"frame":4,"index":4,"position":[0,2,0],"ease":"quadIn"},
+            {"frame":1,"index":4,"position":[0,2,0],"ease":"quadIn"},
 
-            {"frame":1,"index":5,"position":[0,-1,0]},
-            {"frame":4,"index":5,"position":[0,1,0],"ease":"sineOut"}
+            {"frame":0.25,"index":5,"position":[0,-1,0]},
+            {"frame":1,"index":5,"position":[0,1,0],"ease":"sineOut"}
         ]
     },
     "cube_open": {
@@ -197,22 +197,48 @@
             {"frame":0,"index":2,"position":[0.7,3.9,0],"rotation":[0.5,-0.5,0.5,0.5]},
             {"frame":1,"index":2,"position":[0.7,3.9,0],"rotation":[-0.5,0.5,0.5,0.5],"ease":"sineInOut"},
 
-            {"frame":0.5,"index":3,"position":[0,1.5,0],"rotation":[0, 0.382683, 0, 0.92388]},
+            {"frame":0.2,"index":3,"position":[0,1.5,0],"rotation":[0,0.382683,0,0.92388]},
             {"frame":1,"index":3,"position":[0,1,0],"rotation":[0,0,0,1],"ease":"sineIn"},
 
-            {"frame":0.5,"index":4,"position":[0,2.5,0],"rotation":[0, -0.382683, 0, 0.92388]},
+            {"frame":0.2,"index":4,"position":[0,2.5,0],"rotation":[0,-0.382683,0,0.92388]},
             {"frame":1,"index":4,"position":[0,2,0],"rotation":[0,0,0,1],"ease":"sineIn"},
 
             {"frame":0,"index":5,"position":[0,3,0]}
+        ],
+        "activate":[
+            {"index":1,"frame":0,"position":[0,0,0]},
+            {"index":1,"frame":0.4,"position":[0,1,0],"ease":"quadInOut"},
+            {"index":1,"frame":0.8,"position":[0,-1,0],"ease":"cubicIn"},
+            {"index":1,"frame":1.8,"position":[0,0,0],"ease":"quadInOut"},
+
+            {"index":2,"frame":0.6,"position":[0.7,3.9,0]},
+            {"index":2,"frame":0.8,"position":[0.7,3.3,0],"ease":"quartIn"},
+            {"index":2,"frame":1.6,"position":[0.7,3.9,0],"ease":"sineOut"},
+
+            {"index":3,"frame":0,"position":[0,1,0],"rotation":[0,0,0,1]},
+            {"index":3,"frame":0.5,"rotation":[0,1,0,0],"ease":"sineIn"},
+            {"index":3,"frame":0.8,"rotation":[-0,0.382683,-0,-0.92388],"ease":"sineOut"},
+            {"index":3,"frame":1.8,"position":[0,1,0],"rotation":[0,0,0,1],"ease":"quadInOut"},
+
+            {"index":3,"frame":0.4,"position":[0,0,0],"ease":"quadInOut"},
+            {"index":3,"frame":0.8,"position":[0,2,0],"ease":"cubicIn"},
+
+            {"index":4,"frame":0,"position":[0,2,0],"rotation":[0,0,0,1]},
+            {"index":4,"frame":0.5,"rotation":[0,-1,0,0],"ease":"sineIn"},
+            {"index":4,"frame":0.8,"rotation":[-0,-0.382683,-0,-0.92388],"ease":"sineOut"},
+            {"index":4,"frame":1.8,"position":[0,2,0],"rotation":[0,0,0,1],"ease":"quadInOut"},
+
+            {"index":4,"frame":0.4,"position":[0,2,0],"ease":"quadInOut"},
+            {"index":4,"frame":0.8,"position":[0,2.5,0],"ease":"cubicIn"}
         ]
     },
     "cube_4":{
         "close":[
-            {"frame":0,"index":1,"position":[-0.5,1,0],"rotation":[0.5, 0.5, -0.5, 0.5]},
-            {"frame":0,"index":2,"position":[-0.5,1,0],"rotation":[-0.5, -0.5, 0.5, -0.5]},
-            {"frame":0,"index":3,"rotation":[-0.5, -0.5, -0.5, 0.5]},
+            {"frame":0,"index":1,"position":[-0.5,1,0],"rotation":[0.5,0.5,-0.5,0.5]},
+            {"frame":0,"index":2,"position":[-0.5,1,0],"rotation":[-0.5,-0.5,0.5,-0.5]},
+            {"frame":0,"index":3,"rotation":[-0.5,-0.5,-0.5,0.5]},
             {"frame":0,"index":4,"position":[0.5,0.5,0]},
-            {"frame":0,"index":5,"rotation":[-0.5, -0.5, -0.5, 0.5]},
+            {"frame":0,"index":5,"rotation":[-0.5,-0.5,-0.5,0.5]},
             {"frame":0,"index":6,"position":[-0.5,0.5,0]}
         ],
         "open":[

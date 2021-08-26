@@ -143,7 +143,14 @@ export class BeamSkill {
             uSize: [1,3]
         })
     }
-    public *activate(origin: vec3, target: vec3): Generator<ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
+        const origin = vec3(0.6,1.5,0)
+        const target = vec3(20,1.5,0)
+        quat.transform(origin, orientation, origin)
+        quat.transform(target, orientation, target)
+        mat4.transform(origin, transform, origin as any)
+        mat4.transform(target, transform, target as any)
+
         const particleEffects = this.context.get(ParticleEffectPass)
         vec3.subtract(target, origin, this.direction)
 
@@ -224,6 +231,5 @@ export class BeamSkill {
         this.context.get(TransformSystem).delete(this.center.transform)
         this.context.get(TransformSystem).delete(this.light.transform)
         this.context.get(PointLightPass).delete(this.light)
-        return
     }
 }

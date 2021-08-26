@@ -13,6 +13,7 @@ uniform float uSize;
 uniform float uRadius;
 #endif
 
+#define TAU 6.283185307179586
 float triangle(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2){
 	vec2 e0 = p1 - p0; vec2 e1 = p2 - p1; vec2 e2 = p0 - p2;
 	vec2 v0 = p - p0; vec2 v1 = p - p1; vec2 v2 = p - p2;
@@ -34,8 +35,11 @@ void main(){
     float distance = max(0.0, 1.0-length(uv));
     float alpha = distance*distance;
 #elif defined(RING)
-    float distance = max(0.0, 1.0-length(uv));
+    uv = vec2(atan(uv.y,uv.x)/TAU,length(uv));
+    float distance = max(0.0, 1.0-uv.y);
+    //distance -= smoothstep(1.0,0.0,uv.y) * smoothstep(0.0,1.0,abs(fract(uv.x * 9.0)-0.5));
     float alpha = smoothstep(0.0,0.1,distance) * smoothstep(0.5,0.0,distance);
+    alpha = pow(alpha, 1.4);
 #elif defined(ROUNDED_BOX)
     float distance = length(max(abs(uv)-uSize+uRadius,0.0))-uRadius;
     float alpha = 1.0-smoothstep(0.0, 1.0 - uSize, distance);

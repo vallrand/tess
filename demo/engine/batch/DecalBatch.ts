@@ -1,8 +1,8 @@
 import { vec4, mat4 } from '../math'
 import { Transform } from '../Transform'
 import { SpriteMaterial } from '../Sprite'
-import { GL } from '../webgl'
-import { uintNorm4x8 } from './GeometryBatch'
+import { GL, GLSLDataType, IVertexAttribute, VertexDataFormat } from '../webgl'
+import { uint8x4, uintNorm4x8 } from './GeometryBatch'
 
 export interface IBatchedDecal {
     material: SpriteMaterial
@@ -28,11 +28,13 @@ export class DecalBatch {
         4,6,7,4,7,5,
         0,1,3,0,3,2
     ])
+    public readonly format: IVertexAttribute[] = VertexDataFormat.Decal
     public readonly vao: WebGLVertexArrayObject
     public readonly indexBuffer: WebGLBuffer
     public readonly vertexBuffer: WebGLBuffer
     public readonly instanceBuffer: WebGLBuffer
-    public readonly instanceArray: Float32Array
+    public readonly float32View: Float32Array
+    public readonly uint32View: Uint32Array
     public instanceOffset: number = 0
     public readonly stride: number
     constructor(private readonly gl: WebGL2RenderingContext, readonly batchSize: number){
@@ -48,36 +50,42 @@ export class DecalBatch {
         gl.enableVertexAttribArray(0)
         gl.vertexAttribPointer(0, 3, GL.FLOAT, false, 0, 0)
 
-        this.stride = 16 + 1
-        this.instanceArray = new Float32Array(this.stride * batchSize)
+        this.stride = this.format[0].stride / Float32Array.BYTES_PER_ELEMENT
+        this.float32View = new Float32Array(this.stride * batchSize)
+        this.uint32View = new Uint32Array(this.float32View.buffer)
         this.instanceBuffer = gl.createBuffer()
         gl.bindBuffer(GL.ARRAY_BUFFER, this.instanceBuffer)
-        gl.bufferData(GL.ARRAY_BUFFER, this.instanceArray.byteLength, GL.DYNAMIC_DRAW)
+        gl.bufferData(GL.ARRAY_BUFFER, this.float32View.byteLength, GL.DYNAMIC_DRAW)
 
-        gl.enableVertexAttribArray(1)
-        gl.vertexAttribPointer(1, 4, GL.UNSIGNED_BYTE, true, this.stride*4, 0)
-
-        for(let i = 0; i < 4; i++){
-            gl.enableVertexAttribArray(2 + i)
-            gl.vertexAttribPointer(2 + i, 4, GL.FLOAT, false, this.stride*4, i * 4 * 4 + 4)
-            gl.vertexAttribDivisor(2 + i, 1)
+        let index = 0
+        for(let i = 0; i < this.format.length; i++){
+            const { size, type, normalized, stride, offset } = this.format[i]
+            for(let _offset = offset, _size = size; _size > 0; _size -= 4){
+                gl.enableVertexAttribArray(++index)
+                gl.vertexAttribPointer(index, Math.min(4, _size), type, normalized, stride, _offset)
+                gl.vertexAttribDivisor(index, 1)
+                _offset += Math.min(4, _size) * GLSLDataType[type].BYTES_PER_ELEMENT
+            }
         }
-
         gl.bindVertexArray(null)
     }
     render(decal: IBatchedDecal): boolean {
         if(this.instanceOffset + 1 >= this.batchSize) return false
         const color = uintNorm4x8(decal.color[0], decal.color[1], decal.color[2], decal.color[3])
+        if(!color) return true
 
-        this.instanceArray.set(decal.transform?.matrix || mat4.IDENTITY, this.instanceOffset * this.stride + 1)
+        this.float32View.set(decal.transform?.matrix || mat4.IDENTITY, this.instanceOffset * this.stride)
+        this.uint32View[this.instanceOffset * this.stride + 16] = color
+        this.uint32View[this.instanceOffset * this.stride + 17] = uint8x4(0,0,1,0)
         this.instanceOffset++
+        return true
     }
     bind(){
         const gl = this.gl
         gl.bindVertexArray(this.vao)
         if(!this.instanceOffset) return
         gl.bindBuffer(GL.ARRAY_BUFFER, this.instanceBuffer)
-        gl.bufferSubData(GL.ARRAY_BUFFER, 0, this.instanceArray.subarray(0, this.instanceOffset * this.stride))
+        gl.bufferSubData(GL.ARRAY_BUFFER, 0, this.float32View.subarray(0, this.instanceOffset * this.stride))
         this.instanceOffset = 0
     }
     delete(){

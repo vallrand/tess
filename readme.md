@@ -32,6 +32,7 @@ https://github.com/ykob/glsl-bloom/tree/master/src
 decals - https://martindevans.me/game-development/2015/02/27/Drawing-Stuff-On-Other-Stuff-With-Deferred-Screenspace-Decals/
 https://bartwronski.com/2015/03/12/fixing-screen-space-deferred-decals/
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
+https://gist.github.com/bshishov/3eaa056d1560584ff82c1b96ee2f20fd
 
 https://iquilezles.org/www/articles/palettes/palettes.htm
 
@@ -68,6 +69,8 @@ billboards https://forum.unity.com/threads/billboard-script-flat-spherical-arbit
 
 align billboards https://www.gamedev.net/forums/topic/696694-stretched-billboard-projected-particles/
 align billboards2 https://gamedev.stackexchange.com/questions/38695/billboarding-aligning-with-velocity-direction
+
+VULKAN https://therealmjp.github.io/posts/bindless-texturing-for-deferred-rendering-and-decals/
 
 bind gbuffer
 render static geometry
