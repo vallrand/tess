@@ -12,9 +12,12 @@ uniform CameraUniforms {
 };
 
 uniform sampler2D uSampler;
-uniform sampler2D uBloomMap;
 uniform sampler2D uPositionBuffer;
+#ifdef BLOOM
+uniform sampler2D uBloomMap;
 uniform vec4 uBloomMask;
+#endif
+
 #if defined(LINEAR_FOG)
 uniform vec4 uFogColor;
 uniform vec2 uFogRange;
@@ -38,8 +41,9 @@ void main(){
     color = mix(color, uFogColor, fogAmount);
 #endif
 
+#ifdef BLOOM
     vec4 bloom = uBloomMask * texture(uBloomMap, vUV);
     color += bloom;
-
+#endif
     fragColor = color;
 }

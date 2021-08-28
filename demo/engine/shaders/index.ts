@@ -8,7 +8,10 @@ export const shaders = {
     decal_frag: <string> require('./decal_frag.glsl'),
     particle_vert: <string> require('./particle_vert.glsl'),
     fullscreen_vert: <string> require('./fullscreen_vert.glsl'),
+    fullscreen_frag: <string> require('./fullscreen_frag.glsl'),
     geometry_vert: <string> require('./geometry_vert.glsl'),
     geometry_frag: <string> require('./geometry_frag.glsl'),
-    noise_frag: <string> require('./noise_frag.glsl')
+    noise_frag: <string> require('./noise_frag.glsl'),
+    distortion_frag: <string> require('./distortion_frag.glsl'),
+    fog_frag: <string> require('./fog_frag.glsl')
 }

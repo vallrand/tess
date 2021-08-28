@@ -14,7 +14,7 @@ import { ParticleEffectPass } from './engine/deferred/ParticleEffectPass'
 import { PostEffectPass } from './engine/deferred/PostEffectPass'
 import { OverlayPass } from './engine/deferred/OverlayPass'
 
-import { DebugSystem } from './engine/Debug'
+import { DebugSystem } from './engine/debug'
 
 import { SharedSystem, TurnBasedSystem, TerrainSystem, PlayerSystem, AISystem } from './world'
 import manifest from './manifest.json'

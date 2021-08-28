@@ -1,7 +1,8 @@
-import { vec4 } from './math'
-import { Application, System } from './framework'
-import { GL, UniformSamplerBindings } from './webgl'
-import { PostEffectPass } from './deferred/PostEffectPass'
+import { vec4 } from '../math'
+import { Application, System } from '../framework'
+import { GL, UniformSamplerBindings, ShaderProgram } from '../webgl'
+import { shaders } from '../shaders'
+import { PostEffectPass } from '../deferred/PostEffectPass'
 
 class Monitor {
     public readonly dom: HTMLDivElement = document.createElement('div')
@@ -73,6 +74,7 @@ export function attachDebugPanel(){
         drawArrays: 0,
         drawArraysInstanced: 0,
         drawElementsInstanced: 0,
+        blitFramebuffer: 0
     }
     HTMLCanvasElement.prototype.getContext = (getContext => function(){
         const gl = getContext.apply(this, arguments)
@@ -93,8 +95,8 @@ export function attachDebugPanel(){
         refreshRate: 100,
         color: '#e8632a', label: 'DC', range: [0, 40],
         update(deltaTime){
-            this.values.push(glCalls.drawArrays + glCalls.drawElements + glCalls.drawArraysInstanced + glCalls.drawElementsInstanced)
-            glCalls.drawArrays = glCalls.drawElements = glCalls.drawArraysInstanced = glCalls.drawElementsInstanced = 0
+            this.values.push(glCalls.drawArrays + glCalls.drawElements + glCalls.drawArraysInstanced + glCalls.drawElementsInstanced + glCalls.blitFramebuffer)
+            glCalls.drawArrays = glCalls.drawElements = glCalls.drawArraysInstanced = glCalls.drawElementsInstanced = glCalls.blitFramebuffer = 0
         }
     })
 
@@ -111,8 +113,11 @@ attachDebugPanel()
 
 export class DebugSystem implements System {
     public texture: WebGLTexture
+    private readonly program: ShaderProgram
     constructor(private readonly context: Application){
         window['app'] = context
+        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)
+        this.program.uniforms['uMask'] = vec4.ONE
     }
     update(){
         if(this.texture) this.renderDebugTexture(this.texture)
@@ -120,12 +125,10 @@ export class DebugSystem implements System {
     renderDebugTexture(texture: WebGLTexture){
         const gl = this.context.gl
         const plane = this.context.get(PostEffectPass).plane
-        const program = this.context.get(PostEffectPass).blit
 
         gl.bindFramebuffer(GL.FRAMEBUFFER, null)
         gl.bindVertexArray(plane.vao)
-        gl.useProgram(program.target)
-        program.uniforms['uMask'] = vec4.ONE
+        gl.useProgram(this.program.target)
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, texture)

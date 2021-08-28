@@ -13,6 +13,9 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { PointLight, PointLightPass } from '../../engine/deferred/PointLightPass'
 import { ParticleEmitter } from '../../engine/particles'
+import { BillboardType, Sprite } from '../../engine/batch'
+import { PostEffectPass } from '../../engine/deferred/PostEffectPass'
+import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 
 const timelineTracks = {
     'ring.transform.scale': PropertyAnimation([
@@ -44,6 +47,14 @@ const timelineTracks = {
         { frame: 0.8, value: vec2.ONE },
         { frame: 1.8, value: [6,7], ease: ease.sineOut }
     ], vec2.lerp),
+    'wave.transform.scale': PropertyAnimation([
+        { frame: 0.7, value: [0,0,0] },
+        { frame: 1.2, value: [20,20,20], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'wave.color': PropertyAnimation([
+        { frame: 0.8, value: vec4.ONE },
+        { frame: 1.2, value: vec4.ZERO, ease: ease.cubicIn }
+    ], vec4.lerp),
     'light.radius': PropertyAnimation([
         { frame: 0.7, value: 0 },
         { frame: 1.2, value: 12, ease: ease.cubicOut },
@@ -65,6 +76,8 @@ export class ShockwaveSkill {
     private ring: Decal
     private crack: Decal
     private light: PointLight
+    private wave: Sprite
+    private flash: Sprite
 
     private bolts: ParticleEmitter
     private shatterMaterial: SpriteMaterial
@@ -75,19 +88,24 @@ export class ShockwaveSkill {
         this.shatterMaterial.diffuse = materials.addRenderTexture(
             materials.createRenderTexture(512, 512, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/shatter_frag.glsl'), {
-            }), {
-    
-            }, 0
+            }), {}, 0
         ).target
         this.shatterMaterial.normal = materials.addRenderTexture(
             materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/shatter_frag.glsl'), {
                 MASK: true
-            }), {
-    
-            }, 0
+            }), {}, 0
         ).target
-        
+
+        this.wave = new Sprite()
+        this.wave.billboard = BillboardType.None
+        this.wave.material = new SpriteMaterial()
+        this.wave.material.diffuse = SharedSystem.textures.wave
+
+        this.flash = new Sprite()
+        this.flash.billboard = BillboardType.None
+        this.flash.material = new SpriteMaterial()
+        this.flash.material.diffuse = SharedSystem.textures.rays
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const origin: vec3 = mat4.transform([0, 0, 0], transform, vec3() as any) as any
@@ -102,6 +120,11 @@ export class ShockwaveSkill {
         this.crack.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.crack.transform.position)
         this.crack.material = this.shatterMaterial
+
+        this.wave.transform = this.context.get(TransformSystem).create()
+        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.wave.transform.rotation)
+        vec3.add(origin, [0,1.5,0], this.wave.transform.position)
+        this.context.get(PostEffectPass).distortion.add(this.wave)
 
         this.light = this.context.get(PointLightPass).create()
         this.light.transform = this.context.get(TransformSystem).create()
@@ -137,11 +160,14 @@ export class ShockwaveSkill {
         this.context.get(TransformSystem).delete(this.light.transform)
         this.context.get(TransformSystem).delete(this.crack.transform)
         this.context.get(TransformSystem).delete(this.ring.transform)
+        this.context.get(TransformSystem).delete(this.wave.transform)
 
         this.context.get(PointLightPass).delete(this.light)
 
         this.context.get(DecalPass).delete(this.ring)
         this.context.get(DecalPass).delete(this.crack)
+
+        this.context.get(PostEffectPass).distortion.remove(this.wave)
 
         SharedSystem.particles.bolts.remove(this.bolts)
     }

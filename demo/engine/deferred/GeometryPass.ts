@@ -27,7 +27,6 @@ export class DeferredGeometryPass implements System {
             //BUMP_MAPPING
             //#define PARALLAX_LAYERS 32
         ]
-        gl.clearColor(0,0,0,0)
         gl.clearDepth(1)
     }
     public bindReadBuffer(){

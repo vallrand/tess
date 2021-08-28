@@ -34,6 +34,10 @@ void main(){
 #if defined(CIRCLE)
     float distance = max(0.0, 1.0-length(uv));
     float alpha = distance*distance;
+#elif defined(WAVE)
+    uv = vec2(atan(uv.y,uv.x)/TAU,length(uv));
+    float alpha = .5-.5*cos(smoothstep(0.2,1.0,uv.y)*TAU);
+    alpha = alpha * alpha;
 #elif defined(RING)
     uv = vec2(atan(uv.y,uv.x)/TAU,length(uv));
     float distance = max(0.0, 1.0-uv.y);

@@ -61,5 +61,6 @@ export class BloomEffect implements PostEffect {
             this.context.gl.drawElements(GL.TRIANGLES, effectPass.plane.indexCount, GL.UNSIGNED_SHORT, effectPass.plane.indexOffset)
         }
     }
+    get active(): boolean { return this.enabled }
     get texture(): WebGLTexture { return this.enabled ? this.renderTarget[this.iterations & 1] : null }
 }

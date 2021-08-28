@@ -70,6 +70,8 @@ https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0
 https://www.shadertoy.com/view/Xt3cDn
 https://www.shadertoy.com/view/3sKXWh tileable textures
 
+displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
+
 circuit
 https://www.shadertoy.com/view/ttVfzR
 https://www.shadertoy.com/view/Wds3z7

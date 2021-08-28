@@ -3,6 +3,7 @@ import { Application, System } from '../framework'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
 import { DeferredGeometryPass } from './GeometryPass'
 import { PostEffectPass } from './PostEffectPass'
+import { shaders } from '../shaders'
 
 export class HemisphereLight {
     public frame: number = 0
@@ -24,12 +25,12 @@ export class AmbientLightPass implements System {
     public environment: HemisphereLight = new HemisphereLight
     private readonly program: ShaderProgram
     constructor(private readonly context: Application){
-        this.program = ShaderProgram(this.context.gl, require('./fullscreen_vert.glsl'), require('./ambient_light_frag.glsl'))
+        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('./ambient_light_frag.glsl'))
     }
     public update(): void {
         const gl = this.context.gl
 
-        this.context.get(PostEffectPass).swapRenderTarget()
+        this.context.get(PostEffectPass).swapRenderTarget(false, false)
         gl.depthMask(false)
         gl.enable(GL.BLEND)
         gl.disable(GL.DEPTH_TEST)

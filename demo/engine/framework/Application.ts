@@ -28,9 +28,8 @@ export class Application {
             premultipliedAlpha: false, preserveDrawingBuffer: false
         })
         for(let index = 0; index < systems.length; index++){
-            //TODO will fail when there are 2 instances of APP
-            systems[index].index = index
-            this.systems[index] = new systems[index](this)
+            if(systems[index].index == null) systems[index].index = index
+            this.systems[systems[index].index] = new systems[index](this)
         }
         ready(() => document.body.appendChild(this.canvas))
     }

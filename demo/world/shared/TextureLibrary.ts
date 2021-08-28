@@ -12,6 +12,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { RING: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
+    const wave = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { WAVE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
     const rays = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -48,5 +54,5 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
-    return { ring, rays, raysRing, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
+    return { ring, wave, rays, raysRing, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
 }
