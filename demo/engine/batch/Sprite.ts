@@ -9,7 +9,7 @@ export const enum BillboardType {
     None = 0,
     Flat = 1,
     Sphere = 2,
-    Cylinder = 3
+    Cylinder = 3 //Axial
 }
 
 export class Sprite implements IBatched {
@@ -59,9 +59,12 @@ export class Sprite implements IBatched {
                 break
             case BillboardType.Cylinder:
                 vec3.set(transform[4], transform[5], transform[6], normal)
-                const forward = vec3.set(-camera.viewMatrix[2], -camera.viewMatrix[6], -camera.viewMatrix[10], Sprite.forward)
+                const forward = vec3.set(transform[12], transform[13], transform[14], Sprite.forward)
+                vec3.subtract(camera.position, forward, forward)
+                //const forward = vec3.set(camera.viewMatrix[2], camera.viewMatrix[6], camera.viewMatrix[10], Sprite.forward) //flat
                 vec3.cross(forward, normal, tangent)
                 vec3.normalize(tangent, tangent)
+                vec3.scale(tangent, Math.hypot(transform[0], transform[1], transform[2]), tangent)
                 break
         }
         this.vertices[0] = normal[0] * left + tangent[0] * top + transform[12]

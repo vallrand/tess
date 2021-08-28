@@ -84,6 +84,7 @@ foamy water https://www.shadertoy.com/view/llcXW7
 transparency sorting https://csawesome.runestone.academy/runestone/books/published/learnwebgl2/12_advanced_rendering/04_transparency.html
 hashes https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a
 billboards https://forum.unity.com/threads/billboard-script-flat-spherical-arbitrary-axis-aligned.539481/
+billboards https://www.flipcode.com/archives/Billboarding-Excerpt_From_iReal-Time_Renderingi_2E.shtml
 
 align billboards https://www.gamedev.net/forums/topic/696694-stretched-billboard-projected-particles/
 align billboards2 https://gamedev.stackexchange.com/questions/38695/billboarding-aligning-with-velocity-direction

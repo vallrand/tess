@@ -6,8 +6,9 @@ import { FrustumCulling } from './FrustumCulling'
 
 export interface ICamera {
     frame: number
-    viewMatrix: mat4
-    projectionMatrix: mat4
+    readonly viewMatrix: mat4
+    readonly projectionMatrix: mat4
+    readonly position: vec3
 }
 
 export class PerspectiveCamera implements ICamera {
@@ -20,6 +21,7 @@ export class PerspectiveCamera implements ICamera {
     public readonly viewMatrix: mat4 = mat4()
     public readonly projectionMatrix: mat4 = mat4()
     public readonly viewProjectionMatrix: mat4 = mat4()
+    public readonly position: vec3 = vec3()
     public uniform: UniformBlock
     public culling = new FrustumCulling(this)
 }
@@ -54,9 +56,9 @@ export class CameraSystem {
         mat4.multiply(camera.projectionMatrix, camera.viewMatrix, camera.viewProjectionMatrix)
         camera.uniform.data.set(camera.viewProjectionMatrix, 0)
         camera.uniform.data.set(camera.viewMatrix, 16)
-        camera.uniform.data[16+16] = modelMatrix[12]
-        camera.uniform.data[16+17] = modelMatrix[13]
-        camera.uniform.data[16+18] = modelMatrix[14]
+        camera.uniform.data[16+16] = camera.position[0] = modelMatrix[12]
+        camera.uniform.data[16+17] = camera.position[1] = modelMatrix[13]
+        camera.uniform.data[16+18] = camera.position[2] = modelMatrix[14]
 
         camera.frame = this.context.frame
     }

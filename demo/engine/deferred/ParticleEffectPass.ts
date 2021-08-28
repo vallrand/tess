@@ -7,6 +7,7 @@ import { GeometryBatch, IBatched, Sprite, Line } from '../batch'
 import { IEffect } from '../pipeline'
 import { CameraSystem } from '../Camera'
 import { Mesh, MeshSystem } from '../Mesh'
+import { DeferredGeometryPass } from './GeometryPass'
 
 export class ParticleEffectPass implements System {
     private static readonly batchSize: number = 1024
@@ -81,6 +82,7 @@ export class ParticleEffectPass implements System {
             program = itemProgram
         }
         //this.context.get(PostEffectPass).swapRenderTarget()
+        this.context.get(DeferredGeometryPass).bindReadBuffer()
 
         for(let i = this.effects.length - 1; i >= 0; i--) this.effects[i].apply()
     }

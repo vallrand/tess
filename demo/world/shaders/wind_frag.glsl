@@ -37,27 +37,23 @@ float fbm(in vec2 x, in int octaves, in vec2 period) {
 }
 
 void main(){
-    vec2 uv = 2.*vUV-1.;
+    vec2 uv = vUV;
 
-    vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
-    vec2 period = vec2(1000,36);
+    float fade = smoothstep(1.0,0.5,abs(uv.y*2.-1.));
+    vec2 uv0 = vec2(uv.x+uv.y,uv.x-uv.y);
+
+    uv0 += 0.2*(1.-2.*fbm(uv * vec2(4.0,2.0), 4, vec2(4.0,2.0)));
+    uv.x += 0.6*(1.-2.*fbm(uv0 * vec2(4.0,16.0), 4, vec2(4.0,16.0)));
     
-#if defined(RING)
-    float f0 = fbm(vec2(0.0, period.y*polar.y), 4, period);
-    float y0 = mix(0.5,0.75,f0);
-    float alpha = smoothstep(1.0-y0,0.0,abs(polar.x-y0)) * f0 * 1.5;
-#elif defined(BEAM)
-    float f0 = fbm(vec2(0.0, uv.y*4.0), 8, vec2(4.0));
-    float f1 = fbm(vec2(0.0, uv.y*16.0), 4, vec2(32.0));
-    float alpha = smoothstep(1.0,mix(0.9,-2.0,f0),uv.x - 0.2*f1 + 2.0*pow(abs(uv.y),2.0)) * pow(1.0-abs(uv.y),2.0);
-#elif defined(CONE)
-    float angle = abs(atan(uv.y,uv.x+1.0)/TAU);
-    alpha += 0.5 * smoothstep(0.3,0.2,angle) * smoothstep(1.0,0.0,uv.x+2.0*abs(uv.y));
-#else
-    float f0 = 2.0*fbm(vec2(0.0, period.y*polar.y), 4, period);
-    f0 += smoothstep(1.0, -1.0, polar.x - max(0.0,0.5-f0));
-    float alpha = smoothstep(0.0, 1.0, f0 - 1.5*polar.x);
-#endif
-    
-    fragColor = vec4(1) * alpha;
+    float offset = sin(uv.x*TAU);
+    offset -= sin(uv0.y * TAU * 2.0);
+    offset += cos(uv0.x * TAU * 1.0);
+    float l = .5+.5*cos(uv0.y*TAU*4.0 + offset);
+    l = mix(l, pow(l, 8.0), smoothstep(0.5,1.0,abs(uv.y*2.-1.)));
+
+    vec3 color = smoothstep(0.1,1.0,l) * fade * vec3(0.14,0.08,0.2) / (.08+1.0-l);
+    color *= color.r;
+    float alpha = color.r;
+
+    fragColor = vec4(color,alpha);
 }
