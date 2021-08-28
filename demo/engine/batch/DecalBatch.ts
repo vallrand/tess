@@ -1,12 +1,13 @@
-import { vec4, mat4 } from '../math'
+import { vec4, mat4, mat3x2, vec2 } from '../math'
 import { Transform } from '../Transform'
 import { SpriteMaterial } from '../Sprite'
 import { GL, GLSLDataType, IVertexAttribute, VertexDataFormat } from '../webgl'
-import { uint8x4, uintNorm4x8 } from './GeometryBatch'
+import { uint8x4, uintNorm2x16, uintNorm4x8 } from './GeometryBatch'
 
 export interface IBatchedDecal {
     material: SpriteMaterial
     transform: Transform
+    threshold: number
     color: vec4
 }
 export class DecalBatch {
@@ -74,9 +75,21 @@ export class DecalBatch {
         const color = uintNorm4x8(decal.color[0], decal.color[1], decal.color[2], decal.color[3])
         if(!color) return true
 
-        this.float32View.set(decal.transform?.matrix || mat4.IDENTITY, this.instanceOffset * this.stride)
-        this.uint32View[this.instanceOffset * this.stride + 16] = color
-        this.uint32View[this.instanceOffset * this.stride + 17] = uint8x4(0,0,1,0)
+        const matrix = decal.transform?.matrix || mat4.IDENTITY
+        const uvMatrix = decal.material?.uvMatrix || mat3x2.IDENTITY
+        const indexOffset = this.instanceOffset * this.stride
+
+        this.float32View.set(matrix, indexOffset)
+        this.float32View[indexOffset + 3] = decal.threshold
+        this.float32View[indexOffset + 7] = 0
+        this.float32View[indexOffset + 11] = 0
+        this.float32View[indexOffset + 15] = 1
+        this.uint32View[indexOffset + 16] = uintNorm2x16(uvMatrix[4], uvMatrix[5])
+        this.uint32View[indexOffset + 17] = uintNorm2x16(
+            uvMatrix[0] + uvMatrix[2] + uvMatrix[4],
+            uvMatrix[1] + uvMatrix[3] + uvMatrix[5]
+        )
+        this.uint32View[indexOffset + 18] = color
         this.instanceOffset++
         return true
     }

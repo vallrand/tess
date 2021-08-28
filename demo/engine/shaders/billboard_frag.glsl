@@ -3,6 +3,7 @@ precision highp float;
 
 #ifndef POINT
 in vec2 vUV;
+in vec4 vUVClamp;
 #endif
 in vec2 vLife;
 in vec3 vPosition;
@@ -27,6 +28,7 @@ uniform sampler2D uPositionBuffer;
 void main(void){
 #ifdef POINT
     vec2 uv = gl_PointCoord;
+    const vec4 vUVClamp = vec4(0,0,1,1);
 #else
     vec2 uv = vUV;
 #endif
@@ -39,8 +41,11 @@ void main(void){
     vec4 color = texture(uSampler, uv);
 #endif
 
-#ifdef GRADIENT
+#if defined(GRADIENT)
     color = texture(uGradient, vec2(vLife.x, color.a));
+#elif defined(SWIPE)
+    vec2 uv0 = (uv - vUVClamp.xy) / (vUVClamp.zw - vUVClamp.xy);
+    color *= smoothstep(0.5+SWIPE,0.5,abs(uv0.x-.5 + mix(-1.0,1.0,vLife.x)));
 #else
     color *= 4.*vLife.x*(1.-vLife.x);
 #endif

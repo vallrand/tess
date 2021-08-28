@@ -151,6 +151,32 @@ export function ParticleLibrary(context: Application){
         })
     )
 
-    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks)
-    return { dust, smoke, energy, sparks }
+    const bolts = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uRadius: vec2
+        uGravity: vec3
+        uRotation: vec2
+        uSize: vec2
+        uFrame: vec2
+    }>(
+        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
+            FRAMES: true, SWIPE: 0.1
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            CIRCLE: true, FRAMES: true
+        })
+    )
+    bolts.diffuse = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/lightning_frag.glsl'), {
+        }), {
+            uTiles: 4
+        }, 0
+    ).target
+
+    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts)
+    return { dust, smoke, energy, sparks, bolts }
 }

@@ -1,3 +1,5 @@
+import { binarySearch } from './common'
+
 export type IEase = (x: number) => number
 const split = (edge: number, easeA: IEase, easeB: IEase): IEase => x => x < edge ? edge * easeA(x / edge) : edge + (1 - edge) * easeB((x - edge) / (1 - edge))
 const flip = (ease: IEase): IEase => x => 1 - ease(1 - x)
@@ -97,22 +99,8 @@ export const expoInOut = split(0.5, expoIn, expoOut)
 // export const circOut = CubicBezier(0, 0.56, 0.46, 1)
 // export const circInOut = CubicBezier(0.88, 0.14, 0.12, 0.86)
 
-function binarySearch(array: number[], target: number, mode: boolean): number {
-    let out = -1, start = 0, end = array.length - 1
-    if(!mode) while(start <= end){
-        let middle = (start + end) >>> 1
-        if(array[middle] <= target) start = middle + 1
-        else end = (out = middle) - 1
-    }
-    else while(start <= end){
-        let middle = (start + end) >>> 1
-        if(array[middle] >= target) end = middle - 1
-        else start = (out = middle) + 1
-    }
-    return out
-}
-
 export function Spline(values: number[], positions: number[], type: number, tension: number = 0.5): IEase {
+    const sort = (a: number, b: number) => a - b
     const lastIndex = values.length - 1
     positions = positions || values.map((_, i) => i / lastIndex)
     let c1 = Infinity, c2 = -Infinity, reciprocal = 0
@@ -121,7 +109,7 @@ export function Spline(values: number[], positions: number[], type: number, tens
         if(time <= positions[0]) return values[0]
         else if(time >= positions[lastIndex]) return values[lastIndex]
         if(time < c1 || time >= c2){
-            const index = binarySearch(positions, time, true)
+            const index = binarySearch(positions, time, sort) - 1
             c1 = positions[index]
             c2 = positions[index + 1]
             reciprocal = c1 === c2 ? 0 : 1.0 / (c2 - c1)

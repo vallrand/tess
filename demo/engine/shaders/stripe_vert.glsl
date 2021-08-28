@@ -2,11 +2,11 @@
 precision highp float;
 layout(std140, column_major) uniform;
 
-layout(location=0) in vec4 aTransform;
-layout(location=1) in vec4 aVelocity;
-layout(location=2) in vec4 aAcceleration;
-layout(location=3) in vec3 aLifetime;
-layout(location=4) in vec2 aSize;
+layout(location=0) in vec4 aLifetime;
+layout(location=1) in vec4 aSize;
+layout(location=2) in vec4 aTransform;
+layout(location=3) in vec4 aVelocity;
+layout(location=4) in vec4 aAcceleration;
 
 layout(location=5) in vec3 aPosition;
 layout(location=6) in vec2 aUV;

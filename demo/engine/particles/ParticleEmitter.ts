@@ -9,12 +9,13 @@ interface ParticleEmitterOptions {
 
 export class ParticleEmitter {
     public readonly range: vec2 = vec2()
-    uniform: UniformBlock
-    offset: number = 0
+    public readonly uniform: UniformBlock
+    private offset: number = 0
     count: number = 0
     rate: number = 0
+    amount: number = 1
     private elapsed: number = 0
-    queue: number[] = []
+    private readonly queue: number[] = []
     constructor(gl: WebGL2RenderingContext, program: ShaderProgram){
         this.uniform = new UniformBlock(gl, program.uniforms['EmitterUniforms'], UniformBlockBindings.EmitterUniforms)
     }
@@ -23,7 +24,7 @@ export class ParticleEmitter {
 
         this.uniform.uniforms['uLastID'][0] = this.offset + this.range[1]
 
-        if(this.rate) for(this.elapsed += deltaTime; this.elapsed > this.rate; this.elapsed -= this.rate) this.count++
+        if(this.rate) for(this.elapsed += deltaTime; this.elapsed > this.rate; this.elapsed -= this.rate) this.count += this.amount
         else this.elapsed = 0
 
         while(this.queue.length && this.queue[0] < currentTime){
@@ -33,7 +34,7 @@ export class ParticleEmitter {
             this.count -= amount
             this.range[1] -= amount
         }
-        const count = Math.min(options.limit - this.offset, this.count)
+        const count = Math.min(options.limit - this.offset, this.count | 0)
         const added = count - this.range[1]
         const lifespan = this.uniform.uniforms['uLifespan'][1] - this.uniform.uniforms['uLifespan'][2]
         if(added > 0) this.queue.push(currentTime + lifespan, added)

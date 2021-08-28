@@ -4,14 +4,20 @@ precision highp float;
 in vec3 vPosition;
 #ifdef INSTANCED
 in mat4 vInvModel;
+in vec4 vUV;
 in vec4 vColor;
-in vec4 vMaterial;
+in float vThreshold;
 #else
 uniform vec4 uColor;
 uniform mat4 uModelMatrix;
 uniform mat4 uInvModelMatrix;
 #endif
 
+uniform float uDissolveEdge;
+uniform float uLayer;
+uniform GlobalUniforms {
+    vec4 uTime;
+};
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
     mat4 uViewMatrix;
@@ -26,14 +32,14 @@ layout(location=1) out vec4 fragNormal;
 
 void main(){
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
-    //vec3 viewRay = vPosition.xyz - uEyePosition;
+    vec3 viewRay = vPosition.xyz - uEyePosition;
     vec4 worldPosition = texelFetch(uPositionBuffer, fragCoord, 0);
-    if(worldPosition.a > vMaterial.b) discard;
+    if(worldPosition.a > uLayer) discard;
     vec4 objectPosition = vInvModel * vec4(worldPosition.xyz, 1.0);
     if(0.5 < abs(objectPosition.x) || 0.5 < abs(objectPosition.y) || 0.5 < abs(objectPosition.z)) discard;
-    vec2 uv = objectPosition.xz + 0.5;
-
-    fragAlbedo = vColor * texture(uDiffuseMap, uv);
+    vec2 uv = mix(vUV.xy, vUV.zw, objectPosition.xz + 0.5);
+    vec4 color = texture(uDiffuseMap, uv);
+    fragAlbedo = vColor * color;
 #ifdef NORMAL_MAPPING
     vec3 dpdx = dFdx(worldPosition.xyz);
     vec3 dpdy = dFdy(worldPosition.xyz);
@@ -43,10 +49,18 @@ void main(){
     mat3 TBN = mat3(tangent, binormal, normal);
 
     vec3 mappedNormal = texture(uNormalMap, uv).xyz*2.-1.;
+    float blend = dot(mappedNormal, mappedNormal);
     mappedNormal = normalize(TBN * mappedNormal);
-    fragNormal = vec4(mappedNormal, 1.0);
+    fragNormal = blend * vec4(mappedNormal, 1.0);
 #else
     fragNormal = vec4(0);
+#endif
+
+#ifdef MASK
+    float alpha = texture(uNormalMap, uv).a;
+    float threshold = smoothstep(1.0+uDissolveEdge,1.0,abs(alpha*2.-1.+vThreshold));
+    fragAlbedo *= threshold;
+    fragNormal *= threshold;
 #endif
 }
 

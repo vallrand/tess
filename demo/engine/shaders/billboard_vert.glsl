@@ -2,15 +2,16 @@
 precision highp float;
 layout(std140, column_major) uniform;
 
-layout(location=0) in vec4 aTransform;
-layout(location=1) in vec4 aVelocity;
-layout(location=2) in vec4 aAcceleration;
-layout(location=3) in vec3 aLifetime;
-layout(location=4) in vec2 aSize;
+layout(location=0) in vec4 aLifetime;
+layout(location=1) in vec4 aSize;
+layout(location=2) in vec4 aTransform;
+layout(location=3) in vec4 aVelocity;
+layout(location=4) in vec4 aAcceleration;
 #ifndef POINT
 layout(location=5) in vec3 aPosition;
 layout(location=6) in vec2 aUV;
 out vec2 vUV;
+out vec4 vUVClamp;
 #endif
 
 out vec2 vLife;
@@ -61,9 +62,19 @@ void main(){
     position += dot(position, aVelocity.xyz) * aVelocity.xyz * STRETCH;
 #endif
 
+#else
+    position = size * position.xzy * vec3(1,1,-1);
 #endif
     vPosition = position + aTransform.xyz;
+#ifdef FRAMES
+    float uvSize = 1.0/aSize.w; float uvFrame = mod(floor(aSize.z),aSize.w*aSize.w);
+    vec2 uvTile = vec2(mod(uvFrame, aSize.w), floor(uvFrame * uvSize)) * uvSize;
+    vUVClamp = vec4(uvTile, uvTile + uvSize);
+    vUV = uvTile + uvSize * aUV;
+#else
     vUV = aUV;
+    vUVClamp = vec4(0,0,1,1);
+#endif
 #endif
     gl_Position = uViewProjectionMatrix * vec4(vPosition, 1.0);
 }

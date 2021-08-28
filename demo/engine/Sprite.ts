@@ -17,6 +17,7 @@ export class SpriteMaterial {
     readonly size: vec2 = vec2(1,1)
     readonly uvMatrix: mat3x2 = mat3x2()
     diffuse: WebGLTexture
+    normal?: WebGLTexture
     program?: ShaderProgram
     domain: vec3 = vec3(0,0,0)
 }

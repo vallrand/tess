@@ -1,5 +1,21 @@
 # TESS
 
+TODO:
+decal system texturing/ alpha test
+ring + cylinders for anticipation
+expandin cracks
+AOE decal/ burn decal?
+lightning spritesheet + particle emitter
+distortion wave
+
+normal gun
+path trace bullet + light
+cone for muzzle flash
+
+
+
+
+
 Particle effects:
 * dust air static points
 * grass static mesh

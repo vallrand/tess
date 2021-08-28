@@ -56,16 +56,16 @@ export const VertexDataFormat = {
         { name: 'material', size: 1, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 23 }
     ],
     Decal: <IVertexAttribute[]> [
-        { name: 'aModelMatrix', size: 16, type: GL.FLOAT, normalized: false, stride: 72, offset: 0 },
-        { name: 'aColor', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 72, offset: 64 },
-        { name: 'aMaterial', size: 4, type: GL.UNSIGNED_BYTE, normalized: false, stride: 72, offset: 68 }
+        { name: 'aModelMatrix', size: 16, type: GL.FLOAT, normalized: false, stride: 76, offset: 0 },
+        { name: 'aUV', size: 4, type: GL.UNSIGNED_SHORT, normalized: true, stride: 76, offset: 64 },
+        { name: 'aColor', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 76, offset: 72 },
     ],
     Particle: <IVertexAttribute[]> [
-        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 0 },
-        { name: 'aVelocity', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 16 },
-        { name: 'aAcceleration', size: 4, type: GL.FLOAT, normalized: false, stride: 68, offset: 32 },
-        { name: 'aLifetime', size: 3, type: GL.FLOAT, normalized: false, stride: 68, offset: 48 },
-        { name: 'aSize', size: 2, type: GL.FLOAT, normalized: false, stride: 68, offset: 60 }
+        { name: 'aLifetime', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 0 },
+        { name: 'aSize', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 16 },
+        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 32 },
+        { name: 'aVelocity', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 48 },
+        { name: 'aAcceleration', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 64 }
     ]
 }
 

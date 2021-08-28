@@ -64,3 +64,22 @@ export function hashString(value: string): number {
     }
     return hash
 }
+
+export function binarySearch<T>(list: T[], target: T, compare: (a: T, b: T) => number, last?: boolean): number {
+    let min = 0, max = list.length
+    while(min < max){
+        let pivot = min + max >>> 1
+        if(last ? compare(list[pivot], target) <= 0 : compare(list[pivot], target) < 0) min = pivot + 1
+        else max = pivot
+    }
+    return last ? max : min
+}
+
+export function insertionSort<T>(list: T[], compare: (a: T, b: T) => number): void {
+    for(let length = list.length, j, i = 0; i < length; i++){
+        let temp = list[i]
+        for(j = i - 1; j >= 0 && compare(temp, list[j]) > 0; j--)
+            list[j + 1] = list[j]
+        list[j+1] = temp
+    }
+}

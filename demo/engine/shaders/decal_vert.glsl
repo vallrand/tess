@@ -5,12 +5,17 @@ layout(std140, column_major) uniform;
 layout(location=0) in vec3 aPosition;
 #ifdef INSTANCED
 layout(location=1) in mat4 aModelMatrix;
-layout(location=5) in vec4 aColor;
-layout(location=6) in vec4 aMaterial;
+layout(location=5) in vec4 aUV;
+layout(location=6) in vec4 aColor;
+
+out vec3 vPosition;
+out mat4 vInvModel;
+out vec4 vUV;
+out vec4 vColor;
+out float vThreshold;
 #else
-uniform vec4 uColor;
 uniform mat4 uModelMatrix;
-#endif 
+#endif
 
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
@@ -18,15 +23,13 @@ uniform CameraUniforms {
     vec3 uEyePosition;
 };
 
-out vec3 vPosition;
-out mat4 vInvModel;
-out vec4 vColor;
-out vec4 vMaterial;
-
 void main(){
-    vPosition = (aModelMatrix * vec4(aPosition, 1.0)).xyz;
-    vInvModel = inverse(aModelMatrix);
+    mat4 modelMatrix = aModelMatrix;
+    modelMatrix[0][3]=0.0;modelMatrix[1][3]=0.0;modelMatrix[2][3]=0.0;modelMatrix[3][3]=1.0;
+    vPosition = (modelMatrix * vec4(aPosition, 1.0)).xyz;
+    vInvModel = inverse(modelMatrix);
+    vThreshold = aModelMatrix[0][3];
+    vUV = aUV;
     vColor = aColor;
-    vMaterial = aMaterial;
     gl_Position = uViewProjectionMatrix * vec4(vPosition, 1.0);
 }

@@ -2,17 +2,17 @@
 precision highp float;
 layout(std140, column_major) uniform;
 
-layout(location=0) in vec4 aTransform;
-layout(location=1) in vec4 aVelocity;
-layout(location=2) in vec4 aAcceleration;
-layout(location=3) in vec3 aLifetime;
-layout(location=4) in vec2 aSize;
+layout(location=0) in vec4 aLifetime;
+layout(location=1) in vec4 aSize;
+layout(location=2) in vec4 aTransform;
+layout(location=3) in vec4 aVelocity;
+layout(location=4) in vec4 aAcceleration;
 
+layout(xfb_offset=0) out vec4 vLifetime;
+layout(xfb_offset=0) out vec4 vSize;
 layout(xfb_offset=0) out vec4 vTransform;
 layout(xfb_offset=0) out vec4 vVelocity;
 layout(xfb_offset=0) out vec4 vAcceleration;
-layout(xfb_offset=0) out vec3 vLifetime;
-layout(xfb_offset=0) out vec2 vSize;
 
 uniform GlobalUniforms {
     vec4 uTime;
@@ -38,6 +38,9 @@ uniform EmitterUniforms {
 #endif
 #ifdef ANGULAR
     vec4 uAngular;
+#endif
+#ifdef FRAMES
+    vec2 uFrame;
 #endif
     int uLastID;
 };
@@ -109,6 +112,11 @@ void main(){
 
         vSize.x = mix(uSize.x, uSize.y, hash11(seed+=1U));
         vSize.y = 0.0;
+#ifdef FRAMES
+        vSize.zw = vec2(floor(uFrame.y * uFrame.y *  hash11(seed+=1U)), uFrame.y);
+#else
+        vSize.zw = vec2(0,1);
+#endif
     }else{
 #ifdef STATIC
         vLifetime = aLifetime;
@@ -117,7 +125,7 @@ void main(){
         vAcceleration = aAcceleration;
         vSize = aSize;
 #else
-        vLifetime = vec3(aLifetime.x + uTime.y, aLifetime.y, aLifetime.z);
+        vLifetime = aLifetime + vec4(uTime.y,0,0,0);
         float life = clamp(vLifetime.x * vLifetime.y, 0.0, 1.0);
         float deltaTime = max(0.0,vLifetime.x) - max(0.0,aLifetime.x);
 
@@ -143,7 +151,10 @@ void main(){
 #endif
         vVelocity *= mVelocity.xxxy;
         vTransform = aTransform + deltaTime * vVelocity;
-        vSize = vec2(aSize.x, mSize * aSize.x);
+        vSize = vec4(aSize.x, mSize * aSize.x, aSize.z, aSize.w);
+#ifdef FRAMES
+        vSize.z = mod(aSize.z + deltaTime * uFrame.x, vSize.w * vSize.w);
+#endif
 #endif
     }
 }
