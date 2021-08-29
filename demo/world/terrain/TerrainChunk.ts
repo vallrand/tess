@@ -2,7 +2,7 @@ import { vec3, aabb2 } from '../../engine/math'
 import { createPlane } from '../../engine/geometry'
 import { Application } from '../../engine/framework'
 import { MeshSystem, Mesh, MeshBuffer } from '../../engine/Mesh'
-import { TransformSystem } from '../../engine/Transform'
+import { TransformSystem } from '../../engine/scene/Transform'
 import { IActor } from '../Actor'
 
 export class TerrainChunk {

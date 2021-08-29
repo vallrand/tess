@@ -1,6 +1,6 @@
 import { mat4 } from '../math'
 import { Application, System } from '../framework'
-import { CameraSystem } from '../Camera'
+import { CameraSystem } from '../scene/Camera'
 import { MeshSystem } from '../Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { IEffect } from '../pipeline'
@@ -69,7 +69,7 @@ export class DeferredGeometryPass implements System {
 
             gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
             gl.bindTexture(GL.TEXTURE_2D, mesh.material.diffuse)
-            gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uNormalMap)
+            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
             gl.bindTexture(GL.TEXTURE_2D, mesh.material.normal)
             if(mesh.material.array){
                 gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uArrayMap)

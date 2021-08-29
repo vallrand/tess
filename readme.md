@@ -27,6 +27,9 @@ Particle effects:
 
 ## Data Format
 
+optimization https://emscripten.org/docs/optimizing/Optimizing-WebGL.html
+webgl state https://webgl2fundamentals.org/webgl/lessons/resources/webgl-state-diagram.html
+
 particles = 
 https://gpfault.net/posts/webgl2-particles.txt.html
 https://www.youtube.com/watch?v=PWjIeJDE7Rc

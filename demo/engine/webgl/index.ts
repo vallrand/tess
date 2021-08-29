@@ -1,4 +1,5 @@
 export * from './constants'
+export * from './state'
 export * from './shader'
 export * from './texture'
 export * from './shared'

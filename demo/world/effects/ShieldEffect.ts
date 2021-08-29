@@ -3,7 +3,7 @@ import { IEffect } from '../../engine/pipeline'
 import { createSphere } from '../../engine/geometry'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { MeshSystem, MeshBuffer } from '../../engine/Mesh'
-import { Transform } from '../../engine/Transform'
+import { Transform } from '../../engine/scene/Transform'
 
 class ShieldEffectInstance {
     index: number

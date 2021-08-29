@@ -1,4 +1,4 @@
-import { vec3, mat4 } from './math'
+import { vec3, mat4 } from '../math'
 import { PerspectiveCamera } from './Camera'
 import { Transform } from './Transform'
 

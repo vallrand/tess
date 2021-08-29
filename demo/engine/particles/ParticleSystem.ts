@@ -102,9 +102,9 @@ export class ParticleSystem<T> implements IEffect {
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
-        gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uGradient)
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uGradient)
         gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
-        gl.activeTexture(gl.TEXTURE0 + UniformSamplerBindings.uAttributes)
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAttributes)
         gl.bindTexture(GL.TEXTURE_2D, this.curveSampler)
 
         transform: {

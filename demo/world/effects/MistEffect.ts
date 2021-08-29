@@ -1,7 +1,7 @@
 import { Application } from '../../engine/framework'
 import { randomFloat, vec3, aabb3 } from '../../engine/math'
 import { GL, createTexture, ShaderProgram } from '../../engine/webgl'
-import { CameraSystem } from '../../engine/Camera'
+import { CameraSystem } from '../../engine/scene/Camera'
 import { ParticleSystem } from '../../engine/particles'
 
 function intersectPlane(origin: vec3, ray: vec3, planeNormal: vec3, planePosition: vec3, out: vec3): vec3 {

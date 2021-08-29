@@ -5,7 +5,7 @@ import { PostEffectPass } from './PostEffectPass'
 import { Material, RenderTexture } from '../Material'
 import { GeometryBatch, IBatched, Sprite, Line } from '../batch'
 import { IEffect } from '../pipeline'
-import { CameraSystem } from '../Camera'
+import { CameraSystem } from '../scene/Camera'
 import { Mesh, MeshSystem } from '../Mesh'
 import { DeferredGeometryPass } from './GeometryPass'
 

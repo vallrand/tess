@@ -1,10 +1,10 @@
-import { ICamera } from '../Camera'
+import { ICamera } from '../scene/Camera'
 import { mat4, vec2, vec3, vec4 } from '../math'
 import { SpriteMaterial } from '../Sprite'
-import { Transform } from '../Transform'
+import { Transform } from '../scene/Transform'
 import { IBatched } from './GeometryBatch'
 import { IVertexAttribute } from '../webgl'
-import { BoundingVolume, calculateBoundingRadius } from '../FrustumCulling'
+import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
 
 export class BatchMesh implements IBatched {
     public index: number = -1

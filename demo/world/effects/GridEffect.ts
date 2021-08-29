@@ -1,6 +1,6 @@
 import { ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
-import { Transform, TransformSystem } from '../../engine/Transform'
+import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/deferred/DecalPass'
 import { DecalBatch } from '../../engine/batch'
 import { GL } from '../../engine/webgl'

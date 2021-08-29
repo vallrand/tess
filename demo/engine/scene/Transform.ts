@@ -1,5 +1,5 @@
-import { vec2, vec3, quat, mat3x2, mat4, vec4 } from './math'
-import { Application, System, Factory } from './framework'
+import { vec2, vec3, quat, mat3x2, mat4, vec4 } from '../math'
+import { Application, System, Factory } from '../framework'
 
 export class Transform2D {
     public index: number = -1

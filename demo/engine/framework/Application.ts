@@ -1,4 +1,5 @@
 import { ready, IProgressHandler, ProgressHandler } from './Loader'
+import { WebGLState } from '../webgl'
 
 export interface System {
     update(): void
@@ -23,10 +24,10 @@ export class Application {
     constructor(systems: SystemType<any>[]){
         this.canvas.width = 600
         this.canvas.height = 400
-        this.gl = this.canvas.getContext('webgl2', {
-            alpha: false, antialias: false, depth: true,
+        this.gl = new WebGLState(this.canvas.getContext('webgl2', {
+            alpha: false, antialias: false, depth: true, stencil: false,
             premultipliedAlpha: false, preserveDrawingBuffer: false
-        })
+        }))
         for(let index = 0; index < systems.length; index++){
             if(systems[index].index == null) systems[index].index = index
             this.systems[systems[index].index] = new systems[index](this)

@@ -1,9 +1,9 @@
 import { vec2, vec3, vec4, mat4, mat3x2 } from '../math'
-import { ICamera } from '../Camera'
+import { ICamera } from '../scene/Camera'
 import { IBatched } from './GeometryBatch'
 import { SpriteMaterial } from '../Sprite'
-import { Transform } from '../Transform'
-import { BoundingVolume } from '../FrustumCulling'
+import { Transform } from '../scene/Transform'
+import { BoundingVolume } from '../scene/FrustumCulling'
 
 export const enum BillboardType {
     None = 0,

@@ -1,6 +1,6 @@
-import { vec3, quat, mat4, vec4 } from './math'
-import { Application } from './framework'
-import { GL, UniformBlock } from './webgl'
+import { vec3, quat, mat4, vec4 } from '../math'
+import { Application } from '../framework'
+import { GL, UniformBlock } from '../webgl'
 import { TransformSystem, Transform } from './Transform'
 import { FrustumCulling } from './FrustumCulling'
 

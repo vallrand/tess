@@ -1,8 +1,8 @@
 import { vec3, vec4 } from '../math'
 import { GL, ShaderProgram, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
-import { ICamera } from '../Camera'
-import { BoundingVolume } from '../FrustumCulling'
+import { ICamera } from '../scene/Camera'
+import { BoundingVolume } from '../scene/FrustumCulling'
 
 export const uint8x4 = (r: number, g: number, b: number, a: number): number =>
 (0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | (0xFF000000 & a << 24)

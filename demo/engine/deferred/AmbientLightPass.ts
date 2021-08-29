@@ -28,7 +28,7 @@ export class AmbientLightPass implements System {
         this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('./ambient_light_frag.glsl'))
     }
     public update(): void {
-        const gl = this.context.gl
+        const { gl } = this.context
 
         this.context.get(PostEffectPass).swapRenderTarget(false, false)
         gl.depthMask(false)

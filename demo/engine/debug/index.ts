@@ -57,60 +57,6 @@ class Monitor {
     }
 }
 
-export function attachDebugPanel(){
-    const panel = document.createElement('div')
-    Object.assign(panel.style, { position: 'fixed', top: 0, left: 0, zIndex: 128, fontSize: '0.8em' })
-
-    const FPS = new Monitor({
-        refreshRate: 100,
-        color: '#83e82a', label: 'FPS', range: [0, 60],
-        update(deltaTime){
-            this.values.push(1000 / deltaTime)
-        }
-    })
-
-    const glCalls = {
-        drawElements: 0,
-        drawArrays: 0,
-        drawArraysInstanced: 0,
-        drawElementsInstanced: 0,
-        blitFramebuffer: 0
-    }
-    HTMLCanvasElement.prototype.getContext = (getContext => function(){
-        const gl = getContext.apply(this, arguments)
-        const ContextClass = Object.getPrototypeOf(gl).constructor
-        const GLProxy = Object.create(ContextClass.prototype)
-
-        for(let property in glCalls)
-            if(property in ContextClass.prototype)
-                GLProxy[property] = (value => function(){
-                    glCalls[property]++
-                    return value.apply(this, arguments)
-                })(ContextClass.prototype[property])
-            else return gl
-        return Object.setPrototypeOf(gl, GLProxy)
-    })(HTMLCanvasElement.prototype.getContext)
-
-    const DC = new Monitor({
-        refreshRate: 100,
-        color: '#e8632a', label: 'DC', range: [0, 40],
-        update(deltaTime){
-            this.values.push(glCalls.drawArrays + glCalls.drawElements + glCalls.drawArraysInstanced + glCalls.drawElementsInstanced + glCalls.blitFramebuffer)
-            glCalls.drawArrays = glCalls.drawElements = glCalls.drawArraysInstanced = glCalls.drawElementsInstanced = glCalls.blitFramebuffer = 0
-        }
-    })
-
-    panel.appendChild(FPS.dom)
-    panel.appendChild(DC.dom)
-
-    if(document.body) document.body.appendChild(panel)
-    else document.addEventListener('DOMContentLoaded', function onload(){
-        document.body.appendChild(panel)
-    })
-}
-
-attachDebugPanel()
-
 export class DebugSystem implements System {
     public texture: WebGLTexture
     private readonly program: ShaderProgram
@@ -118,6 +64,46 @@ export class DebugSystem implements System {
         window['app'] = context
         this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)
         this.program.uniforms['uMask'] = vec4.ONE
+        this.attachDebugPanel()
+    }
+    private attachDebugPanel(){
+        const panel = document.createElement('div')
+        Object.assign(panel.style, { position: 'fixed', top: 0, left: 0, zIndex: 128, fontSize: '0.8em' })
+    
+        const FPS = new Monitor({
+            refreshRate: 100,
+            color: '#83e82a', label: 'FPS', range: [0, 60],
+            update(deltaTime){
+                this.values.push(1000 / deltaTime)
+            }
+        })
+    
+        const glCalls = {
+            drawElements: 0,
+            drawArrays: 0,
+            drawArraysInstanced: 0,
+            drawElementsInstanced: 0,
+            blitFramebuffer: 0
+        }
+        for(let property in glCalls)
+            this.context.gl[property] = (base => function(){
+                glCalls[property]++
+                return base.apply(this, arguments)
+            })(this.context.gl[property])
+    
+        const DC = new Monitor({
+            refreshRate: 100,
+            color: '#e8632a', label: 'DC', range: [0, 40],
+            update(deltaTime){
+                this.values.push(glCalls.drawArrays + glCalls.drawElements + glCalls.drawArraysInstanced + glCalls.drawElementsInstanced + glCalls.blitFramebuffer)
+                glCalls.drawArrays = glCalls.drawElements = glCalls.drawArraysInstanced = glCalls.drawElementsInstanced = glCalls.blitFramebuffer = 0
+            }
+        })
+    
+        panel.appendChild(FPS.dom)
+        panel.appendChild(DC.dom)
+    
+        document.body.appendChild(panel)
     }
     update(){
         if(this.texture) this.renderDebugTexture(this.texture)

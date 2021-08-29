@@ -1,7 +1,6 @@
 import { Application } from './engine/framework'
 
-import { TransformSystem } from './engine/Transform'
-import { CameraSystem } from './engine/Camera'
+import { TransformSystem, CameraSystem } from './engine/scene'
 import { MaterialSystem } from './engine/Material'
 import { MeshSystem } from './engine/Mesh'
 import { SpriteSystem } from './engine/Sprite'

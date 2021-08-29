@@ -3,6 +3,10 @@ import { GL, createTexture, compileProgram, locateUniforms, TextureOptions, Shad
 import { Application, IProgressHandler, System, Factory, Signal } from './framework'
 import { PostEffectPass } from './deferred/PostEffectPass'
 
+export interface IMaterial {
+    program?: ShaderProgram
+}
+
 export class Material {
     index: number
     diffuse: WebGLTexture

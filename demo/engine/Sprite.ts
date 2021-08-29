@@ -2,7 +2,7 @@ import { vec2, mat3x2, aabb2, vec4, vec3 } from './math'
 import { Application, System, Factory } from './framework'
 import { ShaderProgram } from './webgl'
 import { Batch2D, IBatched2D } from './batch'
-import { Transform2D } from './Transform'
+import { Transform2D } from './scene/Transform'
 
 export class SpriteMaterial {
     public static calculateUVMatrix(frame: aabb2, size: vec2, out: mat3x2): mat3x2 {

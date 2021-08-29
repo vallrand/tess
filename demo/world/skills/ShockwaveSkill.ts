@@ -1,7 +1,7 @@
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { Decal, DecalPass } from '../../engine/deferred/DecalPass'
-import { TransformSystem } from '../../engine/Transform'
+import { TransformSystem } from '../../engine/scene/Transform'
 import { SpriteMaterial } from '../../engine/Sprite'
 import { ActionSignal } from '../Actor'
 import { animations } from '../animations'

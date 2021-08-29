@@ -2,9 +2,9 @@ import { vec3, quat, mat4, aabb3 } from './math'
 import { GL, IVertexAttribute } from './webgl'
 import { Application, IProgressHandler, loadFile, System, Factory } from './framework'
 
-import { Transform } from './Transform'
+import { Transform } from './scene/Transform'
 import { MaterialSystem, Material } from './Material'
-import { BoundingVolume, calculateBoundingRadius } from './FrustumCulling'
+import { BoundingVolume, calculateBoundingRadius } from './scene/FrustumCulling'
 
 interface IBufferRange {
     buffer: number

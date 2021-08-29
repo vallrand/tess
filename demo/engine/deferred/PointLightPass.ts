@@ -2,9 +2,9 @@ import { mat4, vec3 } from '../math'
 import { createSphere } from '../geometry'
 import { Application, System, Factory } from '../framework'
 import { MeshSystem, MeshBuffer } from '../Mesh'
-import { CameraSystem } from '../Camera'
-import { Transform } from '../Transform'
-import { BoundingVolume } from '../FrustumCulling'
+import { CameraSystem } from '../scene/Camera'
+import { Transform } from '../scene/Transform'
+import { BoundingVolume } from '../scene/FrustumCulling'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
 
 export class PointLight {

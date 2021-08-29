@@ -59,7 +59,7 @@ export function locateUniforms(gl: WebGL2RenderingContext, program: WebGLProgram
     for(let i = gl.getProgramParameter(program, GL.ACTIVE_UNIFORM_BLOCKS) - 1; i >= 0; i--){
         const byteSize = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_DATA_SIZE)
         const indices = gl.getActiveUniformBlockParameter(program, i, GL.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)
-        const offsets = gl.getActiveUniforms(program, indices, gl.UNIFORM_OFFSET)
+        const offsets = gl.getActiveUniforms(program, indices, GL.UNIFORM_OFFSET)
         const name = gl.getActiveUniformBlockName(program, i)
         const blockIndices = gl.getActiveUniforms(program, indices, GL.UNIFORM_BLOCK_INDEX)
         const uniforms: WebGLActiveInfo[] = Array(indices.length)

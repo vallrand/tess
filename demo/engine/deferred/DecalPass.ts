@@ -1,12 +1,12 @@
 import { vec4, mat4, binarySearch, insertionSort } from '../math'
 import { Application, System, Factory } from '../framework'
 import { createBox } from '../geometry'
-import { CameraSystem } from '../Camera'
-import { Transform } from '../Transform'
+import { CameraSystem } from '../scene/Camera'
+import { Transform } from '../scene/Transform'
 import { MeshSystem, MeshBuffer } from '../Mesh'
 import { DeferredGeometryPass } from './GeometryPass'
 import { SpriteMaterial } from '../Sprite'
-import { BoundingVolume } from '../FrustumCulling'
+import { BoundingVolume } from '../scene/FrustumCulling'
 import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
 import { DecalBatch, IBatchedDecal } from '../batch'
 import { IEffect } from '../pipeline'
@@ -75,7 +75,7 @@ export class DecalPass implements System {
         item.transform = item.material = null
     }
     update(): void {
-        const gl = this.context.gl
+        const { gl } = this.context
         gl.enable(GL.DEPTH_TEST)
         gl.depthFunc(GL.GEQUAL)
         gl.depthMask(false)
