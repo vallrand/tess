@@ -1,29 +1,14 @@
-import { Application } from '../../engine/framework'
-import { clamp, vec3, vec4, quat, ease } from '../../engine/math'
-import { Armature } from '../../engine/Mesh'
-import { Sprite } from '../../engine/batch'
-import { ParticleEmitter } from '../../engine/particles'
-import { PointLight } from '../../engine/deferred/PointLightPass'
+import { clamp, ease, vec3 } from './math'
+import { ParticleEmitter } from './particles'
 
-export const EmitterTrigger = (options: {
-    frame: number
-    value: number
-    origin?: vec3
-    target?: vec3
-}) => function(elapsedTime: number, deltaTime: number, emitter: ParticleEmitter){
-    const prevTime = elapsedTime - deltaTime
-    if(!(elapsedTime >= options.frame && prevTime < options.frame)) return
-    if(options.origin) vec3.copy(options.origin, emitter.uniform.uniforms['uOrigin'] as any)
-    if(options.target) vec3.copy(options.target, emitter.uniform.uniforms['uTarget'] as any)
-    emitter.count += options.value
-    emitter.uniform.frame = 0
-}
+export type IAnimationTrigger<T = any> = (elapsed: number, deltaTime: number, target: T) => void
+export type IAnimationTween<T = any> = (elapsed: number, target: T) => T
 
 export function PropertyAnimation<T>(frames: {
     frame: number
     value: T
     ease?: ease.IEase
-}[], lerp?: (prev: T, next: T, fraction: number, out: T) => T, framerate: number = 1){
+}[], lerp?: (prev: T, next: T, fraction: number, out: T) => T, framerate: number = 1): IAnimationTween<T> {
     frames.sort((a, b) => a.frame - b.frame)
     const lastIndex = frames.length - 1
     let frame = 0
@@ -41,7 +26,23 @@ export function PropertyAnimation<T>(frames: {
     }
 }
 
-export function AnimationTimeline<T>(target: T, tracks: Record<string, ReturnType<typeof PropertyAnimation>>){
+export const EmitterTrigger = (options: {
+    frame: number
+    value: number
+    origin?: vec3
+    target?: vec3
+}): IAnimationTrigger<ParticleEmitter> => function(elapsedTime: number, deltaTime: number, emitter: ParticleEmitter){
+    const prevTime = elapsedTime - deltaTime
+    if(!(elapsedTime >= options.frame && prevTime < options.frame)) return
+    if(options.origin) vec3.copy(options.origin, emitter.uniform.uniforms['uOrigin'] as any)
+    if(options.target) vec3.copy(options.target, emitter.uniform.uniforms['uTarget'] as any)
+    emitter.count += options.value
+    emitter.uniform.frame = 0
+}
+
+export function AnimationTimeline<T>(
+    target: T, tracks: Record<string, ReturnType<typeof PropertyAnimation> | ReturnType<typeof EmitterTrigger>>
+){
     const properties = Object.keys(tracks).map(key => {
         const path = key.split('.').reverse()
         let node = target
@@ -56,22 +57,6 @@ export function AnimationTimeline<T>(target: T, tracks: Record<string, ReturnTyp
             if(!isNaN(target.frame)) target.frame = 0
         }
     }
-}
-
-export const ArmatureAnimation = (tracks: {
-    index: number
-    rotation?: (time: number, out: quat) => quat
-    position?: (time: number, out: vec3) => vec3
-    scale?: (time: number, out: vec3) => vec3
-}[]) => function(time: number, armature: Armature){
-    for(let i = tracks.length - 1; i >= 0; i--){
-        const track = tracks[i], node = armature.nodes[track.index]
-        track.position?.(time, node.position)
-        track.rotation?.(time, node.rotation)
-        track.scale?.(time, node.scale)
-    }
-    armature.frame = 0
-    return armature
 }
 
 export function parseEase(easing: string): ease.IEase {

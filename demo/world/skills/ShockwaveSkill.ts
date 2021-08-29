@@ -4,8 +4,8 @@ import { Decal, DecalPass } from '../../engine/deferred/DecalPass'
 import { TransformSystem } from '../../engine/scene/Transform'
 import { SpriteMaterial } from '../../engine/Sprite'
 import { ActionSignal } from '../Actor'
-import { animations } from '../animations'
-import { AnimationTimeline, PropertyAnimation } from '../animations/timeline'
+import { modelAnimations } from '../animations'
+import { AnimationTimeline, PropertyAnimation } from '../../engine/Animation'
 import { Cube, cubeModules } from '../player'
 import { SharedSystem } from '../shared'
 import { MaterialSystem } from '../../engine/Material'
@@ -214,7 +214,7 @@ export class ShockwaveSkill {
         for(let duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            animations[moduleSettings.model].activate(elapsedTime, mesh.armature)
+            modelAnimations[moduleSettings.model].activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame

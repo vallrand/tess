@@ -4,7 +4,7 @@ import { TransformSystem } from '../engine/scene/Transform'
 import { MeshSystem, Mesh } from '../engine/Mesh'
 import { KeyboardSystem } from '../engine/Keyboard'
 import { TerrainSystem } from './terrain'
-import { animations } from './animations/animations'
+import { modelAnimations } from './animations/animations'
 import { IActor, TurnBasedSystem, ActionSignal } from './Actor'
 import { PlayerSystem, Cube, CubeModule, Direction } from './player'
 
@@ -37,7 +37,7 @@ export class Workshop implements IActor {
         this.context.get(TerrainSystem).tilePosition(column, row, position)
 
         quat.axisAngle(vec3.AXIS_Y, 0.5 * Math.PI, this.mesh.armature.nodes[0].rotation)
-        animations.dock.open(0, this.mesh.armature)
+        modelAnimations.dock.open(0, this.mesh.armature)
 
         for(let i = 0; i < Workshop.area.length; i++)
             chunk.set(Workshop.area[i][0] + column, Workshop.area[i][1] + row, this)
@@ -65,7 +65,7 @@ export class Workshop implements IActor {
             this.opened = true
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
-                animations.dock.open(fraction, armature)
+                modelAnimations.dock.open(fraction, armature)
                 if(fraction >= 1) break
                 yield ActionSignal.WaitNextFrame
             }
@@ -73,7 +73,7 @@ export class Workshop implements IActor {
             this.opened = false
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
-                animations.dock.open(1 - fraction, armature)
+                modelAnimations.dock.open(1 - fraction, armature)
                 if(fraction >= 1) break
                 yield ActionSignal.WaitNextFrame
             }
@@ -98,7 +98,7 @@ export class Workshop implements IActor {
             ]
             lift: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
-                animations.dock.lift(fraction, armature)
+                modelAnimations.dock.lift(fraction, armature)
                 vec3.lerp(prevPosition, nextPosition, ease.quadIn(fraction), mesh.transform.position)
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(fraction), cameraOffset)
                 mesh.transform.frame = 0
@@ -122,7 +122,7 @@ export class Workshop implements IActor {
             }
             lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
-                animations.dock.lift(1-fraction, armature)
+                modelAnimations.dock.lift(1-fraction, armature)
                 vec3.lerp(prevPosition, nextPosition, ease.quadIn(1-fraction), mesh.transform.position)
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(1-fraction), cameraOffset)
                 mesh.transform.frame = 0

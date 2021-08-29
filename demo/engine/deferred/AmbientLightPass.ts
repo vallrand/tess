@@ -35,7 +35,6 @@ export class AmbientLightPass implements System {
         gl.enable(GL.BLEND)
         gl.disable(GL.DEPTH_TEST)
         gl.cullFace(GL.FRONT)
-        //this.renderer.SRC_ALPHA, this.renderer.ONE_MINUS_SRC_ALPHA
         gl.blendFunc(GL.ONE, GL.ONE)
         gl.clear(GL.COLOR_BUFFER_BIT)
 

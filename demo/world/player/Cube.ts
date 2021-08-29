@@ -6,8 +6,8 @@ import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/Keyboard'
 import { PointLightPass, PointLight } from '../../engine/deferred/PointLightPass'
 import { TerrainSystem, TerrainChunk } from '../terrain'
-import { animations } from '../animations/animations'
-import { EmitterTrigger } from '../animations/timeline'
+import { modelAnimations } from '../animations/animations'
+import { EmitterTrigger } from '../../engine/Animation'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { IActor, TurnBasedSystem, ActionSignal } from '../Actor'
 import { PlayerSystem } from './Player'
@@ -88,7 +88,7 @@ export class Cube implements IActor {
         this.state.sides[side].type = type
         const rotation = DirectionAngle[(this.state.direction + this.state.sides[side].direction) % 4]
         quat.copy(rotation, mesh.armature.nodes[0].rotation)
-        animations[moduleSettings.model].close(0, mesh.armature)
+        modelAnimations[moduleSettings.model].close(0, mesh.armature)
 
         this.hash = this.state.sides.reduce((hash, side) => (
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
@@ -115,7 +115,7 @@ export class Cube implements IActor {
                     state.open = Math.min(1, delta)
                 else if(prev != 0 && prev != 1) state.open = Math.min(prev > 0 ? 1 : 0, prev + delta)
                 if(state.open != prev){
-                    animations[moduleSettings.model].open(Math.abs(state.open), mesh.armature)
+                    modelAnimations[moduleSettings.model].open(Math.abs(state.open), mesh.armature)
                     yield ActionSignal.WaitNextFrame
                     continue
                 }
@@ -153,7 +153,7 @@ export class Cube implements IActor {
                         let fraction = (this.context.currentTime - startTime) / duration
                         vec3.lerp(vec3.ZERO, [3,5,3], _ease(Math.min(1, fraction)), shield.transform.scale)
                         shield.transform.frame = 0
-                        animations[moduleSettings.model].activate(fraction % 1, mesh.armature)
+                        modelAnimations[moduleSettings.model].activate(fraction % 1, mesh.armature)
                         //if(fraction >= 1) break
                         yield ActionSignal.WaitNextFrame
                     }
@@ -218,7 +218,7 @@ export class Cube implements IActor {
 
         const mesh = this.meshes[this.state.side]
         const moduleSettings = cubeModules[this.state.sides[this.state.side].type]
-        animations[moduleSettings.model].close(0, mesh.armature)
+        modelAnimations[moduleSettings.model].close(0, mesh.armature)
 
         const rootNode = mesh.armature.nodes[0]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())

@@ -43,7 +43,7 @@ export class PlayerSystem implements System {
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
-        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.EMP)
+        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.Shield)
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0

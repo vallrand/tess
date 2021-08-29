@@ -7,7 +7,6 @@ export class WebGLState implements WebGL2RenderingContext {
             if(property in this) continue
             const value = this.gl[property]
             if(typeof value === 'function') this[property] = value.bind(this.gl)
-            //else this[property] = value
         }
     }
     get canvas(): HTMLCanvasElement | OffscreenCanvas { return this.gl.canvas }

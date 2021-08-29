@@ -1,8 +1,6 @@
-import { createCylinder, createSphere, applyTransform } from '../../engine/geometry'
-import { clamp, ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { createCylinder, applyTransform } from '../../engine/geometry'
+import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { Mesh, MeshSystem } from '../../engine/Mesh'
-import { Material } from '../../engine/Material'
 import { ShaderProgram } from '../../engine/webgl'
 import { PointLight, PointLightPass } from '../../engine/deferred/PointLightPass'
 import { shaders } from '../../engine/shaders'
@@ -11,8 +9,8 @@ import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { SpriteMaterial } from '../../engine/Sprite'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { BatchMesh, BillboardType, Line, Sprite } from '../../engine/batch'
-import { animations } from '../animations'
-import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../animations/timeline'
+import { modelAnimations } from '../animations'
+import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../../engine/Animation'
 import { SharedSystem } from '../shared'
 import { ActionSignal } from '../Actor'
 import { Cube, cubeModules } from '../player'
@@ -215,7 +213,7 @@ export class BeamSkill {
         for(let duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            animations[moduleSettings.model].activate(elapsedTime, mesh.armature)
+            modelAnimations[moduleSettings.model].activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame

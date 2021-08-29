@@ -1,10 +1,26 @@
 import { clamp, vec3, quat, ease } from '../../engine/math'
 import { Armature } from '../../engine/Mesh'
-import { ArmatureAnimation, parseEase, PropertyAnimation } from './timeline'
+import { parseEase, PropertyAnimation } from '../../engine/Animation'
 
 import animationData from './animation.json'
 
-export const animations: {
+export const ArmatureAnimation = (tracks: {
+    index: number
+    rotation?: (time: number, out: quat) => quat
+    position?: (time: number, out: vec3) => vec3
+    scale?: (time: number, out: vec3) => vec3
+}[]) => function(time: number, armature: Armature){
+    for(let i = tracks.length - 1; i >= 0; i--){
+        const track = tracks[i], node = armature.nodes[track.index]
+        track.position?.(time, node.position)
+        track.rotation?.(time, node.rotation)
+        track.scale?.(time, node.scale)
+    }
+    armature.frame = 0
+    return armature
+}
+
+export const modelAnimations: {
     [model:string]: {
         [animation:string]: (time: number, armature: Armature) => Armature
     }
@@ -35,6 +51,6 @@ for(let key in animationData[model]){
         scale: scale.length ? PropertyAnimation<vec3>(scale, vec3.lerp, 1) : undefined,
         rotation: rotation.length ? PropertyAnimation<quat>(rotation, quat.slerp, 1) : undefined
     })).filter(Boolean))
-    animations[model] = animations[model] || Object.create(null)
-    animations[model][key] = animation
+    modelAnimations[model] = modelAnimations[model] || Object.create(null)
+    modelAnimations[model][key] = animation
 }
