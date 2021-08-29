@@ -1,4 +1,4 @@
-import { ShaderProgram } from '../../engine/webgl'
+import { ShaderProgram, UniformBlock, UniformBlockBindings } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/deferred/DecalPass'
@@ -10,6 +10,7 @@ export class GridEffect {
     private readonly program: ShaderProgram
     private readonly vao: WebGLVertexArrayObject
     public transform: Transform
+    private uniform: UniformBlock
     public enabled: boolean = !true
     constructor(private readonly context: Application, readonly gridSize: number){
         const { gl } = this.context
@@ -25,12 +26,17 @@ export class GridEffect {
 
         this.transform = this.context.get(TransformSystem).create()
         vec3.set(2*gridSize, 10, 2*gridSize, this.transform.scale)
+
+
+        this.uniform = new UniformBlock(gl, { byteSize: 4*(16+4+1) }, UniformBlockBindings.ModelUniforms)
     }
     apply(){
         if(!this.enabled) return
         const { gl } = this.context
         gl.useProgram(this.program.target)
-        this.program.uniforms['uModelMatrix'] = this.transform.matrix
+
+        this.uniform.data.set(this.transform.matrix, 0)
+        this.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
         gl.bindVertexArray(this.vao)
 
         gl.enable(GL.BLEND)

@@ -27,6 +27,7 @@ Particle effects:
 
 ## Data Format
 
+cubic bezier ease https://cubic-bezier.com/#.17,.67,.83,.67
 optimization https://emscripten.org/docs/optimizing/Optimizing-WebGL.html
 webgl state https://webgl2fundamentals.org/webgl/lessons/resources/webgl-state-diagram.html
 

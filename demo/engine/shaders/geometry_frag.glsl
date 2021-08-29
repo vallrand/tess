@@ -14,7 +14,11 @@ uniform CameraUniforms {
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
-uniform float uLayer;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 uniform sampler2D uDiffuseMap;
 uniform sampler2D uNormalMap;
 

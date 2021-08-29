@@ -1,3 +1,4 @@
+import { Application } from '../framework'
 import { vec3, vec4 } from '../math'
 import { GL, ShaderProgram, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
@@ -28,7 +29,7 @@ export interface IBatched {
         diffuse: WebGLTexture
         domain: vec3
     }
-    recalculate(frame: number, camera: ICamera): void
+    update(context: Application, camera: ICamera): void
     readonly bounds: BoundingVolume
 }
 

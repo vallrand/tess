@@ -9,11 +9,12 @@ import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { SpriteMaterial } from '../../engine/Sprite'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { BatchMesh, BillboardType, Line, Sprite } from '../../engine/batch'
-import { modelAnimations } from '../animations'
-import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../../engine/Animation'
+import { CubeModuleModel, modelAnimations } from '../animations'
+import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../../engine/scene/Animation'
 import { SharedSystem } from '../shared'
-import { ActionSignal } from '../Actor'
-import { Cube, cubeModules } from '../player'
+import { _ActionSignal } from '../Actor'
+import { Cube } from '../player'
+import { CubeSkill } from './CubeSkill'
 
 const timelineTracks = {
     'light.radius': PropertyAnimation([
@@ -75,7 +76,7 @@ const timelineTracks = {
     ], vec4.lerp),
 }
 
-export class BeamSkill {
+export class BeamSkill extends CubeSkill {
     private readonly cone: BatchMesh
     private readonly beam: Line
     private energy: ParticleEmitter
@@ -86,7 +87,8 @@ export class BeamSkill {
     private readonly flash: Sprite
     private readonly ring: Sprite
     private readonly direction: vec3 = vec3()
-    constructor(private readonly context: Application, private readonly cube: Cube){
+    constructor(context: Application, cube: Cube){
+        super(context, cube)
         const cylinder = createCylinder({
             radiusTop: 0, radiusBottom: 6, height: 3,
             horizontal: 4, radial: 16,
@@ -141,7 +143,7 @@ export class BeamSkill {
             uSize: [1,3]
         })
     }
-    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
         const origin = vec3(0.6,1.5,0)
         const target = vec3(20,1.5,0)
         quat.transform(origin, orientation, origin)
@@ -197,7 +199,7 @@ export class BeamSkill {
         })
 
         const mesh = this.cube.meshes[this.cube.state.side]
-        const moduleSettings = cubeModules[this.cube.state.sides[this.cube.state.side].type]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
         const animate = AnimationTimeline(this, {
             ...timelineTracks,
@@ -210,13 +212,13 @@ export class BeamSkill {
             'smoke': EmitterTrigger({ frame: 2.5, value: 8, origin }) as any
         })
 
-        for(let duration = 3, startTime = this.context.currentTime; true;){
+        for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            modelAnimations[moduleSettings.model].activate(elapsedTime, mesh.armature)
+            armatureAnimation.activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            yield _ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.energy.remove(this.energy)

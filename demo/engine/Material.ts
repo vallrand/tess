@@ -1,19 +1,59 @@
 import { vec3, quat, mat4 } from './math'
-import { GL, createTexture, compileProgram, locateUniforms, TextureOptions, ShaderProgram } from './webgl'
+import { GL, createTexture, compileProgram, locateUniforms, TextureOptions, ShaderProgram, UniformSamplerBindings } from './webgl'
 import { Application, IProgressHandler, System, Factory, Signal } from './framework'
 import { PostEffectPass } from './deferred/PostEffectPass'
 
 export interface IMaterial {
+    index?: number
     program?: ShaderProgram
+    bind(gl: WebGL2RenderingContext, program: ShaderProgram): void
 }
 
-export class Material {
+export class ShaderMaterial implements IMaterial {
+    public static readonly ADD = [GL.FUNC_ADD,GL.FUNC_ADD,GL.ONE,GL.ONE,GL.ONE,GL.ONE]
+    public static readonly PREMULTIPLY = [GL.FUNC_ADD,GL.FUNC_ADD,GL.ONE,GL.ONE_MINUS_SRC_ALPHA,GL.ZERO,GL.ONE]
+    program?: ShaderProgram
+    cullFace: number = GL.BACK
+    blend: number[] = null
+    depthTest: number = GL.LESS
+    public bind(gl: WebGL2RenderingContext, program: ShaderProgram): void {
+        if(this.cullFace){
+            gl.enable(GL.CULL_FACE)
+            gl.cullFace(this.cullFace)
+        }else gl.disable(GL.CULL_FACE)
+        if(this.depthTest){
+            gl.enable(GL.DEPTH_TEST)
+            gl.depthFunc(this.depthTest)
+        }else gl.disable(GL.DEPTH_TEST)
+        if(this.blend){
+            gl.enable(GL.BLEND)
+            gl.blendEquationSeparate(this.blend[0], this.blend[1])
+            gl.blendFuncSeparate(this.blend[2], this.blend[3], this.blend[4], this.blend[5])
+        }else gl.disable(GL.BLEND)
+    }
+}
+
+export class Material implements IMaterial {
     index: number
     diffuse: WebGLTexture
     normal?: WebGLTexture
     array?: WebGLTexture
     arrayLayers: number
     program?: ShaderProgram
+    public bind(gl: WebGL2RenderingContext, program: ShaderProgram): void {
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
+        gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
+
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
+        gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
+        gl.bindTexture(GL.TEXTURE_2D, this.normal)
+        if(this.array){
+            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uArrayMap)
+            gl.bindTexture(GL.TEXTURE_2D_ARRAY, this.array)
+            program.uniforms['uArrayMapLayers'] = this.arrayLayers - 1
+        }
+    }
 }
 
 export interface RenderTexture {

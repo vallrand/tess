@@ -1,6 +1,6 @@
 import { Application, System } from '../engine/framework'
 
-export const enum ActionSignal {
+export const enum _ActionSignal {
     WaitNextFrame = 0,
     WaitQueueEnd = 1,
     WaitTurnStart = 2
@@ -11,14 +11,14 @@ export interface IActor {
     prevAction: number
     place(column: number, row: number): void
     kill(): void
-    execute(turn: number): Generator<ActionSignal>
+    execute(turn: number): Generator<_ActionSignal>
 }
 
 export class TurnBasedSystem implements System {
     private readonly actors: IActor[] = []
     private readonly queue: {
-        generator: Generator<ActionSignal>
-        iterator: IteratorResult<ActionSignal>
+        generator: Generator<_ActionSignal>
+        iterator: IteratorResult<_ActionSignal>
         pending: boolean
         index: number
     }[] = []
@@ -29,7 +29,7 @@ export class TurnBasedSystem implements System {
     private lastActionIndex: number = 0
 
     constructor(private readonly context: Application){}
-    public start(generator: Generator<ActionSignal>, pending: boolean): number {
+    public start(generator: Generator<_ActionSignal>, pending: boolean): number {
         this.queue.push({ generator, iterator: null, pending, index: this.actionIndex++ })
         return this.actionIndex - 1
     }
@@ -69,9 +69,9 @@ export class TurnBasedSystem implements System {
                 const index = i - removed
                 if(
                     !action.iterator ||
-                    action.iterator.value === ActionSignal.WaitNextFrame ||
-                    action.iterator.value === ActionSignal.WaitTurnStart && this.lastActionIndex >= action.index || 
-                    action.iterator.value === ActionSignal.WaitQueueEnd && index === 0
+                    action.iterator.value === _ActionSignal.WaitNextFrame ||
+                    action.iterator.value === _ActionSignal.WaitTurnStart && this.lastActionIndex >= action.index || 
+                    action.iterator.value === _ActionSignal.WaitQueueEnd && index === 0
                 ) action.iterator = action.generator.next()
 
                 if(action.pending && !action.iterator.done)

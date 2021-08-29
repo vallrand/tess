@@ -8,7 +8,7 @@ import { CubeTileMap } from './CubeTileMap'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/deferred/DecalPass'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
-import { ShieldEffect, GridEffect, EffectLibrary } from '../effects'
+import { GridEffect, EffectLibrary } from '../effects'
 import { CubeModule } from './CubeModules'
 import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
@@ -24,7 +24,6 @@ export class PlayerSystem implements System {
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
     public readonly grid: GridEffect
-    public readonly shield: ShieldEffect
     public readonly effects: EffectLibrary = new EffectLibrary(this.context)
     public readonly skills = CubeSkills(this.context, this.cube)
 
@@ -32,9 +31,6 @@ export class PlayerSystem implements System {
         this.grid = new GridEffect(this.context, 10)
         this.grid.transform.parent = this.cube.transform
         this.context.get(DecalPass).effects.push(this.grid)
-
-        this.shield = new ShieldEffect(this.context)
-        this.context.get(ParticleEffectPass).effects.push(this.shield)
 
         window['orbit'] = (speed = 0.1) => setInterval(() => {
             this.cameraOffset[0] = 4 * Math.sin(speed * performance.now() / 1000)

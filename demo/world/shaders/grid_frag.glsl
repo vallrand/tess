@@ -10,7 +10,11 @@ uniform GlobalUniforms {
     vec4 uTime;
 };
 uniform float uGridSize;
-uniform mat4 uModelMatrix;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 
 #define TAU 6.283185307179586
 

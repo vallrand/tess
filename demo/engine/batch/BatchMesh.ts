@@ -1,3 +1,4 @@
+import { Application } from '../framework'
 import { ICamera } from '../scene/Camera'
 import { mat4, vec2, vec3, vec4 } from '../math'
 import { SpriteMaterial } from '../Sprite'
@@ -45,9 +46,9 @@ export class BatchMesh implements IBatched {
         )
     }
 
-    public recalculate(frame: number, camera: ICamera){
+    public update(context: Application, camera: ICamera){
         if(this.frame > 0 && this.frame >= this.transform.frame) return
-        this.frame = frame
+        this.frame = context.frame
 
         const length = this.vertices.length / 3
         const matrix = this.transform.matrix

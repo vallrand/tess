@@ -1,12 +1,14 @@
 import { Application } from '../framework'
 import { PostEffectPass, PostEffect } from './PostEffectPass'
-import { GL, createTexture, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import { GL, createTexture, ShaderProgram, UniformSamplerBindings, UniformBlockBindings } from '../webgl'
 import { GeometryBatch, IBatched } from '../batch'
 import { ParticleEffectPass } from './ParticleEffectPass'
 import { CameraSystem } from '../scene/Camera'
 import { DeferredGeometryPass } from './GeometryPass'
 import { shaders } from '../shaders'
 import { SpriteMaterial } from '../Sprite'
+import { Mesh } from '../Mesh'
+import { mat4 } from '../math'
 
 export class DistortionEffect implements PostEffect {
     private readonly program: ShaderProgram
@@ -39,12 +41,22 @@ export class DistortionEffect implements PostEffect {
         let material: SpriteMaterial = null
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
-            item.recalculate(this.context.frame, camera)
+            item.update(this.context, camera)
             if(!camera.culling.cull(item.bounds)) continue
+
+            if(!material && !item.vertices && item instanceof Mesh){
+                const mesh = item as Mesh
+                gl.bindVertexArray(mesh.buffer.vao)
+                gl.useProgram(mesh.material.program.target)
+                mesh.material.bind(gl, null)
+                mesh.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
+                gl.drawElements(mesh.buffer.drawMode, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
+                continue
+            }
 
             if(!material) material = item.material as any
             if(material.diffuse !== item.material.diffuse || material.program !== item.material.program) i++
-            else if(!this.batch.render(item)) i++
+            else if(item.vertices && !this.batch.render(item)) i++
             else if(i) continue
 
             const { diffuse, program = this.program } = material

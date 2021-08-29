@@ -14,7 +14,11 @@ out vec4 vUV;
 out vec4 vColor;
 out float vThreshold;
 #else
-uniform mat4 uModelMatrix;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 #endif
 
 uniform CameraUniforms {

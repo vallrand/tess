@@ -10,7 +10,11 @@ uniform CameraUniforms {
     vec3 uEyePosition;
 };
 
-uniform mat4 uModelMatrix;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 
 void main(){
     gl_Position = uViewProjectionMatrix * uModelMatrix * vec4(aPosition, 1.0);

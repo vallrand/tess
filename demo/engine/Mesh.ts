@@ -1,9 +1,9 @@
-import { vec3, quat, mat4, aabb3 } from './math'
-import { GL, IVertexAttribute } from './webgl'
+import { vec3, quat, mat4, aabb3, vec4 } from './math'
+import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from './webgl'
 import { Application, IProgressHandler, loadFile, System, Factory } from './framework'
 
 import { Transform } from './scene/Transform'
-import { MaterialSystem, Material } from './Material'
+import { MaterialSystem, IMaterial } from './Material'
 import { BoundingVolume, calculateBoundingRadius } from './scene/FrustumCulling'
 
 interface IBufferRange {
@@ -44,6 +44,7 @@ export interface MeshBuffer {
 }
 
 export class Armature {
+    private static readonly tempMat4: mat4 = mat4()
     public frame: number = 0
     public boneMatrix: Float32Array
     constructor(public readonly inverseBindPose: mat4[], nodes: {
@@ -72,6 +73,18 @@ export class Armature {
         globalTransform: mat4
         transform: Float32Array
     }[]
+    public update(context: Application): void {
+        if(this.frame) return
+        this.frame = context.frame
+        for(let j = 0; j < this.nodes.length; j++){
+            const node = this.nodes[j]
+            quat.normalize(node.rotation, node.rotation)
+            mat4.fromRotationTranslationScale(node.rotation, node.position, node.scale, node.globalTransform)
+            if(node.parent != -1) mat4.multiply(this.nodes[node.parent].globalTransform, node.globalTransform, node.globalTransform)
+            mat4.multiply(node.globalTransform, this.inverseBindPose[j], Armature.tempMat4)
+            mat4.transpose(Armature.tempMat4, node.transform as any)
+        }
+    }
 }
 
 export class Mesh {
@@ -80,14 +93,24 @@ export class Mesh {
     public program: number = 0
     public layer: number = 0
     public transform: Transform
-    public material: Material
+    public material: IMaterial
     public buffer: MeshBuffer
     public armature: Armature
+    public uniform: UniformBlock
     public readonly bounds = new BoundingVolume
+    public readonly color: vec4 = vec4(1,1,1,1)
+    public update(context: Application){
+        if(this.frame && this.frame >= this.transform.frame) return
+        this.frame = context.frame
+        if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(16+4+1) }, UniformBlockBindings.ModelUniforms)
+        this.bounds.update(this.transform, this.buffer.radius)
+        this.uniform.data.set(this.transform?.matrix || mat4.IDENTITY, 0)
+        this.uniform.data.set(this.color, 16)
+        this.uniform.data[20] = this.layer + 1
+    }
 }
 
 export class MeshSystem extends Factory<Mesh> implements System {
-    private static readonly tempMat4: mat4 = mat4()
     public readonly models: Record<string, {
         buffer: MeshBuffer
         inverseBindPose?: mat4[]
@@ -154,23 +177,8 @@ export class MeshSystem extends Factory<Mesh> implements System {
                 this.list[i-1].index = i-1
             }
             const mesh = this.list[i]
-            if(!(mesh.frame && mesh.frame >= mesh.transform.frame)){
-                mesh.bounds.update(mesh.transform, mesh.buffer.radius)
-                mesh.frame = this.context.frame
-            }
-            if(!mesh.armature || mesh.armature.frame > 0) continue
-            this.updateArmature(mesh.armature)
-        }
-    }
-    private updateArmature(armature: Armature): void {
-        armature.frame = this.context.frame
-        for(let j = 0; j < armature.nodes.length; j++){
-            const node = armature.nodes[j]
-            quat.normalize(node.rotation, node.rotation)
-            mat4.fromRotationTranslationScale(node.rotation, node.position, node.scale, node.globalTransform)
-            if(node.parent != -1) mat4.multiply(armature.nodes[node.parent].globalTransform, node.globalTransform, node.globalTransform)
-            mat4.multiply(node.globalTransform, armature.inverseBindPose[j], MeshSystem.tempMat4)
-            mat4.transpose(MeshSystem.tempMat4, node.transform as any)
+            mesh.update(this.context)
+            mesh.armature?.update(this.context)
         }
     }
     public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, progress: IProgressHandler<void>): void {

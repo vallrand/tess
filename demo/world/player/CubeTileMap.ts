@@ -66,7 +66,7 @@ export class CubeTileMap {
             vec2.set(i * tileSize, 0, sprite.transform.position)
     
             sprite.transform.recalculate(0)
-            sprite.recalculate(0)
+            sprite.update(this.context)
     
             this.batch.render(sprite)
 
@@ -120,7 +120,7 @@ export class CubeTileMap {
                 vec2.set(i * sprite.material.size[0] + 0.5 * sprite.material.size[0], 0.5 * sprite.material.size[0], sprite.transform.position)
 
                 sprite.transform.recalculate(0)
-                sprite.recalculate(0)
+                sprite.update(this.context)
 
                 this.batch.render(sprite)
             }

@@ -23,3 +23,14 @@ export function applyTransform(geometry: IGeometry, matrix: mat4): IGeometry {
     }
     return geometry
 }
+
+export function doubleSided(geometry: IGeometry): IGeometry {
+    const indexArray = new Uint16Array(geometry.indexArray.length * 2)
+    for(let i = geometry.indexArray.length / 3 - 1; i >= 0; i--){
+        indexArray[i*3+0] = geometry.indexArray[i*3+2]
+        indexArray[i*3+1] = geometry.indexArray[i*3+1]
+        indexArray[i*3+2] = geometry.indexArray[i*3+0]
+    }
+    indexArray.set(geometry.indexArray, geometry.indexArray.length)
+    return { ...geometry, indexArray }
+}

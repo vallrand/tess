@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { createSphere } from '../../engine/geometry'
+import { createSphere, doubleSided } from '../../engine/geometry'
 import { MeshSystem } from '../../engine/Mesh'
 
 export function GeometryLibrary(context: Application){

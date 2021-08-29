@@ -6,12 +6,12 @@ import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/Keyboard'
 import { PointLightPass, PointLight } from '../../engine/deferred/PointLightPass'
 import { TerrainSystem, TerrainChunk } from '../terrain'
-import { modelAnimations } from '../animations/animations'
-import { EmitterTrigger } from '../../engine/Animation'
+import { modelAnimations, CubeModuleModel } from '../animations/animations'
+import { EmitterTrigger } from '../../engine/scene/Animation'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
-import { IActor, TurnBasedSystem, ActionSignal } from '../Actor'
+import { IActor, TurnBasedSystem, _ActionSignal } from '../Actor'
 import { PlayerSystem } from './Player'
-import { cubeModules, CubeModule } from './CubeModules'
+import { CubeModule } from './CubeModules'
 import { SharedSystem } from '../shared'
 
 
@@ -79,8 +79,7 @@ export class Cube implements IActor {
     }
     installModule(side: number, direction: Direction, type: CubeModule){
         if(this.meshes[side]) this.context.get(MeshSystem).delete(this.meshes[side])
-        const moduleSettings = cubeModules[type]
-        const mesh = this.meshes[side] = this.context.get(MeshSystem).loadModel(moduleSettings.model)
+        const mesh = this.meshes[side] = this.context.get(MeshSystem).loadModel(CubeModuleModel[type])
 
         mesh.transform = this.transform
         mesh.program = this.state.side == side ? 1 : -1
@@ -88,18 +87,20 @@ export class Cube implements IActor {
         this.state.sides[side].type = type
         const rotation = DirectionAngle[(this.state.direction + this.state.sides[side].direction) % 4]
         quat.copy(rotation, mesh.armature.nodes[0].rotation)
-        modelAnimations[moduleSettings.model].close(0, mesh.armature)
+        modelAnimations[CubeModuleModel[type]].close(0, mesh.armature)
 
         this.hash = this.state.sides.reduce((hash, side) => (
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
         ), 0)
     }
     kill(){}
-    *execute(turn: number): Generator<ActionSignal> {
+    *execute(turn: number): Generator<_ActionSignal> {
         const keys = this.context.get(KeyboardSystem)
         const state = this.state.sides[this.state.side]
-        const moduleSettings = cubeModules[state.type]
         const mesh = this.meshes[this.state.side]
+        const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
+        const skill = this.context.get(PlayerSystem).skills[state.type]
+
         idle: while(true){
             let direction = Direction.None
             if(keys.down('KeyA')) direction = Direction.Right
@@ -107,19 +108,19 @@ export class Cube implements IActor {
             else if(keys.down('KeyW')) direction = Direction.Down
             else if(keys.down('KeyS')) direction = Direction.Up
 
-            open:{
-                const prev = state.open, delta = this.context.deltaTime
-                if(prev > 0 && direction != Direction.None)
-                    state.open = Math.min(0, delta - state.open)
-                else if(prev == 0 && keys.down('Space'))
-                    state.open = Math.min(1, delta)
-                else if(prev != 0 && prev != 1) state.open = Math.min(prev > 0 ? 1 : 0, prev + delta)
-                if(state.open != prev){
-                    modelAnimations[moduleSettings.model].open(Math.abs(state.open), mesh.armature)
-                    yield ActionSignal.WaitNextFrame
-                    continue
+            if(state.open == 0 && keys.down('Space'))
+                for(const generator = skill.open(); true;){
+                    const iterator = generator.next()
+                    if(iterator.done) continue idle
+                    else yield iterator.value
                 }
-            }
+            else if(state.open == 1 && direction != Direction.None)
+                for(const generator = skill.close(); true;){
+                    const iterator = generator.next()
+                    if(iterator.done) continue idle
+                    else yield iterator.value
+                }
+
             switch(state.type){
                 case CubeModule.Railgun:
                 case CubeModule.EMP:
@@ -127,8 +128,6 @@ export class Cube implements IActor {
                     if(state.open != 1) break
                     if(!keys.down('Space')) break
 
-                    const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
-                    const skill = this.context.get(PlayerSystem).skills[state.type]
                     for(const generator = skill.activate(this.transform.matrix, rotation); true;){
                         const iterator = generator.next()
                         if(iterator.done) return iterator.value
@@ -142,21 +141,28 @@ export class Cube implements IActor {
                 // }
                 case CubeModule.Shield: {
                     if(state.open != 1) break
-                    //if(!keys.down('Space')) break
-                    const shield = this.context.get(PlayerSystem).shield.create()
-                    shield.transform = this.context.get(TransformSystem).create()
-                    shield.transform.parent = this.transform
-                    vec3.copy([0,0,0], shield.transform.scale)
-                    const _ease = ease.elasticOut(1,0.75)
 
-                    for(let duration = 1.0, startTime = this.context.currentTime; true;){
-                        let fraction = (this.context.currentTime - startTime) / duration
-                        vec3.lerp(vec3.ZERO, [3,5,3], _ease(Math.min(1, fraction)), shield.transform.scale)
-                        shield.transform.frame = 0
-                        modelAnimations[moduleSettings.model].activate(fraction % 1, mesh.armature)
-                        //if(fraction >= 1) break
-                        yield ActionSignal.WaitNextFrame
-                    }
+                    // for(const generator = skill.activate(this.transform.matrix, rotation); true;){
+                    //     const iterator = generator.next()
+                    //     if(iterator.done) return iterator.value
+                    //     else yield iterator.value
+                    // }
+
+                    // //if(!keys.down('Space')) break
+                    // const shield = this.context.get(PlayerSystem).shield.create()
+                    // shield.transform = this.context.get(TransformSystem).create()
+                    // shield.transform.parent = this.transform
+                    // vec3.copy([0,0,0], shield.transform.scale)
+                    // const _ease = ease.elasticOut(1,0.75)
+
+                    // for(let duration = 1.0, startTime = this.context.currentTime; true;){
+                    //     let fraction = (this.context.currentTime - startTime) / duration
+                    //     vec3.lerp(vec3.ZERO, [3,5,3], _ease(Math.min(1, fraction)), shield.transform.scale)
+                    //     shield.transform.frame = 0
+                    //     modelAnimations[moduleSettings.model].activate(fraction % 1, mesh.armature)
+                    //     //if(fraction >= 1) break
+                    //     yield ActionSignal.WaitNextFrame
+                    // }
                 }
             }
             movement: {
@@ -166,10 +172,10 @@ export class Cube implements IActor {
                 this.prevAction = this.context.get(TurnBasedSystem).start(move, false)
                 break idle
             }
-            yield ActionSignal.WaitNextFrame
+            yield _ActionSignal.WaitNextFrame
         }
     }
-    private moveTransition(direction: Direction): Generator<ActionSignal> {
+    private moveTransition(direction: Direction): Generator<_ActionSignal> {
         const nextOrientation = CubeOrientation.roll(CubeOrientation(this.state.side, this.state.direction), direction)
         const nextDirection = nextOrientation & 0x3
         const nextFace = nextOrientation >>> 2
@@ -217,8 +223,7 @@ export class Cube implements IActor {
         vec2.copy(nextTile, this.state.tile)
 
         const mesh = this.meshes[this.state.side]
-        const moduleSettings = cubeModules[this.state.sides[this.state.side].type]
-        modelAnimations[moduleSettings.model].close(0, mesh.armature)
+        modelAnimations[CubeModuleModel[this.state.sides[this.state.side].type]].close(0, mesh.armature)
 
         const rootNode = mesh.armature.nodes[0]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())
@@ -252,7 +257,7 @@ export class Cube implements IActor {
                 dustTrigger(elapsedTime, this.context.deltaTime, this.dust)
 
                 if(fraction >= 1) break
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
         }.call(this)
     }

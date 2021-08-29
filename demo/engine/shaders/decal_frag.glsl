@@ -8,13 +8,17 @@ in vec4 vUV;
 in vec4 vColor;
 in float vThreshold;
 #else
-uniform vec4 uColor;
-uniform mat4 uModelMatrix;
-uniform mat4 uInvModelMatrix;
+uniform ModelUniforms {
+    //mat4 uModelMatrix;
+    //vec4 uColor;
+    //float uLayer;
+    //uniform mat4 uInvModelMatrix;
+};
 #endif
 
-uniform float uDissolveEdge;
 uniform float uLayer;
+uniform float uDissolveEdge;
+
 uniform GlobalUniforms {
     vec4 uTime;
 };

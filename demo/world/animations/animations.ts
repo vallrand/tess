@@ -1,8 +1,23 @@
 import { clamp, vec3, quat, ease } from '../../engine/math'
 import { Armature } from '../../engine/Mesh'
-import { parseEase, PropertyAnimation } from '../../engine/Animation'
+import { parseEase, PropertyAnimation } from '../../engine/scene/Animation'
+import { CubeModule } from '../player'
 
 import animationData from './animation.json'
+
+export const CubeModuleModel = {
+    [CubeModule.Empty]: 'cube_open',
+    [CubeModule.Death]: 'death',
+    [CubeModule.Machinegun]: 'cube_0',
+    [CubeModule.Railgun]: 'cube_1',
+    [CubeModule.Repair]: 'cube_2',
+    [CubeModule.EMP]: 'cube_3',
+    [CubeModule.Voidgun]: 'cube_4',
+    [CubeModule.Minelayer]: 'cube_5',
+    [CubeModule.Auger]: 'cube_6',
+    [CubeModule.Shield]: 'cube_7',
+    [CubeModule.Missile]: 'cube_8',
+}
 
 export const ArmatureAnimation = (tracks: {
     index: number

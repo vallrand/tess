@@ -4,6 +4,7 @@ import { CameraSystem } from '../scene/Camera'
 import { MeshSystem } from '../Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { IEffect } from '../pipeline'
+import { shaders } from '../shaders'
 
 export class DeferredGeometryPass implements System {
     public albedo: WebGLTexture
@@ -18,16 +19,15 @@ export class DeferredGeometryPass implements System {
         const gl: WebGL2RenderingContext = context.gl
         this.allocateGeometryBuffer(gl, gl.drawingBufferWidth, gl.drawingBufferHeight)
         this.programs = [
-            ShaderProgram(gl, require('../shaders/geometry_vert.glsl'), require('./geometry_frag.glsl'), {
+            ShaderProgram(gl, shaders.geometry_vert, shaders.geometry_frag, {
                 NORMAL_MAPPING: true
             }),
-            ShaderProgram(gl, require('../shaders/geometry_vert.glsl'), require('./geometry_frag.glsl'), {
+            ShaderProgram(gl,shaders.geometry_vert, shaders.geometry_frag, {
                 SKINNING: true, NORMAL_MAPPING: true, COLOR_INDEX: true
             })
             //BUMP_MAPPING
             //#define PARALLAX_LAYERS 32
         ]
-        gl.clearDepth(1)
     }
     public bindReadBuffer(){
         const gl = this.context.gl
@@ -51,6 +51,7 @@ export class DeferredGeometryPass implements System {
 
         gl.depthMask(true)
         gl.disable(GL.BLEND)
+        gl.clearDepth(1)
         gl.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT)
 
         const camera = this.context.get(CameraSystem).camera
@@ -63,20 +64,13 @@ export class DeferredGeometryPass implements System {
             if(mesh.program == -1) continue
             if(programIndex != mesh.program) gl.useProgram(this.programs[programIndex = mesh.program].target)
             if(!camera.culling.cull(mesh.bounds)) continue
-            this.programs[programIndex].uniforms['uLayer'] = mesh.layer+1
-            this.programs[programIndex].uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
+            mesh.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
+            
+            //this.programs[programIndex].uniforms['uLayer'] = mesh.layer+1
+            //this.programs[programIndex].uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
             if(mesh.armature) this.programs[programIndex].uniforms['uBoneMatrix'] = mesh.armature.boneMatrix
 
-            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
-            gl.bindTexture(GL.TEXTURE_2D, mesh.material.diffuse)
-            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
-            gl.bindTexture(GL.TEXTURE_2D, mesh.material.normal)
-            if(mesh.material.array){
-                gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uArrayMap)
-                gl.bindTexture(GL.TEXTURE_2D_ARRAY, mesh.material.array)
-                this.programs[programIndex].uniforms['uArrayMapLayers'] = mesh.material.arrayLayers - 1
-            }
-
+            mesh.material.bind(gl, this.programs[programIndex])
             gl.bindVertexArray(mesh.buffer.vao)
             gl.drawElements(GL.TRIANGLES, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
         }

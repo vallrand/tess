@@ -1,6 +1,6 @@
 import { range, mat3x2, vec4, mat3, vec3, mat4 } from '../math'
 import { Application, System } from '../framework'
-import { GL, IVertexAttribute, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import { GL, IVertexAttribute, ShaderProgram, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { PostEffectPass } from './PostEffectPass'
 import { Material, RenderTexture } from '../Material'
 import { GeometryBatch, IBatched, Sprite, Line } from '../batch'
@@ -62,7 +62,7 @@ export class ParticleEffectPass implements System {
         let program: ShaderProgram = this.list[this.list.length - 1]?.material.program || this.program
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
-            item.recalculate?.(this.context.frame, camera)
+            item.update(this.context, camera)
             if(!camera.culling.cull(item.bounds)) continue
 
             const itemProgram = item.material.program || this.program
@@ -81,18 +81,18 @@ export class ParticleEffectPass implements System {
             if(!flush) i++
             program = itemProgram
         }
-        //this.context.get(PostEffectPass).swapRenderTarget()
+        
         this.context.get(DeferredGeometryPass).bindReadBuffer()
-
         for(let i = this.effects.length - 1; i >= 0; i--) this.effects[i].apply()
     }
     private renderMesh(mesh: Mesh){
         const { gl } = this.context
         gl.bindVertexArray(mesh.buffer.vao)
         gl.useProgram(mesh.material.program.target)
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
-        gl.bindTexture(GL.TEXTURE_2D, mesh.material.diffuse)
-        mesh.material.program.uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
+        mesh.material.bind(gl, null)
+
+        this.context.get(DeferredGeometryPass).bindReadBuffer()
+        mesh.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
         gl.drawElements(mesh.buffer.drawMode, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
     }
 }

@@ -140,7 +140,7 @@ mat4.perspective = (fovy: number, aspectRatio: number, znear: number, zfar: numb
     return out
 }
 
-mat4.transform = (vec: vec3 | vec4, m: mat4, out: vec4): vec4 => {
+mat4.transform = <vec extends vec3 | vec4>(vec: vec, m: mat4, out: vec): vec => {
     let x = vec[0], y = vec[1], z = vec[2], w = vec[3] == null ? 1 : vec[3]
     out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w
     out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w

@@ -29,7 +29,11 @@ uniform CameraUniforms {
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
-uniform mat4 uModelMatrix;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 
 out vec3 vPosition;
 out vec3 vNormal;

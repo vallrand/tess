@@ -38,7 +38,7 @@ export class Sprite2D implements IBatched2D {
     public transform: Transform2D
     public readonly origin: vec2 = vec2(0,0)
 
-    public recalculate(frame: number){
+    public update(context: Application){
         if(!this.material) return
         if(this.frame == 0)
             this.applyTransform(Sprite2D.quadUVs, this.material.uvMatrix, this.uvs, 0)
@@ -65,7 +65,7 @@ export class Sprite2D implements IBatched2D {
         this.vertices[6] = a * left + c * bottom + tx
         this.vertices[7] = d * bottom + b * left + ty
 
-        this.frame = frame
+        this.frame = context.frame
     }
     private applyTransform(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){
         const a = transform[0], b = transform[1],

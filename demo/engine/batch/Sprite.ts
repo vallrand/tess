@@ -1,3 +1,4 @@
+import { Application } from '../framework'
 import { vec2, vec3, vec4, mat4, mat3x2 } from '../math'
 import { ICamera } from '../scene/Camera'
 import { IBatched } from './GeometryBatch'
@@ -32,7 +33,7 @@ export class Sprite implements IBatched {
     public readonly bounds = new BoundingVolume
     public readonly origin: vec2 = vec2(0.5, 0.5)
 
-    public recalculate(frame: number, camera: ICamera){
+    public update(context: Application, camera: ICamera){
         if(this.frame == 0 && this.material)
             this.applyTransform2D(Sprite.quadUVs, this.material.uvMatrix, this.uvs, 0)
 
@@ -83,7 +84,7 @@ export class Sprite implements IBatched {
         this.vertices[10] = normal[1] * left + tangent[1] * bottom + transform[13]
         this.vertices[11] = normal[2] * left + tangent[2] * bottom + transform[14]
 
-        this.frame = frame
+        this.frame = context.frame
     }
     private applyTransform2D(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){
         const a = transform[0], b = transform[1],

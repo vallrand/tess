@@ -5,7 +5,7 @@ import { MeshSystem, Mesh } from '../engine/Mesh'
 import { KeyboardSystem } from '../engine/Keyboard'
 import { TerrainSystem } from './terrain'
 import { modelAnimations } from './animations/animations'
-import { IActor, TurnBasedSystem, ActionSignal } from './Actor'
+import { IActor, TurnBasedSystem, _ActionSignal } from './Actor'
 import { PlayerSystem, Cube, CubeModule, Direction } from './player'
 
 export class Workshop implements IActor {
@@ -51,7 +51,7 @@ export class Workshop implements IActor {
         this.context.get(MeshSystem).delete(this.mesh)
         this.mesh = null
     }
-    *execute(turn: number): Generator<ActionSignal> {
+    *execute(turn: number): Generator<_ActionSignal> {
         const armature = this.mesh.armature
         let cube: Cube = null
         for(let z = -2; z <= 2; z++){
@@ -67,7 +67,7 @@ export class Workshop implements IActor {
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 modelAnimations.dock.open(fraction, armature)
                 if(fraction >= 1) break
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
         }else if(!cube){
             this.opened = false
@@ -75,10 +75,10 @@ export class Workshop implements IActor {
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 modelAnimations.dock.open(1 - fraction, armature)
                 if(fraction >= 1) break
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
         }else if(cube && cube.state.tile[1] === this.tile[1]){
-            yield ActionSignal.WaitQueueEnd
+            yield _ActionSignal.WaitQueueEnd
             const mesh = cube.meshes[cube.state.side]
             const prevPosition = vec3.copy(mesh.transform.position, vec3())
             const nextPosition = vec3.add(this.mesh.transform.position, [0,2,0], vec3())
@@ -103,7 +103,7 @@ export class Workshop implements IActor {
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(fraction), cameraOffset)
                 mesh.transform.frame = 0
                 if(fraction >= 1) break
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
             const keys = this.context.get(KeyboardSystem)
             upgradeMenu: while(true){
@@ -118,7 +118,7 @@ export class Workshop implements IActor {
                     const forward = (4-cube.state.direction)%4
                     cube.installModule(cube.state.side, forward, availableModules[0])
                 }
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
             lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
@@ -127,7 +127,7 @@ export class Workshop implements IActor {
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(1-fraction), cameraOffset)
                 mesh.transform.frame = 0
                 if(fraction >= 1) break
-                yield ActionSignal.WaitNextFrame
+                yield _ActionSignal.WaitNextFrame
             }
         }
     }

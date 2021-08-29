@@ -115,7 +115,15 @@ export class WebGLState implements WebGL2RenderingContext {
             this.state[GL.BLEND_COLOR][3] = alpha
         )
     }
-    blendEquation(mode: number): void { this.blendEquationSeparate(mode, mode) }
+    blendEquation(mode: number): void {
+        if(
+            this.state[GL.BLEND_EQUATION_RGB] === mode &&
+            this.state[GL.BLEND_EQUATION_ALPHA] === mode
+        ) return
+        this.gl.blendEquation(
+            this.state[GL.BLEND_EQUATION_RGB] = this.state[GL.BLEND_EQUATION_ALPHA] = mode
+        )
+    }
     blendEquationSeparate(modeRGB: number, modeAlpha: number): void {
         if(
             this.state[GL.BLEND_EQUATION_RGB] === modeRGB &&
@@ -126,19 +134,24 @@ export class WebGLState implements WebGL2RenderingContext {
             this.state[GL.BLEND_EQUATION_ALPHA] = modeAlpha
         )
     }
-    blendFunc(sfactor: number, dfactor: number): void { this.blendFuncSeparate(sfactor, dfactor, sfactor, dfactor) }
+    blendFunc(sfactor: number, dfactor: number): void {
+        if(
+            this.state[GL.BLEND_SRC_RGB] === sfactor && this.state[GL.BLEND_DST_RGB] === dfactor &&
+            this.state[GL.BLEND_SRC_ALPHA] === sfactor && this.state[GL.BLEND_DST_ALPHA] === dfactor
+        ) return
+        this.gl.blendFunc(
+            this.state[GL.BLEND_SRC_RGB] = this.state[GL.BLEND_SRC_ALPHA] = sfactor,
+            this.state[GL.BLEND_DST_RGB] = this.state[GL.BLEND_DST_ALPHA] = dfactor
+        )
+    }
     blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void {
         if(
-            this.state[GL.BLEND_SRC_RGB] === srcRGB &&
-            this.state[GL.BLEND_DST_RGB] === dstRGB &&
-            this.state[GL.BLEND_SRC_ALPHA] === srcAlpha &&
-            this.state[GL.BLEND_DST_ALPHA] === dstAlpha
+            this.state[GL.BLEND_SRC_RGB] === srcRGB && this.state[GL.BLEND_DST_RGB] === dstRGB &&
+            this.state[GL.BLEND_SRC_ALPHA] === srcAlpha && this.state[GL.BLEND_DST_ALPHA] === dstAlpha
         ) return
         this.gl.blendFuncSeparate(
-            this.state[GL.BLEND_SRC_RGB] = srcRGB,
-            this.state[GL.BLEND_DST_RGB] = dstRGB,
-            this.state[GL.BLEND_SRC_ALPHA] = srcAlpha,
-            this.state[GL.BLEND_DST_ALPHA] = dstAlpha
+            this.state[GL.BLEND_SRC_RGB] = srcRGB, this.state[GL.BLEND_DST_RGB] = dstRGB,
+            this.state[GL.BLEND_SRC_ALPHA] = srcAlpha, this.state[GL.BLEND_DST_ALPHA] = dstAlpha
         )
     }
     clearColor(red: number, green: number, blue: number, alpha: number): void {

@@ -16,8 +16,15 @@ uniform CameraUniforms {
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
-uniform mat4 uModelMatrix;
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+};
 uniform sampler2D uPositionBuffer;
+#ifdef DISPLACEMENT
+uniform sampler2D uAlbedoBuffer;
+#endif
 
 #define TAU 6.283185307179586
 
@@ -71,5 +78,15 @@ void main(){
     float wave = smoothstep(0.6,1.0,sin(TAU * (0.2*position.y + 0.5*n) + 2.*uTime.x));
     color *= mix(edge,1.0,wave);
 
+#ifdef DISPLACEMENT
+    vec3 viewNormal = (uViewMatrix * vec4(normal, 0.0)).xyz;
+    vec2 distortion = smoothstep(0.4,1.0,NdV*NdV) * 0.1 * viewNormal.rg;
+    distortion *= 2.0 * n;
+
+    vec2 uv = vec2(gl_FragCoord.xy) / vec2(textureSize(uAlbedoBuffer, 0));
+    uv += distortion;
+    fragColor = texture(uAlbedoBuffer, uv);
+#else
     fragColor = vec4(color,0.1*edge);
+#endif
 }

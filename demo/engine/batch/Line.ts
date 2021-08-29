@@ -1,3 +1,4 @@
+import { Application } from '../framework'
 import { vec3, vec4, mat4 } from '../math'
 import { ICamera } from '../scene/Camera'
 import { IBatched } from './GeometryBatch'
@@ -18,9 +19,9 @@ export class Line implements IBatched {
     public path: vec3[]
     public width: number = 1
     public height: number = 0
-    public recalculate(frame: number, camera: ICamera){
+    public update(context: Application, camera: ICamera){
         if(this.frame > 0 && this.frame >= camera.frame) return
-        this.frame = frame
+        this.frame = context.frame
 
         const length = this.path.length
         if(!this.vertices || this.vertices.length != length * 6) this.resize(length)
@@ -51,7 +52,7 @@ export class Line implements IBatched {
             lengthSquared += vec3.distanceSquared(prev, next)
         }
         this.height = Math.sqrt(lengthSquared) / this.width
-        this.bounds.fromVertices(this.vertices, 3, 0, frame)
+        this.bounds.fromVertices(this.vertices, 3, 0, context.frame)
     }
     private resize(length: number){
         this.vertices = new Float32Array(length * 2 * 3)

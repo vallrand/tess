@@ -3,10 +3,10 @@ import { Application } from '../../engine/framework'
 import { Decal, DecalPass } from '../../engine/deferred/DecalPass'
 import { TransformSystem } from '../../engine/scene/Transform'
 import { SpriteMaterial } from '../../engine/Sprite'
-import { ActionSignal } from '../Actor'
-import { modelAnimations } from '../animations'
-import { AnimationTimeline, PropertyAnimation } from '../../engine/Animation'
-import { Cube, cubeModules } from '../player'
+import { _ActionSignal } from '../Actor'
+import { modelAnimations, CubeModuleModel } from '../animations'
+import { AnimationTimeline, PropertyAnimation } from '../../engine/scene/Animation'
+import { Cube } from '../player'
 import { SharedSystem } from '../shared'
 import { MaterialSystem } from '../../engine/Material'
 import { GL, ShaderProgram } from '../../engine/webgl'
@@ -17,6 +17,7 @@ import { BatchMesh, BillboardType, Sprite } from '../../engine/batch'
 import { PostEffectPass } from '../../engine/deferred/PostEffectPass'
 import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
 import { createCylinder } from '../../engine/geometry'
+import { CubeSkill } from './CubeSkill'
 
 const timelineTracks = {
     'ring.transform.scale': PropertyAnimation([
@@ -104,7 +105,7 @@ const timelineTracks = {
     ], vec4.lerp)
 }
 
-export class ShockwaveSkill {
+export class ShockwaveSkill extends CubeSkill {
     private ring: Decal
     private crack: Decal
     private light: PointLight
@@ -115,7 +116,8 @@ export class ShockwaveSkill {
 
     private bolts: ParticleEmitter
     private shatterMaterial: SpriteMaterial
-    constructor(private readonly context: Application, private readonly cube: Cube){
+    constructor(context: Application, cube: Cube){
+        super(context, cube)
         const materials = context.get(MaterialSystem)
 
         this.shatterMaterial = new SpriteMaterial()
@@ -166,7 +168,7 @@ export class ShockwaveSkill {
         this.cylinder.material = new SpriteMaterial()
         this.cylinder.material.diffuse = SharedSystem.textures.wind
     }
-    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
         const origin: vec3 = mat4.transform([0, 0, 0], transform, vec3() as any) as any
 
         this.ring = this.context.get(DecalPass).create(0)
@@ -205,19 +207,19 @@ export class ShockwaveSkill {
         vec3.add(origin, [0,2,0], this.bolts.uniform.uniforms['uOrigin'] as any)
 
         const mesh = this.cube.meshes[this.cube.state.side]
-        const moduleSettings = cubeModules[this.cube.state.sides[this.cube.state.side].type]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
         const animate = AnimationTimeline(this, {
             ...timelineTracks
         })
 
-        for(let duration = 2.0, startTime = this.context.currentTime; true;){
+        for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            modelAnimations[moduleSettings.model].activate(elapsedTime, mesh.armature)
+            armatureAnimation.activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            yield _ActionSignal.WaitNextFrame
         }
 
 

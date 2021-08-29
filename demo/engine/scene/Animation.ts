@@ -1,5 +1,38 @@
-import { clamp, ease, vec3 } from './math'
-import { ParticleEmitter } from './particles'
+import { Application, System } from '../framework'
+import { clamp, ease, vec3 } from '../math'
+import { ParticleEmitter } from '../particles'
+
+export const enum ActionSignal {
+    WaitNextFrame = 0
+}
+
+export class AnimationSystem implements System {
+    private index: number = 1
+    private readonly queue: {
+        generator: Generator<ActionSignal>
+        iterator: IteratorResult<ActionSignal>
+        index: number
+    }[] = []
+    constructor(private readonly context: Application){}
+    public update(): void {
+        let removed = 0
+        for(let i = 0; i < this.queue.length; i++){
+            const routine = this.queue[i]
+            if(
+                !routine.iterator ||
+                routine.iterator.value === ActionSignal.WaitNextFrame
+            ) routine.iterator = routine.generator.next()
+
+            if(routine.iterator.done) removed++
+            else this.queue[i - removed] = routine
+        }
+        this.queue.length -= removed
+    }
+    public start(generator: Generator<ActionSignal>): number {
+        this.queue.push({ generator, iterator: null, index: this.index })
+        return this.index++
+    }
+}
 
 export type IAnimationTrigger<T = any> = (elapsed: number, deltaTime: number, target: T) => void
 export type IAnimationTween<T = any> = (elapsed: number, target: T) => T
