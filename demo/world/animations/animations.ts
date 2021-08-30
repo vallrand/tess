@@ -1,5 +1,5 @@
 import { clamp, vec3, quat, ease } from '../../engine/math'
-import { Armature } from '../../engine/Mesh'
+import { Armature } from '../../engine/components/Mesh'
 import { parseEase, PropertyAnimation } from '../../engine/scene/Animation'
 import { CubeModule } from '../player'
 

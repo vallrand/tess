@@ -1,7 +1,7 @@
 import { shaders } from '../../engine/shaders'
 import { ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
-import { MaterialSystem } from '../../engine/Material'
+import { MaterialSystem } from '../../engine/materials/Material'
 
 export function MaterialLibrary(context: Application){
     const materials = context.get(MaterialSystem)

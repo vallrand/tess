@@ -2,9 +2,9 @@ import { vec2, vec4 } from '../../math'
 import { Application } from '../../framework'
 import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../../webgl'
 import { shaders } from '../../shaders'
-import { PostEffectPass, PostEffect } from '../PostEffectPass'
+import { PostEffectPass, IPostEffect } from '../PostEffectPass'
 
-export class BloomEffect implements PostEffect {
+export class BloomEffect implements IPostEffect {
     private static downscale = 4
     private static readonly horizontal = vec2(1, 0)
     private static readonly vertical = vec2(0, 1)

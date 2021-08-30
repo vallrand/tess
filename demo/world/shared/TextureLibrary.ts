@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
-import { MaterialSystem } from '../../engine/Material'
+import { MaterialSystem } from '../../engine/materials/Material'
 import { shaders } from '../../engine/shaders'
 
 export function TextureLibrary(context: Application){

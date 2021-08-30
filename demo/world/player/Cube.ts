@@ -1,6 +1,6 @@
 import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat, ease } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { MeshSystem, Mesh } from '../../engine/Mesh'
+import { MeshSystem, Mesh } from '../../engine/components/Mesh'
 import { TransformSystem, Transform } from '../../engine/scene/Transform'
 import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/Keyboard'

@@ -1,7 +1,7 @@
 import { Application } from '../framework'
 import { IEffect } from '../pipeline'
 import { GL, ShaderProgram, IVertexAttribute, UniformSamplerBindings, UniformBlockBindings } from '../webgl'
-import { MeshBuffer } from '../Mesh'
+import { MeshBuffer } from '../components/Mesh'
 import { ParticleEmitter } from './ParticleEmitter'
 
 export interface ParticleSystemOptions {

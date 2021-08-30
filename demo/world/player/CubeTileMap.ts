@@ -1,11 +1,11 @@
 import { range, vec2, aabb2, mat3x2, mat3 } from '../../engine/math'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
-import { Batch2D } from '../../engine/batch'
+import { Batch2D } from '../../engine/pipeline/batch'
 import { OverlayPass } from '../../engine/pipeline/OverlayPass'
 import { Sprite2D, Sprite2DMaterial } from '../../engine/Sprite2D'
 import { Transform2D } from '../../engine/scene/Transform'
-import { MaterialSystem, MeshMaterial } from '../../engine/Material'
+import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { Direction, CubeOrientation } from './CubeOrientation'
 import { Cube } from './Cube'
 

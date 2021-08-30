@@ -1,7 +1,7 @@
 import { vec2, vec3, quat, aabb2, ease } from '../engine/math'
 import { Application } from '../engine/framework'
 import { TransformSystem } from '../engine/scene/Transform'
-import { MeshSystem, Mesh } from '../engine/Mesh'
+import { MeshSystem, Mesh } from '../engine/components/Mesh'
 import { KeyboardSystem } from '../engine/Keyboard'
 import { TerrainSystem } from './terrain'
 import { modelAnimations } from './animations/animations'

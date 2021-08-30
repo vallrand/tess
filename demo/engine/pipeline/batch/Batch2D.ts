@@ -1,7 +1,7 @@
-import { vec4 } from '../math'
-import { GL, VertexDataFormat } from '../webgl'
+import { vec4 } from '../../math'
+import { GL, VertexDataFormat } from '../../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
-import { uintNorm4x8, uintNorm2x16 } from './GeometryBatch'
+import { uintNorm4x8, uintNorm2x16 } from './common'
 
 export interface IBatched2D {
     vertices: Float32Array

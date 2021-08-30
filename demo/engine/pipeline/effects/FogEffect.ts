@@ -1,10 +1,10 @@
 import { GL, ShaderProgram, UniformSamplerBindings } from '../../webgl'
 import { vec2, vec4 } from '../../math'
-import { PostEffect, PostEffectPass } from '../PostEffectPass'
+import { IPostEffect, PostEffectPass } from '../PostEffectPass'
 import { shaders } from '../../shaders'
 import { Application } from '../../framework'
 
-export class FogEffect implements PostEffect {
+export class FogEffect implements IPostEffect {
     public enabled: boolean = true
     public readonly color: vec4 = vec4(0.2,0.2,0.2,0)
     public readonly range: vec2 = vec2(5,30)

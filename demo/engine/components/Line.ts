@@ -1,9 +1,9 @@
 import { Application } from '../framework'
 import { vec3, vec4, mat4 } from '../math'
 import { ICamera } from '../scene/Camera'
-import { IBatched } from './GeometryBatch'
+import { IBatched } from '../pipeline/batch/GeometryBatch'
 import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
-import { SpriteMaterial } from './Sprite'
+import { SpriteMaterial } from '../materials'
 
 export class Line implements IBatched {
     private static readonly forward: vec3 = vec3()

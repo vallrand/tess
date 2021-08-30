@@ -1,61 +1,8 @@
-import { vec3, quat, mat4 } from './math'
-import { GL, createTexture, compileProgram, locateUniforms, TextureOptions, ShaderProgram, UniformSamplerBindings } from './webgl'
-import { Application, IProgressHandler, ISystem, Factory, Signal } from './framework'
-import { PostEffectPass } from './pipeline/PostEffectPass'
-import { shaders } from './shaders'
-
-export interface IMaterial {
-    index?: number
-    program?: ShaderProgram
-    bind(gl: WebGL2RenderingContext): void
-    merge(material: IMaterial): boolean
-}
-
-export class ShaderMaterial implements IMaterial {
-    public static readonly ADD = [GL.FUNC_ADD,GL.FUNC_ADD,GL.ONE,GL.ONE,GL.ONE,GL.ONE]
-    public static readonly PREMULTIPLY = [GL.FUNC_ADD,GL.FUNC_ADD,GL.ONE,GL.ONE_MINUS_SRC_ALPHA,GL.ZERO,GL.ONE]
-    program: ShaderProgram
-    cullFace: number = GL.BACK
-    blend: number[] = null
-    depthTest: number = GL.LESS
-    public bind(gl: WebGL2RenderingContext): void {
-        if(this.cullFace){
-            gl.enable(GL.CULL_FACE)
-            gl.cullFace(this.cullFace)
-        }else gl.disable(GL.CULL_FACE)
-        if(this.depthTest){
-            gl.enable(GL.DEPTH_TEST)
-            gl.depthFunc(this.depthTest)
-        }else gl.disable(GL.DEPTH_TEST)
-        if(this.blend){
-            gl.enable(GL.BLEND)
-            gl.blendEquationSeparate(this.blend[0], this.blend[1])
-            gl.blendFuncSeparate(this.blend[2], this.blend[3], this.blend[4], this.blend[5])
-        }else gl.disable(GL.BLEND)
-    }
-    public merge(material: IMaterial): boolean { return material === this }
-}
-
-export class MeshMaterial implements IMaterial {
-    index: number
-    diffuse: WebGLTexture
-    normal?: WebGLTexture
-    array?: WebGLTexture
-    arrayLayers: number
-    program: ShaderProgram
-    public bind(gl: WebGL2RenderingContext): void {
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
-        gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
-        gl.bindTexture(GL.TEXTURE_2D, this.normal)
-        if(this.array){
-            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uArrayMap)
-            gl.bindTexture(GL.TEXTURE_2D_ARRAY, this.array)
-            this.program.uniforms['uArrayMapLayers'] = this.arrayLayers - 1
-        }
-    }
-    public merge(material: IMaterial): boolean { return material === this }
-}
+import { Application, IProgressHandler, ISystem, Signal } from '../framework'
+import { GL, createTexture, TextureOptions, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import { IMaterial, PostEffectPass } from '../pipeline'
+import { shaders } from '../shaders'
+import { MeshMaterial } from './MeshMaterial'
 
 export interface RenderTexture {
     width: number
@@ -178,7 +125,7 @@ export class MaterialSystem implements ISystem {
             if(!manifest.model.find(model => model.texture === material.index)) return
             const normalTexture = this.addRenderTexture(
                 this.createRenderTexture(width, height, 1), 0,
-                ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('./shaders/normal_height.glsl')), {
+                ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/normal_height.glsl')), {
                 uSampler: material.diffuse, uScale: MaterialSystem.heightmapScale,
                 uScreenSize: [width, height]
             }, 0).target

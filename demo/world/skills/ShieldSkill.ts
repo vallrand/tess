@@ -1,22 +1,19 @@
-import { Application } from '../../engine/framework'
-import { Mesh } from '../../engine/Mesh'
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
-import { _ActionSignal } from '../Actor'
+import { Application } from '../../engine/framework'
+import { GL, ShaderProgram } from '../../engine/webgl'
+import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { TransformSystem } from '../../engine/scene'
+import { ParticleEmitter } from '../../engine/particles'
+import { Sprite, BillboardType, Mesh } from '../../engine/components'
+import { ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { PointLight, PointLightPass, Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
+import { shaders } from '../../engine/shaders'
+
 import { CubeModuleModel, modelAnimations } from '../animations'
+import { SharedSystem } from '../shared'
+import { _ActionSignal } from '../Actor'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
-import { SharedSystem } from '../shared'
-import { ShaderMaterial } from '../../engine/Material'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { shaders } from '../../engine/shaders'
-import { TransformSystem } from '../../engine/scene'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
-import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
-import { Decal, DecalPass } from '../../engine/pipeline/DecalPass'
-import { Sprite, BillboardType, SpriteMaterial } from '../../engine/batch'
-import { PostEffectPass } from '../../engine/pipeline/PostEffectPass'
-import { ParticleEmitter } from '../../engine/particles'
-import { PointLight, PointLightPass } from '../../engine/pipeline/PointLightPass'
 
 const timelineTracks = {
     'shield.transform.scale': PropertyAnimation([
@@ -76,13 +73,15 @@ export class ShieldSkill extends CubeSkill {
         super(context, cube)
 
         this.shield = new Mesh()
+        this.shield.order = 1
         this.shield.buffer = SharedSystem.geometry.sphereMesh
         const shieldMaterial = this.shield.material = new ShaderMaterial()
         shieldMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), {})
         shieldMaterial.cullFace = GL.NONE
-        shieldMaterial.blend = ShaderMaterial.ADD
+        shieldMaterial.blendMode = ShaderMaterial.Add
 
         this.displacement = new Mesh()
+        this.displacement.order = 0
         this.displacement.buffer = SharedSystem.geometry.sphereMesh
         const displacementMaterial = this.displacement.material = new ShaderMaterial()
         //TODO add property to blit screen
@@ -99,7 +98,7 @@ export class ShieldSkill extends CubeSkill {
         this.wave.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.wave.transform.position)
         this.wave.material = new SpriteMaterial()
-        this.wave.material.program = this.context.get(ParticleEffectPass).program
+        this.wave.material.program = this.context.get(DecalPass).program
         this.wave.material.diffuse = SharedSystem.textures.ring
 
         this.beam = new Sprite()
@@ -114,7 +113,11 @@ export class ShieldSkill extends CubeSkill {
 
         this.displacement.transform = this.context.get(TransformSystem).create()
         this.displacement.transform.parent = this.cube.transform
-        this.context.get(PostEffectPass).add(this.displacement as any)
+        this.context.get(PostEffectPass).add(this.displacement)
+
+        this.shield.transform = this.context.get(TransformSystem).create()
+        this.shield.transform.parent = this.cube.transform
+        this.context.get(PostEffectPass).add(this.shield)
 
         this.light = this.context.get(PointLightPass).create()
         this.light.transform = this.context.get(TransformSystem).create()
@@ -131,10 +134,6 @@ export class ShieldSkill extends CubeSkill {
             uRotation: [0, 2*Math.PI],
             uAngular: [-Math.PI,Math.PI,0,0],
         })
-
-        this.shield.transform = this.context.get(TransformSystem).create()
-        this.shield.transform.parent = this.cube.transform
-        this.context.get(ParticleEffectPass).add(this.shield)
 
         const animate = AnimationTimeline(this, {
             ...timelineTracks,

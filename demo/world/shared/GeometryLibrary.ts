@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { createSphere, doubleSided } from '../../engine/geometry'
-import { MeshSystem } from '../../engine/Mesh'
+import { MeshSystem } from '../../engine/components/Mesh'
 
 export function GeometryLibrary(context: Application){
     const sphere = createSphere({

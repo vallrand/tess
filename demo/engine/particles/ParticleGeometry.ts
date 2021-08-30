@@ -1,6 +1,6 @@
 import { GL, createTexture } from '../webgl'
 import { IEase } from '../math/ease'
-import { MeshBuffer } from '../Mesh'
+import { MeshBuffer } from '../components/Mesh'
 
 export function GradientRamp(gl: WebGL2RenderingContext, colors: number[], height: number = 1): WebGLTexture {
     const data = new Uint8Array(colors.length * 4)

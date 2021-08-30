@@ -1,7 +1,7 @@
 import { mat4 } from '../math'
 import { Application, ISystem } from '../framework'
 import { CameraSystem } from '../scene/Camera'
-import { MeshSystem } from '../Mesh'
+import { MeshSystem } from '../components/Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { IEffect } from '.'
 import { shaders } from '../shaders'

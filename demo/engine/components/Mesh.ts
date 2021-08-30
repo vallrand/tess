@@ -1,11 +1,10 @@
-import { vec3, quat, mat4, aabb3, vec4 } from './math'
-import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from './webgl'
-import { Application, IProgressHandler, loadFile, ISystem, Factory } from './framework'
+import { vec3, quat, mat4, aabb3, vec4 } from '../math'
+import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from '../webgl'
+import { Application, IProgressHandler, loadFile, ISystem, Factory } from '../framework'
 
-import { Transform } from './scene/Transform'
-import { MaterialSystem, IMaterial } from './Material'
-import { BoundingVolume, calculateBoundingRadius } from './scene/FrustumCulling'
-import { IMesh } from './pipeline'
+import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
+import { MaterialSystem } from '../materials/Material'
+import { IMesh, IMaterial } from '../pipeline'
 
 interface IBufferRange {
     buffer: number

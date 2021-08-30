@@ -1,6 +1,6 @@
 import { vec3, quat, aabb2 } from '../../engine/math'
 import { Application, ISystem } from '../../engine/framework'
-import { MaterialSystem, MeshMaterial } from '../../engine/Material'
+import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { PlayerSystem } from '../player'

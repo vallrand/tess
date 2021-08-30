@@ -1,7 +1,7 @@
 import { clamp, lerp, vec2, vec3, vec4, mat4, quat, ease, aabb2, mat3x2 } from '../../engine/math'
 import { Application, ISystem, IProgressHandler } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene/Camera'
-import { MaterialSystem, MeshMaterial } from '../../engine/Material'
+import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { Cube } from './Cube'
 import { DebugSystem } from '../../engine/Debug'
 import { CubeTileMap } from './CubeTileMap'
@@ -41,7 +41,7 @@ export class PlayerSystem implements ISystem {
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
-        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.EMP)
+        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.Shield)
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0

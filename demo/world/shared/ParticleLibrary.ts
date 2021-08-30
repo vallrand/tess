@@ -3,7 +3,7 @@ import { vec2, vec3, vec4, ease } from '../../engine/math'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
 import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
 import { shaders } from '../../engine/shaders'
-import { MaterialSystem } from '../../engine/Material'
+import { MaterialSystem } from '../../engine/materials/Material'
 import { AttributeCurveSampler, GradientRamp, ParticleGeometry, ParticleOvertimeAttributes, ParticleSystem } from '../../engine/particles'
 import { SharedSystem } from './index'
 

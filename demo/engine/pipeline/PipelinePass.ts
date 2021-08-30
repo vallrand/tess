@@ -1,8 +1,7 @@
 import { Application, ISystem } from '../framework'
-import { IMaterial } from '../Material'
-import { MeshBuffer } from '../Mesh'
+import { GL, ShaderProgram, UniformBlock } from '../webgl'
 import { BoundingVolume, ICamera } from '../scene'
-import { UniformBlock } from '../webgl'
+import { MeshBuffer } from '../components/Mesh'
 
 export interface IMesh {
     order: number
@@ -11,6 +10,13 @@ export interface IMesh {
     buffer?: MeshBuffer
     uniform?: UniformBlock
     readonly bounds: BoundingVolume
+}
+
+export interface IMaterial {
+    index?: number
+    program?: ShaderProgram
+    bind(gl: WebGL2RenderingContext): void
+    merge(material: IMaterial): boolean
 }
 
 export abstract class PipelinePass implements ISystem {

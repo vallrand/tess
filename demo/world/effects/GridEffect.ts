@@ -2,7 +2,7 @@ import { ShaderProgram, UniformBlock, UniformBlockBindings } from '../../engine/
 import { Application } from '../../engine/framework'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/pipeline/DecalPass'
-import { DecalBatch } from '../../engine/batch'
+import { DecalBatch } from '../../engine/pipeline/batch'
 import { GL } from '../../engine/webgl'
 import { vec3 } from '../../engine/math'
 

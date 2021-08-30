@@ -1,8 +1,7 @@
 import { range, mat3x2, vec4, mat3 } from '../math'
 import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
-import { RenderTexture } from '../Material'
-import { Batch2D } from '../batch'
+import { Batch2D } from './batch'
 import { PipelinePass } from './PipelinePass'
 
 export class OverlayPass extends PipelinePass implements ISystem {

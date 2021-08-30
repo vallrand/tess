@@ -1,4 +1,4 @@
-import { GL, IVertexAttribute } from '../webgl'
+import { GL, IVertexAttribute } from '../../webgl'
 
 export abstract class VertexDataBatch<T> {
     protected readonly indexArray: Uint16Array

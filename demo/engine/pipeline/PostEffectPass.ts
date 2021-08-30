@@ -1,37 +1,17 @@
 import { vec2, vec4 } from '../math'
 import { createPlane } from '../geometry'
 import { Application, ISystem } from '../framework'
-import { MeshSystem, MeshBuffer } from '../Mesh'
+import { MeshSystem, MeshBuffer } from '../components/Mesh'
 import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../webgl'
 import { DeferredGeometryPass } from './GeometryPass'
 import { shaders } from '../shaders'
-import { IMaterial } from '../Material'
-import { SpriteMaterial } from '../batch'
 import { ParticleEffectPass } from './ParticleEffectPass'
 import { FogEffect, BloomEffect } from './effects'
-import { PipelinePass } from './PipelinePass'
+import { PipelinePass, IMaterial } from './PipelinePass'
 
-export interface PostEffect {
+export interface IPostEffect {
     readonly active: boolean
     apply(effectPass: PostEffectPass, last: boolean): void
-}
-
-export class PostEffectMaterial extends SpriteMaterial implements IMaterial {
-    constructor(private readonly context: Application){super()}
-    bind(gl: WebGL2RenderingContext): void {
-        // const effectPass = this.context.get(PostEffectPass)
-        // gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAlbedoBuffer)
-        // gl.bindTexture(GL.TEXTURE_2D, effectPass.renderTarget[effectPass.index])
-        // effectPass.swapRenderTarget(false, true)
-
-        gl.disable(GL.BLEND)
-        gl.disable(GL.CULL_FACE)
-        gl.depthFunc(GL.LEQUAL)
-        gl.enable(GL.DEPTH_TEST)
-    }
-    merge(material: IMaterial): boolean {
-        return this.program === material.program && this.diffuse === (material as SpriteMaterial).diffuse
-    }
 }
 
 export class PostEffectPass extends PipelinePass implements ISystem {
@@ -45,8 +25,7 @@ export class PostEffectPass extends PipelinePass implements ISystem {
     public readonly fog: FogEffect
 
     public readonly list: any[] = []
-
-    public readonly effects: PostEffect[] = []
+    public readonly effects: IPostEffect[] = []
     constructor(context: Application){
         super(context)
         const gl: WebGL2RenderingContext = context.gl
@@ -110,18 +89,8 @@ export class PostEffectPass extends PipelinePass implements ISystem {
             this.context.get(ParticleEffectPass).render(this.list)
         }
 
-
-        // gl.disable(GL.DEPTH_TEST)
-        // gl.disable(GL.BLEND)
-        // gl.disable(GL.CULL_FACE)
-        // gl.bindVertexArray(this.plane.vao)
-
-        let last = 0
-        //TODO separate systems for effects?
-        while(last < this.effects.length && !this.effects[last].active) last++
         for(let i = this.effects.length - 1; i >= 0; i--)
-            if(this.effects[i].active) this.effects[i].apply(this, false)//i === last)
-        //TODO refactor, blit is required anyway
+            if(this.effects[i].active) this.effects[i].apply(this, false)
         this.swapRenderTarget(true, true)
     }
 }

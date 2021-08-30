@@ -1,21 +1,18 @@
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { Decal, DecalPass } from '../../engine/pipeline/DecalPass'
-import { TransformSystem } from '../../engine/scene/Transform'
+import { GL, ShaderProgram } from '../../engine/webgl'
+import { TransformSystem, AnimationTimeline, PropertyAnimation } from '../../engine/scene'
+import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
+import { MaterialSystem, SpriteMaterial } from '../../engine/materials'
+import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
+import { ParticleEmitter } from '../../engine/particles'
+import { createCylinder, doubleSided } from '../../engine/geometry'
+import { shaders } from '../../engine/shaders'
+
 import { _ActionSignal } from '../Actor'
 import { modelAnimations, CubeModuleModel } from '../animations'
-import { AnimationTimeline, PropertyAnimation } from '../../engine/scene/Animation'
 import { Cube } from '../player'
 import { SharedSystem } from '../shared'
-import { MaterialSystem } from '../../engine/Material'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { shaders } from '../../engine/shaders'
-import { PointLight, PointLightPass } from '../../engine/pipeline/PointLightPass'
-import { ParticleEmitter } from '../../engine/particles'
-import { Sprite, BillboardType, SpriteMaterial, BatchMesh } from '../../engine/batch'
-import { PostEffectMaterial, PostEffectPass } from '../../engine/pipeline/PostEffectPass'
-import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
-import { createCylinder, doubleSided } from '../../engine/geometry'
 import { CubeSkill } from './CubeSkill'
 
 const timelineTracks = {
@@ -134,7 +131,8 @@ export class ShockwaveSkill extends CubeSkill {
 
         this.wave = new Sprite()
         this.wave.billboard = BillboardType.None
-        this.wave.material = new PostEffectMaterial(this.context)
+        this.wave.material = new SpriteMaterial()
+        this.wave.material.blendMode = null
         this.wave.material.program = SharedSystem.materials.distortion
         this.wave.material.diffuse = SharedSystem.textures.wave
 
