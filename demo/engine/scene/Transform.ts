@@ -1,5 +1,5 @@
 import { vec2, vec3, quat, mat3x2, mat4, vec4 } from '../math'
-import { Application, System, Factory } from '../framework'
+import { Application, ISystem, Factory } from '../framework'
 
 export class Transform2D {
     public index: number = -1
@@ -34,7 +34,7 @@ export class Transform {
     }
 }
 
-export class TransformSystem extends Factory<Transform> implements System {
+export class TransformSystem extends Factory<Transform> implements ISystem {
     constructor(private readonly context: Application){super(Transform)}
     public delete(transform: Transform): void {
         super.delete(transform)

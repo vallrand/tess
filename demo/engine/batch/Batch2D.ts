@@ -11,7 +11,7 @@ export interface IBatched2D {
     colors?: Uint32Array
     material: { diffuse: WebGLTexture }
 }
-export class Batch2D extends VertexDataBatch {
+export class Batch2D extends VertexDataBatch<IBatched2D> {
     public static quadIndices = [0,1,2,0,2,3]
     public readonly textures: WebGLTexture[] = []
     private readonly maxTextures: number

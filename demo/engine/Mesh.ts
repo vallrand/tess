@@ -1,10 +1,11 @@
 import { vec3, quat, mat4, aabb3, vec4 } from './math'
 import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from './webgl'
-import { Application, IProgressHandler, loadFile, System, Factory } from './framework'
+import { Application, IProgressHandler, loadFile, ISystem, Factory } from './framework'
 
 import { Transform } from './scene/Transform'
 import { MaterialSystem, IMaterial } from './Material'
 import { BoundingVolume, calculateBoundingRadius } from './scene/FrustumCulling'
+import { IMesh } from './pipeline'
 
 interface IBufferRange {
     buffer: number
@@ -87,9 +88,10 @@ export class Armature {
     }
 }
 
-export class Mesh {
+export class Mesh implements IMesh {
     public index: number = -1
     public frame: number = 0
+    public order: number = 0
     public program: number = 0
     public layer: number = 0
     public transform: Transform
@@ -110,7 +112,7 @@ export class Mesh {
     }
 }
 
-export class MeshSystem extends Factory<Mesh> implements System {
+export class MeshSystem extends Factory<Mesh> implements ISystem {
     public readonly models: Record<string, {
         buffer: MeshBuffer
         inverseBindPose?: mat4[]

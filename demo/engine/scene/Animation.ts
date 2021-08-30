@@ -1,4 +1,4 @@
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { clamp, ease, vec3 } from '../math'
 import { ParticleEmitter } from '../particles'
 
@@ -6,7 +6,7 @@ export const enum ActionSignal {
     WaitNextFrame = 0
 }
 
-export class AnimationSystem implements System {
+export class AnimationSystem implements ISystem {
     private index: number = 1
     private readonly queue: {
         generator: Generator<ActionSignal>

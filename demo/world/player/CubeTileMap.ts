@@ -2,10 +2,10 @@ import { range, vec2, aabb2, mat3x2, mat3 } from '../../engine/math'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { Batch2D } from '../../engine/batch'
-import { OverlayPass } from '../../engine/deferred/OverlayPass'
-import { Sprite2D, SpriteMaterial } from '../../engine/Sprite'
+import { OverlayPass } from '../../engine/pipeline/OverlayPass'
+import { Sprite2D, Sprite2DMaterial } from '../../engine/Sprite2D'
 import { Transform2D } from '../../engine/scene/Transform'
-import { MaterialSystem, Material } from '../../engine/Material'
+import { MaterialSystem, MeshMaterial } from '../../engine/Material'
 import { Direction, CubeOrientation } from './CubeOrientation'
 import { Cube } from './Cube'
 
@@ -14,7 +14,7 @@ export class CubeTileMap {
     private readonly batch: Batch2D
     private readonly program: ShaderProgram
     private readonly batchRanges: [number,number][] = []
-    private readonly tiles: SpriteMaterial[] = []
+    private readonly tiles: Sprite2DMaterial[] = []
     private readonly materials: {
         fbo: WebGLFramebuffer
         size: vec2
@@ -41,7 +41,7 @@ export class CubeTileMap {
         this.batch.bind()
         gl.drawElements(GL.TRIANGLES, indexCount, GL.UNSIGNED_SHORT, 2 * offset)
     }
-    public extractTileMap(materials: Material[], tileSize: number, gridSize: number){
+    public extractTileMap(materials: MeshMaterial[], tileSize: number, gridSize: number){
         const gl = this.context.gl, materialSystem = this.context.get(MaterialSystem)
         const tileMap = materialSystem.createRenderTexture(tileSize * materials.length, tileSize, 1, {
             filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE
@@ -49,10 +49,10 @@ export class CubeTileMap {
         const sourceSize = vec2(tileSize * gridSize, tileSize * gridSize)
         const sprite = new Sprite2D()
         sprite.transform = new Transform2D()
-        sprite.material = new SpriteMaterial()
+        sprite.material = new Sprite2DMaterial()
     
         vec2.set(tileSize, tileSize, sprite.material.size)
-        SpriteMaterial.calculateUVMatrix(aabb2(5*tileSize,0,6*tileSize,tileSize), sourceSize, sprite.material.uvMatrix)
+        Sprite2DMaterial.calculateUVMatrix(aabb2(5*tileSize,0,6*tileSize,tileSize), sourceSize, sprite.material.uvMatrix)
         
         for(let i = 0; i < materials.length; i++){
             const material = materials[i]
@@ -66,14 +66,15 @@ export class CubeTileMap {
             vec2.set(i * tileSize, 0, sprite.transform.position)
     
             sprite.transform.recalculate(0)
+            sprite.frame = 0
             sprite.update(this.context)
     
             this.batch.render(sprite)
 
-            const tileMaterial = this.tiles[material.index] = new SpriteMaterial()
+            const tileMaterial = this.tiles[material.index] = new Sprite2DMaterial()
             tileMaterial.diffuse = tileMap.target
             vec2.set(tileSize, tileSize, tileMaterial.size)
-            SpriteMaterial.calculateUVMatrix(
+            Sprite2DMaterial.calculateUVMatrix(
                 aabb2(i * tileSize,0,(i+1)*tileSize,tileSize),
                 vec2(tileSize * materials.length, tileSize),
                 tileMaterial.uvMatrix
@@ -120,6 +121,7 @@ export class CubeTileMap {
                 vec2.set(i * sprite.material.size[0] + 0.5 * sprite.material.size[0], 0.5 * sprite.material.size[0], sprite.transform.position)
 
                 sprite.transform.recalculate(0)
+                sprite.frame = 0
                 sprite.update(this.context)
 
                 this.batch.render(sprite)

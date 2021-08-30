@@ -1,13 +1,15 @@
 import { range, mat3x2, vec4, mat3 } from '../math'
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { RenderTexture } from '../Material'
 import { Batch2D } from '../batch'
+import { PipelinePass } from './PipelinePass'
 
-export class OverlayPass implements System {
+export class OverlayPass extends PipelinePass implements ISystem {
     public readonly program: ShaderProgram
     public readonly batch: Batch2D
-    constructor(private readonly context: Application){
+    constructor(context: Application){
+        super(context)
         const gl: WebGL2RenderingContext = context.gl
         const maxTextures = gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
         let fragmentSource: string = require('../shaders/batch2d_frag.glsl')

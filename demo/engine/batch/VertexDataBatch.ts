@@ -1,6 +1,6 @@
 import { GL, IVertexAttribute } from '../webgl'
 
-export abstract class VertexDataBatch {
+export abstract class VertexDataBatch<T> {
     protected readonly indexArray: Uint16Array
     protected readonly uint32View: Uint32Array
     protected readonly float32View: Float32Array
@@ -41,6 +41,7 @@ export abstract class VertexDataBatch {
         }
         gl.bindVertexArray(null)
     }
+    abstract render(geometry: T): boolean
     bind(){
         const gl = this.gl
         gl.bindVertexArray(this.vao)

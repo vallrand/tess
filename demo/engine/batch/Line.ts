@@ -2,13 +2,14 @@ import { Application } from '../framework'
 import { vec3, vec4, mat4 } from '../math'
 import { ICamera } from '../scene/Camera'
 import { IBatched } from './GeometryBatch'
-import { SpriteMaterial } from '../Sprite'
 import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
+import { SpriteMaterial } from './Sprite'
 
 export class Line implements IBatched {
     private static readonly forward: vec3 = vec3()
     private static readonly normal: vec3 = vec3()
     private static readonly tangent: vec3 = vec3()
+    public order: number = 0
     public frame: number = 0
     public vertices: Float32Array = new Float32Array(0)
     public uvs: Float32Array = new Float32Array(0)

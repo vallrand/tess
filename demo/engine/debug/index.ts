@@ -1,8 +1,8 @@
 import { vec4 } from '../math'
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { GL, UniformSamplerBindings, ShaderProgram } from '../webgl'
 import { shaders } from '../shaders'
-import { PostEffectPass } from '../deferred/PostEffectPass'
+import { PostEffectPass } from '../pipeline/PostEffectPass'
 
 class Monitor {
     public readonly dom: HTMLDivElement = document.createElement('div')
@@ -57,7 +57,7 @@ class Monitor {
     }
 }
 
-export class DebugSystem implements System {
+export class DebugSystem implements ISystem {
     public texture: WebGLTexture
     private readonly program: ShaderProgram
     constructor(private readonly context: Application){

@@ -1,4 +1,4 @@
-import { Application, System } from '../engine/framework'
+import { Application, ISystem } from '../engine/framework'
 
 export const enum _ActionSignal {
     WaitNextFrame = 0,
@@ -14,7 +14,7 @@ export interface IActor {
     execute(turn: number): Generator<_ActionSignal>
 }
 
-export class TurnBasedSystem implements System {
+export class TurnBasedSystem implements ISystem {
     private readonly actors: IActor[] = []
     private readonly queue: {
         generator: Generator<_ActionSignal>

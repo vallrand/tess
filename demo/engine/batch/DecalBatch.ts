@@ -1,7 +1,7 @@
 import { vec4, mat4, mat3x2, vec2 } from '../math'
 import { Transform } from '../scene/Transform'
-import { SpriteMaterial } from '../Sprite'
 import { GL, GLSLDataType, IVertexAttribute, VertexDataFormat } from '../webgl'
+import { SpriteMaterial } from './Sprite'
 import { uint8x4, uintNorm2x16, uintNorm4x8 } from './GeometryBatch'
 
 export interface IBatchedDecal {

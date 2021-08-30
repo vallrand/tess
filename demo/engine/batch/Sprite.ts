@@ -1,16 +1,52 @@
 import { Application } from '../framework'
-import { vec2, vec3, vec4, mat4, mat3x2 } from '../math'
+import { vec2, vec3, vec4, mat4, mat3x2, aabb2 } from '../math'
 import { ICamera } from '../scene/Camera'
 import { IBatched } from './GeometryBatch'
-import { SpriteMaterial } from '../Sprite'
 import { Transform } from '../scene/Transform'
 import { BoundingVolume } from '../scene/FrustumCulling'
+import { IMaterial } from '../Material'
+import { GL, ShaderProgram } from '../webgl'
 
 export const enum BillboardType {
     None = 0,
     Flat = 1,
     Sphere = 2,
-    Cylinder = 3 //Axial
+    Cylinder = 3,
+    Axial = 4
+}
+
+export class SpriteMaterial implements IMaterial {
+    public static calculateUVMatrix(frame: aabb2, size: vec2, out: mat3x2): mat3x2 {
+        out[0] = (frame[2] - frame[0] - 1) / size[0]
+        out[1] = 0
+        out[2] = 0
+        out[3] = (frame[3] - frame[1] - 1) / size[1]
+        out[4] = (frame[0] + 0.5) / size[0]
+        out[5] = (frame[1] + 0.5) / size[1]
+        return out
+    }
+    readonly size: vec2 = vec2(1,1)
+    readonly uvMatrix: mat3x2 = mat3x2()
+    diffuse: WebGLTexture
+    normal?: WebGLTexture
+    program: ShaderProgram
+    domain: vec3 = vec3(0,0,0)
+    bind(gl: WebGL2RenderingContext): void {
+        gl.enable(GL.CULL_FACE)
+        gl.cullFace(GL.BACK)
+        gl.enable(GL.DEPTH_TEST)
+        gl.depthFunc(GL.LEQUAL)
+        gl.enable(GL.BLEND)
+        gl.blendEquation(GL.FUNC_ADD)
+        gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
+    }
+    merge(material: IMaterial): boolean {
+        return this === material ||
+        this.program === material.program && (
+            'uSamplers' in this.program.uniforms ||
+            this.diffuse === (material as SpriteMaterial).diffuse
+        )
+    }
 }
 
 export class Sprite implements IBatched {
@@ -97,6 +133,3 @@ export class Sprite implements IBatched {
         }
     }
 }
-
-
- 

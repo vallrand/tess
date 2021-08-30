@@ -1,11 +1,11 @@
 import { ready, IProgressHandler, ProgressHandler } from './Loader'
 import { WebGLState } from '../webgl'
 
-export interface System {
+export interface ISystem {
     update(): void
     load?(manifest: any, progress: IProgressHandler<void>): void
 }
-export interface SystemType<T extends System> {
+export interface SystemType<T extends ISystem> {
     index?: number
     new (context: Application): T
 }
@@ -14,7 +14,7 @@ export class Application {
     private static readonly timestep = 2 * 1000/60
     private readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     public readonly gl: WebGL2RenderingContext
-    private readonly systems: System[] = []
+    private readonly systems: ISystem[] = []
 
     private previousTimestamp: number = 0
     private timeScale: number = 1
@@ -34,7 +34,7 @@ export class Application {
         }
         ready(() => document.body.appendChild(this.canvas))
     }
-    public get<T extends System>(type: SystemType<T>): T { return this.systems[type.index] as T }
+    public get<T extends ISystem>(type: SystemType<T>): T { return this.systems[type.index] as T }
     update = (currentTime: number) => {
         this.deltaTime = this.timeScale * 1e-3 * Math.min(Application.timestep, currentTime - this.previousTimestamp)
         this.previousTimestamp = currentTime

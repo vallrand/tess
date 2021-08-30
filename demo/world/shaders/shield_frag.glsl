@@ -64,19 +64,7 @@ void main(){
     vec3 view = normalize(uEyePosition - position);
     float NdV = dot(normal, view);
 
-    ivec2 fragCoord = ivec2(gl_FragCoord.xy);
-    vec4 fragPosition = texelFetch(uPositionBuffer, fragCoord, 0);
-    float distance = length(fragPosition.xyz - position);
-
-    float edge = smoothstep(1.0,0.0,NdV)*smoothstep(-0.5,0.0,NdV);
-    edge += smoothstep(0.5,0.0,distance);
-
     float n = fbm(position + vec3(0,2.*uTime.x,0), 4);
-    vec3 color = vec3(0.0,0.1,0.1);
-    color = mix(color, vec3(0.4,0.6,0.6), smoothstep(0.5,0.0,n));
-    color = mix(color, vec3(0.6,0.8,0.8), smoothstep(0.2,0.0,n));
-    float wave = smoothstep(0.6,1.0,sin(TAU * (0.2*position.y + 0.5*n) + 2.*uTime.x));
-    color *= mix(edge,1.0,wave);
 
 #ifdef DISPLACEMENT
     vec3 viewNormal = (uViewMatrix * vec4(normal, 0.0)).xyz;
@@ -87,6 +75,19 @@ void main(){
     uv += distortion;
     fragColor = texture(uAlbedoBuffer, uv);
 #else
-    fragColor = vec4(color,0.1*edge);
+    ivec2 fragCoord = ivec2(gl_FragCoord.xy);
+    vec4 fragPosition = texelFetch(uPositionBuffer, fragCoord, 0);
+    float distance = length(fragPosition.xyz - position);
+
+    float edge = smoothstep(1.0,0.0,NdV)*smoothstep(-0.5,0.0,NdV);
+    edge += smoothstep(0.5,0.0,distance);
+
+    vec3 color = vec3(0.0,0.1,0.1);
+    color = mix(color, vec3(0.4,0.6,0.6), smoothstep(0.5,0.0,n));
+    color = mix(color, vec3(0.6,0.8,0.8), smoothstep(0.2,0.0,n));
+    float wave = smoothstep(0.6,1.0,sin(TAU * (0.2*position.y + 0.5*n) + 2.*uTime.x));
+    color *= mix(edge,1.0,wave);
+
+    fragColor = uColor * vec4(color,0.1*edge);
 #endif
 }

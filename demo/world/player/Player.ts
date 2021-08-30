@@ -1,19 +1,21 @@
 import { clamp, lerp, vec2, vec3, vec4, mat4, quat, ease, aabb2, mat3x2 } from '../../engine/math'
-import { Application, System, IProgressHandler } from '../../engine/framework'
+import { Application, ISystem, IProgressHandler } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene/Camera'
-import { MaterialSystem, Material } from '../../engine/Material'
+import { MaterialSystem, MeshMaterial } from '../../engine/Material'
 import { Cube } from './Cube'
 import { DebugSystem } from '../../engine/Debug'
 import { CubeTileMap } from './CubeTileMap'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
-import { DecalPass } from '../../engine/deferred/DecalPass'
-import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
+import { DecalPass } from '../../engine/pipeline/DecalPass'
+import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
 import { GridEffect, EffectLibrary } from '../effects'
 import { CubeModule } from './CubeModules'
 import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
+import { shaders } from '../../engine/shaders'
+import { ShaderProgram } from '../../engine/webgl'
 
-export class PlayerSystem implements System {
+export class PlayerSystem implements ISystem {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
     private readonly cameraPivot: vec3 = vec3(0,0,0)
@@ -39,7 +41,7 @@ export class PlayerSystem implements System {
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
-        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.Shield)
+        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.EMP)
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0
@@ -84,11 +86,11 @@ export class PlayerSystem implements System {
         for(let index = 0; index < layers.length; index++)
         materials.addRenderTexture(
             textureArray, index,
-            materials.fullscreenShader(layers[index].shader),
+            ShaderProgram(this.context.gl, shaders.fullscreen_vert, layers[index].shader),
             layers[index].uniforms, layers[index].rate
         )
         
-        const cubeMaterials: Material[] = []
+        const cubeMaterials: MeshMaterial[] = []
         const cubeTilemap = this.tilemap
         for(let key in materials.materials){
             materials.materials[key].array = textureArray.target
@@ -96,7 +98,7 @@ export class PlayerSystem implements System {
             if(manifest.texture[key].indexOf('cube') != -1) cubeMaterials.push(materials.materials[key]) 
         }
         let remaining = cubeMaterials.length
-        materials.materialLoad.addListener(function handleMaterial(material: Material){
+        materials.materialLoad.addListener(function handleMaterial(material: MeshMaterial){
             const index = cubeMaterials.indexOf(material)
             if(index == -1) return
             if(--remaining > 0) return

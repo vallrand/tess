@@ -1,6 +1,8 @@
 import { vec3, quat, aabb2 } from '../../engine/math'
-import { Application, System } from '../../engine/framework'
-import { MaterialSystem, Material } from '../../engine/Material'
+import { Application, ISystem } from '../../engine/framework'
+import { MaterialSystem, MeshMaterial } from '../../engine/Material'
+import { ShaderProgram } from '../../engine/webgl'
+import { shaders } from '../../engine/shaders'
 import { PlayerSystem } from '../player'
 import { TurnBasedSystem, IActor } from '../Actor'
 
@@ -8,7 +10,7 @@ import { LevelGenerator } from './LevelGenerator'
 
 import { TerrainChunk } from './TerrainChunk'
 
-export class TerrainSystem implements System {
+export class TerrainSystem implements ISystem {
     private static readonly pool: TerrainChunk[] = []
     private readonly positionOffset = -0.5 * TerrainChunk.chunkSize + 0.5 * TerrainChunk.tileSize
     private readonly gridSize = 3
@@ -16,19 +18,19 @@ export class TerrainSystem implements System {
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
     private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context)
 
-    private readonly dunesMaterial: Material
+    private readonly dunesMaterial: MeshMaterial
     constructor(private readonly context: Application){
         const materials = this.context.get(MaterialSystem)
         this.dunesMaterial = materials.create()
         this.dunesMaterial.diffuse = materials.addRenderTexture(
             materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-            materials.fullscreenShader(require('../shaders/sandstone_frag.glsl')), {
+            ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/sandstone_frag.glsl')), {
                 uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
             }, 0
         ).target
         this.dunesMaterial.normal = materials.addRenderTexture(
             materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-            materials.fullscreenShader(require('../shaders/dunes_frag.glsl')), {
+            ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/dunes_frag.glsl')), {
                 uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
             }, 0
         ).target

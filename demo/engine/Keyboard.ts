@@ -1,6 +1,6 @@
-import { Application, System } from './framework'
+import { Application, ISystem } from './framework'
 
-export class KeyboardSystem implements System {
+export class KeyboardSystem implements ISystem {
     private readonly keys: Record<string, number> = Object.create(null)
     constructor(private readonly context: Application){
         addEventListener('keydown', (event: KeyboardEvent) => {

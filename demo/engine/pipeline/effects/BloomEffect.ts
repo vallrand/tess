@@ -1,7 +1,8 @@
-import { vec2, vec4 } from '../math'
-import { Application } from '../framework'
-import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../webgl'
-import { PostEffectPass, PostEffect } from './PostEffectPass'
+import { vec2, vec4 } from '../../math'
+import { Application } from '../../framework'
+import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../../webgl'
+import { shaders } from '../../shaders'
+import { PostEffectPass, PostEffect } from '../PostEffectPass'
 
 export class BloomEffect implements PostEffect {
     private static downscale = 4
@@ -21,10 +22,10 @@ export class BloomEffect implements PostEffect {
     public readonly mask: vec4 = vec4(2,2,2,2)
     constructor(private readonly context: Application){
         const gl: WebGL2RenderingContext = context.gl
-        this.brightness = ShaderProgram(gl, require('./fullscreen_vert.glsl'), require('../shaders/threshold.glsl'), {
+        this.brightness = ShaderProgram(gl, shaders.fullscreen_vert, require('../../shaders/threshold.glsl'), {
             MASK: true, BRIGHTNESS: false
         })
-        this.blur = ShaderProgram(gl, require('./fullscreen_vert.glsl'), require('../shaders/gauss_blur.glsl'), { KERNEL_SIZE: 9 })
+        this.blur = ShaderProgram(gl, shaders.fullscreen_vert, require('../../shaders/gauss_blur.glsl'), { KERNEL_SIZE: 9 })
         this.width = gl.drawingBufferWidth / BloomEffect.downscale
         this.height = gl.drawingBufferHeight / BloomEffect.downscale
 
@@ -43,6 +44,11 @@ export class BloomEffect implements PostEffect {
     apply(effectPass: PostEffectPass){
         if(!this.enabled) return
         const gl: WebGL2RenderingContext = this.context.gl
+
+        gl.disable(GL.DEPTH_TEST)
+        gl.disable(GL.BLEND)
+        gl.disable(GL.CULL_FACE)
+
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, effectPass.renderTarget[effectPass.index])
         
@@ -50,6 +56,7 @@ export class BloomEffect implements PostEffect {
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.fbo[0])
         gl.viewport(0, 0, this.width, this.height)
 
+        gl.bindVertexArray(effectPass.plane.vao)
         this.context.gl.drawElements(GL.TRIANGLES, effectPass.plane.indexCount, GL.UNSIGNED_SHORT, effectPass.plane.indexOffset)
         
         gl.useProgram(this.blur.target)

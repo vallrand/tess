@@ -1,14 +1,13 @@
-import { createCylinder, applyTransform } from '../../engine/geometry'
+import { createCylinder, applyTransform, doubleSided } from '../../engine/geometry'
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { ShaderProgram } from '../../engine/webgl'
-import { PointLight, PointLightPass } from '../../engine/deferred/PointLightPass'
+import { PointLight, PointLightPass } from '../../engine/pipeline/PointLightPass'
 import { shaders } from '../../engine/shaders'
 import { TransformSystem } from '../../engine/scene/Transform'
-import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
-import { SpriteMaterial } from '../../engine/Sprite'
+import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { BatchMesh, BillboardType, Line, Sprite } from '../../engine/batch'
+import { Sprite, BillboardType, SpriteMaterial, BatchMesh, Line } from '../../engine/batch'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../../engine/scene/Animation'
 import { SharedSystem } from '../shared'
@@ -96,7 +95,7 @@ export class BeamSkill extends CubeSkill {
         })
         applyTransform(cylinder, mat4.fromRotationTranslationScale(
             quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat()), vec3(0,0,-1.5), vec3.ONE, mat4()))
-        this.cone = new BatchMesh(cylinder, true)
+        this.cone = new BatchMesh(doubleSided(cylinder))
         this.cone.material = new SpriteMaterial()
         this.cone.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/converge_frag.glsl'))
         this.cone.material.diffuse = SharedSystem.textures.directionalNoise
@@ -121,10 +120,12 @@ export class BeamSkill extends CubeSkill {
 
         const ringMaterial = new SpriteMaterial()
         ringMaterial.diffuse = SharedSystem.textures.ring
+        ringMaterial.program = this.context.get(ParticleEffectPass).program
         vec2.set(2, 2, ringMaterial.size)
 
         const raysMaterial = new SpriteMaterial()
         raysMaterial.diffuse = SharedSystem.textures.rays
+        raysMaterial.program = this.context.get(ParticleEffectPass).program
         vec2.set(2, 2, raysMaterial.size)
 
         this.ring = new Sprite()

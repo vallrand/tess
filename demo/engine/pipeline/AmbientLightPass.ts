@@ -1,9 +1,10 @@
 import { vec3, quat, mat4 } from '../math'
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
 import { DeferredGeometryPass } from './GeometryPass'
 import { PostEffectPass } from './PostEffectPass'
 import { shaders } from '../shaders'
+import { PipelinePass } from './PipelinePass'
 
 export class HemisphereLight {
     public frame: number = 0
@@ -21,11 +22,12 @@ export class HemisphereLight {
     }
 }
 
-export class AmbientLightPass implements System {
+export class AmbientLightPass extends PipelinePass implements ISystem {
     public environment: HemisphereLight = new HemisphereLight
     private readonly program: ShaderProgram
-    constructor(private readonly context: Application){
-        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('./ambient_light_frag.glsl'))
+    constructor(context: Application){
+        super(context)
+        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.ambient_frag)
     }
     public update(): void {
         const { gl } = this.context

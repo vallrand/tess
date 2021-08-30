@@ -3,15 +3,17 @@ import { Application } from './engine/framework'
 import { TransformSystem, CameraSystem, AnimationSystem } from './engine/scene'
 import { MaterialSystem } from './engine/Material'
 import { MeshSystem } from './engine/Mesh'
-import { SpriteSystem } from './engine/Sprite'
+import { SpriteSystem } from './engine/Sprite2D'
 import { KeyboardSystem } from './engine/Keyboard'
-import { DeferredGeometryPass } from './engine/deferred/GeometryPass'
-import { DecalPass } from './engine/deferred/DecalPass'
-import { PointLightPass } from './engine/deferred/PointLightPass'
-import { AmbientLightPass } from './engine/deferred/AmbientLightPass'
-import { ParticleEffectPass } from './engine/deferred/ParticleEffectPass'
-import { PostEffectPass } from './engine/deferred/PostEffectPass'
-import { OverlayPass } from './engine/deferred/OverlayPass'
+import {
+    DeferredGeometryPass,
+    DecalPass,
+    AmbientLightPass,
+    PointLightPass,
+    ParticleEffectPass,
+    PostEffectPass,
+    OverlayPass
+} from './engine/pipeline'
 
 import { DebugSystem } from './engine/debug'
 

@@ -1,11 +1,11 @@
 import { Application } from '../framework'
 import { ICamera } from '../scene/Camera'
 import { mat4, vec2, vec3, vec4 } from '../math'
-import { SpriteMaterial } from '../Sprite'
 import { Transform } from '../scene/Transform'
 import { IBatched } from './GeometryBatch'
 import { IVertexAttribute } from '../webgl'
 import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
+import { SpriteMaterial } from './Sprite'
 
 export class BatchMesh implements IBatched {
     public index: number = -1
@@ -25,16 +25,8 @@ export class BatchMesh implements IBatched {
         format: IVertexAttribute[]
         vertexArray: Float32Array
         indexArray: Uint16Array
-    }, double?: boolean){
-        if(double){
-            this.indices = new Uint16Array(geometry.indexArray.length * 2)
-            for(let i = geometry.indexArray.length / 3 - 1; i >= 0; i--){
-                this.indices[i*3+0] = geometry.indexArray[i*3+2]
-                this.indices[i*3+1] = geometry.indexArray[i*3+1]
-                this.indices[i*3+2] = geometry.indexArray[i*3+0]
-            }
-            this.indices.set(geometry.indexArray, geometry.indexArray.length)
-        }else this.indices = geometry.indexArray
+    }){
+        this.indices = geometry.indexArray
         this._vertices = geometry.vertexArray
         const length = geometry.vertexArray.byteLength / geometry.format[1].stride
         this.vertices = new Float32Array(length * 3)

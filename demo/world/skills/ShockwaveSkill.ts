@@ -1,8 +1,7 @@
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { Decal, DecalPass } from '../../engine/deferred/DecalPass'
+import { Decal, DecalPass } from '../../engine/pipeline/DecalPass'
 import { TransformSystem } from '../../engine/scene/Transform'
-import { SpriteMaterial } from '../../engine/Sprite'
 import { _ActionSignal } from '../Actor'
 import { modelAnimations, CubeModuleModel } from '../animations'
 import { AnimationTimeline, PropertyAnimation } from '../../engine/scene/Animation'
@@ -11,12 +10,12 @@ import { SharedSystem } from '../shared'
 import { MaterialSystem } from '../../engine/Material'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
-import { PointLight, PointLightPass } from '../../engine/deferred/PointLightPass'
+import { PointLight, PointLightPass } from '../../engine/pipeline/PointLightPass'
 import { ParticleEmitter } from '../../engine/particles'
-import { BatchMesh, BillboardType, Sprite } from '../../engine/batch'
-import { PostEffectPass } from '../../engine/deferred/PostEffectPass'
-import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
-import { createCylinder } from '../../engine/geometry'
+import { Sprite, BillboardType, SpriteMaterial, BatchMesh } from '../../engine/batch'
+import { PostEffectMaterial, PostEffectPass } from '../../engine/pipeline/PostEffectPass'
+import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
+import { createCylinder, doubleSided } from '../../engine/geometry'
 import { CubeSkill } from './CubeSkill'
 
 const timelineTracks = {
@@ -135,17 +134,20 @@ export class ShockwaveSkill extends CubeSkill {
 
         this.wave = new Sprite()
         this.wave.billboard = BillboardType.None
-        this.wave.material = new SpriteMaterial()
+        this.wave.material = new PostEffectMaterial(this.context)
+        this.wave.material.program = SharedSystem.materials.distortion
         this.wave.material.diffuse = SharedSystem.textures.wave
 
         this.flash = new Sprite()
         this.flash.billboard = BillboardType.None
         this.flash.material = new SpriteMaterial()
+        this.flash.material.program = this.context.get(ParticleEffectPass).program
         this.flash.material.diffuse = SharedSystem.textures.wave
 
         this.beam = new Sprite()
         this.beam.billboard = BillboardType.Cylinder
         this.beam.material = new SpriteMaterial()
+        this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
         vec2.set(0,0.5,this.beam.origin)
 
@@ -164,8 +166,9 @@ export class ShockwaveSkill extends CubeSkill {
             radial: 32, horizontal: 1,
             cap: false, angleStart: 0, angleLength: 2*Math.PI
         })
-        this.cylinder = new BatchMesh(cylinder, true)
+        this.cylinder = new BatchMesh(doubleSided(cylinder))
         this.cylinder.material = new SpriteMaterial()
+        this.cylinder.material.program = this.context.get(ParticleEffectPass).program
         this.cylinder.material.diffuse = SharedSystem.textures.wind
     }
     public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
@@ -185,7 +188,7 @@ export class ShockwaveSkill extends CubeSkill {
         this.wave.transform = this.context.get(TransformSystem).create()
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.wave.transform.rotation)
         vec3.add(origin, [0,1.5,0], this.wave.transform.position)
-        this.context.get(PostEffectPass).distortion.add(this.wave)
+        this.context.get(PostEffectPass).add(this.wave)
 
         this.flash.transform = this.context.get(TransformSystem).create()
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.flash.transform.rotation)
@@ -236,7 +239,7 @@ export class ShockwaveSkill extends CubeSkill {
         this.context.get(DecalPass).delete(this.ring)
         this.context.get(DecalPass).delete(this.crack)
 
-        this.context.get(PostEffectPass).distortion.remove(this.wave)
+        this.context.get(PostEffectPass).remove(this.wave)
         this.context.get(ParticleEffectPass).remove(this.flash)
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.cylinder)

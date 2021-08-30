@@ -1,12 +1,13 @@
 import { mat4 } from '../math'
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { CameraSystem } from '../scene/Camera'
 import { MeshSystem } from '../Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
-import { IEffect } from '../pipeline'
+import { IEffect } from '.'
 import { shaders } from '../shaders'
+import { PipelinePass } from './PipelinePass'
 
-export class DeferredGeometryPass implements System {
+export class DeferredGeometryPass extends PipelinePass implements ISystem {
     public albedo: WebGLTexture
     public normal: WebGLTexture
     public position: WebGLTexture
@@ -15,7 +16,8 @@ export class DeferredGeometryPass implements System {
     private programs: ShaderProgram[]
     public readonly effects: IEffect[] = []
 
-    constructor(private readonly context: Application){
+    constructor(context: Application){
+        super(context)
         const gl: WebGL2RenderingContext = context.gl
         this.allocateGeometryBuffer(gl, gl.drawingBufferWidth, gl.drawingBufferHeight)
         this.programs = [
@@ -70,7 +72,8 @@ export class DeferredGeometryPass implements System {
             //this.programs[programIndex].uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
             if(mesh.armature) this.programs[programIndex].uniforms['uBoneMatrix'] = mesh.armature.boneMatrix
 
-            mesh.material.bind(gl, this.programs[programIndex])
+            mesh.material.program = this.programs[programIndex]
+            mesh.material.bind(gl)
             gl.bindVertexArray(mesh.buffer.vao)
             gl.drawElements(GL.TRIANGLES, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)
         }

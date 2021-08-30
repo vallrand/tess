@@ -97,8 +97,14 @@ export class ParticleSystem<T> implements IEffect {
             gl.blendFunc(GL.ONE, GL.ONE)
         else gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
 
-        if(this.options.depthTest) gl.enable(GL.DEPTH_TEST)
-        else gl.disable(GL.DEPTH_TEST)
+        if(this.options.depthTest){
+            gl.enable(GL.DEPTH_TEST)
+            gl.depthFunc(this.options.depthTest)
+        }else gl.disable(GL.DEPTH_TEST)
+        if(this.options.cull){
+            gl.enable(GL.CULL_FACE)
+            gl.cullFace(this.options.cull)
+        }else gl.disable(GL.CULL_FACE)
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
         gl.bindTexture(GL.TEXTURE_2D, this.diffuse)

@@ -13,5 +13,8 @@ export const shaders = {
     geometry_frag: <string> require('./geometry_frag.glsl'),
     noise_frag: <string> require('./noise_frag.glsl'),
     distortion_frag: <string> require('./distortion_frag.glsl'),
-    fog_frag: <string> require('./fog_frag.glsl')
+    fog_frag: <string> require('./fog_frag.glsl'),
+    light_vert: <string> require('./light_vert.glsl'),
+    pbr_frag: <string> require('./pbr_frag.glsl'),
+    ambient_frag: <string> require('./ambient_frag.glsl')
 }

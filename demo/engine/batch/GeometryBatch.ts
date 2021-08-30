@@ -4,6 +4,9 @@ import { GL, ShaderProgram, VertexDataFormat } from '../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
 import { ICamera } from '../scene/Camera'
 import { BoundingVolume } from '../scene/FrustumCulling'
+import { IMaterial } from '../Material'
+import { IMesh } from '../pipeline'
+
 
 export const uint8x4 = (r: number, g: number, b: number, a: number): number =>
 (0xFF & r) | (0xFF00 & g << 8) | (0xFF0000 & b << 16) | (0xFF000000 & a << 24)
@@ -15,25 +18,23 @@ export const uintNorm4x8 = (r: number, g: number, b: number, a: number): number 
 export const uintNorm2x16 = (u: number, v: number): number => 
 (0xFFFF * v << 16) | 0xFFFF & (0xFFFF * u | 0)
 
-export interface IBatched {
+export interface IBatchMaterial extends IMaterial {
+    diffuse: WebGLTexture
+    domain: vec3
+}
+
+export interface IBatched extends IMesh {
     frame: number
     index?: number
-    order?: number
     vertices: Float32Array
     uvs: Float32Array
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
-    material: {
-        program?: ShaderProgram
-        diffuse: WebGLTexture
-        domain: vec3
-    }
-    update(context: Application, camera: ICamera): void
-    readonly bounds: BoundingVolume
+    material: IBatchMaterial
 }
 
-export class GeometryBatch extends VertexDataBatch {
+export class GeometryBatch extends VertexDataBatch<IBatched> {
     public static quadIndices = [0,1,2,0,2,3]
     public readonly textures: WebGLTexture[] = []
     private readonly maxTextures: number

@@ -1,16 +1,16 @@
 import { vec4, mat4, binarySearch, insertionSort } from '../math'
-import { Application, System, Factory } from '../framework'
+import { Application, ISystem, Factory } from '../framework'
 import { createBox } from '../geometry'
 import { CameraSystem } from '../scene/Camera'
 import { Transform } from '../scene/Transform'
 import { MeshSystem, MeshBuffer } from '../Mesh'
 import { DeferredGeometryPass } from './GeometryPass'
-import { SpriteMaterial } from '../Sprite'
 import { BoundingVolume } from '../scene/FrustumCulling'
 import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
-import { DecalBatch, IBatchedDecal } from '../batch'
-import { IEffect } from '../pipeline'
+import { DecalBatch, IBatchedDecal, SpriteMaterial } from '../batch'
+import { IEffect } from '.'
 import { shaders } from '../shaders'
+import { PipelinePass } from './PipelinePass'
 
 export class Decal implements IBatchedDecal {
     frame: number = 0
@@ -27,16 +27,17 @@ export class Decal implements IBatchedDecal {
     }
 }
 
-export class DecalPass implements System {
+export class DecalPass extends PipelinePass implements ISystem {
     private static readonly orderSort = <T extends { order: number }>(a: T, b: T) => a.order - b.order
     private readonly pool: Decal[] = []
     public readonly list: Decal[] = []
     public readonly batch: DecalBatch
-    private readonly program: ShaderProgram
+    public readonly program: ShaderProgram
     private readonly fbo: WebGLFramebuffer
     private readonly defaultNormalMap: WebGLTexture
     public readonly effects: IEffect[] = []
-    constructor(private readonly context: Application){
+    constructor(context: Application){
+        super(context)
         const { gl } = this.context
         this.batch = new DecalBatch(gl, 128)
         this.program = ShaderProgram(gl, shaders.decal_vert, shaders.decal_frag, {

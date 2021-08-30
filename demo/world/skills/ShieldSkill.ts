@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { Mesh } from '../../engine/Mesh'
-import { ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { _ActionSignal } from '../Actor'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube } from '../player'
@@ -11,17 +11,25 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { TransformSystem } from '../../engine/scene'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
-import { ParticleEffectPass } from '../../engine/deferred/ParticleEffectPass'
-import { Decal, DecalPass } from '../../engine/deferred/DecalPass'
-import { SpriteMaterial } from '../../engine/Sprite'
-import { BillboardType, Sprite } from '../../engine/batch'
-import { PostEffectPass } from '../../engine/deferred/PostEffectPass'
+import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
+import { Decal, DecalPass } from '../../engine/pipeline/DecalPass'
+import { Sprite, BillboardType, SpriteMaterial } from '../../engine/batch'
+import { PostEffectPass } from '../../engine/pipeline/PostEffectPass'
 import { ParticleEmitter } from '../../engine/particles'
+import { PointLight, PointLightPass } from '../../engine/pipeline/PointLightPass'
 
 const timelineTracks = {
     'shield.transform.scale': PropertyAnimation([
         { frame: 1, value: vec3.ZERO },
         { frame: 3, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
+    ], vec3.lerp),
+    'shield.color': PropertyAnimation([
+        { frame: 1, value: [1,0,0.5,0] },
+        { frame: 2.5, value: vec4.ONE, ease: ease.cubicOut }
+    ], vec4.lerp),
+    'displacement.transform.scale': PropertyAnimation([
+        { frame: 1.0, value: vec3.ZERO },
+        { frame: 2.5, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
     ], vec3.lerp),
     'wave.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [0,2,0] },
@@ -40,15 +48,18 @@ const timelineTracks = {
         { frame: 1.4, value: [0.5,1,1,0], ease: ease.sineIn },
         { frame: 1.8, value: vec4.ZERO, ease: ease.cubicIn }
     ], vec4.lerp),
-    'bulge.transform.scale': PropertyAnimation([
-        { frame: 1.0, value: vec3.ZERO },
-        { frame: 2.5, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
+    'light.radius': PropertyAnimation([
+        { frame: 0, value: 8 }
+    ], lerp),
+    'light.intensity': PropertyAnimation([
+        { frame: 1.2, value: 0 },
+        { frame: 1.8, value: 6, ease: ease.quadOut},
+        { frame: 2.4, value: 0, ease: ease.sineOut }
+    ], lerp),
+    'light.color': PropertyAnimation([
+        { frame: 1.0, value: [1,0.5,0.8] },
+        { frame: 2.4, value: [0.5,1,1], ease: ease.sineIn }
     ], vec3.lerp),
-    // 'bulge.color': PropertyAnimation([
-    //     { frame: 0.8, value: vec4.ONE },
-    //     { frame: 1.8, value: vec4.ZERO, ease: ease.quartIn }
-    // ], vec4.lerp)
-
 }
 
 export class ShieldSkill extends CubeSkill {
@@ -56,10 +67,11 @@ export class ShieldSkill extends CubeSkill {
     private idleIndex: number = -1
 
     private shield: Mesh
-    private bulge: Mesh
+    private displacement: Mesh
     private wave: Decal
     private dust: ParticleEmitter
     private beam: Sprite
+    private light: PointLight
     constructor(context: Application, cube: Cube){
         super(context, cube)
 
@@ -70,10 +82,11 @@ export class ShieldSkill extends CubeSkill {
         shieldMaterial.cullFace = GL.NONE
         shieldMaterial.blend = ShaderMaterial.ADD
 
-        this.bulge = new Mesh()
-        this.bulge.buffer = SharedSystem.geometry.sphereMesh
-        const bulgeMaterial = this.bulge.material = new ShaderMaterial()
-        bulgeMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
+        this.displacement = new Mesh()
+        this.displacement.buffer = SharedSystem.geometry.sphereMesh
+        const displacementMaterial = this.displacement.material = new ShaderMaterial()
+        //TODO add property to blit screen
+        displacementMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
     }
     public *open(): Generator<_ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
@@ -86,20 +99,26 @@ export class ShieldSkill extends CubeSkill {
         this.wave.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.wave.transform.position)
         this.wave.material = new SpriteMaterial()
+        this.wave.material.program = this.context.get(ParticleEffectPass).program
         this.wave.material.diffuse = SharedSystem.textures.ring
 
         this.beam = new Sprite()
         this.beam.billboard = BillboardType.Cylinder
         vec2.set(0,0.5,this.beam.origin)
         this.beam.material = new SpriteMaterial()
+        this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
         this.beam.transform = this.context.get(TransformSystem).create()
         vec3.add(origin, [0,4,0], this.beam.transform.position)
         this.context.get(ParticleEffectPass).add(this.beam)
 
-        this.bulge.transform = this.context.get(TransformSystem).create()
-        this.bulge.transform.parent = this.cube.transform
-        this.context.get(PostEffectPass).distortion.add(this.bulge as any)
+        this.displacement.transform = this.context.get(TransformSystem).create()
+        this.displacement.transform.parent = this.cube.transform
+        this.context.get(PostEffectPass).add(this.displacement as any)
+
+        this.light = this.context.get(PointLightPass).create()
+        this.light.transform = this.context.get(TransformSystem).create()
+        vec3.add(origin, [0,8,0], this.light.transform.position)
 
         this.dust = SharedSystem.particles.dust.add({
             uOrigin: origin,

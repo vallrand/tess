@@ -1,11 +1,13 @@
 import { mat4, vec3 } from '../math'
 import { createSphere } from '../geometry'
-import { Application, System, Factory } from '../framework'
+import { Application, ISystem, Factory } from '../framework'
 import { MeshSystem, MeshBuffer } from '../Mesh'
 import { CameraSystem } from '../scene/Camera'
 import { Transform } from '../scene/Transform'
 import { BoundingVolume } from '../scene/FrustumCulling'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
+import { PipelinePass } from './PipelinePass'
+import { shaders } from '../shaders'
 
 export class PointLight {
     public index: number = -1
@@ -28,22 +30,35 @@ export class PointLight {
     }
 }
 
-export class PointLightPass extends Factory<PointLight> implements System {
+export class PointLightPass extends PipelinePass implements ISystem {
     private readonly program: ShaderProgram
     private readonly sphere: MeshBuffer
-    constructor(private readonly context: Application){
-        super(PointLight)
+    private readonly pool: PointLight[] = []
+    public readonly list: PointLight[] = []
+    constructor(context: Application){
+        super(context)
         const gl: WebGL2RenderingContext = context.gl
-        this.program = ShaderProgram(gl, require('./point_light_vert.glsl'), require('./pbr_frag.glsl'), {
+        this.program = ShaderProgram(gl, shaders.light_vert, shaders.pbr_frag, {
             OMNILIGHT: true, GGX: true, SCHLICK: true
         })
 
         const sphere = createSphere({ longitude: 32, latitude: 32, radius: 1 })
         this.sphere = this.context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format)
     }
-    public delete(light: PointLight): void {
-        super.delete(light)
-        light.frame = 0
+    public create(): PointLight {
+        const item = this.pool.pop() || new PointLight()
+        item.index = this.list.push(item) - 1
+        return item
+    }
+    public delete(item: PointLight): void {
+        if(item.index == -1) return
+        this.list[item.index] = this.list[this.list.length - 1]
+        this.list[item.index].index = item.index
+        this.list.length--
+        item.index = -1
+        this.pool.push(item)
+
+        item.frame = 0
     }
     public update(): void {
         const gl = this.context.gl

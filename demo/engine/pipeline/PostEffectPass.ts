@@ -1,49 +1,40 @@
 import { vec2, vec4 } from '../math'
 import { createPlane } from '../geometry'
-import { Application, System } from '../framework'
+import { Application, ISystem } from '../framework'
 import { MeshSystem, MeshBuffer } from '../Mesh'
 import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../webgl'
-import { BloomEffect } from './BloomEffect'
-import { DistortionEffect } from './DistortionEffect'
 import { DeferredGeometryPass } from './GeometryPass'
 import { shaders } from '../shaders'
+import { IMaterial } from '../Material'
+import { SpriteMaterial } from '../batch'
+import { ParticleEffectPass } from './ParticleEffectPass'
+import { FogEffect, BloomEffect } from './effects'
+import { PipelinePass } from './PipelinePass'
 
 export interface PostEffect {
     readonly active: boolean
     apply(effectPass: PostEffectPass, last: boolean): void
 }
 
-//TODO move into pipeline/effects
-class FogEffect implements PostEffect {
-    public enabled: boolean = true
-    public readonly color: vec4 = vec4(0.2,0.2,0.2,0)
-    public readonly range: vec2 = vec2(5,30)
-    private readonly program: ShaderProgram
-    constructor(private readonly context: Application){
-        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fog_frag, {
-            LINEAR_FOG: true, BLOOM: true
-        })
-        this.program.uniforms['uBloomMap'] = UniformSamplerBindings.uNormalMap
+export class PostEffectMaterial extends SpriteMaterial implements IMaterial {
+    constructor(private readonly context: Application){super()}
+    bind(gl: WebGL2RenderingContext): void {
+        // const effectPass = this.context.get(PostEffectPass)
+        // gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAlbedoBuffer)
+        // gl.bindTexture(GL.TEXTURE_2D, effectPass.renderTarget[effectPass.index])
+        // effectPass.swapRenderTarget(false, true)
+
+        gl.disable(GL.BLEND)
+        gl.disable(GL.CULL_FACE)
+        gl.depthFunc(GL.LEQUAL)
+        gl.enable(GL.DEPTH_TEST)
     }
-    get active(): boolean { return this.enabled }
-    apply(effectPass: PostEffectPass, last: boolean): void {
-        const { gl } = this.context
-
-        effectPass.swapRenderTarget(last, false)
-        gl.useProgram(this.program.target)
-        this.program.uniforms['uFogColor'] = this.color
-        this.program.uniforms['uFogRange'] = this.range
-
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
-        gl.bindTexture(GL.TEXTURE_2D, effectPass.bloom.texture)
-        this.program.uniforms['uBloomMask'] = effectPass.bloom.mask
-
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-        gl.drawElements(GL.TRIANGLES, effectPass.plane.indexCount, GL.UNSIGNED_SHORT, effectPass.plane.indexOffset)
+    merge(material: IMaterial): boolean {
+        return this.program === material.program && this.diffuse === (material as SpriteMaterial).diffuse
     }
 }
 
-export class PostEffectPass implements System {
+export class PostEffectPass extends PipelinePass implements ISystem {
     public readonly plane: MeshBuffer
 
     public readonly fbo: WebGLFramebuffer[] = []
@@ -52,10 +43,12 @@ export class PostEffectPass implements System {
 
     public readonly bloom: BloomEffect
     public readonly fog: FogEffect
-    public readonly distortion: DistortionEffect
+
+    public readonly list: any[] = []
 
     public readonly effects: PostEffect[] = []
-    constructor(private readonly context: Application){
+    constructor(context: Application){
+        super(context)
         const gl: WebGL2RenderingContext = context.gl
         const plane = createPlane({ width: 2, height: 2, columns: 1, rows: 1 })
         this.plane = this.context.get(MeshSystem).uploadVertexData(plane.vertexArray, plane.indexArray, plane.format)
@@ -70,7 +63,6 @@ export class PostEffectPass implements System {
         }
 
         this.effects.push(
-            this.distortion = new DistortionEffect(this.context),
             this.fog = new FogEffect(this.context),
             this.bloom = new BloomEffect(this.context)
         )
@@ -95,12 +87,34 @@ export class PostEffectPass implements System {
             gl.clear(GL.COLOR_BUFFER_BIT)
         }
     }
+    add(item: any){
+        this.list.push(item)
+    }
+    remove(item: any){
+        const index = this.list.indexOf(item)
+        if(index != -1) this.list.splice(index, 1)
+    }
     public update(): void {
         const { gl } = this.context
-        gl.disable(GL.DEPTH_TEST)
-        gl.disable(GL.BLEND)
-        gl.disable(GL.CULL_FACE)
-        gl.bindVertexArray(this.plane.vao)
+
+        if(this.list.length){
+            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAlbedoBuffer)
+            gl.bindTexture(GL.TEXTURE_2D, this.renderTarget[this.index])
+            this.swapRenderTarget(false, true)
+
+            gl.disable(GL.BLEND)
+            gl.disable(GL.CULL_FACE)
+            gl.depthFunc(GL.LEQUAL)
+            gl.enable(GL.DEPTH_TEST)
+
+            this.context.get(ParticleEffectPass).render(this.list)
+        }
+
+
+        // gl.disable(GL.DEPTH_TEST)
+        // gl.disable(GL.BLEND)
+        // gl.disable(GL.CULL_FACE)
+        // gl.bindVertexArray(this.plane.vao)
 
         let last = 0
         //TODO separate systems for effects?
