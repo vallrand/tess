@@ -15,6 +15,7 @@ export class Line implements IBatched {
     public uvs: Float32Array = new Float32Array(0)
     public indices: Uint16Array = new Uint16Array(0)
     public readonly color: vec4 = vec4(1,1,1,1)
+    public readonly normal: vec3 = vec3(0,1,0)
     public material: SpriteMaterial
     public readonly bounds = new BoundingVolume
     public path: vec3[]

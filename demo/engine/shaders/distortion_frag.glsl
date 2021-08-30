@@ -14,7 +14,7 @@ uniform CameraUniforms {
 };
 #else
 in vec4 vColor;
-in vec3 vDomain;
+in vec3 vNormal;
 in float vMaterial;
 #endif
 

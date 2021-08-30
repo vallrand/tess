@@ -27,6 +27,7 @@ export class Sprite implements IBatched {
     public readonly uvs: Float32Array = new Float32Array(Sprite.quadUVs)
     public readonly indices: Uint16Array = Sprite.quadIndices
     public readonly color: vec4 = vec4(1,1,1,1)
+    public readonly normal: vec3 = vec3(1,0,0)
     public material: SpriteMaterial
     public transform: Transform
     public readonly bounds = new BoundingVolume
@@ -83,6 +84,7 @@ export class Sprite implements IBatched {
         this.vertices[10] = normal[1] * left + tangent[1] * bottom + transform[13]
         this.vertices[11] = normal[2] * left + tangent[2] * bottom + transform[14]
 
+        vec3.cross(normal, tangent, this.normal)
         this.frame = context.frame
     }
     private applyTransform2D(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){

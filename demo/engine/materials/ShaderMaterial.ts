@@ -28,7 +28,7 @@ export class ShaderMaterial implements IMaterial {
         }else gl.disable(GL.BLEND)
     }
     public merge(material: IMaterial): boolean {
-        return this === material &&
+        return this === material ||
         this.program === material.program &&
         this.depthWrite === (material as ShaderMaterial).depthWrite &&
         this.depthTest === (material as ShaderMaterial).depthTest &&

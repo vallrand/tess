@@ -67,10 +67,19 @@ export function TextureLibrary(context: Application){
     ).target
 
     const wind = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/wind_frag.glsl'), {  }), { uColor: [1,1,1,1] }, 0
     ).target
 
-    return { particle, ring, wave, rays, raysRing, raysBeam, wind, directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse }
+    const stripes = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { STRIPE: true }), { uColor: [0.6,1,1,0.6] }, 0
+    ).target
+
+    return {
+        particle, ring, wave, rays, raysRing, raysBeam, wind, stripes,
+        directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse
+    }
 }

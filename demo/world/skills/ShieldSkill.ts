@@ -4,7 +4,7 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
-import { Sprite, BillboardType, Mesh } from '../../engine/components'
+import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
 import { ShaderMaterial, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
@@ -38,25 +38,38 @@ const timelineTracks = {
     ], vec4.lerp),
     'beam.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
-        { frame: 1.8, value: [1.4,4.2,1.4], ease: ease.cubicOut }
+        { frame: 2.0, value: [1.4,4.2,1.4], ease: ease.cubicOut }
     ], vec3.lerp),
     'beam.color': PropertyAnimation([
         { frame: 0.8, value: [1,0.4,0.8,1.0] },
         { frame: 1.4, value: [0.5,1,1,0], ease: ease.sineIn },
-        { frame: 1.8, value: vec4.ZERO, ease: ease.cubicIn }
+        { frame: 2.0, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
-    'light.radius': PropertyAnimation([
-        { frame: 0, value: 8 }
-    ], lerp),
-    'light.intensity': PropertyAnimation([
-        { frame: 1.2, value: 0 },
-        { frame: 1.8, value: 6, ease: ease.quadOut},
-        { frame: 2.4, value: 0, ease: ease.sineOut }
-    ], lerp),
-    'light.color': PropertyAnimation([
-        { frame: 1.0, value: [1,0.5,0.8] },
-        { frame: 2.4, value: [0.5,1,1], ease: ease.sineIn }
+    'tube.transform.scale': PropertyAnimation([
+        { frame: 0.6, value: [1,3,1] },
+        { frame: 1.0, value: [2.4,3.6,2.4], ease: ease.quadOut },
+        { frame: 1.4, value: [5,2,5], ease: ease.sineIn }
     ], vec3.lerp),
+    'tube.transform.position': PropertyAnimation([
+        { frame: 0.2, value: [0,0,0] },
+        { frame: 1.2, value: [0,4,0], ease: ease.sineOut }
+    ], vec3.lerp),
+    'tube.color': PropertyAnimation([
+        { frame: 1.0, value: vec4.ONE },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.cubicIn }
+    ], vec4.lerp),
+    'sphere.transform.rotation': PropertyAnimation([
+        { frame: 0, value: quat.axisAngle(vec3.AXIS_X, Math.PI, quat()) }
+    ], quat.slerp),
+    'sphere.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.2, value: [4,6,4], ease: ease.cubicOut },
+        { frame: 2.2, value: [3,5,3], ease: ease.quadInOut }
+    ], vec3.lerp),
+    'sphere.color': PropertyAnimation([
+        { frame: 1.2, value: vec4.ONE },
+        { frame: 2.2, value: vec4.ZERO, ease: ease.cubicIn }
+    ], vec4.lerp)
 }
 
 export class ShieldSkill extends CubeSkill {
@@ -65,12 +78,18 @@ export class ShieldSkill extends CubeSkill {
 
     private shield: Mesh
     private displacement: Mesh
+    private tube: BatchMesh
     private wave: Decal
     private dust: ParticleEmitter
     private beam: Sprite
-    private light: PointLight
+    private sphere: BatchMesh
+    private waveMaterial: SpriteMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
+
+        this.waveMaterial = new SpriteMaterial()
+        this.waveMaterial.program = this.context.get(DecalPass).program
+        this.waveMaterial.diffuse = SharedSystem.textures.ring
 
         this.shield = new Mesh()
         this.shield.order = 1
@@ -84,8 +103,22 @@ export class ShieldSkill extends CubeSkill {
         this.displacement.order = 0
         this.displacement.buffer = SharedSystem.geometry.sphereMesh
         const displacementMaterial = this.displacement.material = new ShaderMaterial()
-        //TODO add property to blit screen
         displacementMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
+
+        this.beam = new Sprite()
+        this.beam.billboard = BillboardType.Cylinder
+        vec2.set(0,0.5,this.beam.origin)
+        this.beam.material = new SpriteMaterial()
+        this.beam.material.program = this.context.get(ParticleEffectPass).program
+        this.beam.material.diffuse = SharedSystem.textures.raysBeam
+
+        this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.tube.material = new SpriteMaterial()
+        this.tube.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/scroll_frag.glsl'), { FRESNEL: true })
+        this.tube.material.diffuse = SharedSystem.textures.stripes
+
+        this.sphere = new BatchMesh(SharedSystem.geometry.lowPolySphere)
+        this.sphere.material = this.tube.material
     }
     public *open(): Generator<_ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
@@ -97,19 +130,19 @@ export class ShieldSkill extends CubeSkill {
         this.wave = this.context.get(DecalPass).create(0)
         this.wave.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.wave.transform.position)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.program = this.context.get(DecalPass).program
-        this.wave.material.diffuse = SharedSystem.textures.ring
+        this.wave.material = this.waveMaterial
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.beam.origin)
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
         this.beam.transform = this.context.get(TransformSystem).create()
         vec3.add(origin, [0,4,0], this.beam.transform.position)
         this.context.get(ParticleEffectPass).add(this.beam)
+
+        this.tube.transform = this.context.get(TransformSystem).create()
+        this.tube.transform.parent = this.cube.transform
+        this.context.get(ParticleEffectPass).add(this.tube)
+
+        this.sphere.transform = this.context.get(TransformSystem).create()
+        this.sphere.transform.parent = this.cube.transform
+        this.context.get(ParticleEffectPass).add(this.sphere)
 
         this.displacement.transform = this.context.get(TransformSystem).create()
         this.displacement.transform.parent = this.cube.transform
@@ -118,10 +151,6 @@ export class ShieldSkill extends CubeSkill {
         this.shield.transform = this.context.get(TransformSystem).create()
         this.shield.transform.parent = this.cube.transform
         this.context.get(PostEffectPass).add(this.shield)
-
-        this.light = this.context.get(PointLightPass).create()
-        this.light.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,8,0], this.light.transform.position)
 
         this.dust = SharedSystem.particles.dust.add({
             uOrigin: origin,
@@ -140,17 +169,29 @@ export class ShieldSkill extends CubeSkill {
             'dust': EmitterTrigger({ frame: 0.85, value: 36 })
         })
 
-        for(let duration = 3, startTime = this.context.currentTime; true;){
+        for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             if(elapsedTime <= 1) armatureAnimation.open(elapsedTime, mesh.armature)
-            //else if(this.idleIndex == -1) this.idleIndex = this.context.get(AnimationSystem).start(this.idle())
+            else if(this.idleIndex == -1) this.idleIndex = this.context.get(AnimationSystem).start(this.idle())
 
             animate(elapsedTime, this.context.deltaTime)
-            if(elapsedTime > duration) startTime = this.context.currentTime
-            //if(elapsedTime > duration) break
+            if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame
         }
         state.open = 1
+
+        this.context.get(TransformSystem).delete(this.wave.transform)
+        this.context.get(TransformSystem).delete(this.beam.transform)
+        this.context.get(TransformSystem).delete(this.tube.transform)
+        this.context.get(TransformSystem).delete(this.sphere.transform)
+
+        SharedSystem.particles.dust.remove(this.dust)
+
+        this.context.get(ParticleEffectPass).remove(this.sphere)
+        this.context.get(ParticleEffectPass).remove(this.tube)
+        this.context.get(ParticleEffectPass).remove(this.beam)
+
+        this.context.get(DecalPass).delete(this.wave)
     }
     public *idle(): Generator<ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]

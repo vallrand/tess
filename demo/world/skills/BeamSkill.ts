@@ -42,10 +42,10 @@ const timelineTracks = {
         { frame: 1.2, value: [1,1,1,1], ease: ease.quadOut },
         { frame: 1.4, value: [1,1,1,0], ease: ease.quadIn }
     ], vec4.lerp),
-    'cone.material.domain': PropertyAnimation([
-        { frame: 0.4, value: vec3.ZERO },
-        { frame: 1.5, value: [0xFF,0,0], ease: ease.quartIn }
-    ], vec3.lerp),
+    'cone.material.uvTransform': PropertyAnimation([
+        { frame: 0.4, value: vec2.ZERO },
+        { frame: 1.5, value: [0xFF,0], ease: ease.quartIn }
+    ], vec2.lerp),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [2,2,2] },
         { frame: 1.1, value: [4,4,4], ease: ease.sineOut },
@@ -107,14 +107,14 @@ export class BeamSkill extends CubeSkill {
         this.center.billboard = BillboardType.Sphere
         this.center.material = new SpriteMaterial()
         this.center.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
-        vec3.set(8, 4, 0, this.center.material.domain)
+        vec2.set(8, 4, this.center.material.uvTransform as any)
         this.center.material.diffuse = gradient
 
         this.beam = new Line()
         this.beam.path = [vec3(), vec3()]
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
-        vec3.set(4, 8, 0, this.beam.material.domain)
+        vec2.set(4, 8, this.beam.material.uvTransform as any)
         this.beam.material.diffuse = gradient
 
         const ringMaterial = new SpriteMaterial()

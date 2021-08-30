@@ -3,13 +3,14 @@ precision highp float;
 in vec2 vUV;
 in vec3 vPosition;
 in vec4 vColor;
-in vec3 vDomain;
+in vec3 vNormal;
 in float vMaterial;
 out vec4 fragColor;
 
 uniform GlobalUniforms {
     vec4 uTime;
 };
+uniform vec4 uUVTransform;
 uniform sampler2D uSampler;
 
 #define TAU 6.283185307179586
@@ -74,13 +75,13 @@ void main(){
     float time = 4.0*uTime.x;
 #ifndef RADIAL
     float fade = smoothstep(1.0, 0.8, abs(uv.x));
-    float f0 = 1.-2.*fbm(vec3(vDomain.xy * uv + vec2(time,0), -.5*time), 4);
-    f0 *= 1.-2.*noise3D(vec3(vDomain.xy * uv,f0)*vec3(2,0.25,3)+vec3(time,0,time));
+    float f0 = 1.-2.*fbm(vec3(uUVTransform.xy * uv + vec2(time,0), -.5*time), 4);
+    f0 *= 1.-2.*noise3D(vec3(uUVTransform.xy * uv,f0)*vec3(2,0.25,3)+vec3(time,0,time));
     float d0 = abs(uv.y+0.5*f0);
 #else
     float fade = 1.0;
     uv = vec2(atan(uv.y,uv.x)/TAU+.5, length(uv));
-    float f0 = 1.-2.*fbm(vec3(vDomain.xy * uv.xy + vec2(0,-time),-.5*time), 4, vec3(vDomain.xy,10));
+    float f0 = 1.-2.*fbm(vec3(uUVTransform.xy * uv.xy + vec2(0,-time),-.5*time), 4, vec3(uUVTransform.xy,10));
     float d0 = abs(uv.y+0.5*f0)-0.5*smoothstep(0.1,.0,uv.y);
 #endif
 

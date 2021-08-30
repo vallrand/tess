@@ -56,6 +56,11 @@ void main(){
     float x1 = 1.0-uv.x;
     float y0 = mix(pow(1.0-uv.y,8.0), pow(1.0-uv.y,2.0), x1*x1);
     float alpha = smoothstep(0.0, 1.0, x0*y0);
+#elif defined(STRIPE)
+    uv = .5+.5*uv;
+    float line = .5+.5*cos(TAU*(4.0*uv.y+0.5));
+    float l0 = 1.0/pow(1.0-line,0.2);
+    float alpha = 0.4 * line * l0;
 #endif
     fragColor = uColor * alpha;
 }

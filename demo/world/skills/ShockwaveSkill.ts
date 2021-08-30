@@ -6,7 +6,6 @@ import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
 import { MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
-import { createCylinder, doubleSided } from '../../engine/geometry'
 import { shaders } from '../../engine/shaders'
 
 import { _ActionSignal } from '../Actor'
@@ -159,12 +158,7 @@ export class ShockwaveSkill extends CubeSkill {
             uFrame: [8,4]
         })
 
-        const cylinder = createCylinder({
-            radiusTop: 0.5, radiusBottom: 0.5, height: 1,
-            radial: 32, horizontal: 1,
-            cap: false, angleStart: 0, angleLength: 2*Math.PI
-        })
-        this.cylinder = new BatchMesh(doubleSided(cylinder))
+        this.cylinder = new BatchMesh(SharedSystem.geometry.cylinder)
         this.cylinder.material = new SpriteMaterial()
         this.cylinder.material.program = this.context.get(ParticleEffectPass).program
         this.cylinder.material.diffuse = SharedSystem.textures.wind

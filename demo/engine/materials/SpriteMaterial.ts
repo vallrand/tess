@@ -15,14 +15,15 @@ export class SpriteMaterial extends ShaderMaterial implements IMaterial {
         return out
     }
     readonly size: vec2 = vec2(1,1)
+    readonly uvTransform: vec4 = vec4(0, 0, 1, 1)
     readonly uvMatrix: mat3x2 = mat3x2()
     diffuse: WebGLTexture
     normal?: WebGLTexture
-    domain: vec3 = vec3(0,0,0)
     depthTest: number = GL.LEQUAL
     blendMode = ShaderMaterial.Premultiply
     bind(gl: WebGL2RenderingContext): void {
         super.bind(gl)
+        if('uvTransform' in this.program.uniforms) this.program.uniforms['uvTransform'] = this.uvTransform
     }
     merge(material: IMaterial): boolean {
         return super.merge(material) && (

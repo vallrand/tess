@@ -52,7 +52,7 @@ export const VertexDataFormat = {
         { name: 'position', size: 3, type: GL.FLOAT, normalized: false, stride: 24, offset: 0 },
         { name: 'uv', size: 2, type: GL.UNSIGNED_SHORT, normalized: true, stride: 24, offset: 12 },
         { name: 'color', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 24, offset: 16 },
-        { name: 'domain', size: 3, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 20 },
+        { name: 'normal', size: 3, type: GL.BYTE, normalized: true, stride: 24, offset: 20 },
         { name: 'material', size: 1, type: GL.UNSIGNED_BYTE, normalized: false, stride: 24, offset: 23 }
     ],
     Decal: <IVertexAttribute[]> [
@@ -82,9 +82,12 @@ export const GLSLTypeSize = {
     [GL.FLOAT_MAT4]: 16
 }
 export const GLSLDataType = {
+    [GL.BYTE]: Int8Array,
     [GL.UNSIGNED_BYTE]: Uint8Array,
+    [GL.SHORT]: Int16Array,
     [GL.UNSIGNED_SHORT]: Uint16Array,
     [GL.INT]: Int32Array,
+    [GL.UNSIGNED_INT]: Uint32Array,
     [GL.SAMPLER_2D]: Int32Array,
     [GL.SAMPLER_2D_ARRAY]: Int32Array,
     [GL.FLOAT]: Float32Array,

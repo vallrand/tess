@@ -5,11 +5,12 @@ precision highp int;
 in vec2 vUV;
 in vec3 vPosition;
 in vec4 vColor;
-in vec3 vDomain;
+in vec3 vNormal;
 in float vMaterial;
 
 out vec4 fragColor;
 
+uniform vec4 uUVTransform;
 uniform sampler2D uSampler;
 
 uniform GlobalUniforms {
@@ -17,7 +18,7 @@ uniform GlobalUniforms {
 };
 
 void main(){
-    float time = 1.6 * uTime.x + vDomain.x * 0.036;
+    float time = 1.6 * uTime.x + uUVTransform.x * 0.036;
     vec2 uv = vUV;
     float c0 = texture(uSampler, uv).r;
     float c1 = texture(uSampler, uv + vec2(0,-0.2*time)).g;

@@ -57,7 +57,11 @@ vec2 parallaxMapping(in vec2 uv, in vec3 viewDirection, in float heightScale){
 void main(){
     vec2 uv = vUV;
     vec3 position = vPosition;
+//#ifdef SKINNING
+//    vec3 normal = normalize(cross(dFdx(position),dFdy(position)));
+//#else
     vec3 normal = normalize(vNormal);
+//#endif
 
 #ifdef NORMAL_MAPPING
     vec3 dpdx = dFdx(position);

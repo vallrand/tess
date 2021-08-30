@@ -2,22 +2,19 @@ import { vec3, vec4 } from '../../math'
 import { GL, VertexDataFormat } from '../../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
 import { IMesh, IMaterial } from '..'
-import { uint8x4, uint16x2, uintNorm4x8, uintNorm2x16 } from './common'
-
-export interface IBatchMaterial extends IMaterial {
-    diffuse: WebGLTexture
-    domain: vec3
-}
+import { uint8x4, uint16x2, uintNorm4x8, intNorm4x8, uintNorm2x16 } from './common'
 
 export interface IBatched extends IMesh {
     frame: number
     index?: number
     vertices: Float32Array
     uvs: Float32Array
+    normals?: Float32Array
+    normal?: vec3
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
-    material: IBatchMaterial
+    material: IMaterial & { diffuse: WebGLTexture }
 }
 
 export class GeometryBatch extends VertexDataBatch<IBatched> {
@@ -29,12 +26,14 @@ export class GeometryBatch extends VertexDataBatch<IBatched> {
         this.maxTextures = gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
     }
     render(geometry: IBatched): boolean {
-        const { vertices, uvs, indices, colors, material } = geometry
+        const { vertices, uvs, indices, colors, normals, material } = geometry
         const indexCount = indices.length, vertexCount = vertices.length >>> 1
         if(this.indexOffset == 0) this.textures.length = 0
         let textureIndex = this.textures.indexOf(material.diffuse)
 
-        if(
+        if(indexCount > this.maxIndices || vertexCount > this.maxVertices)
+            throw new Error(`${indexCount}>${this.maxIndices} or ${vertexCount}>${this.maxVertices}`)
+        else if(
             (textureIndex == -1 && this.textures.length >= this.maxTextures) ||
             (this.indexOffset + indexCount > this.maxIndices) ||
             (this.vertexOffset + vertexCount > this.maxVertices)
@@ -43,7 +42,8 @@ export class GeometryBatch extends VertexDataBatch<IBatched> {
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
         if(!color) return true
         if(textureIndex == -1) textureIndex = this.textures.push(material.diffuse) - 1
-        const material4 = uint8x4(material.domain[0], material.domain[1], material.domain[2], textureIndex)
+        const material4 = uint8x4(0,0,0, textureIndex) |
+        (geometry.normal ? intNorm4x8(geometry.normal[0], geometry.normal[1], geometry.normal[2], 0) : 0)
         
         if(!this.fixedIndices) for(let i = 0; i < indexCount; i++)
             this.indexArray[this.indexOffset + i] = indices[i] + this.vertexOffset
@@ -57,7 +57,8 @@ export class GeometryBatch extends VertexDataBatch<IBatched> {
             this.float32View[index + 2] = vertices[3*i+2]
             this.uint32View[index + 3] = uintNorm2x16(uvs[2*i], uvs[2*i+1])
             this.uint32View[index + 4] = colors ? colors[i] : color
-            this.uint32View[index + 5] = material4
+            this.uint32View[index + 5] = normals ? 
+            (material4 | intNorm4x8(normals[3*i+0], normals[3*i+1], normals[3*i+2], 0)) : material4
         }
         this.vertexOffset += vertexCount
         return true

@@ -76,6 +76,11 @@ https://www.shadertoy.com/view/3sKXWh tileable textures
 
 displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
 
+normal matrix https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/
+https://lxjk.github.io/2017/10/01/Stop-Using-Normal-Matrix.html
+https://stackoverflow.com/questions/27600045/the-correct-way-to-calculate-normal-matrix
+https://www.gamedev.net/forums/topic/648782-normals-in-world-space-from-a-glsl-shader/
+
 circuit
 https://www.shadertoy.com/view/ttVfzR
 https://www.shadertoy.com/view/Wds3z7

@@ -1,4 +1,4 @@
-import { vec3, quat, mat4, aabb3, vec4 } from '../math'
+import { vec3, quat, mat4, aabb3, vec4, mat3 } from '../math'
 import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from '../webgl'
 import { Application, IProgressHandler, loadFile, ISystem, Factory } from '../framework'
 

@@ -41,7 +41,7 @@ export function PropertyAnimation<T>(frames: {
     frame: number
     value: T
     ease?: ease.IEase
-}[], lerp?: (prev: T, next: T, fraction: number, out: T) => T, framerate: number = 1): IAnimationTween<T> {
+}[], lerp: (prev: T, next: T, fraction: number, out: T) => T, framerate: number = 1): IAnimationTween<T> {
     frames.sort((a, b) => a.frame - b.frame)
     const lastIndex = frames.length - 1
     let frame = 0
