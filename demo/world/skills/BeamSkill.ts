@@ -14,7 +14,7 @@ import { _ActionSignal } from '../Actor'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
-const timelineTracks = {
+const actionTimeline = {
     'light.radius': PropertyAnimation([
         { frame: 1.0, value: 0 },
         { frame: 1.4, value: 8, ease: ease.quadOut }
@@ -202,7 +202,7 @@ export class BeamSkill extends CubeSkill {
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
         const animate = AnimationTimeline(this, {
-            ...timelineTracks,
+            ...actionTimeline,
             'beam.path.1': PropertyAnimation([
                 { frame: 1.3, value: origin },
                 { frame: 1.6, value: target, ease: ease.cubicOut }

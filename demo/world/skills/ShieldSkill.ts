@@ -1,4 +1,4 @@
-import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
@@ -6,7 +6,7 @@ import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
 import { ShaderMaterial, SpriteMaterial } from '../../engine/materials'
-import { PointLight, PointLightPass, Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
+import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
@@ -15,7 +15,7 @@ import { _ActionSignal } from '../Actor'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
-const timelineTracks = {
+const introTimeline = {
     'shield.transform.scale': PropertyAnimation([
         { frame: 1, value: vec3.ZERO },
         { frame: 3, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
@@ -28,6 +28,10 @@ const timelineTracks = {
         { frame: 1.0, value: vec3.ZERO },
         { frame: 2.5, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
     ], vec3.lerp),
+    'displacement.color': PropertyAnimation([
+        { frame: 1, value: [1,0.2,0.8,1] },
+        { frame: 2, value: [1,1,1,0.1], ease: ease.quadOut }
+    ], vec4.lerp),
     'wave.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [0,2,0] },
         { frame: 1.4, value: [12,2,12], ease: ease.cubicOut }
@@ -69,6 +73,21 @@ const timelineTracks = {
     'sphere.color': PropertyAnimation([
         { frame: 1.2, value: vec4.ONE },
         { frame: 2.2, value: vec4.ZERO, ease: ease.cubicIn }
+    ], vec4.lerp)
+}
+const outroTimeline = {
+    'shield.transform.scale': PropertyAnimation([
+        { frame: 0.2, value: [3,5,3] },
+        { frame: 1.0, value: vec3.ZERO, ease: ease.CubicBezier(0.36, 0, 0.66, -0.56) }
+    ], vec3.lerp),
+    'shield.color': PropertyAnimation([
+        { frame: 0.2, value: vec4.ONE },
+        { frame: 1.0, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'displacement.color': PropertyAnimation([
+        { frame: 0, value: [1,1,1,0.1] },
+        { frame: 0.4, value: [1,0.6,0.9,1], ease: ease.quadOut },
+        { frame: 0.8, value: [1,1,1,0], ease: ease.sineIn }
     ], vec4.lerp)
 }
 
@@ -165,7 +184,7 @@ export class ShieldSkill extends CubeSkill {
         })
 
         const animate = AnimationTimeline(this, {
-            ...timelineTracks,
+            ...introTimeline,
             'dust': EmitterTrigger({ frame: 0.85, value: 36 })
         })
 
@@ -193,14 +212,62 @@ export class ShieldSkill extends CubeSkill {
 
         this.context.get(DecalPass).delete(this.wave)
     }
+    public *close(): Generator<_ActionSignal> {
+        const state = this.cube.state.sides[this.cube.state.side]
+        const mesh = this.cube.meshes[this.cube.state.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
+
+        const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
+        this.idleIndex = -1
+        while(!waiter.continue) yield _ActionSignal.WaitNextFrame
+
+        const animate = AnimationTimeline(this, outroTimeline)
+        for(const duration = 1, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            armatureAnimation.open(1.0 - elapsedTime, mesh.armature)
+            animate(elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
+            yield _ActionSignal.WaitNextFrame
+        }
+        state.open = 0
+
+        this.context.get(TransformSystem).delete(this.shield.transform)
+        this.context.get(TransformSystem).delete(this.displacement.transform)
+
+        this.context.get(PostEffectPass).remove(this.shield)
+        this.context.get(PostEffectPass).remove(this.displacement)
+    }
     public *idle(): Generator<ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
+        const velocityEase = (v0: number, v1: number, duration: number): ease.IEase => {
+            const acceleration = (v1 - v0) / duration
+            const distance = duration * (v0 + 0.5 * (v1 - v0))
+            return x => x <= duration
+            ? v0 * x + x*x*0.5 * acceleration
+            : v1 * x + distance
+        }
+        velocityEase.duration = (v0: number, v1: number, distance: number): number => 
+        distance / (v0 + 0.5 * (v1 - v0))
+        const accelerationEase = velocityEase(0, 1, 0.5)
+
+        let head: number = 0
         for(const startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            armatureAnimation.loop(elapsedTime % 1, mesh.armature)
+            head = accelerationEase(elapsedTime) % 1.0
+            armatureAnimation.loop(head, mesh.armature)
+            if(this.idleIndex == -1) break
+            yield ActionSignal.WaitNextFrame
+        }
+        const decelerationDistance = .25 - head % .25
+        const decelerationDuration = velocityEase.duration(1, 0, decelerationDistance)
+        const decelerationEase = velocityEase(1, 0, decelerationDuration)
+        for(const startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            armatureAnimation.loop((head + decelerationEase(elapsedTime)) % 1, mesh.armature)
+            if(elapsedTime > decelerationDuration) break
             yield ActionSignal.WaitNextFrame
         }
     }

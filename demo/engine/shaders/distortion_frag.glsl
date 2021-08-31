@@ -25,6 +25,8 @@ uniform sampler2D uSampler;
 
 void main(){
     vec4 color = texture(uSampler,vUV);
+#ifdef CHROMATIC_ABERRATION
+#endif
 #ifdef MESH
     vec3 normal = normalize(vNormal);
     vec3 view = normalize(uEyePosition - vPosition);

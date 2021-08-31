@@ -68,12 +68,14 @@ void main(){
 
 #ifdef DISPLACEMENT
     vec3 viewNormal = (uViewMatrix * vec4(normal, 0.0)).xyz;
-    vec2 distortion = smoothstep(0.4,1.0,NdV*NdV) * 0.1 * viewNormal.rg;
-    distortion *= 2.0 * n;
+    float fresnel = smoothstep(0.4,1.0,NdV*NdV);
+    vec2 distortion = fresnel * 0.1 * viewNormal.rg;
+    distortion *= 20.0 * uColor.a * n;
 
     vec2 uv = vec2(gl_FragCoord.xy) / vec2(textureSize(uAlbedoBuffer, 0));
     uv += distortion;
     fragColor = texture(uAlbedoBuffer, uv);
+    fragColor.rgb *= mix(vec3(1),uColor.rgb,fresnel);
 #else
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
     vec4 fragPosition = texelFetch(uPositionBuffer, fragCoord, 0);

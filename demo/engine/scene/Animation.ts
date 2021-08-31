@@ -2,18 +2,43 @@ import { Application, ISystem } from '../framework'
 import { clamp, ease, vec3 } from '../math'
 import { ParticleEmitter } from '../particles'
 
-export const enum ActionSignal {
-    WaitNextFrame = 0
+export interface ActionSignal {
+    continue: boolean
+}
+export const ActionSignal = {
+    WaitNextFrame: <ActionSignal> { continue: true }
 }
 
 export class AnimationSystem implements ISystem {
     private index: number = 1
+    private readonly pending: Array<ActionSignal & { target: number }> = []
     private readonly queue: {
         generator: Generator<ActionSignal>
         iterator: IteratorResult<ActionSignal>
         index: number
     }[] = []
     constructor(private readonly context: Application){}
+    private indexOf(index: number): number {
+        for(let i = 0; i < this.queue.length; i++)
+            if(this.queue[i].index > index) return -1
+            else if(this.queue[i].index) return i
+        return -1
+    }
+    public await(index: number): ActionSignal {
+        if(this.indexOf(index) == -1) return ActionSignal.WaitNextFrame
+        const signal = { target: index, continue: false }
+        this.pending.push(signal)
+        return signal
+    }
+    private dispatch(index: number): void {
+        let removed = 0
+        for(let i = 0; i < this.pending.length; i++)
+            if(this.pending[i].target === index){
+                this.pending[i].continue = true
+                removed++
+            }else this.pending[i - removed] = this.pending[i]
+        this.pending.length -= removed
+    }
     public update(): void {
         let removed = 0
         for(let i = 0; i < this.queue.length; i++){
@@ -22,6 +47,8 @@ export class AnimationSystem implements ISystem {
                 !routine.iterator ||
                 routine.iterator.value === ActionSignal.WaitNextFrame
             ) routine.iterator = routine.generator.next()
+
+            if(routine.iterator.done) this.dispatch(routine.index)
 
             if(routine.iterator.done) removed++
             else this.queue[i - removed] = routine

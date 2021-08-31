@@ -36,5 +36,12 @@ void main(){
     color *= smoothstep(0.1,0.5,NdV);
 #endif
 
-    fragColor = color * vColor;
+#ifdef DISSOLVE
+    float edge = 0.1;
+    float threshold = mix(1.0, -edge, vColor.a);
+    color *= smoothstep(threshold, threshold + edge, color.a);
+#else
+    color *= vColor;
+#endif
+    fragColor = color;
 }

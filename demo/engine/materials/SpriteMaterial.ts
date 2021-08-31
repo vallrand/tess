@@ -23,7 +23,7 @@ export class SpriteMaterial extends ShaderMaterial implements IMaterial {
     blendMode = ShaderMaterial.Premultiply
     bind(gl: WebGL2RenderingContext): void {
         super.bind(gl)
-        if('uvTransform' in this.program.uniforms) this.program.uniforms['uvTransform'] = this.uvTransform
+        if('uUVTransform' in this.program.uniforms) this.program.uniforms['uUVTransform'] = this.uvTransform
     }
     merge(material: IMaterial): boolean {
         return super.merge(material) && (

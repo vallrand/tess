@@ -14,7 +14,7 @@ import { Cube } from '../player'
 import { SharedSystem } from '../shared'
 import { CubeSkill } from './CubeSkill'
 
-const timelineTracks = {
+const actionTimeline = {
     'ring.transform.scale': PropertyAnimation([
         { frame: 0, value: [16,2,16] },
         { frame: 0.6, value: [0,2,0], ease: ease.quadIn }
@@ -205,7 +205,7 @@ export class ShockwaveSkill extends CubeSkill {
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
         const animate = AnimationTimeline(this, {
-            ...timelineTracks
+            ...actionTimeline
         })
 
         for(const duration = 2.0, startTime = this.context.currentTime; true;){
