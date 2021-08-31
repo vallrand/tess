@@ -8,9 +8,13 @@ export function MaterialLibrary(context: Application){
 
     const distortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {})
 
+    const chromaticAberration = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
+        CHROMATIC_ABERRATION: true
+    })
+
     
 
     return {
-        distortion
+        distortion, chromaticAberration
     }
 }

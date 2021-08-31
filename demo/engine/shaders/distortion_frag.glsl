@@ -25,8 +25,6 @@ uniform sampler2D uSampler;
 
 void main(){
     vec4 color = texture(uSampler,vUV);
-#ifdef CHROMATIC_ABERRATION
-#endif
 #ifdef MESH
     vec3 normal = normalize(vNormal);
     vec3 view = normalize(uEyePosition - vPosition);
@@ -44,5 +42,12 @@ void main(){
 #endif
     vec2 uv = vec2(gl_FragCoord.xy) / vec2(textureSize(uAlbedoBuffer, 0));
     uv += distortion;
+#ifdef CHROMATIC_ABERRATION
+    float red = texture(uAlbedoBuffer, uv - vec2(.01*color.b,0)).r;
+    vec4 diffuse = texture(uAlbedoBuffer, uv);
+    float blue = texture(uAlbedoBuffer, uv + vec2(.01*color.b,0)).b;
+    fragColor = vec4(red, diffuse.g, blue, diffuse.a);
+#else
     fragColor = texture(uAlbedoBuffer, uv);
+#endif
 }

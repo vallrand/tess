@@ -107,14 +107,15 @@ export class Cube implements IActor {
             else if(keys.down('KeyD')) direction = Direction.Left
             else if(keys.down('KeyW')) direction = Direction.Down
             else if(keys.down('KeyS')) direction = Direction.Up
+            const trigger = keys.down('Space')
 
-            if(state.open == 0 && keys.down('Space'))
+            if(state.open == 0 && trigger)
                 for(const generator = skill.open(); true;){
                     const iterator = generator.next()
                     if(iterator.done) continue idle
                     else yield iterator.value
                 }
-            else if(state.open == 1 && direction != Direction.None)
+            else if(state.open == 1 && !trigger && direction != Direction.None)
                 for(const generator = skill.close(); true;){
                     const iterator = generator.next()
                     if(iterator.done) continue idle
@@ -123,10 +124,9 @@ export class Cube implements IActor {
 
             switch(state.type){
                 case CubeModule.Railgun:
-                case CubeModule.EMP:
-                {
+                case CubeModule.EMP: {
                     if(state.open != 1) break
-                    if(!keys.down('Space')) break
+                    if(!trigger) break
 
                     for(const generator = skill.activate(this.transform.matrix, rotation); true;){
                         const iterator = generator.next()
@@ -134,35 +134,18 @@ export class Cube implements IActor {
                         else yield iterator.value
                     }
                 }
-                // case CubeModule.Empty: {
-                // }
-                // case CubeModule.Machinegun: {
-    
-                // }
+                case CubeModule.Machinegun: {
+                    if(state.open != 1) break
+                    if(!trigger || direction === Direction.None) break
+
+                    for(const generator = skill.activate(this.transform.matrix, rotation, direction); true;){
+                        const iterator = generator.next()
+                        if(iterator.done) return iterator.value
+                        else yield iterator.value
+                    }
+                }
                 case CubeModule.Shield: {
                     if(state.open != 1) break
-
-                    // for(const generator = skill.activate(this.transform.matrix, rotation); true;){
-                    //     const iterator = generator.next()
-                    //     if(iterator.done) return iterator.value
-                    //     else yield iterator.value
-                    // }
-
-                    // //if(!keys.down('Space')) break
-                    // const shield = this.context.get(PlayerSystem).shield.create()
-                    // shield.transform = this.context.get(TransformSystem).create()
-                    // shield.transform.parent = this.transform
-                    // vec3.copy([0,0,0], shield.transform.scale)
-                    // const _ease = ease.elasticOut(1,0.75)
-
-                    // for(let duration = 1.0, startTime = this.context.currentTime; true;){
-                    //     let fraction = (this.context.currentTime - startTime) / duration
-                    //     vec3.lerp(vec3.ZERO, [3,5,3], _ease(Math.min(1, fraction)), shield.transform.scale)
-                    //     shield.transform.frame = 0
-                    //     modelAnimations[moduleSettings.model].activate(fraction % 1, mesh.armature)
-                    //     //if(fraction >= 1) break
-                    //     yield ActionSignal.WaitNextFrame
-                    // }
                 }
             }
             movement: {

@@ -3,7 +3,7 @@ import { Application } from './engine/framework'
 import { TransformSystem, CameraSystem, AnimationSystem } from './engine/scene'
 import { MaterialSystem } from './engine/materials/Material'
 import { MeshSystem } from './engine/components/Mesh'
-import { SpriteSystem } from './engine/Sprite2D'
+import { SpriteSystem } from './engine/components/Sprite2D'
 import { KeyboardSystem } from './engine/Keyboard'
 import {
     DeferredGeometryPass,

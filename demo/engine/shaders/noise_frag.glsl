@@ -88,7 +88,7 @@ vec3 fbmd(vec2 uv, vec2 frequency, int octaves, vec2 shift, float gain, vec2 lac
     value.x = value.x * 0.5 + 0.5;
     return value;
 }
-vec3 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in float seed){
+vec4 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in float seed){
     uv *= period;
     vec2 i = floor(uv); vec2 f = uv - i;
     vec2 minPos, tilePos;
@@ -104,7 +104,7 @@ vec3 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in flo
         minPos = rPos;
         tilePos = cPos;
     }
-    float md0 = 1e+5; md = 1e+5;
+    float md0 = 1e+5, md1 = 1e+5;
     for(int y=-2;y<=2;y++)
     for(int x=-2;x<=2;x++){
         vec2 n = vec2(x,y);
@@ -113,17 +113,15 @@ vec3 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in flo
         vec2 v = minPos - rPos;
         if(dot(v, v) <= 1e-5) continue;
         float d = dot(0.5 * (minPos + rPos), normalize(rPos - minPos));
-        if(d < md){
-            md0 = md; md = d;
-        }else if(d < md0){
-            md0 = d;
+        if(d < md0){
+            md1 = md0; md0 = d;
+        }else if(d < md1){
+            md1 = d;
         }
     }
-    md += (md0 - md) * width;
-    return vec3(md, tilePos);
+    md0 += (md1 - md0) * width;
+    return vec4(md0, md, tilePos);
 }
-
-
 
 float sineNoise(vec2 uv, int layers, float shift){
     vec2 p = vec2(uv); float v = 0.0;
@@ -140,7 +138,10 @@ float sineNoise(vec2 uv, int layers, float shift){
 void main(){
     vec2 uv = vUV;
 
-#if defined(SINE)
+#if defined(CELLULAR)
+    vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
+    float alpha = w.y;
+#elif defined(SINE)
     float alpha = sineNoise(uv*TAU, 8, 411.37);
     alpha = smoothstep(0.2,1.0,alpha);
 #elif defined(WARP)

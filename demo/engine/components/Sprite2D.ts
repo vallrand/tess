@@ -1,9 +1,9 @@
-import { vec2, mat3x2, aabb2, vec4, vec3 } from './math'
-import { Application, ISystem, Factory } from './framework'
-import { GL, ShaderProgram } from './webgl'
-import { Batch2D, IBatched2D } from './pipeline/batch'
-import { Transform2D } from './scene/Transform'
-import { IMaterial } from './pipeline'
+import { vec2, mat3x2, aabb2, vec4, vec3 } from '../math'
+import { Application, ISystem, Factory } from '../framework'
+import { GL, ShaderProgram } from '../webgl'
+import { Batch2D, IBatched2D } from '../pipeline/batch'
+import { Transform2D } from '../scene/Transform'
+import { IMaterial } from '../pipeline'
 
 export class Sprite2DMaterial implements IMaterial {
     public static calculateUVMatrix(frame: aabb2, size: vec2, out: mat3x2): mat3x2 {

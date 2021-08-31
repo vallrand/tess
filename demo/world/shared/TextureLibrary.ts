@@ -57,6 +57,15 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
+    const cellularNoise = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+            CELLULAR: true
+        }), {
+
+        }, 0
+    ).target
+
     const sineNoise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
@@ -80,6 +89,6 @@ export function TextureLibrary(context: Application){
 
     return {
         particle, ring, wave, rays, raysRing, raysBeam, wind, stripes,
-        directionalNoise, cloudNoise, sineNoise, grey: materials.white.diffuse
+        directionalNoise, cloudNoise, cellularNoise, sineNoise, grey: materials.white.diffuse
     }
 }

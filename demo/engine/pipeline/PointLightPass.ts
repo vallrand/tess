@@ -59,6 +59,8 @@ export class PointLightPass extends PipelinePass implements ISystem {
         this.pool.push(item)
 
         item.frame = 0
+        vec3.copy(vec3.ONE, item.color)
+        item.intensity = item.radius = 1
     }
     public update(): void {
         const gl = this.context.gl

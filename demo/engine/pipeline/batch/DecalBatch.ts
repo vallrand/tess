@@ -11,6 +11,7 @@ export interface IBatchedDecal {
     color: vec4
 }
 export class DecalBatch {
+    private static readonly uvTransform: vec4 = vec4(0,0,1,1)
     public static readonly unitCubeVertices = new Float32Array([
         -0.5,-0.5,-0.5,
         -0.5,-0.5,+0.5,
@@ -76,7 +77,7 @@ export class DecalBatch {
         if(!color) return true
 
         const matrix = decal.transform?.matrix || mat4.IDENTITY
-        const uvMatrix = decal.material?.uvMatrix || mat3x2.IDENTITY
+        const uvTransform = decal.material?.uvTransform || DecalBatch.uvTransform
         const indexOffset = this.instanceOffset * this.stride
 
         this.float32View.set(matrix, indexOffset)
@@ -84,10 +85,10 @@ export class DecalBatch {
         this.float32View[indexOffset + 7] = 0
         this.float32View[indexOffset + 11] = 0
         this.float32View[indexOffset + 15] = 1
-        this.uint32View[indexOffset + 16] = uintNorm2x16(uvMatrix[4], uvMatrix[5])
+        this.uint32View[indexOffset + 16] = uintNorm2x16(uvTransform[0], uvTransform[1])
         this.uint32View[indexOffset + 17] = uintNorm2x16(
-            uvMatrix[0] + uvMatrix[2] + uvMatrix[4],
-            uvMatrix[1] + uvMatrix[3] + uvMatrix[5]
+            uvTransform[0] + uvTransform[2],
+            uvTransform[1] + uvTransform[3]
         )
         this.uint32View[indexOffset + 18] = color
         this.instanceOffset++

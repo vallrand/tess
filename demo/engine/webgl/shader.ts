@@ -108,11 +108,11 @@ export function locateUniforms(gl: WebGL2RenderingContext, program: WebGLProgram
     return group
 }
 
-export class UniformBlock {
+export class UniformBlock<T = {[key: string]: Float32Array | Int32Array}> {
     frame: number = 0
     data: Float32Array
     buffer: WebGLBuffer
-    uniforms: Record<string, Float32Array | Int32Array> = Object.create(null)
+    uniforms: T = Object.create(null)
     constructor(gl: WebGL2RenderingContext, info: {
         byteSize: number
         offsets?: number[]
@@ -130,8 +130,9 @@ export class UniformBlock {
         gl.bindBufferBase(GL.UNIFORM_BUFFER, location, this.buffer)
         gl.bufferData(GL.UNIFORM_BUFFER, this.data.byteLength, GL.DYNAMIC_DRAW)
     }
-    bind(gl: WebGL2RenderingContext, location: number){
+    bind(gl: WebGL2RenderingContext, location: number, frame?: number){
         gl.bindBufferBase(GL.UNIFORM_BUFFER, location, this.buffer)
+        //TODO check if dirty?
         gl.bufferSubData(GL.UNIFORM_BUFFER, 0, this.data)
     }
 }

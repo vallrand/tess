@@ -47,8 +47,8 @@ const actionTimeline = {
         { frame: 1.5, value: [0xFF,0], ease: ease.quartIn }
     ], vec2.lerp),
     'ring.transform.scale': PropertyAnimation([
-        { frame: 0.8, value: [2,2,2] },
-        { frame: 1.1, value: [4,4,4], ease: ease.sineOut },
+        { frame: 0.8, value: [4,4,4] },
+        { frame: 1.1, value: [8,8,8], ease: ease.sineOut },
         { frame: 1.4, value: [0,0,0], ease: ease.cubicIn }
     ], vec3.lerp),
     'ring.color': PropertyAnimation([
@@ -58,7 +58,7 @@ const actionTimeline = {
     ], vec4.lerp),
     'flash.transform.scale': PropertyAnimation([
         { frame: 1.3, value: [0,0,0] },
-        { frame: 1.8, value: [5,5,5], ease: ease.cubicOut }
+        { frame: 1.8, value: [10,10,10], ease: ease.cubicOut }
     ], vec3.lerp),
     'flash.color': PropertyAnimation([
         { frame: 1.3, value: [0.7,1,1,0] },
@@ -120,12 +120,10 @@ export class BeamSkill extends CubeSkill {
         const ringMaterial = new SpriteMaterial()
         ringMaterial.diffuse = SharedSystem.textures.ring
         ringMaterial.program = this.context.get(ParticleEffectPass).program
-        vec2.set(2, 2, ringMaterial.size)
 
         const raysMaterial = new SpriteMaterial()
         raysMaterial.diffuse = SharedSystem.textures.rays
         raysMaterial.program = this.context.get(ParticleEffectPass).program
-        vec2.set(2, 2, raysMaterial.size)
 
         this.ring = new Sprite()
         this.ring.billboard = BillboardType.Sphere

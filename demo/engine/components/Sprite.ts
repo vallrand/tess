@@ -24,7 +24,7 @@ export class Sprite implements IBatched {
     public frame: number = 0
     public order: number = 0
     public readonly vertices: Float32Array = new Float32Array(12)
-    public readonly uvs: Float32Array = new Float32Array(Sprite.quadUVs)
+    public readonly uvs: Float32Array = Sprite.quadUVs
     public readonly indices: Uint16Array = Sprite.quadIndices
     public readonly color: vec4 = vec4(1,1,1,1)
     public readonly normal: vec3 = vec3(1,0,0)
@@ -34,12 +34,9 @@ export class Sprite implements IBatched {
     public readonly origin: vec2 = vec2(0.5, 0.5)
 
     public update(context: Application, camera: ICamera){
-        if(this.frame == 0 && this.material)
-            this.applyTransform2D(Sprite.quadUVs, this.material.uvMatrix, this.uvs, 0)
-
         if(this.frame > 0 && this.frame >= camera.frame && this.frame >= this.transform.frame) return
 
-        const width = this.material.size[0], height = this.material.size[1]
+        const width = 1, height = 1
         const left = -this.origin[0] * width, right = left + width
         const top = -this.origin[1] * height, bottom = top + height
 
@@ -86,15 +83,5 @@ export class Sprite implements IBatched {
 
         vec3.cross(normal, tangent, this.normal)
         this.frame = context.frame
-    }
-    private applyTransform2D(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){
-        const a = transform[0], b = transform[1],
-        c = transform[2], d = transform[3],
-        tx = transform[4], ty = transform[5]
-        for(let i = vertices.length - 1; i > 0; i-=2){
-            const x = vertices[i - 1], y = vertices[i]
-            out[offset + i - 1] = a * x + c * y + tx
-            out[offset + i] = b * x + d * y + ty
-        }
     }
 }

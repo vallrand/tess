@@ -5,12 +5,16 @@ export const UniformBlockBindings = {
     ModelUniforms: 1,
     LightUniforms: 2,
     GlobalUniforms: 3,
-    EmitterUniforms: 2
+    EmitterUniforms: 2,
+    EffectUniforms: 4,
+    MaterialUniforms: 4
 }
 
 export const UniformSamplerBindings = {
     uSampler: 0,
     uGradient: 1,
+    uGradientMap: 1,
+    uDisplacementMap: 5,
     uAttributes: 6,
     uDiffuseMap: 0,
     uNormalMap: 1,

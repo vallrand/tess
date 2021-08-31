@@ -56,6 +56,8 @@ https://gist.github.com/bshishov/3eaa056d1560584ff82c1b96ee2f20fd
 
 https://iquilezles.org/www/articles/palettes/palettes.htm
 
+unity master shader https://halisavakis.com/my-take-on-shaders-vfx-master-shader-part-iii/
+
 https://github.com/tsherif/webgl2examples/blob/master/deferred.html
 https://github.com/crebstar/WebGLDR/tree/DeferredRenderer/XAMPP/htdocs
 https://github.com/keaukraine/webgl-dunes
