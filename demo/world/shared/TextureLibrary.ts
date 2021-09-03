@@ -79,6 +79,15 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
+    const voronoiNoise = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+            VORONOI: true
+        }), {
+            uColor: vec4.ONE
+        }, 0
+    ).target
+
     const sineNoise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
@@ -100,6 +109,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { STRIPE: true }), { uColor: [0.6,1,1,0.6] }, 0
     ).target
 
+    const boxStripes = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/wind_frag.glsl'), { BOX_STRIPE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
     const white = createTexture(context.gl, {
         width: 1, height: 1, data: new Uint8Array([0xFF,0xFF,0xFF,0xFF])
     })
@@ -114,8 +129,8 @@ export function TextureLibrary(context: Application){
     ).target
 
     return {
-        particle, glow, ring, wave, rays, raysRing, raysBeam, wind, stripes, trail,
-        directionalNoise, cloudNoise, cellularNoise, sineNoise,
+        particle, glow, ring, wave, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
+        directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
         white, grey: materials.white.diffuse, fire
     }
 }

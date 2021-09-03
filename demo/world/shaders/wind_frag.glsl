@@ -36,7 +36,52 @@ float fbm(in vec2 x, in int octaves, in vec2 period) {
 	return v;
 }
 
+vec4 rectangularNoise(in vec2 uv, in vec2 period){
+    uv *= period;
+    vec2 i = floor(uv);
+    vec2 f = uv - i;
+    vec2 c = vec2(0);
+    int o = int(i.x+i.y) & 1;
+    int u = o ^ 1;
+    bool s = f[o]>hash12(mod(i,period));
+    if(s) c[o] = 1.;
+    vec2 n = i;
+    n[o] += s ? 1. : -1.;
+    if(f[u]>hash12(mod(n,period))) c[u] = 1.;
+    c = i+c;
+
+    vec4 d = vec4(
+        hash12(mod(c + vec2(-1,-1), period)), 
+        hash12(mod(c + vec2( 0,-1), period)), 
+        hash12(mod(c + vec2( 0, 0), period)), 
+    	hash12(mod(c + vec2(-1, 0), period))
+    );
+    o = int(c.x+c.y) & 1;
+    if(o==1) d = d.wxyz;
+    d = d + vec4(c-1.,c);
+    return d;
+}
+
 void main(){
+#ifdef BOX_STRIPE
+    vec2 uv = vUV;
+    float alpha = 0.0; float alpha2 = 0.0;
+    float scale = 24.0;
+    uv.y += 0.2;
+    int iterations = 4;
+    for(int i = 0; i < iterations; i++){
+        vec4 v = rectangularNoise(uv, vec2(scale));
+        float y = floor(0.5+uv.y*scale/8.0)*8.0;
+    
+        alpha += smoothstep(0.5,0.0,min(abs(y-v.y),abs(v.w-y)));
+        alpha2 += smoothstep(0.0,0.5,min(y-v.y,v.w-y));
+        uv.y += 1.0 / scale;
+        uv.x += sin(y + float(i+1));
+    }
+    alpha*=1.5/float(iterations);
+    alpha2*=2.0/float(iterations);
+    fragColor = vec4(alpha,alpha2,alpha,alpha);
+#else
     vec2 uv = vUV;
 
     float fade = smoothstep(1.0,0.5,abs(uv.y*2.-1.));
@@ -56,4 +101,5 @@ void main(){
     float alpha = color.r;
 
     fragColor = vec4(color,alpha);
+#endif
 }

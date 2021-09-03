@@ -125,6 +125,7 @@ export class Cube implements IActor {
 
             switch(state.type){
                 case CubeModule.Railgun:
+                case CubeModule.Minelayer:
                 case CubeModule.EMP: {
                     if(state.open != 1) break
                     if(!trigger) break

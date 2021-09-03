@@ -205,9 +205,9 @@ export class BeamSkill extends CubeSkill {
                 { frame: 1.3, value: origin },
                 { frame: 1.6, value: target, ease: ease.cubicOut }
             ], vec3.lerp),
-            'energy': EmitterTrigger({ frame: 0, value: 128, origin, target: origin }) as any,
-            'sparks': EmitterTrigger({ frame: 1.2, value: 32, origin, target: origin }) as any,
-            'smoke': EmitterTrigger({ frame: 2.5, value: 8, origin }) as any
+            'energy': EmitterTrigger({ frame: 0, value: 128, origin, target: origin }),
+            'sparks': EmitterTrigger({ frame: 1.2, value: 32, origin, target: origin }),
+            'smoke': EmitterTrigger({ frame: 2.5, value: 8, origin })
         })
 
         for(const duration = 3, startTime = this.context.currentTime; true;){

@@ -5,7 +5,7 @@ import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, 
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
 
@@ -102,11 +102,11 @@ export class ShieldSkill extends CubeSkill {
     private dust: ParticleEmitter
     private beam: Sprite
     private sphere: BatchMesh
-    private waveMaterial: SpriteMaterial
+    private waveMaterial: DecalMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
 
-        this.waveMaterial = new SpriteMaterial()
+        this.waveMaterial = new DecalMaterial()
         this.waveMaterial.program = this.context.get(DecalPass).program
         this.waveMaterial.diffuse = SharedSystem.textures.ring
 

@@ -42,8 +42,11 @@ void main(){
     vec4 objectPosition = vInvModel * vec4(worldPosition.xyz, 1.0);
     if(0.5 < abs(objectPosition.x) || 0.5 < abs(objectPosition.y) || 0.5 < abs(objectPosition.z)) discard;
     vec2 uv = mix(vUV.xy, vUV.zw, objectPosition.xz + 0.5);
-    vec4 color = texture(uDiffuseMap, uv);
-    fragAlbedo = vColor * color;
+    vec4 color = vColor * texture(uDiffuseMap, uv);
+#ifdef ALPHA_CUTOFF
+    if(color.a < ALPHA_CUTOFF) discard;
+#endif
+    fragAlbedo = color;
 #ifdef NORMAL_MAPPING
     vec3 dpdx = dFdx(worldPosition.xyz);
     vec3 dpdy = dFdy(worldPosition.xyz);
@@ -56,6 +59,11 @@ void main(){
     float blend = dot(mappedNormal, mappedNormal);
     mappedNormal = normalize(TBN * mappedNormal);
     fragNormal = blend * vec4(mappedNormal, 1.0);
+
+#ifdef ALPHA_CUTOFF
+    fragNormal.a=0.0;
+#endif
+
 #else
     fragNormal = vec4(0);
 #endif
@@ -63,6 +71,9 @@ void main(){
 #ifdef MASK
     float alpha = texture(uNormalMap, uv).a;
     float threshold = smoothstep(1.0+uDissolveEdge,1.0,abs(alpha*2.-1.+vThreshold));
+#ifdef ALPHA_CUTOFF
+    if(color.a * threshold < ALPHA_CUTOFF) discard;
+#endif
     fragAlbedo *= threshold;
     fragNormal *= threshold;
 #endif

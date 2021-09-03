@@ -123,6 +123,34 @@ vec4 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in flo
     return vec4(md0, md, tilePos);
 }
 
+vec4 rectangularNoise(in vec2 uv, in vec2 period){
+    uv *= period;
+    vec2 i = floor(uv);
+    vec2 f = uv - i;
+    vec2 c = vec2(0);
+    int o = int(i.x+i.y) & 1;
+    int u = o ^ 1;
+    bool s = f[o]>hash21(mod(i,period));
+    if(s) c[o] = 1.;
+    vec2 n = i;
+    n[o] += s ? 1. : -1.;
+    if(f[u]>hash21(mod(n,period))) c[u] = 1.;
+    c = i+c;
+
+    vec4 d = vec4(
+        hash21(mod(c + vec2(-1,-1), period)), 
+        hash21(mod(c + vec2( 0,-1), period)), 
+        hash21(mod(c + vec2( 0, 0), period)), 
+    	hash21(mod(c + vec2(-1, 0), period))
+    );
+    o = int(c.x+c.y) & 1;
+    if(o==1) d = d.wxyz;
+    d = d + vec4(c-1.,c);
+    vec2 mi = d.xy;
+    vec2 ma = d.zw;
+    return vec4(uv-mi, uv-ma);
+}
+
 float sineNoise(vec2 uv, int layers, float shift){
     vec2 p = vec2(uv); float v = 0.0;
 	for(int i=0;i<layers;i++){
@@ -143,6 +171,12 @@ void main(){
 #if defined(CELLULAR)
     vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
     float alpha = 1.0-(1.0-1.5*w.y);
+#elif defined(VORONOI)
+    vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
+    float alpha = smoothstep(0.8,-0.2,w.x);
+#elif defined(RECTANGULAR)
+    vec4 minmax = rectangularNoise(uv, vec2(8));
+    float alpha = min(min(abs(minmax.x), abs(minmax.y)), min(abs(minmax.z),abs(minmax.w)));
 #elif defined(SINE)
     float alpha = sineNoise(uv*TAU, 8, 411.37);
     alpha = smoothstep(0.2,1.0,alpha);

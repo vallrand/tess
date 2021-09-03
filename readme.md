@@ -74,6 +74,8 @@ https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0
 
 https://www.shadertoy.com/view/Xt3cDn
 https://www.shadertoy.com/view/3sKXWh tileable textures
+https://www.shadertoy.com/view/Ws3GRs - rectangular tiling
+https://www.shadertoy.com/view/3sdcWH - rectangular tiling 2
 
 displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
 
@@ -90,6 +92,7 @@ https://www.shadertoy.com/view/4dVBzz
 https://www.gamedev.net/forums/topic/642794-tileable-fbm-noise/
 https://www.shadertoy.com/view/4lfXDM
 foamy water https://www.shadertoy.com/view/llcXW7
+circuits fractal https://www.shadertoy.com/view/XlX3Rj
 
 transparency sorting https://csawesome.runestone.academy/runestone/books/published/learnwebgl2/12_advanced_rendering/04_transparency.html
 hashes https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a

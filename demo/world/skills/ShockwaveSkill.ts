@@ -3,7 +3,7 @@ import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { TransformSystem, AnimationTimeline, PropertyAnimation } from '../../engine/scene'
 import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
-import { MaterialSystem, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
 import { shaders } from '../../engine/shaders'
@@ -110,12 +110,12 @@ export class ShockwaveSkill extends CubeSkill {
     private cylinder: BatchMesh
 
     private bolts: ParticleEmitter
-    private shatterMaterial: SpriteMaterial
+    private shatterMaterial: DecalMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
         const materials = context.get(MaterialSystem)
 
-        this.shatterMaterial = new SpriteMaterial()
+        this.shatterMaterial = new DecalMaterial()
         this.shatterMaterial.diffuse = materials.addRenderTexture(
             materials.createRenderTexture(512, 512, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/shatter_frag.glsl'), {
@@ -170,7 +170,7 @@ export class ShockwaveSkill extends CubeSkill {
         this.ring = this.context.get(DecalPass).create(0)
         this.ring.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.ring.transform.position)
-        this.ring.material = new SpriteMaterial()
+        this.ring.material = new DecalMaterial()
         this.ring.material.diffuse = SharedSystem.textures.raysRing
 
         this.crack = this.context.get(DecalPass).create(1)

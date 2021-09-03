@@ -8,7 +8,7 @@ import { DeferredGeometryPass } from './GeometryPass'
 import { BoundingVolume } from '../scene/FrustumCulling'
 import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
 import { DecalBatch, IBatchedDecal } from './batch'
-import { SpriteMaterial } from '../materials'
+import { DecalMaterial, SpriteMaterial } from '../materials'
 import { IEffect } from '.'
 import { shaders } from '../shaders'
 import { PipelinePass } from './PipelinePass'
@@ -17,7 +17,7 @@ export class Decal implements IBatchedDecal {
     frame: number = 0
     order: number = 0
     transform: Transform
-    material: SpriteMaterial
+    material: DecalMaterial
     readonly color: vec4 = vec4(1,1,1,1)
     public threshold: number = 0
     public readonly bounds = new BoundingVolume
@@ -78,19 +78,12 @@ export class DecalPass extends PipelinePass implements ISystem {
     }
     update(): void {
         const { gl } = this.context
-        gl.enable(GL.DEPTH_TEST)
-        gl.depthFunc(GL.GEQUAL)
-        gl.depthMask(false)
-        gl.cullFace(GL.FRONT)
-        gl.enable(GL.BLEND)
-        gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
-
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.fbo)
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uPositionBuffer)
         gl.bindTexture(GL.TEXTURE_2D, this.context.get(DeferredGeometryPass).position)
 
         const camera = this.context.get(CameraSystem).camera
-        let material: SpriteMaterial = null
+        let material: DecalMaterial = null
         for(let i = this.list.length - 1; i >= 0; i--){
             const decal: Decal = this.list[i]
             decal.update(this.context.frame, this.context)
@@ -101,18 +94,19 @@ export class DecalPass extends PipelinePass implements ISystem {
             else if(!this.batch.render(decal)) i++
             else if(i) continue
 
-            const { diffuse, normal = this.defaultNormalMap, program = this.program } = material
+            const _material = material
             material = null
             const instances = this.batch.instanceOffset
             if(!instances) continue
 
             this.batch.bind()
-            gl.useProgram(program.target)
+            gl.useProgram((_material.program || this.program).target)
+            _material.bind(gl)
             
             gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
-            gl.bindTexture(GL.TEXTURE_2D, diffuse)
+            gl.bindTexture(GL.TEXTURE_2D, _material.diffuse)
             gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
-            gl.bindTexture(GL.TEXTURE_2D, normal)
+            gl.bindTexture(GL.TEXTURE_2D, _material.normal || this.defaultNormalMap)
             
             gl.drawElementsInstanced(GL.TRIANGLES, DecalBatch.unitCubeIndices.length, GL.UNSIGNED_SHORT, 0, instances)
         }

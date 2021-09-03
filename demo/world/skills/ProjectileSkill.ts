@@ -2,7 +2,7 @@ import { Application } from '../../engine/framework'
 import { ease, lerp, mat4, mod, quat, range, vec2, vec3, vec4 } from '../../engine/math'
 import { uintNorm4x8 } from '../../engine/pipeline/batch'
 import { BatchMesh, BillboardType, Line, Mesh, Sprite, Trail } from '../../engine/components'
-import { EffectMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, EffectMaterial, SpriteMaterial } from '../../engine/materials'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { shaders } from '../../engine/shaders'
@@ -77,7 +77,7 @@ export class ProjectileSkill extends CubeSkill {
     private trailMaterial: SpriteMaterial
     private sphereMaterial: EffectMaterial<any>
     private glowMaterial: SpriteMaterial
-    private burnMaterial: SpriteMaterial
+    private burnMaterial: DecalMaterial
     private waveMaterial: SpriteMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
@@ -113,7 +113,7 @@ export class ProjectileSkill extends CubeSkill {
         this.glowMaterial.diffuse = SharedSystem.textures.raysRing
         this.glowMaterial.program = this.context.get(ParticleEffectPass).program
 
-        this.burnMaterial = new SpriteMaterial()
+        this.burnMaterial = new DecalMaterial()
         this.burnMaterial.program = this.context.get(DecalPass).program
         this.burnMaterial.diffuse = SharedSystem.textures.particle
 
@@ -160,7 +160,7 @@ export class ProjectileSkill extends CubeSkill {
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<_ActionSignal> {
         const mesh = this.mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
-        const rotationalIndex = mod(direction - this.cube.state.direction, 4)
+        const rotationalIndex = mod(direction - this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
 
         const worldTransform = mat4.fromRotationTranslationScale(DirectionAngle[(direction + 3) % 4], this.pivot, vec3.ONE, mat4())
         mat4.multiply(this.cube.transform.matrix, worldTransform, worldTransform)
