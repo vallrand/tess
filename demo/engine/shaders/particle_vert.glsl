@@ -22,8 +22,11 @@ uniform EmitterUniforms {
     vec3 uOrigin;
     vec2 uSize;
     vec3 uGravity;
-#if defined(SPHERE) || defined(CIRCLE)
+#if defined(SPHERE)
     vec2 uRadius;
+#elif defined(CIRCLE)
+    vec2 uRadius;
+    vec4 uOrientation;
 #elif defined(BOX)
     vec3 uExtents;
 #endif
@@ -64,6 +67,10 @@ float hash11(uint n){
     return float( n & uvec3(0x7fffffffU))/float(0x7fffffff);
 }
 
+vec4 quat(in vec3 axis, in float angle){return vec4(axis*sin(.5*angle),cos(.5*angle));}
+vec3 qrotate(in vec4 q, in vec3 v){return v + 2.0*cross(q.xyz, cross(q.xyz,v) + q.w*v);}
+vec4 qmul(vec4 a, vec4 b){return vec4(cross(a.xyz,b.xyz) + a.xyz*b.w + b.xyz*a.w, a.w*b.w - dot(a.xyz,b.xyz));}
+
 void main(){
     if(gl_VertexID >= uLastID){
         uint seed = uint(gl_VertexID) ^ floatBitsToUint(uTime.z);
@@ -84,7 +91,7 @@ void main(){
 #elif defined(CIRCLE)
         float theta = TAU * hash11(seed+=1U);
         float radius = mix(uRadius.x, uRadius.y, hash11(seed+=1U));
-        vec3 normal = vec3(cos(theta), 0, sin(theta));
+        vec3 normal = qrotate(uOrientation,vec3(cos(theta), 0, sin(theta)));
         vTransform.xyz = uOrigin + radius * normal;
 #elif defined(BOX)
         vTransform.xyz = uOrigin + uExtents * (vec3(hash11(seed+=1U), hash11(seed+=1U), hash11(seed+=1U))-.5);
@@ -99,7 +106,7 @@ void main(){
 
 #if defined(TARGETED)
         vec3 direction = normalize(vTransform.xyz - uTarget);
-        vVelocity.xyz = normal * mix(uForce.x, uForce.y, hash11(seed+=1U));
+        vVelocity.xyz = direction * mix(uForce.x, uForce.y, hash11(seed+=1U));
 #endif
         vAcceleration.xyz = uGravity;
 #ifdef ANGULAR

@@ -154,6 +154,7 @@ export class ShockwaveSkill extends CubeSkill {
             uLifespan: [0.1,0.8,0,0],
             uGravity: [0,0,0],
             uRotation: [0,2*Math.PI],
+            uOrientation: quat.IDENTITY,
             uSize: [0.1,1.2],
             uFrame: [8,4]
         })

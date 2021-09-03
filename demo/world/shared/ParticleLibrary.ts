@@ -1,5 +1,5 @@
 import { Application, One, Zero } from '../../engine/framework'
-import { vec2, vec3, vec4, ease } from '../../engine/math'
+import { vec2, vec3, vec4, ease, quat } from '../../engine/math'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
 import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
 import { shaders } from '../../engine/shaders'
@@ -23,7 +23,7 @@ export function ParticleLibrary(context: Application){
         context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
-            SPHERICAL: true, SOFT: false, MASK: false, GRADIENT: true, ALIGNED: true, STRETCH: 0.04
+            ALIGNED: true, SOFT: false, MASK: false, GRADIENT: true, STRETCH: 0.04
         }),
         ShaderProgram(context.gl, shaders.particle_vert, null, {
             SPHERE: true, TARGETED: true, LUT: true, RADIAL: true
@@ -94,6 +94,7 @@ export function ParticleLibrary(context: Application){
         uRotation: vec2
         uAngular: vec4
         uSize: vec2
+        uOrientation: quat
         uRadius: vec2
         uForce: vec2
         uTarget: vec3
@@ -155,6 +156,7 @@ export function ParticleLibrary(context: Application){
         uLifespan: vec4
         uOrigin: vec3
         uRadius: vec2
+        uOrientation: quat
         uGravity: vec3
         uRotation: vec2
         uSize: vec2
@@ -177,6 +179,41 @@ export function ParticleLibrary(context: Application){
         }, 0
     ).target
 
-    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts)
-    return { dust, smoke, energy, sparks, bolts }
+    const embers = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uRotation: vec2
+        uGravity: vec3
+        uSize: vec2
+        uRadius: vec2
+        uOrientation: quat
+        uForce: vec2
+        uTarget: vec3
+    }>(
+        context, { limit: 516, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
+            ALIGNED: true, GRADIENT: true, STRETCH: 0.04
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            CIRCLE: true, TARGETED: true, LUT: true
+        })
+    )
+    embers.diffuse = SharedSystem.textures.particle
+    embers.gradientRamp = GradientRamp(context.gl, [
+        0xffffff00, 0xfaf8ca00, 0xf2d57c00, 0xcf8f4210, 0xb3461730, 0x82100820, 0x30030010, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+    ], 2)
+    embers.curveSampler = AttributeCurveSampler(context.gl, 32, 
+        Object.values(<ParticleOvertimeAttributes> {
+            size0: x => 1 - ease.sineIn(x),
+            size1: x => 1 - ease.quadIn(x),
+            linear0: x => 0.98, linear1: x => 0.96,
+            rotational0: Zero, rotational1: Zero,
+            radial0: Zero, radial1: Zero,
+        })
+    )
+
+    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts, embers)
+    return { dust, smoke, energy, sparks, bolts, embers }
 }

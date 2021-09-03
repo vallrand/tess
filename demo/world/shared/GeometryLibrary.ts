@@ -1,5 +1,6 @@
 import { Application } from '../../engine/framework'
-import { createCylinder, createSphere, doubleSided } from '../../engine/geometry'
+import { mat4, quat, vec3 } from '../../engine/math'
+import { createCylinder, createSphere, doubleSided, applyTransform } from '../../engine/geometry'
 import { MeshSystem } from '../../engine/components/Mesh'
 
 export function GeometryLibrary(context: Application){
@@ -12,6 +13,15 @@ export function GeometryLibrary(context: Application){
         longitude: 16, latitude: 16, radius: 1
     })
 
+    const hemisphere = applyTransform(createSphere({
+        longitude: 8, latitude: 4, radius: 1,
+        thetaStart: 0, thetaLength: 0.5 * Math.PI,
+        phiStart: 0, phiLength: 2 * Math.PI
+    }), mat4.fromRotationTranslationScale(
+        quat.axisAngle(vec3.AXIS_X,0.5*Math.PI,quat()),
+        vec3(0,0,-1), vec3.ONE, mat4()
+    ))
+
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
         radial: 32, horizontal: 1,
@@ -19,6 +29,6 @@ export function GeometryLibrary(context: Application){
     }))
 
     return {
-        sphere, lowPolySphere, cylinder, sphereMesh
+        sphere, lowPolySphere, hemisphere, cylinder, sphereMesh
     }
 }

@@ -37,13 +37,18 @@ void main(){
     vPosition = aTransform.xyz;
 #else
     vec3 position = vec3(rotate(aTransform.w) * aPosition.xy, aPosition.z);
+#ifdef VIEWPLANE
+    vec3 forward = -vec3(uViewMatrix[0][2], uViewMatrix[1][2], uViewMatrix[2][2]);
+#else
+    vec3 forward = normalize(aTransform.xyz - uEyePosition);
+#endif
+
 #if defined(ALIGNED)
-    vec3 view = normalize(aTransform.xyz - uEyePosition);
     vec3 direction = -normalize(aVelocity.xyz);
-    vec3 up = cross(view, direction);
-    vec3 right = cross(view, up);
-    view = cross(right, up);
-    mat3 matrix = mat3(right, up, view);
+    vec3 up = cross(forward, direction);
+    vec3 right = cross(forward, up);
+    forward = cross(right, up);
+    mat3 matrix = mat3(right, up, forward);
     position = size * matrix * position;
 #ifdef STRETCH
     position += dot(position, aVelocity.xyz) * aVelocity.xyz * STRETCH;

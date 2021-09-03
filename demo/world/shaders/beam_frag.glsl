@@ -74,6 +74,7 @@ void main(){
     vec2 uv = 2.*vUV-1.;
     float time = 4.0*uTime.x;
 #ifndef RADIAL
+    uv = uv.yx;
     float fade = smoothstep(1.0, 0.8, abs(uv.x));
     float f0 = 1.-2.*fbm(vec3(uUVTransform.xy * uv + vec2(time,0), -.5*time), 4);
     f0 *= 1.-2.*noise3D(vec3(uUVTransform.xy * uv,f0)*vec3(2,0.25,3)+vec3(time,0,time));

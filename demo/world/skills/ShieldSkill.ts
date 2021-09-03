@@ -5,7 +5,7 @@ import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, 
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
 
@@ -132,8 +132,14 @@ export class ShieldSkill extends CubeSkill {
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
 
         this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
-        this.tube.material = new SpriteMaterial()
-        this.tube.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/scroll_frag.glsl'), { FRESNEL: true })
+        this.tube.material = new EffectMaterial(this.context.gl, {
+            FRESNEL: true, PANNING: true, VERTICAL_MASK: true
+        }, {
+            uUVTransform: vec4(0,0,1,1),
+            uUVPanning: vec2(0, -0.6),
+            uVerticalMask: vec4(0,0,0.8,1),
+            uFresnelMask: vec2(0.1,0.5)
+        })
         this.tube.material.diffuse = SharedSystem.textures.stripes
 
         this.sphere = new BatchMesh(SharedSystem.geometry.lowPolySphere)
@@ -176,6 +182,7 @@ export class ShieldSkill extends CubeSkill {
             uLifespan: [0.6,1.0,-0.1,0],
             uSize: [2,5],
             uRadius: [0.5,0.8],
+            uOrientation: quat.IDENTITY,
             uForce: [6,12],
             uTarget: origin,
             uGravity: [0.0, 9.8, 0.0],

@@ -70,8 +70,9 @@ export class Cube implements IActor {
             uLifespan: [0.8,1.2,-0.16,0],
             uSize: [2,4],
             uRadius: [0.2,0.4],
+            uOrientation: quat.IDENTITY,
             uForce: [4,8],
-            uTarget: [0,-0.1,0],
+            uTarget: [0,0,0],
             uGravity: [0.0, 9.8, 0.0],
             uRotation: [0, 2 * Math.PI],
             uAngular: [-Math.PI,Math.PI,0,0],
@@ -218,7 +219,7 @@ export class Cube implements IActor {
         
         return function*(this: Cube){
             const dustTrigger = EmitterTrigger({
-                frame: 0.36, value: 16, origin: nextPosition, target: vec3.add(nextPosition, [0,-0.2,0], vec3())
+                frame: 0.36, value: 16, origin: nextPosition, target: nextPosition
             })
             const movementEase = ease.bounceIn(0.064, 0.8)
             for(const duration = 0.64, startTime = this.context.currentTime; true;){

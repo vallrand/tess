@@ -101,7 +101,7 @@ export const EmitterTrigger = (options: {
 }
 
 export function AnimationTimeline<T>(
-    target: T, tracks: Record<string, ReturnType<typeof PropertyAnimation> | ReturnType<typeof EmitterTrigger>>
+    target: T, tracks: Record<string, ReturnType<typeof PropertyAnimation> | IAnimationTrigger>
 ){
     const properties = Object.keys(tracks).map(key => {
         const path = key.split('.').reverse()

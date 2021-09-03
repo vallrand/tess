@@ -1,5 +1,6 @@
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
+import { vec4 } from '../../engine/math'
+import { createTexture, GL, ShaderProgram } from '../../engine/webgl'
 import { MaterialSystem } from '../../engine/materials/Material'
 import { shaders } from '../../engine/shaders'
 
@@ -10,6 +11,12 @@ export function TextureLibrary(context: Application){
         materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { CIRCLE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
+    const glow = materials.addRenderTexture(
+        materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { GLOW: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
     const ring = materials.addRenderTexture(
@@ -42,6 +49,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/rays_frag.glsl'), { BEAM: true }), {  }, 0
     ).target
 
+    const trail = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/directional_noise_frag.glsl'), { LINE: true }), {  }, 0
+    ).target
+
     const directionalNoise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -53,7 +66,7 @@ export function TextureLibrary(context: Application){
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
 
         }), {
-
+            uColor: vec4.ONE
         }, 0
     ).target
 
@@ -62,7 +75,7 @@ export function TextureLibrary(context: Application){
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
             CELLULAR: true
         }), {
-
+            uColor: vec4.ONE
         }, 0
     ).target
 
@@ -71,7 +84,7 @@ export function TextureLibrary(context: Application){
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
             SINE: true
         }), {
-
+            uColor: vec4.ONE
         }, 0
     ).target
 
@@ -87,8 +100,22 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { STRIPE: true }), { uColor: [0.6,1,1,0.6] }, 0
     ).target
 
+    const white = createTexture(context.gl, {
+        width: 1, height: 1, data: new Uint8Array([0xFF,0xFF,0xFF,0xFF])
+    })
+
+    const fire = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+
+        }), {
+            uColor: [3,2.5,1.5,1]
+        }, 0
+    ).target
+
     return {
-        particle, ring, wave, rays, raysRing, raysBeam, wind, stripes,
-        directionalNoise, cloudNoise, cellularNoise, sineNoise, grey: materials.white.diffuse
+        particle, glow, ring, wave, rays, raysRing, raysBeam, wind, stripes, trail,
+        directionalNoise, cloudNoise, cellularNoise, sineNoise,
+        white, grey: materials.white.diffuse, fire
     }
 }

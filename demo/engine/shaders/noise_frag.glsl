@@ -135,12 +135,14 @@ float sineNoise(vec2 uv, int layers, float shift){
     return pow(v,1.4);
 }
 
+uniform vec4 uColor;
+
 void main(){
     vec2 uv = vUV;
 
 #if defined(CELLULAR)
     vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
-    float alpha = w.y;
+    float alpha = 1.0-(1.0-1.5*w.y);
 #elif defined(SINE)
     float alpha = sineNoise(uv*TAU, 8, 411.37);
     alpha = smoothstep(0.2,1.0,alpha);
@@ -156,5 +158,5 @@ void main(){
     float f0 = fbm(uv, vec2(4.0), 7, 23.0, 0.5, 2.0, 0.95, 0.0);
     float alpha = smoothstep(0.2, 1.0, f0);
 #endif
-	fragColor = vec4(alpha);
+	fragColor = uColor * vec4(alpha);
 }

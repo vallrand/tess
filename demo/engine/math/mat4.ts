@@ -140,7 +140,7 @@ mat4.perspective = (fovy: number, aspectRatio: number, znear: number, zfar: numb
     return out
 }
 
-mat4.transform = <vec extends vec3 | vec4>(vec: vec, m: mat4, out: vec): vec => {
+mat4.transform = <T extends vec3 | vec4>(vec: vec3 | vec4, m: mat4, out: T): T => {
     let x = vec[0], y = vec[1], z = vec[2], w = vec[3] == null ? 1 : vec[3]
     out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w
     out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w
@@ -338,6 +338,47 @@ mat4.fromDualquat = (dq: dualquat, out: mat4): mat4 => {
     out[14] = 2.0 * (-tw * rz - tx * ry + ty * rx + tz * rw)
     out[15] = 1
     return out
+}
+
+mat4.decompose = (mat: mat4, translation: vec3, scale: vec3, rotation: vec4): void => {
+    translation[0] = mat[12]; translation[1] = mat[13]; translation[2] = mat[14]
+    let m11 = mat[0], m12 = mat[1], m13 = mat[2],
+    m21 = mat[4], m22 = mat[5], m23 = mat[6],
+    m31 = mat[8], m32 = mat[9], m33 = mat[10]
+    scale[0] = Math.hypot(m11, m12, m13)
+    scale[1] = Math.hypot(m21, m22, m23)
+    scale[2] = Math.hypot(m31, m32, m33)
+    const isx = scale[0]&&1/scale[0], isy = scale[1]&&1/scale[1], isz = scale[2]&&1/scale[2]
+    m11 *= isx; m21 *= isx; m31 *= isx
+    m12 *= isy; m22 *= isy; m32 *= isy
+    m13 *= isz; m23 *= isz; m33 *= isz
+
+    let trace = m11 + m22 + m33
+    if(trace > 0){
+        const S = Math.sqrt(trace + 1.0) * 2
+        rotation[3] = 0.25 * S
+        rotation[0] = (m23 - m32) / S
+        rotation[1] = (m31 - m13) / S
+        rotation[2] = (m12 - m21) / S
+    }else if(m11 > m22 && m11 > m33){
+        const S = Math.sqrt(1.0 + m11 - m22 - m33) * 2
+        rotation[3] = (m23 - m32) / S
+        rotation[0] = 0.25 * S
+        rotation[1] = (m12 + m21) / S
+        rotation[2] = (m31 + m13) / S
+    }else if(m22 > m33){
+        const S = Math.sqrt(1.0 + m22 - m11 - m33) * 2
+        rotation[3] = (m31 - m13) / S
+        rotation[0] = (m12 + m21) / S
+        rotation[1] = 0.25 * S
+        rotation[2] = (m23 + m32) / S
+    }else{
+        const S = Math.sqrt(1.0 + m33 - m11 - m22) * 2
+        rotation[3] = (m12 - m21) / S
+        rotation[0] = (m31 + m13) / S
+        rotation[1] = (m23 + m32) / S
+        rotation[2] = 0.25 * S
+    }
 }
 
 mat4.IDENTITY = mat4()

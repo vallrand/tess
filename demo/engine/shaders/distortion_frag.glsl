@@ -4,9 +4,9 @@ precision highp int;
 
 in vec2 vUV;
 in vec3 vPosition;
-#ifdef MESH
 in vec3 vNormal;
 
+#ifdef MESH
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
     mat4 uViewMatrix;
@@ -14,7 +14,6 @@ uniform CameraUniforms {
 };
 #else
 in vec4 vColor;
-in vec3 vNormal;
 in float vMaterial;
 #endif
 

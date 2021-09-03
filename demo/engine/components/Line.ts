@@ -1,8 +1,7 @@
-import { Application } from '../framework'
-import { vec3, vec4, mat4 } from '../math'
-import { ICamera } from '../scene/Camera'
-import { IBatched } from '../pipeline/batch/GeometryBatch'
-import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
+import { Application, One } from '../framework'
+import { vec3, vec4, mat4, vec2, ease } from '../math'
+import { ICamera, BoundingVolume, IAnimationTrigger } from '../scene'
+import { IBatched, uintNorm4x8 } from '../pipeline/batch'
 import { SpriteMaterial } from '../materials'
 
 export class Line implements IBatched {
@@ -14,11 +13,13 @@ export class Line implements IBatched {
     public vertices: Float32Array = new Float32Array(0)
     public uvs: Float32Array = new Float32Array(0)
     public indices: Uint16Array = new Uint16Array(0)
+    public colors: Uint32Array
     public readonly color: vec4 = vec4(1,1,1,1)
     public readonly normal: vec3 = vec3(0,1,0)
     public material: SpriteMaterial
     public readonly bounds = new BoundingVolume
     public path: vec3[]
+    public ease: ease.IEase = One
     public width: number = 1
     public height: number = 0
     public update(context: Application, camera: ICamera){
@@ -41,7 +42,7 @@ export class Line implements IBatched {
             vec3.add(tangent, normal, tangent)
             vec3.cross(forward, tangent, tangent)
             vec3.normalize(tangent, tangent)
-            vec3.scale(tangent, 0.5 * this.width, tangent)
+            vec3.scale(tangent, this.ease(i / (length - 1)) * 0.5 * this.width, tangent)
 
             this.vertices[i*6+0] = prev[0] - tangent[0]
             this.vertices[i*6+1] = prev[1] - tangent[1]
@@ -69,9 +70,39 @@ export class Line implements IBatched {
             this.indices[i*6+5]=i*2+3
         }
         for(let i = length - 1; i >= 0; i--){
-            this.uvs[i*4+0] = this.uvs[i*4+2] = 1 - i / (length - 1)
-            this.uvs[i*4+1] = 0
-            this.uvs[i*4+3] = 1
+            this.uvs[i*4+1] = this.uvs[i*4+3] = 1 - i / (length - 1)
+            this.uvs[i*4+0] = 0
+            this.uvs[i*4+2] = 1
         }
+    }
+    public addColorFade(fade: ease.IEase){
+        if(!this.colors || this.colors.length != this.path.length * 2)
+            this.colors = new Uint32Array(this.path.length * 2)
+        for(let i = 0; i < this.colors.length; i++){
+            let f = Math.floor(i / 2) / (this.path.length - 1)
+            const strength = fade(f)
+            this.colors[i] = uintNorm4x8(strength,strength,strength,strength)
+        }
+    }
+}
+
+export function Trail(target: vec3, range: vec2, stiffness: number = 1): IAnimationTrigger<Line> {
+    return function(elapsedTime: number, deltaTime: number, line: Line){
+        vec3.copy(target, line.path[0])
+        for(let i = 1; i < line.path.length; i++){
+            const prev = line.path[i-1]
+            const next = line.path[i]
+            const dx = next[0] - prev[0]
+            const dy = next[1] - prev[1]
+            const dz = next[2] - prev[2]
+            const distance = Math.sqrt(dx*dx + dy*dy + dz*dz)
+            if(!distance) continue
+            const offset = Math.max(0, distance - range[1]) + Math.min(0, distance - range[0])
+            const factor = Math.min(1, deltaTime * 60) * stiffness * offset / distance
+            next[0] -= dx * factor
+            next[1] -= dy * factor
+            next[2] -= dz * factor
+        }
+        line.frame = 0
     }
 }

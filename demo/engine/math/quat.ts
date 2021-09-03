@@ -25,7 +25,7 @@ quat.conjugate = (q: quat, out: quat): quat => {
     return out
 }
 
-quat.transform = (v: vec4 | vec3, q: quat, out: vec4 | vec3): vec4 | vec3 => {
+quat.transform = <T extends vec3 | vec4>(v: vec4 | vec3, q: quat, out: T): T => {
     const x = v[0], y = v[1], z = v[2],
     rx = q[0], ry = q[1], rz = q[2], rw = q[3],
     ix = rw * x + ry * z - rz * y,
@@ -106,6 +106,11 @@ quat.rotationTo = (a: vec3, b: vec3, out: quat): quat => {
     vec3.cross(a, b, out as any)
     out[3] = magnitude + dot
     return quat.normalize(out, out)
+}
+
+quat.angle = (a: quat, b: quat): number => {
+    const dot = vec4.dot(a, b)
+    return Math.acos(2 * dot * dot - 1)
 }
 
 quat.IDENTITY = quat()
