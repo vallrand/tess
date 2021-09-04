@@ -95,7 +95,7 @@ export class ProjectileSkill extends CubeSkill {
             uUVPanning: vec2(-0.3,0),
             uDissolveColor: vec4.ZERO,
             uDissolveThreshold: vec3(0,0.04,0),
-            uColorAdjustment: vec2(1,0.8),
+            uColorAdjustment: vec3(1,0.8,0),
             uUV2Transform: vec4(0.71,0.29,1,3.8),
             uUV2Panning: vec2(-0.5,0.2),
             uVerticalMask: vec4(0.2,0.5,0.8,1.0),
@@ -143,7 +143,7 @@ export class ProjectileSkill extends CubeSkill {
         }, {
             uUVTransform: vec4(0.1,0,2,2.4),
             uUV2Transform: vec4(0.3,0,1.0,0.6),
-            uColorAdjustment: vec2(1,0.8),
+            uColorAdjustment: vec3(1,0.8,0),
             uUVPanning: vec2(0,-0.8),
             uUV2Panning: vec2(0.1,-0.2),
             uVerticalMask: vec4(0.2,0.5,0.8,1.0),
@@ -160,7 +160,7 @@ export class ProjectileSkill extends CubeSkill {
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<_ActionSignal> {
         const mesh = this.mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
-        const rotationalIndex = mod(direction - this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
+        const rotationalIndex = mod(direction - this.cube.state.direction - this.cube.state.sides[this.cube.state.side].direction, 4)
 
         const worldTransform = mat4.fromRotationTranslationScale(DirectionAngle[(direction + 3) % 4], this.pivot, vec3.ONE, mat4())
         mat4.multiply(this.cube.transform.matrix, worldTransform, worldTransform)

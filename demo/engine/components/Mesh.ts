@@ -206,14 +206,19 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         })
     }
     public loadModel(name: string): Mesh {
-        const { model, inverseBindPose, buffer } = this.models[name]
-        const armature = new Armature(inverseBindPose, model.armature)
-        
         const mesh = this.create()
-        mesh.program = mesh.layer = 1
+        const { model, inverseBindPose, buffer } = this.models[name]
+        if(model.armature){
+            const armature = new Armature(inverseBindPose, model.armature)
+            mesh.armature = armature
+            mesh.program = 1
+        }else{
+            mesh.program = 2
+        }
+        mesh.layer = 1
         mesh.buffer = buffer
-        mesh.armature = armature
         mesh.material = this.context.get(MaterialSystem).materials[model.texture]
+
         return mesh
     }
 }

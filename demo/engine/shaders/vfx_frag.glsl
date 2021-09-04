@@ -24,7 +24,7 @@ uniform sampler2D uDisplacementMap;
 
 uniform EffectUniforms {
     uniform vec4 uUVTransform;
-    uniform vec2 uColorAdjustment;
+    uniform vec3 uColorAdjustment;
 #ifdef VERTICAL_MASK
     uniform vec4 uVerticalMask;
 #endif
@@ -71,14 +71,14 @@ void main(){
 
 #ifdef GREYSCALE
     float grey = texture(uDiffuseMap, uv0).r;
-    grey = pow(clamp(mix(1.-grey,grey,uColorAdjustment.y),0.,1.), uColorAdjustment.x);
+    grey = pow(clamp(mix(1.-grey,grey,uColorAdjustment.y),0.,1.), uColorAdjustment.x)+uColorAdjustment.z;
 
     vec2 uv2 = uUV2Transform.xy + uv * uUV2Transform.zw;
 #ifdef PANNING
     uv2 += uTime.x * uUV2Panning.xy;
 #endif
     float grey2 = texture(uDiffuseMap, uv2).g;
-    grey2 = pow(clamp(mix(1.-grey2,grey2,uColorAdjustment.y),0.,1.), uColorAdjustment.x);
+    grey2 = pow(clamp(mix(1.-grey2,grey2,uColorAdjustment.y),0.,1.), uColorAdjustment.x)+uColorAdjustment.z;
     grey *= 2.0 * grey2;
 
     vec4 color = vec4(min(1.,grey));

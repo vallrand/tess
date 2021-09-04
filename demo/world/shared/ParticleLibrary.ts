@@ -130,13 +130,17 @@ export function ParticleLibrary(context: Application){
         uGravity: vec3
         uRotation: vec2
         uSize: vec2
+        uFieldDomain: vec4
+        uFieldStrength: vec2
     }>(
         context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/smoke_frag.glsl'), {
             SPHERICAL: true, MASK: true, GRADIENT: true
         }),
-        ShaderProgram(context.gl, shaders.particle_vert, null, { LUT: true })
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            LUT: true, VECTOR_FIELD: true
+        })
     )
     smoke.diffuse = SharedSystem.textures.sineNoise
     smoke.gradientRamp = GradientRamp(context.gl, [

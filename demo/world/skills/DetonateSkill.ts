@@ -4,14 +4,15 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass } from '../../engine/pipeline'
 import { DecalMaterial, EffectMaterial, MaterialSystem, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
-import { BatchMesh } from '../../engine/components'
+import { BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { AnimationTimeline, EmitterTrigger, PropertyAnimation, TransformSystem } from '../../engine/scene'
+import { AnimationTimeline, EmitterTrigger, PropertyAnimation, EventTrigger, TransformSystem } from '../../engine/scene'
 import { _ActionSignal } from '../Actor'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube } from '../player'
 import { SharedSystem } from '../shared'
 import { CubeSkill } from './CubeSkill'
+import { Minefield, LandMine } from './Minefield'
 
 const actionTimeline = {
     'dust': EmitterTrigger({ frame: 1.0, value: 48 }),
@@ -33,12 +34,36 @@ const actionTimeline = {
     ], lerp),
     'tube.transform.scale': PropertyAnimation([
         { frame: 0, value: [0,2,0] },
-        { frame: 1.3, value: [2.6,7,2.6], ease: ease.cubicOut }
+        { frame: 1.2, value: [2.6,7,2.6], ease: ease.cubicOut }
     ], vec3.lerp),
     'tube.color': PropertyAnimation([
         { frame: 0, value: vec4.ONE },
-        { frame: 1.3, value: vec4.ZERO, ease: ease.quartIn }
-    ], vec4.lerp)
+        { frame: 1.2, value: vec4.ZERO, ease: ease.quartIn }
+    ], vec4.lerp),
+    'chargeX.transform.scale': PropertyAnimation([
+        { frame: 0, value: [12,2,2] }
+    ], vec3.lerp),
+    'chargeY.transform.scale': PropertyAnimation([
+        { frame: 0, value: [12,2,2] }
+    ], vec3.lerp),
+    'chargeX.threshold': PropertyAnimation([
+        { frame: 0, value: 3 },
+        { frame: 0.7, value: 0, ease: ease.sineIn },
+        { frame: 1.4, value: -3, ease: ease.sineOut }
+    ], lerp),
+    'chargeY.threshold': PropertyAnimation([
+        { frame: 0, value: 3 },
+        { frame: 0.7, value: 0, ease: ease.sineIn },
+        { frame: 1.4, value: -3, ease: ease.sineOut }
+    ], lerp),
+    'beam.transform.scale': PropertyAnimation([
+        { frame: 0, value: vec3.ZERO },
+        { frame: 0.9, value: [2,7,1], ease: ease.sineIn }
+    ], vec3.lerp),
+    'beam.color': PropertyAnimation([
+        { frame: 0.9, value: [1,0.5,0.6,0] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
 }
 
 export class DetonateSkill extends CubeSkill {
@@ -47,6 +72,11 @@ export class DetonateSkill extends CubeSkill {
     private stamp: Decal
     private tube: BatchMesh
     private stampMaterial: DecalMaterial
+    private chargeX: Decal
+    private chargeY: Decal
+    private chargeMaterial: DecalMaterial
+    private beam: Sprite
+    private minefield: Minefield = new Minefield(this.context)
     constructor(context: Application, cube: Cube){
         super(context, cube)
         const materials = context.get(MaterialSystem)
@@ -76,7 +106,7 @@ export class DetonateSkill extends CubeSkill {
         }, {
             uUVTransform: vec4(0,0,3,2),
             uUVPanning: vec2(-0.4,-0.8),
-            uColorAdjustment: vec2(1,1),
+            uColorAdjustment: vec3(1,1,0),
             uUV2Transform: vec4(0,0.04,2,2),
             uUV2Panning: vec2(0.4,-0.8),
             uVerticalMask: vec4(0.0,0.5,0.8,1.0),
@@ -85,6 +115,20 @@ export class DetonateSkill extends CubeSkill {
             0xffffff00, 0xebdada00, 0xd18a9770, 0x94063ca0, 0x512e3c70, 0x29202330, 0x00000000, 0x00000000
         ], 1)
         this.tube.material.diffuse = SharedSystem.textures.boxStripes
+
+        this.chargeMaterial = new DecalMaterial()
+        this.chargeMaterial.program = ShaderProgram(this.context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
+            INSTANCED: true
+        })
+        this.chargeMaterial.program.uniforms['uLayer'] = this.chargeMaterial.layer
+        this.chargeMaterial.program.uniforms['uDissolveEdge'] = 1
+
+        this.beam = new Sprite()
+        this.beam.billboard = BillboardType.Cylinder
+        this.beam.material = new SpriteMaterial()
+        this.beam.material.program = this.context.get(ParticleEffectPass).program
+        this.beam.material.diffuse = SharedSystem.textures.raysBeam
+        vec2.set(0,0.5,this.beam.origin)
     }
     public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
@@ -100,6 +144,21 @@ export class DetonateSkill extends CubeSkill {
         this.stamp.material = this.stampMaterial
         this.stamp.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.stamp.transform.position)
+
+        this.chargeX = this.context.get(DecalPass).create(0)
+        this.chargeX.material = this.chargeMaterial
+        this.chargeX.transform = this.context.get(TransformSystem).create()
+        vec3.copy(origin, this.chargeX.transform.position)
+
+        this.chargeY = this.context.get(DecalPass).create(0)
+        this.chargeY.material = this.chargeMaterial
+        this.chargeY.transform = this.context.get(TransformSystem).create()
+        vec3.copy(origin, this.chargeY.transform.position)
+        quat.axisAngle(vec3.AXIS_Y, 0.5 * Math.PI, this.chargeY.transform.rotation)
+
+        this.beam.transform = this.context.get(TransformSystem).create()
+        vec3.copy(origin, this.beam.transform.position)
+        this.context.get(ParticleEffectPass).add(this.beam)
 
         this.light = this.context.get(PointLightPass).create()
         this.light.transform = this.context.get(TransformSystem).create()
@@ -118,15 +177,34 @@ export class DetonateSkill extends CubeSkill {
         const animate = AnimationTimeline(this, {
             ...actionTimeline
         })
+        const mine = this.minefield.create()
 
-        while(true)
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             armatureAnimation.activate(elapsedTime, mesh.armature)
+            if(elapsedTime >= 1 && !mine.enabled)
+                mine.place(this.cube.state.tile[0], this.cube.state.tile[1])
 
             if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame
         }
+
+        this.context.get(TransformSystem).delete(this.chargeX.transform)
+        this.context.get(TransformSystem).delete(this.chargeY.transform)
+        this.context.get(TransformSystem).delete(this.light.transform)
+        this.context.get(TransformSystem).delete(this.beam.transform)
+        this.context.get(TransformSystem).delete(this.stamp.transform)
+        this.context.get(TransformSystem).delete(this.tube.transform)
+
+        this.context.get(DecalPass).delete(this.chargeX)
+        this.context.get(DecalPass).delete(this.chargeY)
+        this.context.get(DecalPass).delete(this.stamp)
+
+        SharedSystem.particles.dust.remove(this.dust)
+        this.context.get(PointLightPass).delete(this.light)
+
+        this.context.get(ParticleEffectPass).remove(this.beam)
+        this.context.get(ParticleEffectPass).remove(this.tube)
     }
 }

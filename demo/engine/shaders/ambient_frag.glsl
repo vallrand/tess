@@ -17,12 +17,14 @@ uniform LightUniforms {
 
 void main(){
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
-    vec3 normal = normalize(texelFetch(uNormalBuffer, fragCoord, 0).xyz);
+    vec3 normal = texelFetch(uNormalBuffer, fragCoord, 0).xyz;
+    float blend = length(normal);
+    normal = normalize(normal);
     vec4 albedo = texelFetch(uAlbedoBuffer, fragCoord, 0);
     float emission = max(0.,2.*albedo.a-1.);
 
-    vec3 light = mix(uGroundColor, uSkyColor, 0.5 + 0.5 * dot(normal, uLightDirection));
-    light = mix(light, vec3(1), emission);
+    vec3 light = mix(uGroundColor, uSkyColor, clamp(0.5 + 0.5 * dot(normal, uLightDirection),0.,1.));
+    light = mix(light, vec3(1), max(emission,1.-blend));
 
     fragColor = vec4(light * albedo.rgb, emission);
 }

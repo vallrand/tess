@@ -3,14 +3,14 @@ import { _ActionSignal } from '../Actor'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube } from '../player'
 
-export abstract class CubeSkill {
+export class CubeSkill {
     constructor(protected readonly context: Application, protected readonly cube: Cube){}
     public *open(): Generator<_ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
-        for(const duration = 1.0, startTime = this.context.currentTime; true;){
+        for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
 
             armatureAnimation.open(elapsedTime / duration, mesh.armature)
@@ -24,7 +24,7 @@ export abstract class CubeSkill {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
-        for(const duration = 1.0, startTime = this.context.currentTime; true;){
+        for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
 
             armatureAnimation.open(1.0 - elapsedTime / duration, mesh.armature)

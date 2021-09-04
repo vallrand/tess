@@ -34,6 +34,10 @@ uniform EmitterUniforms {
     vec2 uForce;
     vec3 uTarget;
 #endif
+#ifdef VECTOR_FIELD
+	vec4 uFieldDomain;
+	vec2 uFieldStrength;
+#endif
 #ifdef TRAIL
     vec2 uLength;
 #else
@@ -65,6 +69,58 @@ float hash11(uint n){
 	n = (n << 13U) ^ n;
     n = n * (n * n * 15731U + 789221U) + 1376312589U;
     return float( n & uvec3(0x7fffffffU))/float(0x7fffffff);
+}
+float hash31(vec3 uv){
+	const uvec3 u = uvec3(1597334673U, 3812015801U, 2798796415U);
+	uvec3 q = floatBitsToUint(uv);
+	q *= u;
+	uint n = (q.x ^ q.y ^ q.z) * 1597334673U;
+	return -1.0 + 2.0 * float(n) * (1.0 / float(0xffffffffU));
+}
+vec3 hash33(vec3 uv){
+	const uvec3 u = uvec3(1597334673U, 3812015801U, 2798796415U);
+	uvec3 q = floatBitsToUint(uv);
+	q *= u;
+	q = (q.x ^ q.y ^ q.z)*u;
+	return -1.0 + 2.0 * vec3(q) * (1.0 / float(0xffffffffU));
+}
+
+float noise3D(vec3 p, float seed){
+    vec3 pi = floor(p);
+    vec3 pf = p - pi; pi += seed;
+    vec3 w = pf * pf * (3.0 - 2.0 * pf);
+    return mix(mix(mix(hash31(pi + vec3(0, 0, 0)), hash31(pi + vec3(1, 0, 0)), w.x),
+        	   mix(hash31(pi + vec3(0, 0, 1)), hash31(pi + vec3(1, 0, 1)), w.x), w.z),
+               mix(mix(hash31(pi + vec3(0, 1, 0)), hash31(pi + vec3(1, 1, 0)), w.x),
+                   mix(hash31(pi + vec3(0, 1, 1)), hash31(pi + vec3(1, 1, 1)), w.x), w.z), w.y);
+}
+float perlin3D(vec3 p, float seed){
+    vec3 pi = floor(p);
+    vec3 pf = p - pi; pi += seed;
+    vec3 w = pf * pf * (3.0 - 2.0 * pf);
+    return mix(mix(mix(dot(pf - vec3(0, 0, 0), hash33(pi + vec3(0, 0, 0))), 
+                       dot(pf - vec3(1, 0, 0), hash33(pi + vec3(1, 0, 0))), w.x),
+                   mix(dot(pf - vec3(0, 0, 1), hash33(pi + vec3(0, 0, 1))), 
+                       dot(pf - vec3(1, 0, 1), hash33(pi + vec3(1, 0, 1))), w.x), w.z),
+               mix(mix(dot(pf - vec3(0, 1, 0), hash33(pi + vec3(0, 1, 0))), 
+                       dot(pf - vec3(1, 1, 0), hash33(pi + vec3(1, 1, 0))), w.x),
+                   mix(dot(pf - vec3(0, 1, 1), hash33(pi + vec3(0, 1, 1))), 
+                       dot(pf - vec3(1, 1, 1), hash33(pi + vec3(1, 1, 1))), w.x), w.z), w.y);
+}
+float simplex3D(vec3 p){
+    const float K1 = 0.333333333;
+    const float K2 = 0.166666667;
+    vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+    vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+    vec3 e = step(vec3(0.0), d0 - d0.yzx);
+	vec3 i1 = e * (1.0 - e.zxy);
+	vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+    vec3 d1 = d0 - (i1 - 1.0 * K2);
+    vec3 d2 = d0 - (i2 - 2.0 * K2);
+    vec3 d3 = d0 - (1.0 - 3.0 * K2);
+    vec4 h = max(0.6 - vec4(dot(d0, d0), dot(d1, d1), dot(d2, d2), dot(d3, d3)), 0.0);
+    vec4 n = h * h * h * h * vec4(dot(d0, hash33(i)), dot(d1, hash33(i + i1)), dot(d2, hash33(i + i2)), dot(d3, hash33(i + 1.0)));
+    return dot(vec4(31.316), n);
 }
 
 vec4 quat(in vec3 axis, in float angle){return vec4(axis*sin(.5*angle),cos(.5*angle));}
@@ -143,6 +199,7 @@ void main(){
         float mSize = mix(s0.x, s0.y, f);
         vec2 mVelocity = vec2(mix(s0.z,s0.w,f),mix(s1.x,s1.y,f));
         float mRadial = mix(s1.z,s1.w,f);
+		mVelocity = 1.0 / (1.0 + (1.0-mVelocity) * deltaTime * 60.);
 #else
         const float mSize = 1.0;
         const vec2 mVelocity = vec2(1.0);
@@ -151,6 +208,15 @@ void main(){
 
         vAcceleration = aAcceleration;
         vVelocity = aVelocity + vAcceleration * deltaTime;
+#ifdef VECTOR_FIELD
+		vec3 fieldPosition = aTransform.xyz*uFieldDomain.xyz + vec3(3972.8371)*vLifetime.z;
+		vec3 fieldForce = vec3(
+			simplex3D(fieldPosition),
+			simplex3D(fieldPosition+vec3(189.234)),
+			simplex3D(fieldPosition+vec3(411.321))
+		);
+		vVelocity.xyz += fieldForce * deltaTime * uFieldStrength.x;
+#endif
 #ifdef RADIAL
         vec3 radial = uTarget - aTransform.xyz;
         vec3 attractor = mRadial * normalize(radial);

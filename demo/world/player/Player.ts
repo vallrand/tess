@@ -41,12 +41,14 @@ export class PlayerSystem implements ISystem {
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
-        if(this.context.frame == 1) this.cube.installModule(this.cube.state.side, 0, CubeModule.Minelayer)
+        if(this.context.frame == 1){
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Minelayer)
+            window['quat'] = quat
+        }
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0
         window['a'] = this.cube.meshes[this.cube.state.side].armature
-        window['quat'] = quat
         
         vec3.copy(this.cube.transform.position, this.cameraTarget)
         this.adjustCamera(this.cameraTarget)

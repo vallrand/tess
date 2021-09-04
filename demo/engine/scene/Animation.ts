@@ -86,6 +86,13 @@ export function PropertyAnimation<T>(frames: {
     }
 }
 
+export const EventTrigger = <T>(frame: number, callback: (target: T) => void): IAnimationTrigger<T> =>
+function(elapsedTime: number, deltaTime: number, target: T){
+    const prevTime = elapsedTime - deltaTime
+    if(!(elapsedTime >= frame && prevTime < frame)) return
+    callback(target)
+}
+
 export const EmitterTrigger = (options: {
     frame: number
     value: number

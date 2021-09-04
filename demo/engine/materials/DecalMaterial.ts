@@ -11,6 +11,7 @@ export class DecalMaterial extends ShaderMaterial {
     cullFace = GL.FRONT as GL.FRONT
     depthWrite = false
     blendMode = ShaderMaterial.Premultiply
+    layer: number = 1
     bind(gl: WebGL2RenderingContext): void {
         super.bind(gl)
         // gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)

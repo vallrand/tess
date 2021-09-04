@@ -10,15 +10,12 @@
         "esModuleInterop": true,
         "allowJs": true,
         "resolveJsonModule": true,
-        "typeRoots": ["./node_modules/@types"],
-        "paths": {
-          "*": ["*","modules/*"]
-        }
+        "typeRoots": ["./node_modules/@types"]
     },
     "include": [
-      "demo"
+        "demo/**/*"
     ],
     "exclude": [
         "node_modules"
-      ]
+    ]
   }

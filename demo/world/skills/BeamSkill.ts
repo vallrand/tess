@@ -138,7 +138,9 @@ export class BeamSkill extends CubeSkill {
             uLifespan: [1.6,2,-1,0],
             uRotation: [0,2*Math.PI],
             uGravity: [0,3.2,0],
-            uSize: [1,3]
+            uSize: [1,3],
+            uFieldDomain: vec4.ONE,
+            uFieldStrength: vec2.ZERO
         })
     }
     public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {

@@ -76,6 +76,8 @@ https://www.shadertoy.com/view/Xt3cDn
 https://www.shadertoy.com/view/3sKXWh tileable textures
 https://www.shadertoy.com/view/Ws3GRs - rectangular tiling
 https://www.shadertoy.com/view/3sdcWH - rectangular tiling 2
+https://www.iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm - SDF 2D
+https://www.shadertoy.com/view/4sc3z2 - noises
 
 displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
 

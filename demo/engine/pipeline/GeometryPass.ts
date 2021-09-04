@@ -26,6 +26,9 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
             }),
             ShaderProgram(gl,shaders.geometry_vert, shaders.geometry_frag, {
                 SKINNING: true, NORMAL_MAPPING: true, COLOR_INDEX: true
+            }),
+            ShaderProgram(gl, shaders.geometry_vert, shaders.geometry_frag, {
+                NORMAL_MAPPING: true, COLOR_INDEX: true
             })
             //BUMP_MAPPING
             //#define PARALLAX_LAYERS 32
