@@ -68,7 +68,7 @@ vec4 lerpLUT(sampler2D texture, float u, int v){
 float hash11(uint n){
 	n = (n << 13U) ^ n;
     n = n * (n * n * 15731U + 789221U) + 1376312589U;
-    return float( n & uvec3(0x7fffffffU))/float(0x7fffffff);
+    return float(n & uvec3(0x7fffffffU))/float(0x7fffffff);
 }
 float hash31(vec3 uv){
 	const uvec3 u = uvec3(1597334673U, 3812015801U, 2798796415U);

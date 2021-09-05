@@ -5,12 +5,16 @@ import { ParticleLibrary } from './ParticleLibrary'
 import { GeometryLibrary } from './GeometryLibrary'
 import { EffectLibrary } from './EffectLibrary'
 
+import { DebrisEffect } from './effects'
+
 export class SharedSystem implements ISystem {
     public static textures: ReturnType<typeof TextureLibrary>
     public static materials: ReturnType<typeof MaterialLibrary>
     public static particles: ReturnType<typeof ParticleLibrary>
     public static geometry: ReturnType<typeof GeometryLibrary>
     public static effects: ReturnType<typeof EffectLibrary>
+
+    private debris: DebrisEffect
 
     constructor(private readonly context: Application){
         SharedSystem.textures = TextureLibrary(this.context)
@@ -20,4 +24,7 @@ export class SharedSystem implements ISystem {
         SharedSystem.effects = EffectLibrary(this.context)
     }
     public update(): void {}
+    public load(): void {
+        this.debris = new DebrisEffect(this.context, 'cube_debris')
+    }
 }

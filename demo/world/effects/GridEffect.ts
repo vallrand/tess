@@ -28,7 +28,7 @@ export class GridEffect {
         vec3.set(2*gridSize, 10, 2*gridSize, this.transform.scale)
 
 
-        this.uniform = new UniformBlock(gl, { byteSize: 4*(16+4+1) }, UniformBlockBindings.ModelUniforms)
+        this.uniform = new UniformBlock(gl, { byteSize: 4*(16+4+2) }, UniformBlockBindings.ModelUniforms)
     }
     apply(){
         if(!this.enabled) return

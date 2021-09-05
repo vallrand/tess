@@ -6,7 +6,6 @@
   "scripts": {
     "pack_textures": "node ./tasks/pack-texture.js ./source/textures ./build/assets",
     "pack_meshes": "node ./tasks/pack-mesh.js ./source ./build/assets/models.bin ./demo/manifest.json",
-    "pack_vfx": "node ./tasks/pack-sprite.js ./source/vfx ./build/assets ./demo/manifest.json",
     "build": "webpack --mode production",
     "start": "webpack serve --mode development"
   },

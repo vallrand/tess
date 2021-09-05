@@ -1,6 +1,6 @@
-import { Application, IProgressHandler, ISystem, Signal } from '../framework'
+import { Application, ISystem, ILoadedData } from '../framework'
 import { GL, createTexture, TextureOptions, ShaderProgram, UniformSamplerBindings } from '../webgl'
-import { IMaterial, PostEffectPass } from '../pipeline'
+import { DeferredGeometryPass, IMaterial, PostEffectPass } from '../pipeline'
 import { shaders } from '../shaders'
 import { MeshMaterial } from './MeshMaterial'
 
@@ -22,7 +22,8 @@ export class MaterialSystem implements ISystem {
     public static readonly heightmapScale: number = 10
     public readonly white: MeshMaterial = new MeshMaterial()
     public readonly materials: MeshMaterial[] = Object.create(null)
-    public readonly materialLoad = new Signal<MeshMaterial>()
+    public readonly staticMaterials: MeshMaterial[] = Object.create(null)
+    //public readonly materialLoad = new Signal<MeshMaterial>()
     public enabled: boolean = true
     private readonly renderQueue: {
         rate: number
@@ -41,6 +42,7 @@ export class MaterialSystem implements ISystem {
     }
     create(): MeshMaterial {
         const material = new MeshMaterial()
+        material.program = this.context.get(DeferredGeometryPass).programs[0]
         return material
     }
     public createRenderTexture(width: number, height: number, layers: number = 1, options?: TextureOptions): RenderTexture {
@@ -117,10 +119,7 @@ export class MaterialSystem implements ISystem {
             this.renderTexture(texture, layer, program, uniforms)
         }
     }
-    public load(manifest: { texture: string[], model: {texture:number}[] }, progress: IProgressHandler<void>): void {
-        let remaining = manifest.texture.length
-        progress(remaining)
-
+    public load(manifest: { texture: string[], model: {texture:number}[] }, data: ILoadedData): void {
         function renderNormalMap(material: MeshMaterial, width: number, height: number){
             if(!manifest.model.find(model => model.texture === material.index)) return
             const normalTexture = this.addRenderTexture(
@@ -132,21 +131,18 @@ export class MaterialSystem implements ISystem {
             material.normal = normalTexture
         }
 
-        for(let i = remaining - 1; i >= 0; i--){
+        for(let i = manifest.texture.length - 1; i >= 0; i--){
             const material = this.materials[i] = new MeshMaterial()
             material.index = i
-            const image: HTMLImageElement = new Image()
-            image.crossOrigin = 'anonymous'
-            image.onerror = event => progress(-1, new Error(`${manifest.texture[i]}`))
-            image.onload = event => {
-                const { naturalWidth: width, naturalHeight: height } = image
-                const texture = createTexture(this.context.gl, { width, height, data: image })
-                material.diffuse = texture
-                renderNormalMap.call(this, material, width, height)
-                this.materialLoad.dispatch(material)
-                progress(--remaining)
-            }
-            image.src = manifest.texture[i]
+            const image = data.textures[i]
+            const { naturalWidth: width, naturalHeight: height } = image
+            const texture = createTexture(this.context.gl, { width, height, data: image })
+            material.diffuse = texture
+            renderNormalMap.call(this, material, width, height)
         }
+    }
+    public loadTexture(){
+        const image: HTMLImageElement = new Image()
+        image.crossOrigin = 'anonymous'
     }
 }

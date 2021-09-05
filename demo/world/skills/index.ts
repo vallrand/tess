@@ -7,6 +7,8 @@ import { ShockwaveSkill } from './ShockwaveSkill'
 import { ShieldSkill } from './ShieldSkill'
 import { ProjectileSkill } from './ProjectileSkill'
 import { DetonateSkill } from './DetonateSkill'
+import { OrbSkill } from './OrbSkill'
+import { ArtillerySkill } from './ArtillerySkill'
 
 
 export const CubeSkills = (context: Application, cube: Cube) => ({
@@ -15,5 +17,7 @@ export const CubeSkills = (context: Application, cube: Cube) => ({
     [CubeModule.EMP]: new ShockwaveSkill(context, cube),
     [CubeModule.Shield]: new ShieldSkill(context, cube),
     [CubeModule.Machinegun]: new ProjectileSkill(context, cube),
-    [CubeModule.Minelayer]: new DetonateSkill(context, cube)
+    [CubeModule.Minelayer]: new DetonateSkill(context, cube),
+    [CubeModule.Voidgun]: new OrbSkill(context, cube),
+    [CubeModule.Missile]: new ArtillerySkill(context, cube)
 })

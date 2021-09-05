@@ -4,6 +4,32 @@ import { createTexture, GL, ShaderProgram } from '../../engine/webgl'
 import { MaterialSystem } from '../../engine/materials/Material'
 import { shaders } from '../../engine/shaders'
 
+
+function TextureArray(context: Application){
+    const materials = context.get(MaterialSystem)
+    const layers = [
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0,0,0,0.5] }},
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.91, 0.23, 0.52, 1] }}, 
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.69, 0.71, 0.73, 0] }}, 
+        { shader: require('../shaders/circuit_frag.glsl'), rate: 2, uniforms: {  }}, 
+        { shader: require('../shaders/hatch_frag.glsl'), rate: 0, uniforms: { uColor: [0.8,0.9,1.0] }}, 
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.61, 0.7, 0.5] }}, 
+        { shader: require('../shaders/wires_frag.glsl'), rate: 2, uniforms: {  }}, 
+        { shader: require('../shaders/rust_frag.glsl'), rate: 0, uniforms: {  }}, 
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.6, 0.62, 0.5] }}
+    ]
+
+    const textureArray = materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize, layers.length)
+    for(let index = 0; index < layers.length; index++)
+    materials.addRenderTexture(
+        textureArray, index,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, layers[index].shader),
+        layers[index].uniforms, layers[index].rate
+    )
+
+    return { array: textureArray.target, arrayLayers: layers.length }
+}
+
 export function TextureLibrary(context: Application){
     const materials = context.get(MaterialSystem)
 
@@ -128,9 +154,13 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
+    const indexedTexture = TextureArray(context)
+
     return {
         particle, glow, ring, wave, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
         directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
-        white, grey: materials.white.diffuse, fire
+        white, grey: materials.white.diffuse, fire,
+
+        indexedTexture
     }
 }

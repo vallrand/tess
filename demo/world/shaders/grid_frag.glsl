@@ -14,6 +14,7 @@ uniform ModelUniforms {
     mat4 uModelMatrix;
     vec4 uColor;
     float uLayer;
+    float uStartTime;
 };
 
 #define TAU 6.283185307179586

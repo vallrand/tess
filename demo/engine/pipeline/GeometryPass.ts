@@ -1,11 +1,9 @@
-import { mat4 } from '../math'
 import { Application, ISystem } from '../framework'
 import { CameraSystem } from '../scene/Camera'
 import { MeshSystem } from '../components/Mesh'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
-import { IEffect } from '.'
 import { shaders } from '../shaders'
-import { PipelinePass } from './PipelinePass'
+import { PipelinePass, IEffect } from './PipelinePass'
 
 export class DeferredGeometryPass extends PipelinePass implements ISystem {
     public albedo: WebGLTexture
@@ -13,7 +11,7 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
     public position: WebGLTexture
     public depth: WebGLRenderbuffer
     private gbuffer: WebGLFramebuffer
-    private programs: ShaderProgram[]
+    public readonly programs: ShaderProgram[]
     public readonly effects: IEffect[] = []
 
     constructor(context: Application){
@@ -47,16 +45,10 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
         const gl = this.context.gl
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.gbuffer)
-
-        gl.enable(GL.CULL_FACE)
-        gl.depthFunc(GL.LEQUAL)
-        gl.enable(GL.DEPTH_TEST)
-        gl.cullFace(GL.BACK)
+        
         gl.clearColor(0,0,0,0)
-
-        gl.depthMask(true)
-        gl.disable(GL.BLEND)
         gl.clearDepth(1)
+        gl.depthMask(true)
         gl.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT)
 
         const camera = this.context.get(CameraSystem).camera
@@ -64,18 +56,14 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
         this.context.get(CameraSystem).uniform.bind(gl, UniformBlockBindings.GlobalUniforms)
 
         const meshes = this.context.get(MeshSystem).list
-        for(let programIndex = -1, i = meshes.length - 1; i >= 0; i--){
+        for(let program: ShaderProgram = null, i = meshes.length - 1; i >= 0; i--){
             const mesh = meshes[i]
-            if(mesh.program == -1) continue
-            if(programIndex != mesh.program) gl.useProgram(this.programs[programIndex = mesh.program].target)
+            if(mesh.color[3] === 0) continue
             if(!camera.culling.cull(mesh.bounds)) continue
+            if(program !== mesh.material.program) gl.useProgram((program = mesh.material.program).target)
             mesh.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
             
-            //this.programs[programIndex].uniforms['uLayer'] = mesh.layer+1
-            //this.programs[programIndex].uniforms['uModelMatrix'] = mesh.transform?.matrix || mat4.IDENTITY
-            if(mesh.armature) this.programs[programIndex].uniforms['uBoneMatrix'] = mesh.armature.boneMatrix
-
-            mesh.material.program = this.programs[programIndex]
+            if(mesh.armature) mesh.material.program.uniforms['uBoneMatrix'] = mesh.armature.boneMatrix
             mesh.material.bind(gl)
             gl.bindVertexArray(mesh.buffer.vao)
             gl.drawElements(GL.TRIANGLES, mesh.buffer.indexCount, GL.UNSIGNED_SHORT, mesh.buffer.indexOffset)

@@ -83,7 +83,7 @@ export class Cube implements IActor {
         const mesh = this.meshes[side] = this.context.get(MeshSystem).loadModel(CubeModuleModel[type])
 
         mesh.transform = this.transform
-        mesh.program = this.state.side == side ? 1 : -1
+        mesh.color[3] = this.state.side == side ? 1 : 0
         this.state.sides[side].direction = direction
         this.state.sides[side].type = type
         const rotation = DirectionAngle[(this.state.direction + this.state.sides[side].direction) % 4]
@@ -126,6 +126,7 @@ export class Cube implements IActor {
             switch(state.type){
                 case CubeModule.Railgun:
                 case CubeModule.Minelayer:
+                case CubeModule.Voidgun:
                 case CubeModule.EMP: {
                     if(state.open != 1) break
                     if(!trigger) break
@@ -199,8 +200,8 @@ export class Cube implements IActor {
         }
         if(this.context.get(TerrainSystem).getTile(nextTile[0], nextTile[1]) != null) return
 
-        this.meshes[this.state.side].program = -1
-        this.meshes[nextFace].program = 1
+        this.meshes[this.state.side].color[3] = 0
+        this.meshes[nextFace].color[3] = 1
         this.state.direction = nextDirection
         this.state.side = nextFace
         this.context.get(TerrainSystem).setTile(this.state.tile[0], this.state.tile[1], null)

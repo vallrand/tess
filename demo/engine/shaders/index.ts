@@ -17,5 +17,6 @@ export const shaders = {
     light_vert: <string> require('./light_vert.glsl'),
     pbr_frag: <string> require('./pbr_frag.glsl'),
     ambient_frag: <string> require('./ambient_frag.glsl'),
-    vfx_frag: <string> require('./vfx_frag.glsl')
+    vfx_frag: <string> require('./vfx_frag.glsl'),
+    debris_vert: <string> require('./debris_vert.glsl')
 }

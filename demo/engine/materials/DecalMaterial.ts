@@ -7,8 +7,8 @@ export class DecalMaterial extends ShaderMaterial {
     readonly uvTransform: vec4 = vec4(0,0,1,1)
     diffuse: WebGLTexture
     normal?: WebGLTexture
-    depthTest = GL.GEQUAL as GL.GEQUAL
-    cullFace = GL.FRONT as GL.FRONT
+    depthTest = GL.GEQUAL
+    cullFace = GL.FRONT
     depthWrite = false
     blendMode = ShaderMaterial.Premultiply
     layer: number = 1

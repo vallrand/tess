@@ -1,9 +1,9 @@
-import { ready, IProgressHandler, ProgressHandler } from './Loader'
+import { Loader, ILoadedData } from './Loader'
 import { WebGLState } from '../webgl'
 
 export interface ISystem {
     update(): void
-    load?(manifest: any, progress: IProgressHandler<void>): void
+    load?(manifest: any, data: ILoadedData): void
 }
 export interface SystemType<T extends ISystem> {
     index?: number
@@ -14,6 +14,7 @@ export class Application {
     private static readonly timestep = 2 * 1000/60
     private readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     public readonly gl: WebGL2RenderingContext
+    private readonly loader: Loader = new Loader
     private readonly systems: ISystem[] = []
 
     private previousTimestamp: number = 0
@@ -32,7 +33,7 @@ export class Application {
             if(systems[index].index == null) systems[index].index = index
             this.systems[systems[index].index] = new systems[index](this)
         }
-        ready(() => document.body.appendChild(this.canvas))
+        Loader.awaitDocumentLoad(() => document.body.appendChild(this.canvas))
     }
     public get<T extends ISystem>(type: SystemType<T>): T { return this.systems[type.index] as T }
     update = (currentTime: number) => {
@@ -45,17 +46,12 @@ export class Application {
         requestAnimationFrame(this.update)
     }
     public load(manifest: any){
-        const progress = ProgressHandler(this.update.bind(this, 0))
-        let totalRemaining = 0
-        for(let i = 0; i < this.systems.length; i++){
-            if(!this.systems[i].load) continue
-            let prevRemaining = 0
-            this.systems[i].load(manifest, (remaining, value) => {
-                if(remaining == -1) return progress(remaining, value)
-                totalRemaining += remaining - prevRemaining
-                prevRemaining = remaining
-                progress(totalRemaining)
-            })
-        }    
+        this.loader.load(manifest, (loadedData: ILoadedData) => {
+            for(let i = 0; i < this.systems.length; i++){
+                if(!this.systems[i].load) continue
+                this.systems[i].load(manifest, loadedData)
+            }
+            Loader.awaitUserGesture(() => this.update(0))
+        })
     }
 }

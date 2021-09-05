@@ -20,6 +20,7 @@ uniform ModelUniforms {
     mat4 uModelMatrix;
     vec4 uColor;
     float uLayer;
+    float uStartTime;
 };
 uniform sampler2D uPositionBuffer;
 #ifdef DISPLACEMENT

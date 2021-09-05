@@ -1,5 +1,5 @@
 import { clamp, lerp, vec2, vec3, vec4, mat4, quat, ease, aabb2, mat3x2 } from '../../engine/math'
-import { Application, ISystem, IProgressHandler } from '../../engine/framework'
+import { Application, ISystem } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene/Camera'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { Cube } from './Cube'
@@ -14,6 +14,8 @@ import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
 import { shaders } from '../../engine/shaders'
 import { ShaderProgram } from '../../engine/webgl'
+import { SharedSystem } from '../shared'
+import { MeshSystem } from '../../engine/components'
 
 export class PlayerSystem implements ISystem {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
@@ -42,7 +44,7 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Minelayer)
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Voidgun)
             window['quat'] = quat
         }
         this.tilemap.renderFaceTiles(this.cube)
@@ -70,42 +72,15 @@ export class PlayerSystem implements ISystem {
         quat.normalize(camera.transform.rotation, camera.transform.rotation)
         camera.transform.frame = 0
     }
-    load(manifest: { texture: string[] }, progress: IProgressHandler<void>){
-        const materials = this.context.get(MaterialSystem)
-        const layers = [
-            { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0,0,0,0.5] }},
-            { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.91, 0.23, 0.52, 1] }}, 
-            { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.69, 0.71, 0.73, 0] }}, 
-            { shader: require('../shaders/circuit_frag.glsl'), rate: 2, uniforms: {  }}, 
-            { shader: require('../shaders/hatch_frag.glsl'), rate: 0, uniforms: { uColor: [0.8,0.9,1.0] }}, 
-            { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.61, 0.7, 0.5] }}, 
-            { shader: require('../shaders/wires_frag.glsl'), rate: 2, uniforms: {  }}, 
-            { shader: require('../shaders/rust_frag.glsl'), rate: 0, uniforms: {  }}, 
-            { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.6, 0.62, 0.5] }}
-        ]
-
-        const textureArray = materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize, layers.length)
-        for(let index = 0; index < layers.length; index++)
-        materials.addRenderTexture(
-            textureArray, index,
-            ShaderProgram(this.context.gl, shaders.fullscreen_vert, layers[index].shader),
-            layers[index].uniforms, layers[index].rate
-        )
-        
+    load(){
+        const models = this.context.get(MeshSystem).models
         const cubeMaterials: MeshMaterial[] = []
-        const cubeTilemap = this.tilemap
-        for(let key in materials.materials){
-            materials.materials[key].array = textureArray.target
-            materials.materials[key].arrayLayers = layers.length
-            if(manifest.texture[key].indexOf('cube') != -1) cubeMaterials.push(materials.materials[key]) 
+        for(let key in models){
+            if(!models[key].material) continue
+            models[key].material.array = SharedSystem.textures.indexedTexture.array
+            models[key].material.arrayLayers = SharedSystem.textures.indexedTexture.arrayLayers
+            if(key.indexOf('cube') != -1) cubeMaterials[models[key].material.index] = models[key].material
         }
-        let remaining = cubeMaterials.length
-        materials.materialLoad.addListener(function handleMaterial(material: MeshMaterial){
-            const index = cubeMaterials.indexOf(material)
-            if(index == -1) return
-            if(--remaining > 0) return
-            materials.materialLoad.removeListener(handleMaterial)
-            cubeTilemap.extractTileMap(cubeMaterials, 512/8, 8)
-        })
+        this.tilemap.extractTileMap(cubeMaterials.filter(Boolean), 512/8, 8)
     }
 }

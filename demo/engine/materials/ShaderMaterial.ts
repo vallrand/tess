@@ -5,8 +5,8 @@ export class ShaderMaterial implements IMaterial {
     public static readonly Add = [[GL.FUNC_ADD],[GL.ONE,GL.ONE]]
     public static readonly Premultiply = [[GL.FUNC_ADD],[GL.ONE,GL.ONE_MINUS_SRC_ALPHA,GL.ZERO,GL.ONE]]
     depthWrite: boolean = false
-    cullFace: GL.NONE | GL.BACK | GL.FRONT | GL.FRONT_AND_BACK = GL.BACK
-    depthTest: GL.NONE | GL.LESS | GL.LEQUAL | GL.GREATER | GL.GEQUAL | GL.EQUAL = GL.LESS
+    cullFace: number = GL.BACK
+    depthTest: number = GL.LESS
     blendMode?: number[][] = null
     program: ShaderProgram = undefined
     public bind(gl: WebGL2RenderingContext): void {

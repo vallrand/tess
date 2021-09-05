@@ -1,14 +1,21 @@
-import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import { GL, UniformSamplerBindings } from '../webgl'
 import { IMaterial } from '../pipeline'
+import { ShaderMaterial } from './ShaderMaterial'
 
-export class MeshMaterial implements IMaterial {
+export class MeshMaterial extends ShaderMaterial implements IMaterial {
     index: number
     diffuse: WebGLTexture
     normal?: WebGLTexture
     array?: WebGLTexture
     arrayLayers: number
-    program: ShaderProgram
+
+    depthTest = GL.LEQUAL
+    cullFace = GL.BACK
+    blendMode = null
+    depthWrite = true
+
     public bind(gl: WebGL2RenderingContext): void {
+        super.bind(gl)
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uDiffuseMap)
         gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)

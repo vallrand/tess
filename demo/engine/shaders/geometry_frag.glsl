@@ -8,6 +8,9 @@ precision highp sampler2DArray;
 in vec3 vPosition;
 in vec3 vNormal; 
 in vec2 vUV;
+#ifdef VERTEX_COLOR
+in vec4 vColor;
+#endif
 
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
@@ -18,6 +21,7 @@ uniform ModelUniforms {
     mat4 uModelMatrix;
     vec4 uColor;
     float uLayer;
+    float uStartTime;
 };
 uniform sampler2D uDiffuseMap;
 uniform sampler2D uNormalMap;
@@ -97,11 +101,17 @@ void main(){
     float metallic = 0.5 * smoothstep(0.25, 0.0, diffuse.a);
 
 #ifdef COLOR_INDEX
+#ifdef VERTEX_COLOR
+    metallic = 0.0;
+    diffuse = texture(uArrayMap, vec3(4.*uv, uArrayMapLayers * vColor.a));
+    diffuse.rgb *= vColor.rgb;
+#else
     vec2 size = vec2(textureSize(uDiffuseMap, 0));
     float colorIndex = texelFetch(uDiffuseMap, ivec2(uv * size), 0).r;
     float ao = diffuse.g;
     diffuse = texture(uArrayMap, vec3(4.*uv, uArrayMapLayers * colorIndex));
     diffuse.rgb *= ao;
+#endif
 #endif
 
     fragPosition = vec4(position, uLayer);

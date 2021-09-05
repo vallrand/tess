@@ -1,10 +1,9 @@
 import { vec3, quat, mat4, aabb3, vec4, mat3 } from '../math'
+import { Application, ISystem, ILoadedData, Factory } from '../framework'
 import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from '../webgl'
-import { Application, IProgressHandler, loadFile, ISystem, Factory } from '../framework'
-
 import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
-import { MaterialSystem } from '../materials/Material'
-import { IMesh, IMaterial } from '../pipeline'
+import { MaterialSystem, MeshMaterial } from '../materials'
+import { IMesh, IMaterial, DeferredGeometryPass } from '../pipeline'
 
 interface IBufferRange {
     buffer: number
@@ -91,8 +90,8 @@ export class Mesh implements IMesh {
     public index: number = -1
     public frame: number = 0
     public order: number = 0
-    public program: number = 0
     public layer: number = 0
+    public startTime: number = 0
     public transform: Transform
     public material: IMaterial
     public buffer: MeshBuffer
@@ -103,11 +102,12 @@ export class Mesh implements IMesh {
     public update(context: Application){
         if(this.frame && this.frame >= this.transform.frame) return
         this.frame = context.frame
-        if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(16+4+1) }, UniformBlockBindings.ModelUniforms)
+        if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(16+4+2) }, UniformBlockBindings.ModelUniforms)
         this.bounds.update(this.transform, this.buffer.radius)
         this.uniform.data.set(this.transform?.matrix || mat4.IDENTITY, 0)
         this.uniform.data.set(this.color, 16)
         this.uniform.data[20] = this.layer + 1
+        this.uniform.data[21] = this.startTime
     }
 }
 
@@ -116,12 +116,14 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         buffer: MeshBuffer
         inverseBindPose?: mat4[]
         model: IModelData
+        material?: MeshMaterial
     }> = Object.create(null)
     constructor(private readonly context: Application){super(Mesh)}
     public delete(mesh: Mesh): void {
         super.delete(mesh)
-        mesh.frame = mesh.program = mesh.layer = 0
+        mesh.frame = mesh.layer = mesh.order = 0
         mesh.armature = mesh.material = mesh.buffer = mesh.transform = null
+        vec4.copy(vec4.ONE, mesh.color)
     }
     public unloadVertexData(buffer: MeshBuffer): void {
         this.context.gl.deleteBuffer(buffer.vbo)
@@ -169,8 +171,8 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
     }
     public update(){
         for(let i = this.list.length - 1; i >= 0; i--){
-            if(this.list[i].program == -1) continue
-            if(i > 0 && this.list[i-1].program > this.list[i].program){
+            if(this.list[i].color[3] == 0) continue
+            if(i > 0 && this.list[i-1].order > this.list[i].order){
                 const temp = this.list[i]
                 this.list[i] = this.list[i-1]
                 this.list[i-1] = temp
@@ -182,43 +184,39 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
             mesh.armature?.update(this.context)
         }
     }
-    public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, progress: IProgressHandler<void>): void {
-        loadFile<ArrayBuffer>(manifest.buffer[0], 'arraybuffer', (remaining, value) => {
-            if(remaining == -1) return progress(remaining, value as Error)
-            if(remaining != 0) return progress(remaining)
+    public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, data: ILoadedData): void {
+        const arraybuffer = data.buffers[0]
+        for(let i = 0; i < manifest.model.length; i++){
+            const model = manifest.model[i]
+            const vertices = new Float32Array(arraybuffer, model.vertices.byteOffset, model.vertices.byteLength / Float32Array.BYTES_PER_ELEMENT)
+            const indices = new Uint16Array(arraybuffer, model.indices.byteOffset, model.indices.byteLength / Uint16Array.BYTES_PER_ELEMENT)
+            const format = manifest.format[model.format]
+            const buffer = this.uploadVertexData(vertices, indices, format)
             
-            const arraybuffer = value as ArrayBuffer
-            for(let i = 0; i < manifest.model.length; i++){
-                const model = manifest.model[i]
-                const vertices = new Float32Array(arraybuffer, model.vertices.byteOffset, model.vertices.byteLength / Float32Array.BYTES_PER_ELEMENT)
-                const indices = new Uint16Array(arraybuffer, model.indices.byteOffset, model.indices.byteLength / Uint16Array.BYTES_PER_ELEMENT)
-                const format = manifest.format[model.format]
-                const buffer = this.uploadVertexData(vertices, indices, format)
-                
-                this.models[model.name] = { buffer, model }
-                if(model.inverseBindPose)
-                    this.models[model.name].inverseBindPose = model.armature.map((node, index) => new Float32Array(
-                        arraybuffer,
-                        model.inverseBindPose.byteOffset + index * 16 * Float32Array.BYTES_PER_ELEMENT, 16
-                    )) as any
+            this.models[model.name] = { buffer, model }
+            if(model.inverseBindPose)
+                this.models[model.name].inverseBindPose = model.armature.map((node, index) => new Float32Array(
+                    arraybuffer,
+                    model.inverseBindPose.byteOffset + index * 16 * Float32Array.BYTES_PER_ELEMENT, 16
+                )) as any
+
+            if(model.texture != -1){
+                const material = this.models[model.name].material = new MeshMaterial()
+                material.program = this.context.get(DeferredGeometryPass).programs[model.armature ? 1 : 2]
+                material.diffuse = this.context.get(MaterialSystem).materials[model.texture].diffuse
+                material.normal = this.context.get(MaterialSystem).materials[model.texture].normal
+                material.index = this.context.get(MaterialSystem).materials[model.texture].index
             }
-            progress(remaining)
-        })
+        }
     }
     public loadModel(name: string): Mesh {
         const mesh = this.create()
-        const { model, inverseBindPose, buffer } = this.models[name]
-        if(model.armature){
-            const armature = new Armature(inverseBindPose, model.armature)
-            mesh.armature = armature
-            mesh.program = 1
-        }else{
-            mesh.program = 2
-        }
+        const { model, inverseBindPose, buffer, material } = this.models[name]
         mesh.layer = 1
         mesh.buffer = buffer
-        mesh.material = this.context.get(MaterialSystem).materials[model.texture]
-
+        mesh.material = material
+        if(model.armature) mesh.armature = new Armature(inverseBindPose, model.armature)
+        mesh.order = model.armature ? 1 : 2
         return mesh
     }
 }

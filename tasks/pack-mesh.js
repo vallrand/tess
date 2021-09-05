@@ -3,12 +3,13 @@ import path from 'path'
 import { GL, DataType, DataBuffer, interleaveVertexData, packVertexData } from './common.js'
 
 const DATA_FORMAT = [
-    { name: 'index', dataType: GL.UNSIGNED_SHORT, length: 1 },
-    { name: 'position', dataType: GL.FLOAT, length: 3, normalized: false },
-    { name: 'normal', dataType: GL.SHORT, length: 3, normalized: true, padding: 2 },
-    { name: 'uv', dataType: GL.UNSIGNED_SHORT, length: 2, normalized: true },
-    { name: 'joint', dataType: GL.UNSIGNED_BYTE, length: 4, normalized: false },
-    { name: 'weight', dataType: GL.UNSIGNED_BYTE, length: 4, normalized: true }
+    { name: 'index', dataType: GL.UNSIGNED_SHORT, length: 1, key: 'INDEX' },
+    { name: 'position', dataType: GL.FLOAT, length: 3, normalized: false, key: 'POSITION' },
+    { name: 'normal', dataType: GL.SHORT, length: 3, normalized: true, padding: 2, key: 'NORMAL' },
+    { name: 'uv', dataType: GL.UNSIGNED_SHORT, length: 2, normalized: true, key: 'TEXCOORD_0' },
+    { name: 'color', dataType: GL.UNSIGNED_SHORT, length: 4, normalized: true, key: 'COLOR_0' },
+    { name: 'joint', dataType: GL.UNSIGNED_BYTE, length: 4, normalized: false, key: 'JOINTS_0' },
+    { name: 'weight', dataType: GL.UNSIGNED_BYTE, length: 4, normalized: true, key: 'WEIGHTS_0' }
 ]
 
 function AttributeFormat(format){
@@ -35,6 +36,7 @@ export default (async function(source, binaryFilepath, manifestFilepath){
 
     const accumulator = new DataBuffer()
     const textures = []
+    const formats = []
     const models = []
     for(let file of files){
         if(file.isDirectory() || !/\.gltf$/.test(file.name)) continue
@@ -58,9 +60,11 @@ export default (async function(source, binaryFilepath, manifestFilepath){
         }
         const meshData = meshes.map(mesh => {
             const { attributes, indices, material } = mesh.primitives[0]
-            if(material == null) return
-            const image = materials[material].normalTexture.index
-            const out = { texture: images[image].name.replace(/_[^_]*$/,'.png') }
+            const out = Object.create(null)
+            if(material != null){
+                const image = materials[material].normalTexture.index
+                out.texture = images[image].name.replace(/_[^_]*$/,'.png')
+            }
             attributes.INDEX = indices
             for(let attribute in attributes){
                 const accessor = accessors[attributes[attribute]]
@@ -76,21 +80,21 @@ export default (async function(source, binaryFilepath, manifestFilepath){
             if(!mesh) continue
 
             let texture = textures.indexOf(mesh.texture)
-            if(texture == -1) texture = textures.push(mesh.texture) - 1
+            if(texture == -1 && mesh.texture) texture = textures.push(mesh.texture) - 1
+
+            const out = { name: node.name, texture }
+            const format = DATA_FORMAT.filter(attribute => attribute.key in mesh)
+
+            out.format = formats.findIndex(other => other.length == format.length && other.every((attrib, i) => attrib === format[i]))
+            if(out.format == -1) out.format = formats.push(format) -1
+
+            const vertexDataStride = format.slice(1).reduce((total, attribute) => total + attribute.length, 0)
+            const vertexArray = new Float32Array(mesh.vertexCount * vertexDataStride)
+            interleaveVertexData(format.slice(1).map(attribute => mesh[attribute.key]), format.slice(1), vertexArray)
+            out.indices = accumulator.add(mesh.INDEX)
+            out.vertices = accumulator.add(new Float32Array(packVertexData(vertexArray, format.slice(1))))
 
             if(skin){
-                const vertexDataStride = DATA_FORMAT.slice(1).reduce((total, attribute) => total + attribute.length, 0)
-                const vertexArray = new Float32Array(mesh.vertexCount * vertexDataStride)
-                interleaveVertexData([
-                    mesh.POSITION,
-                    mesh.NORMAL,
-                    mesh.TEXCOORD_0,
-                    mesh.JOINTS_0,
-                    mesh.WEIGHTS_0
-                ], DATA_FORMAT.slice(1), vertexArray)
-                const indices = accumulator.add(mesh.INDEX)
-                const vertices = accumulator.add(new Float32Array(packVertexData(vertexArray, DATA_FORMAT.slice(1))))
-
                 const inverseBindPose = accumulator.add(accessDataBuffer(skin.inverseBindMatrices))
                 const joints = skin.joints.map(index => ({
                     name: nodes[index].name,
@@ -99,27 +103,10 @@ export default (async function(source, binaryFilepath, manifestFilepath){
                     position: nodes[index].translation,
                     parent: skin.joints.findIndex(i => nodes[i].children && nodes[i].children.indexOf(index) != -1)
                 }))
-
-                models.push({
-                    name: node.name, format: 1, texture,
-                    vertices, indices, inverseBindPose, armature: joints
-                })
-            }else{
-                const vertexDataStride = DATA_FORMAT.slice(1, -2).reduce((total, attribute) => total + attribute.length, 0)
-                const vertexArray = new Float32Array(mesh.vertexCount * vertexDataStride)
-                interleaveVertexData([
-                    mesh.POSITION,
-                    mesh.NORMAL,
-                    mesh.TEXCOORD_0
-                ], DATA_FORMAT.slice(1, -2), vertexArray)
-                const indices = accumulator.add(mesh.INDEX)
-                const vertices = accumulator.add(new Float32Array(packVertexData(vertexArray, DATA_FORMAT.slice(1, -2))))
-
-                models.push({
-                    name: node.name, format: 0, texture,
-                    vertices, indices
-                })
+                out.inverseBindPose = inverseBindPose
+                out.armature = joints
             }
+            models.push(out)
         }
 	}
     const arraybuffer = accumulator.join()
@@ -129,10 +116,7 @@ export default (async function(source, binaryFilepath, manifestFilepath){
     console.log('\x1b[34m%s\x1b[0m', `Writing ${manifestFilepath}`)
     const directory = 'assets/'
     await fs.writeFile(manifestFilepath, JSON.stringify({
-        format: [
-            AttributeFormat(DATA_FORMAT.slice(0, -2)),
-            AttributeFormat(DATA_FORMAT),
-        ],
+        format: formats.map(AttributeFormat),
         buffer: [ directory+path.basename(binaryFilepath) ],
         texture: textures.map(filename => directory+filename),
         model: models
