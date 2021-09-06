@@ -1,4 +1,5 @@
 import { VertexDataFormat } from '../webgl/shared'
+import { IGeometry } from './common'
 
 export function createSphere(options: {
     longitude: number
@@ -8,7 +9,7 @@ export function createSphere(options: {
     thetaLength?: number
     phiStart?: number
     phiLength?: number
-}){
+}): IGeometry {
     const {
         longitude = 32, latitude = 32, radius = 1,
         thetaStart = 0, thetaLength = Math.PI,

@@ -23,7 +23,6 @@ export class MaterialSystem implements ISystem {
     public readonly white: MeshMaterial = new MeshMaterial()
     public readonly materials: MeshMaterial[] = Object.create(null)
     public readonly staticMaterials: MeshMaterial[] = Object.create(null)
-    //public readonly materialLoad = new Signal<MeshMaterial>()
     public enabled: boolean = true
     private readonly renderQueue: {
         rate: number

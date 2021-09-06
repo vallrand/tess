@@ -35,14 +35,26 @@ float fbm(in vec2 x, in int octaves, in vec2 period) {
 	}
 	return v;
 }
+float fbmRidge(in vec2 p, in vec2 period, int octaves){	
+	float z=.5;
+	float rz= 0.;
+	for(int i=1;i<octaves;i++){
+		rz += z * abs(noise2D(p * period, period)*2.-1.);
+		z*=.5;
+        period*=2.;
+	}
+	return rz;
+}
+vec2 polar(in vec2 uv){return vec2(atan(uv.y,uv.x)/TAU+0.5,length(uv));}
+vec2 cartesian(in vec2 uv){float a=(uv.x-0.5)*TAU;return vec2(cos(a),sin(a))*uv.y;}
+mat2 rotate(in float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
 
 void main(){
     vec2 uv = 2.*vUV-1.;
-
-    vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
-    vec2 period = vec2(1000,36);
     
 #if defined(RING)
+    vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
+    vec2 period = vec2(1000,36);
     float f0 = fbm(vec2(0.0, period.y*polar.y), 4, period);
     float y0 = mix(0.5,0.75,f0);
     float alpha = smoothstep(1.0-y0,0.0,abs(polar.x-y0)) * f0 * 1.5;
@@ -53,7 +65,24 @@ void main(){
 #elif defined(CONE)
     float angle = abs(atan(uv.y,uv.x+1.0)/TAU);
     alpha += 0.5 * smoothstep(0.3,0.2,angle) * smoothstep(1.0,0.0,uv.x+2.0*abs(uv.y));
+#elif defined(SWIRL)
+    vec2 uvp = polar(uv);
+    
+    float r0 = fbmRidge(uvp,vec2(1,2),4);
+    uvp.x += 1.0 * r0;
+    uv = cartesian(uvp);
+
+    vec2 basis = vec2(fbmRidge(uv-0.1,vec2(2),4), fbmRidge(uv+0.1,vec2(2),4));
+    uv += (basis-.5);
+    float f0 = fbmRidge(uv*rotate(basis.x - basis.y), vec2(2),4);
+    
+    f0 *= abs(uvp.y-0.5)*2.;
+    f0 = mix(0.01 / f0, 0.1 / f0, f0);
+    f0 *= smoothstep(1.0,0.5,uvp.y);
+    float alpha = f0;
 #else
+    vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
+    vec2 period = vec2(1000,36);
     float f0 = 2.0*fbm(vec2(0.0, period.y*polar.y), 4, period);
     f0 += smoothstep(1.0, -1.0, polar.x - max(0.0,0.5-f0));
     float alpha = smoothstep(0.0, 1.0, f0 - 1.5*polar.x);

@@ -1,10 +1,14 @@
 import { Application } from '../../engine/framework'
+import { mod } from '../../engine/math'
 import { _ActionSignal } from '../Actor'
 import { CubeModuleModel, modelAnimations } from '../animations'
-import { Cube } from '../player'
+import { Cube, Direction } from '../player'
 
 export class CubeSkill {
     constructor(protected readonly context: Application, protected readonly cube: Cube){}
+    get direction(): Direction {
+        return mod(this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
+    }
     public *open(): Generator<_ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]

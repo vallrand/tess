@@ -16,6 +16,9 @@ uniform ModelUniforms {
 };
 #endif
 
+layout(location=0) out vec4 fragAlbedo;
+layout(location=1) out vec4 fragNormal;
+
 uniform float uLayer;
 uniform float uDissolveEdge;
 
@@ -30,9 +33,6 @@ uniform CameraUniforms {
 uniform sampler2D uDiffuseMap;
 uniform sampler2D uNormalMap;
 uniform sampler2D uPositionBuffer;
-
-layout(location=0) out vec4 fragAlbedo;
-layout(location=1) out vec4 fragNormal;
 
 void main(){
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);

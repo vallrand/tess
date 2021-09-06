@@ -52,6 +52,11 @@ void main(){
 #elif defined(TRIANGLE)
     float distance = triangle(uv, vec2(-uSize.x,uSize.y), vec2(-uSize.x,-uSize.y), vec2(uSize.x,0.0));
     float alpha = smoothstep(uBlur, 0.0, distance);
+#elif defined(SPARKLE)
+    uv = abs(uv);
+    float sparkle = max(0.0, 1.0 - (16.0*uv.x*uv.y + .5*(uv.x+uv.y)));
+    sparkle = pow(1.0/(1.0-sparkle),0.2) - 1.0;
+    float alpha = sparkle;
 #elif defined(BLINK)
     uv = abs(uv);
     float x0 = 1.0-uv.x*uv.x;

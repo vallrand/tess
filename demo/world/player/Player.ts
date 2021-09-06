@@ -8,7 +8,7 @@ import { CubeTileMap } from './CubeTileMap'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/pipeline/DecalPass'
 import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
-import { GridEffect, EffectLibrary } from '../effects'
+import { EffectLibrary } from '../effects'
 import { CubeModule } from './CubeModules'
 import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
@@ -27,15 +27,10 @@ export class PlayerSystem implements ISystem {
 
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
-    public readonly grid: GridEffect
     public readonly effects: EffectLibrary = new EffectLibrary(this.context)
     public readonly skills = CubeSkills(this.context, this.cube)
 
     constructor(private readonly context: Application){
-        this.grid = new GridEffect(this.context, 10)
-        this.grid.transform.parent = this.cube.transform
-        this.context.get(DecalPass).effects.push(this.grid)
-
         window['orbit'] = (speed = 0.1) => setInterval(() => {
             this.cameraOffset[0] = 4 * Math.sin(speed * performance.now() / 1000)
             this.cameraOffset[2] = 4 * Math.cos(speed * performance.now() / 1000)
@@ -46,6 +41,7 @@ export class PlayerSystem implements ISystem {
         if(this.context.frame == 1){
             this.cube.installModule(this.cube.state.side, 0, CubeModule.Voidgun)
             window['quat'] = quat
+            window['app'].systems[17].cameraOffset=[-4,5,-5]//[-4,8,3]//
         }
         this.tilemap.renderFaceTiles(this.cube)
 
@@ -73,6 +69,7 @@ export class PlayerSystem implements ISystem {
         camera.transform.frame = 0
     }
     load(){
+        this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform
         const models = this.context.get(MeshSystem).models
         const cubeMaterials: MeshMaterial[] = []
         for(let key in models){

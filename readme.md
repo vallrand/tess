@@ -79,12 +79,18 @@ https://www.shadertoy.com/view/3sdcWH - rectangular tiling 2
 https://www.iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm - SDF 2D
 https://www.shadertoy.com/view/4sc3z2 - noises
 
+ground fog https://stackoverflow.com/questions/21549456/how-to-implement-a-ground-fog-glsl-shader
+unity shaders https://github.com/jraleman/marstronics/tree/master/Unity%20Project/Assets/Standard%20Assets/Effects
+
 displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
 
 normal matrix https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/
 https://lxjk.github.io/2017/10/01/Stop-Using-Normal-Matrix.html
 https://stackoverflow.com/questions/27600045/the-correct-way-to-calculate-normal-matrix
 https://www.gamedev.net/forums/topic/648782-normals-in-world-space-from-a-glsl-shader/
+
+fire ring https://www.shadertoy.com/view/tslSDX
+glow lines https://www.shadertoy.com/user/remonvv
 
 circuit
 https://www.shadertoy.com/view/ttVfzR

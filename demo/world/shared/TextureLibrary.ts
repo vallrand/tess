@@ -45,6 +45,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { GLOW: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
+    const sparkle = materials.addRenderTexture(
+        materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { SPARKLE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
     const ring = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -55,6 +61,12 @@ export function TextureLibrary(context: Application){
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { WAVE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
+    const swirl = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { SWIRL: true }), {  }, 0
     ).target
 
     const rays = materials.addRenderTexture(
@@ -157,7 +169,7 @@ export function TextureLibrary(context: Application){
     const indexedTexture = TextureArray(context)
 
     return {
-        particle, glow, ring, wave, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
+        particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
         directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
         white, grey: materials.white.diffuse, fire,
 

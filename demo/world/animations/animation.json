@@ -262,31 +262,53 @@
     },
     "cube_4":{
         "close":[
-            {"frame":0,"index":1,"position":[-0.5,1,0],"rotation":[0.5,0.5,-0.5,0.5]},
-            {"frame":0,"index":2,"position":[-0.5,1,0],"rotation":[-0.5,-0.5,0.5,-0.5]},
-            {"frame":0,"index":3,"rotation":[-0.5,-0.5,-0.5,0.5]},
-            {"frame":0,"index":4,"position":[0.5,0.5,0]},
-            {"frame":0,"index":5,"rotation":[-0.5,-0.5,-0.5,0.5]},
-            {"frame":0,"index":6,"position":[-0.5,0.5,0]}
+            {"index":1,"frame":0,"position":[-0.5,1,0],"rotation":[0.5,0.5,-0.5,0.5]},
+            {"index":2,"frame":0,"position":[-0.5,1,0],"rotation":[-0.5,-0.5,0.5,-0.5]},
+            {"index":3,"frame":0,"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":4,"frame":0,"position":[0.5,0.5,0]},
+            {"index":5,"frame":0,"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":6,"frame":0,"position":[-0.5,0.5,0]}
         ],
         "open":[
-            {"frame":0,"index":1,"position":[-0.7,1,0],"rotation":[0.5, 0.5, -0.5, 0.5]},
-            {"frame":1,"index":1,"position":[0,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"sineIn"},
+            {"index":1,"frame":0,"position":[-0.7,1,0],"rotation":[0.5,0.5,-0.5,0.5]},
+            {"index":1,"frame":1,"position":[0,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"sineIn"},
 
-            {"frame":0,"index":2,"position":[-0.9,1,0],"rotation":[-0.5, -0.5, 0.5, -0.5]},
-            {"frame":1,"index":2,"position":[0.6,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"sineIn"},
+            {"index":2,"frame":0,"position":[-0.9,1,0],"rotation":[-0.5,-0.5,0.5,-0.5]},
+            {"index":2,"frame":1,"position":[0.6,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"sineIn"},
 
-            {"frame":0,"index":3,"rotation":[-0.5, -0.5, -0.5, 0.5]},
-            {"frame":1,"index":3,"rotation":[-0.707107,0,0,0.707107],"ease":"quadInOut"},
+            {"index":3,"frame":0,"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":3,"frame":1,"rotation":[-0.707107,0,0,0.707107],"ease":"quadInOut"},
 
-            {"frame":0.5,"index":4,"position":[0.5,0.5,0]},
-            {"frame":1,"index":4,"position":[0.5,0.5,1],"ease":"quadOut"},
+            {"index":4,"frame":0.4,"position":[0.5,0.5,0.4],"scale":[0,1,0]},
+            {"index":4,"frame":1,"position":[0.5,0.5,1],"scale":[1,1,1],"ease":"quadOut"},
 
-            {"frame":0,"index":5,"rotation":[-0.5, -0.5, -0.5, 0.5]},
-            {"frame":1,"index":5,"rotation":[0,0.707107,0.707107,0],"ease":"quadInOut"},
+            {"index":5,"frame":0,"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":5,"frame":1,"rotation":[0,0.707107,0.707107,0],"ease":"quadInOut"},
 
-            {"frame":0.5,"index":6,"position":[-0.5,0.5,0]},
-            {"frame":1,"index":6,"position":[-0.5,0.5,1],"ease":"quadOut"}
+            {"index":6,"frame":0.4,"position":[-0.5,0.5,0.4],"scale":[0,1,0]},
+            {"index":6,"frame":1,"position":[-0.5,0.5,1],"scale":[1,1,1],"ease":"quadOut"}
+        ],
+        "activate":[
+            {"index":1,"frame":0.1,"position":[0,1,0],"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":1,"frame":0.6,"position":[0.5,1,0],"ease":"quadInOut"},
+            {"index":1,"frame":0.8,"position":[-1,1,0],"ease":"quartIn"},
+            {"index":1,"frame":0.6,"rotation":[0.683013,0.683013,-0.183013,0.183013],"ease":"quadIn"},
+            {"index":1,"frame":0.9,"rotation":[0.183013,0.183013,-0.683013,0.683013],"ease":"linear"},
+            {"index":1,"frame":1.4,"position":[0,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"quadOut"},
+
+            {"index":2,"frame":0,"position":[0.6,1,0],"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":2,"frame":0.6,"position":[1.4,1,0],"ease":"quadInOut"},
+            {"index":2,"frame":0.8,"position":[-0.5,1,0],"ease":"quadIn"},
+            {"index":2,"frame":0.5,"rotation":[0.183013,0.183013,-0.683013,0.683013],"ease":"quadIn"},
+            {"index":2,"frame":0.8,"rotation":[0.683013,0.683013,-0.183013,0.183013],"ease":"linear"},
+            {"index":2,"frame":1.5,"position":[0.6,1,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"sineOut"},
+
+            {"index":4,"frame":0.6,"position":[0.5,0.5,1]},
+            {"index":4,"frame":0.8,"position":[0.5,0.5,0.6],"ease":"cubicIn"},
+            {"index":4,"frame":1.2,"position":[0.5,0.5,1],"ease":"cubicOut"},
+            {"index":6,"frame":0.6,"position":[-0.5,0.5,1]},
+            {"index":6,"frame":0.8,"position":[-0.5,0.5,0.6],"ease":"cubicIn"},
+            {"index":6,"frame":1.2,"position":[-0.5,0.5,1],"ease":"cubicOut"}
         ]
     },
     "cube_5":{

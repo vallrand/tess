@@ -1,11 +1,12 @@
 import { VertexDataFormat } from '../webgl/shared'
+import { IGeometry } from './common'
 
 export function createPlane(options: {
     width: number
     height: number
     columns: number
     rows: number
-}){
+}): IGeometry {
     const { width, height, columns = 1, rows = 1 } = options
     const vertical = columns + 1, horizontal = rows + 1
     const vertexArray = new Float32Array(vertical * horizontal * (3 + 3 + 2))

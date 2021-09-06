@@ -11,9 +11,6 @@ import { shaders } from '../../engine/shaders'
 import { MistEffect } from './MistEffect'
 import { GrassEffect } from './GrassEffect'
 
-import { GridEffect } from './GridEffect'
-export { GridEffect }
-
 export class EffectLibrary {
     // public readonly dust: ParticleSystem<{
     //     uLifespan: vec4

@@ -4,7 +4,6 @@ in vec2 vUV;
 out vec4 fragColor;
 
 #define TAU 6.283185307179586
-
 float hash11(in float u){
     uint n = floatBitsToUint(u);
     n = (n << 13U) ^ n;
@@ -167,7 +166,9 @@ uniform vec4 uColor;
 
 void main(){
     vec2 uv = vUV;
-
+#ifdef SKEW
+    uv = vec2(uv.x+uv.y,uv.x-uv.y);
+#endif
 #if defined(CELLULAR)
     vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
     float alpha = 1.0-(1.0-1.5*w.y);

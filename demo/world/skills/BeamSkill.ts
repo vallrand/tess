@@ -84,7 +84,7 @@ export class BeamSkill extends CubeSkill {
     private readonly center: Sprite
     private readonly flash: Sprite
     private readonly ring: Sprite
-    private readonly direction: vec3 = vec3()
+    private readonly _direction: vec3 = vec3()
     constructor(context: Application, cube: Cube){
         super(context, cube)
         const cylinder = createCylinder({
@@ -152,11 +152,11 @@ export class BeamSkill extends CubeSkill {
         mat4.transform(target, transform, target as any)
 
         const particleEffects = this.context.get(ParticleEffectPass)
-        vec3.subtract(target, origin, this.direction)
+        vec3.subtract(target, origin, this._direction)
 
         this.cone.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.cone.transform.position)
-        quat.rotationTo([0,0,-1], this.direction, this.cone.transform.rotation)
+        quat.rotationTo([0,0,-1], this._direction, this.cone.transform.rotation)
 
         this.center.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.center.transform.position)

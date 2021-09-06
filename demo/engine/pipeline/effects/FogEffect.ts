@@ -8,12 +8,15 @@ export class FogEffect implements IPostEffect {
     public enabled: boolean = true
     public readonly color: vec4 = vec4(0.2,0.2,0.2,0)
     public readonly range: vec2 = vec2(5,30)
+    public readonly height: vec2 = vec2(0, 1)
+    public frame: number = 0
     private readonly program: ShaderProgram
     constructor(private readonly context: Application){
         this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fog_frag, {
-            LINEAR_FOG: true, BLOOM: true
+            LINEAR_FOG: true, HALFSPACE: true, BLOOM: true
         })
         this.program.uniforms['uBloomMap'] = UniformSamplerBindings.uNormalMap
+
     }
     get active(): boolean { return this.enabled }
     apply(effectPass: PostEffectPass, last: boolean): void {
@@ -25,8 +28,12 @@ export class FogEffect implements IPostEffect {
 
         effectPass.swapRenderTarget(last, false)
         gl.useProgram(this.program.target)
-        this.program.uniforms['uFogColor'] = this.color
-        this.program.uniforms['uFogRange'] = this.range
+        if(this.frame == 0){
+            this.frame = this.context.frame
+            this.program.uniforms['uFogColor'] = this.color
+            this.program.uniforms['uFogRange'] = this.range
+            this.program.uniforms['uFogHeight'] = this.height
+        }
 
         gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
         gl.bindTexture(GL.TEXTURE_2D, effectPass.bloom.texture)

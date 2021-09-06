@@ -1,4 +1,5 @@
 import { VertexDataFormat } from '../webgl/shared'
+import { IGeometry } from './common'
 
 export function createCylinder(options: {
     radiusTop: number
@@ -9,7 +10,7 @@ export function createCylinder(options: {
     cap: boolean
     angleStart: number
     angleLength: number
-}){
+}): IGeometry {
     const {
         radiusTop = 1,
         radiusBottom = 1,

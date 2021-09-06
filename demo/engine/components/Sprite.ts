@@ -52,8 +52,10 @@ export class Sprite implements IBatched {
             case BillboardType.Sphere:
                 vec3.set(camera.viewMatrix[0], camera.viewMatrix[4], camera.viewMatrix[8], normal)
                 vec3.set(camera.viewMatrix[1], camera.viewMatrix[5], camera.viewMatrix[9], tangent)
-                mat4.transformNormal(normal, transform, normal)
-                mat4.transformNormal(tangent, transform, tangent)
+                vec3.scale(normal, this.transform.scale[0], normal)
+                vec3.scale(tangent, this.transform.scale[1], tangent)
+                //mat4.transformNormal(normal, transform, normal)
+                //mat4.transformNormal(tangent, transform, tangent)
                 break
             case BillboardType.Cylinder:
                 vec3.set(transform[4], transform[5], transform[6], normal)

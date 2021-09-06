@@ -9,7 +9,11 @@ layout(location=5) in vec4 aUV;
 layout(location=6) in vec4 aColor;
 
 out vec3 vPosition;
+#ifdef WORLD
+out mat4 vModel;
+#else
 out mat4 vInvModel;
+#endif
 out vec4 vUV;
 out vec4 vColor;
 out float vThreshold;
@@ -31,7 +35,11 @@ void main(){
     mat4 modelMatrix = aModelMatrix;
     modelMatrix[0][3]=0.0;modelMatrix[1][3]=0.0;modelMatrix[2][3]=0.0;modelMatrix[3][3]=1.0;
     vPosition = (modelMatrix * vec4(aPosition, 1.0)).xyz;
+#ifdef WORLD
+    vModel = modelMatrix;
+#else
     vInvModel = inverse(modelMatrix);
+#endif
     vThreshold = aModelMatrix[0][3];
     vUV = aUV;
     vColor = aColor;
