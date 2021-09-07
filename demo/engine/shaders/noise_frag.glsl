@@ -190,7 +190,7 @@ void main(){
     uv = uv + 0.2 * vec2(f0, f1);
     float alpha = fbmd(uv, frequency, 7, vec2(0.0), gain, lacunarity, slopeness, factor, seed).x;
 #else
-    float f0 = fbm(uv, vec2(4.0), 7, 23.0, 0.5, 2.0, 0.95, 0.0);
+    float f0 = fbm(uv, vec2(8.0), 7, 23.0, 0.5, 2.0, 0.95, 0.0);
     float alpha = smoothstep(0.2, 1.0, f0);
 #endif
 	fragColor = uColor * vec4(alpha);

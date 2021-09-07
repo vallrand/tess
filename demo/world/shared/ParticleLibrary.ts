@@ -218,6 +218,25 @@ export function ParticleLibrary(context: Application){
         })
     )
 
-    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts, embers)
-    return { dust, smoke, energy, sparks, bolts, embers }
+    const fire = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uRotation: vec2
+        uGravity: vec3
+        uSize: vec2
+        uRadius: vec2
+    }>(
+        context, { limit: 516, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/fire_frag.glsl'), {
+            ALIGNED: true
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            SPHERE: true, RELATIVE: true
+        })
+    )
+    fire.diffuse = SharedSystem.textures.fire
+
+    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts, embers, fire)
+    return { dust, smoke, energy, sparks, bolts, embers, fire }
 }

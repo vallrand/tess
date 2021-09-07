@@ -88,6 +88,9 @@ normal matrix https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal
 https://lxjk.github.io/2017/10/01/Stop-Using-Normal-Matrix.html
 https://stackoverflow.com/questions/27600045/the-correct-way-to-calculate-normal-matrix
 https://www.gamedev.net/forums/topic/648782-normals-in-world-space-from-a-glsl-shader/
+linear depth https://gist.github.com/kovrov/a26227aeadde77b78092b8a962bd1a91
+linear depth2 https://learnopengl.com/Advanced-OpenGL/Depth-testing
+recover depth https://stackoverflow.com/questions/11277501/how-to-recover-view-space-position-given-view-space-depth-value-and-ndc-xy/46118945#46118945
 
 fire ring https://www.shadertoy.com/view/tslSDX
 glow lines https://www.shadertoy.com/user/remonvv

@@ -55,8 +55,9 @@ void main(){
 #endif
 
 #elif defined(CYLINDRICAL)
-    vec3 right = vec3(uViewMatrix[0][0], uViewMatrix[1][0], uViewMatrix[2][0]);
     vec3 up = vec3(0,1,0);
+    //vec3 right = vec3(uViewMatrix[0][0], uViewMatrix[1][0], uViewMatrix[2][0]);
+    vec3 right = cross(forward, up);
     position = size * (right * position.x + up * position.y);
 #elif defined(SPHERICAL)
     vec3 right = vec3(uViewMatrix[0][0], uViewMatrix[1][0], uViewMatrix[2][0]);

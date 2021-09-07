@@ -3,10 +3,10 @@ import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { createCylinder, applyTransform, doubleSided, modifyGeometry } from '../../engine/geometry'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
-import { TransformSystem } from '../../engine/scene'
+import { TransformSystem, Transform } from '../../engine/scene'
 import { ParticleEmitter, GradientRamp } from '../../engine/particles'
-import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh } from '../../engine/components'
+import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
 
@@ -77,62 +77,53 @@ const actionTimeline = {
 }
 
 class CorrosiveOrb {
-    orb: BatchMesh
+    orb: Mesh
     aura: Sprite
+    transform: Transform
+    fire: ParticleEmitter
     readonly tile: vec2 = vec2()
-    constructor(private readonly context: Application, private readonly parent: OrbSkill){
-
-    }
+    constructor(private readonly context: Application, private readonly parent: OrbSkill){}
     public get enabled(): boolean { return !!this.orb }
-    public place(column: number, row: number, origin: vec3): void {
-        const transform = this.context.get(TransformSystem).create()
-        this.context.get(TerrainSystem).tilePosition(column, row, transform.position)
+    public place(column: number, row: number): void {
+        this.transform = this.context.get(TransformSystem).create()
+        this.context.get(TerrainSystem).tilePosition(column, row, this.transform.position)
+        this.transform.position[1] += 1
         vec2.set(column, row, this.tile)
-        transform.position[1] += 1
 
-        this.orb = new BatchMesh(SharedSystem.geometry.lowPolySphere)
-        this.orb.order = 2
-        const orbMaterial = new SpriteMaterial()
-        orbMaterial.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/orb_frag.glsl'), {
-
-        })
-        orbMaterial.blendMode = null
-        this.orb.material = orbMaterial
+        this.orb = new Mesh()
+        this.orb.buffer = SharedSystem.geometry.sphereMesh
+        this.orb.order = 3
+        this.orb.layer = 2
+        this.context.get(MeshSystem).list.push(this.orb)
+        this.orb.material = this.parent.orbMaterial
         this.orb.transform = this.context.get(TransformSystem).create()
-        this.orb.transform.parent = transform
-        this.context.get(ParticleEffectPass).add(this.orb)
+        this.orb.transform.parent = this.transform
 
         this.aura = new Sprite()
         this.aura.order = 4
         this.aura.billboard = BillboardType.Sphere
-        const auraMaterial = new EffectMaterial(this.context.gl, {
-            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, SKEW: true
-        }, {
-            uUVTransform: vec4(0,0,1,0.8),
-            uVerticalMask: vec4(0.2,0.4,0.6,1),
-            uUVPanning: vec2(0.2, -0.1),
-            uUV2Transform: vec4(0,0,1,1.6),
-            uUV2Panning: vec2(-0.2, -0.3),
-            uColorAdjustment: vec3(1,0.9,0)
-        })
-        auraMaterial.diffuse = SharedSystem.textures.cellularNoise
-        auraMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
-        ], 1)
-        auraMaterial.depthTest = GL.NONE
-
-        this.aura.material = auraMaterial
+        this.aura.material = this.parent.auraMaterial
         this.aura.transform = this.context.get(TransformSystem).create()
-        this.aura.transform.parent = transform
-        vec3.set(4,4,4, this.aura.transform.scale)
+        this.aura.transform.parent = this.transform
         this.context.get(ParticleEffectPass).add(this.aura)
 
-        this.context.get(AnimationSystem).start(this.idle(origin))
+        this.fire = SharedSystem.particles.fire.add({
+            uLifespan: vec4(0.8,1.0,0,0),
+            uOrigin: this.transform.position,
+            uRotation: vec2.ZERO,
+            uGravity: vec3.ZERO,
+            uSize: vec2(1,3),
+            uRadius: vec2(0.8,1.2)
+        })
     }
     public kill(): void {
-        
+        this.context.get(TransformSystem).delete(this.transform)
+        this.context.get(TransformSystem).delete(this.aura.transform)
+        this.context.get(TransformSystem).delete(this.orb.transform)
+        this.orb = this.aura = null
+        SharedSystem.particles.fire.remove(this.fire)
     }
-    private *idle(origin: vec3): Generator<ActionSignal> {
+    public *appear(origin: vec3): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
             'aura.transform.parent.position': PropertyAnimation([
                 { frame: 0, value: origin },
@@ -148,31 +139,73 @@ class CorrosiveOrb {
             ], vec3.lerp)
         })
 
+        this.fire.rate = 0.36
         for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }
-        for(const startTime = this.context.currentTime; true;){
+    }
+    public *dissolve(): Generator<ActionSignal> {
+        this.fire.rate = 0
+        const animate = AnimationTimeline(this, {
+            'aura.color': PropertyAnimation([
+                { frame: 0, value: vec4.ONE },
+                { frame: 1, value: vec4.ZERO, ease: ease.sineOut }
+            ], vec4.lerp),
+            'orb.color': PropertyAnimation([
+                { frame: 0, value: vec4.ONE },
+                { frame: 1, value: vec4.ZERO, ease: ease.quadIn }
+            ], vec4.lerp)
+        })
 
-            
-
+        for(const duration = 1, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            animate(elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }
+        this.kill()
+        const index = this.parent.list.indexOf(this)
+        this.parent.list.splice(index, 1)
+        this.parent.pool.push(this)
     }
 }
 
 export class OrbSkill extends CubeSkill {
+    pool: CorrosiveOrb[] = []
+    list: CorrosiveOrb[] = []
     private cone: BatchMesh
     private glow: Sprite
     private ring: Sprite
     private sphere: BatchMesh
     private distortion: Sprite
     private particles: ParticleEmitter
+
+    orbMaterial: MeshMaterial
+    auraMaterial: EffectMaterial<any>
+
     constructor(context: Application, cube: Cube){
         super(context, cube)
+
+        this.orbMaterial = new MeshMaterial()
+        this.orbMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
+
+        this.auraMaterial = new EffectMaterial(this.context.gl, {
+            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, DEPTH_OFFSET: 0.001
+        }, {
+            uUVTransform: vec4(0,0,1,0.8),
+            uVerticalMask: vec4(0.2,0.4,0.6,1),
+            uUVPanning: vec2(0.2, -0.1),
+            uUV2Transform: vec4(0,0,1,1.6),
+            uUV2Panning: vec2(-0.2, -0.3),
+            uColorAdjustment: vec3(1,0.9,0)
+        })
+        this.auraMaterial.diffuse = SharedSystem.textures.cellularNoise
+        this.auraMaterial.gradient = GradientRamp(this.context.gl, [
+            0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
+        ], 1)
 
         const cone = createCylinder({
             radiusTop: 0.5, radiusBottom: 4, height: 4,
@@ -283,16 +316,23 @@ export class OrbSkill extends CubeSkill {
             'particles': EmitterTrigger({ frame: 0.2, value: 48 }),
         })
 
-        const orb = new CorrosiveOrb(this.context, this)
+        const orb = this.pool.pop() || new CorrosiveOrb(this.context, this)
         const tile: vec2 = [vec2(0,-2),vec2(-2,0),vec2(0,2),vec2(2,0)][this.direction]
         vec2.add(this.cube.state.tile, tile, tile)
 
-        for(const duration = 2, startTime = this.context.currentTime; true;){
+        //TODO remove
+        if(this.list.length > 0) this.context.get(AnimationSystem).start(this.list[0].dissolve())
+
+        for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             armatureAnimation.activate(elapsedTime, mesh.armature)
 
-            if(elapsedTime > 0.7 && !orb.enabled) orb.place(tile[0], tile[1], target)
+            if(elapsedTime > 0.8 && !orb.enabled){
+                this.list.push(orb)
+                orb.place(tile[0], tile[1])
+                this.context.get(AnimationSystem).start(orb.appear(target))
+            }
 
             if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame

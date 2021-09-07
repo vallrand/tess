@@ -4,14 +4,16 @@ precision highp int;
 
 in vec2 vUV;
 in vec3 vPosition;
-in vec4 vColor;
 in vec3 vNormal;
+#ifdef TRANSPARENT
+in vec4 vColor;
 in float vMaterial;
-
 layout(location=0) out vec4 fragColor;
-
-uniform vec4 uUVTransform;
-uniform sampler2D uSampler;
+#else
+layout(location=0) out vec4 fragPosition;
+layout(location=1) out vec4 fragNormal;
+layout(location=2) out vec4 fragAlbedo;
+#endif
 
 uniform GlobalUniforms {
     vec4 uTime;
@@ -21,6 +23,14 @@ uniform CameraUniforms {
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
+#ifndef TRANSPARENT
+uniform ModelUniforms {
+    mat4 uModelMatrix;
+    vec4 uColor;
+    float uLayer;
+    float uStartTime;
+};
+#endif
 
 #define TAU 6.283185307179586
 vec3 hash(vec3 p){
@@ -71,6 +81,18 @@ void main(){
     color = mix(color, vec4(0.08,0.32,0.22,0.2), min(8.0,0.04/n0-1.0));
 
     color *= 0.2+0.8*max(0.,dot(vec3(0,1,0),normal));
-    
+
+#ifdef TRANSPARENT
     fragColor = color * vColor;
+#else
+    float alpha = n1;
+    const float uThresholdEdge = 0.25;
+    float threshold = mix(1.0,-uThresholdEdge,uColor.a);
+    color.rgb = mix(color.rgb, vec3(0.3,0.1,0.5), smoothstep(-uThresholdEdge,0.0,threshold - alpha));
+    if(alpha <= threshold) discard; 
+    const float metallic = 0.5;
+    fragPosition = vec4(vPosition, uLayer);
+    fragNormal = vec4(0,0,0, metallic);
+    fragAlbedo = color;
+#endif
 }

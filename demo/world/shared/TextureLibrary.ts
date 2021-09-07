@@ -160,7 +160,7 @@ export function TextureLibrary(context: Application){
     const fire = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
-
+            //WARP: true, SKEW: true
         }), {
             uColor: [3,2.5,1.5,1]
         }, 0

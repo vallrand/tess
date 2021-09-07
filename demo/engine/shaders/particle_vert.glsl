@@ -130,7 +130,7 @@ vec4 qmul(vec4 a, vec4 b){return vec4(cross(a.xyz,b.xyz) + a.xyz*b.w + b.xyz*a.w
 void main(){
     if(gl_VertexID >= uLastID){
         uint seed = uint(gl_VertexID) ^ floatBitsToUint(uTime.z);
-        vLifetime.z = uintBitsToFloat(seed);
+        vLifetime.z = hash11(seed+=1U);
 #ifdef STATIC
         vLifetime.x = uTime.x - mix(uLifespan.z, uLifespan.w, hash11(seed+=1U));
         vLifetime.y = mix(uLifespan.x, uLifespan.y, hash11(seed+=1U));
@@ -163,6 +163,8 @@ void main(){
 #if defined(TARGETED)
         vec3 direction = normalize(vTransform.xyz - uTarget);
         vVelocity.xyz = direction * mix(uForce.x, uForce.y, hash11(seed+=1U));
+#elif defined(RELATIVE)
+        vVelocity.xyz = normal;
 #endif
         vAcceleration.xyz = uGravity;
 #ifdef ANGULAR

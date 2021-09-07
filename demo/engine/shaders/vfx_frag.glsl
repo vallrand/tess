@@ -52,6 +52,14 @@ uniform EffectUniforms {
 };
 
 #define TAU 6.283185307179586
+float linearizeDepth(mat4 projectionMatrix){
+    //float near = projectionMatrix[2][3] / (projectionMatrix[2][2] - 1.0);
+    //float far = projectionMatrix[2][3] / (projectionMatrix[2][2] + 1.0);
+    float z_ndc = gl_FragCoord.z * 2.0 - 1.0;
+    //float linearDepth = (2.0 * near * far) / (far + near - z_ndc * (far - near));
+    float linearDepth = projectionMatrix[2][3] / (projectionMatrix[2][2] + z_ndc);
+    return linearDepth;
+}
 
 void main(){
     vec2 uv = vUV;
@@ -117,4 +125,9 @@ void main(){
     color *= vColor;
 #endif
     fragColor = color;
+
+#ifdef DEPTH_OFFSET
+    //TODO linearize depth first
+    gl_FragDepth = gl_FragCoord.z - DEPTH_OFFSET;
+#endif
 }

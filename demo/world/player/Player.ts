@@ -41,7 +41,7 @@ export class PlayerSystem implements ISystem {
         if(this.context.frame == 1){
             this.cube.installModule(this.cube.state.side, 0, CubeModule.Voidgun)
             window['quat'] = quat
-            window['app'].systems[17].cameraOffset=[-4,5,-5]//[-4,8,3]//
+            //window['app'].systems[17].cameraOffset=[-4,5,-5]//[-4,8,3]//
         }
         this.tilemap.renderFaceTiles(this.cube)
 
