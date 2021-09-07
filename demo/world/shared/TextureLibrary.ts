@@ -46,7 +46,7 @@ export function TextureLibrary(context: Application){
     ).target
 
     const sparkle = materials.addRenderTexture(
-        materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { SPARKLE: true }), { uColor: [1,1,1,1] }, 0
     ).target
@@ -157,7 +157,7 @@ export function TextureLibrary(context: Application){
         width: 1, height: 1, data: new Uint8Array([0xFF,0xFF,0xFF,0xFF])
     })
 
-    const fire = materials.addRenderTexture(
+    const noise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
             //WARP: true, SKEW: true
@@ -170,8 +170,8 @@ export function TextureLibrary(context: Application){
 
     return {
         particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
-        directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
-        white, grey: materials.white.diffuse, fire,
+        noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
+        white, grey: materials.white.diffuse,
 
         indexedTexture
     }

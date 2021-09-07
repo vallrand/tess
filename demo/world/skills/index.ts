@@ -9,7 +9,8 @@ import { ProjectileSkill } from './ProjectileSkill'
 import { DetonateSkill } from './DetonateSkill'
 import { OrbSkill } from './OrbSkill'
 import { ArtillerySkill } from './ArtillerySkill'
-
+import { RestoreSkill } from './RestoreSkill'
+import { ExtractSkill } from './ExtractSkill'
 
 export const CubeSkills = (context: Application, cube: Cube) => ({
     [CubeModule.Empty]: new CubeSkill(context, cube),
@@ -19,5 +20,7 @@ export const CubeSkills = (context: Application, cube: Cube) => ({
     [CubeModule.Machinegun]: new ProjectileSkill(context, cube),
     [CubeModule.Minelayer]: new DetonateSkill(context, cube),
     [CubeModule.Voidgun]: new OrbSkill(context, cube),
-    [CubeModule.Missile]: new ArtillerySkill(context, cube)
+    [CubeModule.Missile]: new ArtillerySkill(context, cube),
+    [CubeModule.Repair]: new RestoreSkill(context, cube),
+    [CubeModule.Auger]: new ExtractSkill(context, cube)
 })

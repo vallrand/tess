@@ -253,7 +253,7 @@ export class OrbSkill extends CubeSkill {
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
 
-        this.sphere = new BatchMesh(SharedSystem.geometry.lowPolySphere)
+        this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = coneMaterial
 
         this.distortion = new Sprite()

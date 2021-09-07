@@ -235,7 +235,7 @@ export function ParticleLibrary(context: Application){
             SPHERE: true, RELATIVE: true
         })
     )
-    fire.diffuse = SharedSystem.textures.fire
+    fire.diffuse = SharedSystem.textures.noise
 
     context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts, embers, fire)
     return { dust, smoke, energy, sparks, bolts, embers, fire }

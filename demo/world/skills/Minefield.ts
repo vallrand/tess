@@ -156,7 +156,7 @@ export class Minefield {
     private createExplosion(): ExplosionEffect {
         if(this.pool.length) return this.pool.pop()
 
-        const core = new BatchMesh(SharedSystem.geometry.lowPolySphere)
+        const core = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         core.order = 4
         core.material = this.coreMaterial
 

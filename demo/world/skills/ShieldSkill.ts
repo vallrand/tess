@@ -142,7 +142,7 @@ export class ShieldSkill extends CubeSkill {
         })
         this.tube.material.diffuse = SharedSystem.textures.stripes
 
-        this.sphere = new BatchMesh(SharedSystem.geometry.lowPolySphere)
+        this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = this.tube.material
     }
     public *open(): Generator<_ActionSignal> {

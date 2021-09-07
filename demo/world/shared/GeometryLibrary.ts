@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { mat4, quat, vec3 } from '../../engine/math'
-import { createCylinder, createSphere, doubleSided, applyTransform } from '../../engine/geometry'
+import { createBox, createCylinder, createSphere, doubleSided, applyTransform } from '../../engine/geometry'
 import { MeshSystem } from '../../engine/components/Mesh'
 
 export function GeometryLibrary(context: Application){
@@ -9,7 +9,7 @@ export function GeometryLibrary(context: Application){
     })
     const sphereMesh = context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format, false)
 
-    const lowPolySphere = createSphere({
+    const lowpolySphere = createSphere({
         longitude: 16, latitude: 16, radius: 1
     })
 
@@ -19,8 +19,8 @@ export function GeometryLibrary(context: Application){
         phiStart: 0, phiLength: 2 * Math.PI
     }), mat4.fromRotationTranslationScale(
         quat.axisAngle(vec3.AXIS_X,0.5*Math.PI,quat()),
-        vec3(0,0,-1), vec3.ONE, mat4()
-    ))
+        vec3(0,0,-1), vec3.ONE, mat4())
+    )
 
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
@@ -28,7 +28,11 @@ export function GeometryLibrary(context: Application){
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }))
 
+    const openBox = doubleSided(applyTransform(createBox({
+        width: 1, height: 1, depth: 1, open: true
+    }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, mat4())))
+
     return {
-        sphere, lowPolySphere, hemisphere, cylinder, sphereMesh
+        sphere, lowpolySphere, hemisphere, cylinder, openBox, sphereMesh
     }
 }

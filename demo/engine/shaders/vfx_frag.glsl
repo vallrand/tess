@@ -63,6 +63,9 @@ float linearizeDepth(mat4 projectionMatrix){
 
 void main(){
     vec2 uv = vUV;
+#ifdef HALF
+    uv.y = abs(uv.y*2.-1.);
+#endif
 #ifdef POLAR
     uv=uv*2.-1.;uv=vec2(atan(uv.y,uv.x)/TAU+.5,length(uv));
 #endif

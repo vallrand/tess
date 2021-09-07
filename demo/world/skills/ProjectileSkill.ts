@@ -259,7 +259,7 @@ export class ProjectileSkill extends CubeSkill {
         trail.addColorFade(trail.ease)
         trail.material = this.trailMaterial
 
-        const sphere = new BatchMesh(SharedSystem.geometry.lowPolySphere)
+        const sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         sphere.order = 8
         sphere.material = this.sphereMaterial
 

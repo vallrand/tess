@@ -35,6 +35,7 @@ export class Cube implements IActor {
     public transform: Transform
     public readonly meshes: Mesh[] = []
     public dust: ParticleEmitter
+    public light: PointLight
     public state: CubeState = {
         tile: vec2(0, 0),
         side: 0, direction: Direction.Up,
@@ -57,13 +58,13 @@ export class Cube implements IActor {
         this.context.get(TerrainSystem).setTile(this.state.tile[0], this.state.tile[1], this)
         this.context.get(TurnBasedSystem).add(this)
 
-        const light = this.context.get(PointLightPass).create()
-        light.transform = this.context.get(TransformSystem).create()
-        light.transform.parent = this.transform
-        light.transform.position[1] = 4
-        light.radius = 12
-        light.intensity = 1.0
-        vec3.set(1,1,0.8,light.color)
+        this.light = this.context.get(PointLightPass).create()
+        this.light.transform = this.context.get(TransformSystem).create()
+        this.light.transform.parent = this.transform
+        this.light.transform.position[1] = 4
+        this.light.radius = 12
+        this.light.intensity = 1.0
+        vec3.set(1,1,0.8,this.light.color)
 
         this.dust = SharedSystem.particles.dust.add({
             uOrigin: [0,0,0],
@@ -142,6 +143,18 @@ export class Cube implements IActor {
                     if(!trigger || direction === Direction.None) break
 
                     for(const generator = skill.activate(this.transform.matrix, rotation, direction); true;){
+                        const iterator = generator.next()
+                        if(iterator.done) return iterator.value
+                        else yield iterator.value
+                    }
+                }
+                case CubeModule.Repair:
+                case CubeModule.Auger: {
+                    if(state.open != 1) break
+                    if(!trigger) break
+                    if(skill.active) break
+
+                    for(const generator = skill.activate(this.transform.matrix, rotation); true;){
                         const iterator = generator.next()
                         if(iterator.done) return iterator.value
                         else yield iterator.value

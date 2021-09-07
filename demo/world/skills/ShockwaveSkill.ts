@@ -150,9 +150,9 @@ export class ShockwaveSkill extends CubeSkill {
 
         this.bolts = SharedSystem.particles.bolts.add({
             uOrigin: [0,0,0],
-            uRadius: [0,0],
+            uRadius: vec2.ZERO,
             uLifespan: [0.1,0.8,0,0],
-            uGravity: [0,0,0],
+            uGravity: vec3.ZERO,
             uRotation: [0,2*Math.PI],
             uOrientation: quat.IDENTITY,
             uSize: [0.1,1.2],
