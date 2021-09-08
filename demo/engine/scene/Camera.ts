@@ -43,7 +43,7 @@ export class CameraSystem {
     }
     private updatePerspectiveCamera(camera: PerspectiveCamera){
         if(camera.frame && camera.frame >= camera.transform.frame) return
-        if(!camera.uniform) camera.uniform = new UniformBlock(this.context.gl, { byteSize: 4*(16+16+4) })
+        if(!camera.uniform) camera.uniform = new UniformBlock(this.context.gl, { byteSize: 4*(16+16+16+4) })
 
         if(!camera.frame){
             camera.aspectRatio = this.context.gl.drawingBufferWidth / this.context.gl.drawingBufferHeight
@@ -55,10 +55,11 @@ export class CameraSystem {
         mat4.invert(modelMatrix, camera.viewMatrix)
         mat4.multiply(camera.projectionMatrix, camera.viewMatrix, camera.viewProjectionMatrix)
         camera.uniform.data.set(camera.viewProjectionMatrix, 0)
-        camera.uniform.data.set(camera.viewMatrix, 16)
-        camera.uniform.data[16+16] = camera.position[0] = modelMatrix[12]
-        camera.uniform.data[16+17] = camera.position[1] = modelMatrix[13]
-        camera.uniform.data[16+18] = camera.position[2] = modelMatrix[14]
+        camera.uniform.data.set(camera.projectionMatrix, 16)
+        camera.uniform.data.set(camera.viewMatrix, 16+16)
+        camera.uniform.data[16+16+16] = camera.position[0] = modelMatrix[12]
+        camera.uniform.data[16+16+17] = camera.position[1] = modelMatrix[13]
+        camera.uniform.data[16+16+18] = camera.position[2] = modelMatrix[14]
 
         camera.frame = this.context.frame
     }

@@ -8,7 +8,6 @@ import { CubeTileMap } from './CubeTileMap'
 import { Transform, TransformSystem } from '../../engine/scene/Transform'
 import { DecalPass } from '../../engine/pipeline/DecalPass'
 import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
-import { EffectLibrary } from '../effects'
 import { CubeModule } from './CubeModules'
 import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
@@ -27,7 +26,6 @@ export class PlayerSystem implements ISystem {
 
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
-    public readonly effects: EffectLibrary = new EffectLibrary(this.context)
     public readonly skills = CubeSkills(this.context, this.cube)
 
     constructor(private readonly context: Application){
@@ -39,7 +37,7 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Repair)
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Auger)
             window['quat'] = quat
             //window['app'].systems[17].cameraOffset=[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }

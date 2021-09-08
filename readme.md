@@ -83,6 +83,10 @@ ground fog https://stackoverflow.com/questions/21549456/how-to-implement-a-groun
 unity shaders https://github.com/jraleman/marstronics/tree/master/Unity%20Project/Assets/Standard%20Assets/Effects
 
 displacement http://kylehalladay.com/blog/tutorial/2016/01/15/Screen-Space-Distortion.html
+view ray frustum shader https://community.khronos.org/t/ray-origin-through-view-and-projection-matrices/72579
+https://gamedev.stackexchange.com/questions/60313/implementing-a-skybox-with-glsl-version-330
+https://stackoverflow.com/questions/2354821/raycasting-how-to-properly-apply-a-projection-matrix
+sky https://www.shadertoy.com/view/lt2SR1
 
 normal matrix https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/
 https://lxjk.github.io/2017/10/01/Stop-Using-Normal-Matrix.html

@@ -7,6 +7,7 @@ out vec4 fragColor;
 
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
+    mat4 uProjectionMatrix;
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
@@ -46,9 +47,8 @@ void main(){
     vec4 color = texelFetch(uSampler, fragCoord, 0);
 
     vec4 position = texelFetch(uPositionBuffer, fragCoord, 0);
-    color = mix(color, uFogColor, step(position.a,.5));
     vec3 viewRay = position.xyz - uEyePosition;
-    float distance = length(viewRay);
+    float distance = length(viewRay) * step(.5,position.a);
 
 #ifdef HALFSPACE
     distance += halfspace(uEyePosition, position.xyz, viewRay, uFogHeight.x, uFogHeight.y);

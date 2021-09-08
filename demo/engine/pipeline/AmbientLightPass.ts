@@ -34,10 +34,11 @@ export class AmbientLightPass extends PipelinePass implements ISystem {
 
         this.context.get(PostEffectPass).swapRenderTarget(false, false)
         gl.depthMask(false)
-        gl.enable(GL.BLEND)
         gl.disable(GL.DEPTH_TEST)
-        gl.cullFace(GL.FRONT)
+        gl.enable(GL.BLEND)
         gl.blendFunc(GL.ONE, GL.ONE)
+        gl.enable(GL.CULL_FACE)
+        gl.cullFace(GL.BACK)
         gl.clear(GL.COLOR_BUFFER_BIT)
 
         this.context.get(DeferredGeometryPass).bindReadBuffer()

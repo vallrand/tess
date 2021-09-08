@@ -1,8 +1,10 @@
-import { Application } from '../../engine/framework'
-import { randomFloat, vec3, aabb3 } from '../../engine/math'
-import { GL, createTexture, ShaderProgram } from '../../engine/webgl'
-import { CameraSystem } from '../../engine/scene/Camera'
-import { ParticleSystem } from '../../engine/particles'
+import { Application } from '../../../engine/framework'
+import { randomFloat, vec3, aabb3 } from '../../../engine/math'
+import { GL, ShaderProgram } from '../../../engine/webgl'
+import { shaders } from '../../../engine/shaders'
+import { CameraSystem } from '../../../engine/scene/Camera'
+import { ParticleSystem } from '../../../engine/particles'
+import { MaterialSystem } from '../../../engine/materials'
 
 function intersectPlane(origin: vec3, ray: vec3, planeNormal: vec3, planePosition: vec3, out: vec3): vec3 {
     const d = -vec3.dot(planePosition, planeNormal)
@@ -21,8 +23,9 @@ export class MistEffect extends ParticleSystem<void> {
             context, { limit: amount, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.BACK, blend: 1, format: [
                 { name: 'aTransform', size: 3, type: GL.FLOAT, normalized: false, stride: 12, offset: 0 }
             ] }, null, ShaderProgram(context.gl,
-                require('../shaders/mist_vert.glsl'),
-                require('../../engine/shaders/billboard_frag.glsl'),
+
+                require('../../shaders/mist_vert.glsl'),
+                shaders.billboard_frag,
                 { POINT: true }), null
         )
         this.program.uniforms['uArea'] = vec3(bounds[3] - bounds[0], bounds[4] - bounds[1], bounds[5] - bounds[2])
@@ -37,6 +40,13 @@ export class MistEffect extends ParticleSystem<void> {
         }
         gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[0])
         gl.bufferSubData(GL.ARRAY_BUFFER, 0, vertexArray)
+
+        const materials = this.context.get(MaterialSystem)
+        this.diffuse = materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert,
+                require('../../shaders/shape_frag.glsl'), { CIRCLE: true }), { uColor: [0.5,0.5,0.5,1] }, 0
+        ).target
     }
     public apply(): void {
         update:{

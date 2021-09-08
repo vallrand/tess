@@ -193,7 +193,7 @@ export class OrbSkill extends CubeSkill {
         this.orbMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
 
         this.auraMaterial = new EffectMaterial(this.context.gl, {
-            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, DEPTH_OFFSET: 0.001
+            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, DEPTH_OFFSET: 5.2
         }, {
             uUVTransform: vec4(0,0,1,0.8),
             uVerticalMask: vec4(0.2,0.4,0.6,1),
@@ -271,7 +271,7 @@ export class OrbSkill extends CubeSkill {
         const origin = mat4.transform([0,1,0], this.cube.transform.matrix, vec3())
         const parentTransform = this.context.get(TransformSystem).create()
         vec3.copy(origin, parentTransform.position)
-        quat.copy(DirectionAngle[mod(this.cube.state.direction + 3, 4)], parentTransform.rotation)
+        quat.copy(DirectionAngle[mod(this.direction + 3, 4)], parentTransform.rotation)
         const target = quat.transform([0,1,-3], parentTransform.rotation, vec3())
         mat4.transform(target, this.cube.transform.matrix, target)
 

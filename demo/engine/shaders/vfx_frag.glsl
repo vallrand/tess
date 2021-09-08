@@ -14,6 +14,7 @@ uniform GlobalUniforms {
 };
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
+    mat4 uProjectionMatrix;
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
@@ -52,13 +53,15 @@ uniform EffectUniforms {
 };
 
 #define TAU 6.283185307179586
-float linearizeDepth(mat4 projectionMatrix){
-    //float near = projectionMatrix[2][3] / (projectionMatrix[2][2] - 1.0);
-    //float far = projectionMatrix[2][3] / (projectionMatrix[2][2] + 1.0);
+float linearizeDepth(){
     float z_ndc = gl_FragCoord.z * 2.0 - 1.0;
     //float linearDepth = (2.0 * near * far) / (far + near - z_ndc * (far - near));
-    float linearDepth = projectionMatrix[2][3] / (projectionMatrix[2][2] + z_ndc);
+    float linearDepth = uProjectionMatrix[2][3] / (uProjectionMatrix[2][2] + z_ndc);
     return linearDepth;
+}
+float projectDepth(in float z){
+    float z_ndc = uProjectionMatrix[2][3] / z - uProjectionMatrix[2][2];
+    return .5+.5*z_ndc;
 }
 
 void main(){
@@ -130,7 +133,6 @@ void main(){
     fragColor = color;
 
 #ifdef DEPTH_OFFSET
-    //TODO linearize depth first
-    gl_FragDepth = gl_FragCoord.z - DEPTH_OFFSET;
+    gl_FragDepth = projectDepth(linearizeDepth() - DEPTH_OFFSET);
 #endif
 }

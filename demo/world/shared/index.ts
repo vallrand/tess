@@ -1,11 +1,14 @@
 import { Application, ISystem } from '../../engine/framework'
+import { DeferredGeometryPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { TextureLibrary } from './TextureLibrary'
 import { MaterialLibrary } from './MaterialLibrary'
 import { ParticleLibrary } from './ParticleLibrary'
 import { GeometryLibrary } from './GeometryLibrary'
 import { EffectLibrary } from './EffectLibrary'
 
-import { DebrisEffect, GridEffect } from './effects'
+import {
+    DebrisEffect, GridEffect, SkyEffect, MistEffect
+} from './effects'
 
 export class SharedSystem implements ISystem {
     public static textures: ReturnType<typeof TextureLibrary>
@@ -16,6 +19,8 @@ export class SharedSystem implements ISystem {
 
     public debris: DebrisEffect
     public grid: GridEffect
+    public sky: SkyEffect
+    public mist: MistEffect
 
     constructor(private readonly context: Application){
         SharedSystem.textures = TextureLibrary(this.context)
@@ -26,7 +31,16 @@ export class SharedSystem implements ISystem {
     }
     public update(): void {}
     public load(): void {
+        this.sky = new SkyEffect(this.context)
+        this.context.get(DeferredGeometryPass).effects.push(this.sky)
         this.debris = new DebrisEffect(this.context, 'cube_debris')
         this.grid = new GridEffect(this.context, 10)
+        
+        this.mist = new MistEffect(this.context, 256, [-8,0,-8,8,6,8])
+        this.context.get(ParticleEffectPass).effects.push(this.mist)
+
+        this.grid.enabled = false
+        this.mist.enabled = false
+        this.sky.enabled = false
     }
 }

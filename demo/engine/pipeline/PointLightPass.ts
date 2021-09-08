@@ -67,6 +67,9 @@ export class PointLightPass extends PipelinePass implements ISystem {
         const camera = this.context.get(CameraSystem).camera
         const lights: PointLight[] = this.list
 
+        gl.enable(GL.CULL_FACE)
+        gl.cullFace(GL.FRONT)
+
         gl.useProgram(this.program.target)
         gl.bindVertexArray(this.sphere.vao)
     

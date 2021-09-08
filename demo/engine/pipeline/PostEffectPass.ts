@@ -29,7 +29,7 @@ export class PostEffectPass extends PipelinePass implements ISystem {
     constructor(context: Application){
         super(context)
         const gl: WebGL2RenderingContext = context.gl
-        const plane = createPlane({ width: 2, height: 2, columns: 1, rows: 1 })
+        const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
         this.plane = this.context.get(MeshSystem).uploadVertexData(plane.vertexArray, plane.indexArray, plane.format)
         for(let i = 0; i < 2; i++){
             this.fbo[i] = gl.createFramebuffer()

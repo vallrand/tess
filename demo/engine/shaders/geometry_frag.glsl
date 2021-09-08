@@ -12,8 +12,13 @@ in vec2 vUV;
 in vec4 vColor;
 #endif
 
+layout(location=0) out vec4 fragPosition;
+layout(location=1) out vec4 fragNormal;
+layout(location=2) out vec4 fragAlbedo;
+
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
+    mat4 uProjectionMatrix;
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };
@@ -30,10 +35,6 @@ uniform sampler2D uNormalMap;
     uniform sampler2DArray uArrayMap;
     uniform float uArrayMapLayers;
 #endif
-
-layout(location=0) out vec4 fragPosition;
-layout(location=1) out vec4 fragNormal;
-layout(location=2) out vec4 fragAlbedo;
 
 vec2 parallaxMapping(in vec2 uv, in vec3 viewDirection, in float heightScale){
 #ifndef PARALLAX_LAYERS

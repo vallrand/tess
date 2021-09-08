@@ -9,6 +9,7 @@ in vec3 vNormal;
 #ifdef MESH
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
+    mat4 uProjectionMatrix;
     mat4 uViewMatrix;
     vec3 uEyePosition;
 };

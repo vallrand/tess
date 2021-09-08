@@ -19,13 +19,13 @@ export interface IMaterial {
     merge(material: IMaterial): boolean
 }
 
-export abstract class PipelinePass implements ISystem {
-    constructor(protected readonly context: Application){}
-    public abstract update(): void
-}
-
 export interface IEffect {
     priority?: number
     enabled: boolean
     apply(): void
+}
+
+export abstract class PipelinePass implements ISystem {
+    constructor(protected readonly context: Application){}
+    public abstract update(): void
 }
