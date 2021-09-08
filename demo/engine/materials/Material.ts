@@ -123,7 +123,7 @@ export class MaterialSystem implements ISystem {
             if(!manifest.model.find(model => model.texture === material.index)) return
             const normalTexture = this.addRenderTexture(
                 this.createRenderTexture(width, height, 1), 0,
-                ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/normal_height.glsl')), {
+                ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.bumpmap_frag), {
                 uSampler: material.diffuse, uScale: MaterialSystem.heightmapScale,
                 uScreenSize: [width, height]
             }, 0).target

@@ -10,6 +10,7 @@ export type ImageData = {
 
 export interface TextureOptions {
     flipY?: boolean
+    premultiply?: boolean
     format?: number
     mipmaps?: number
     type?: number
@@ -20,7 +21,7 @@ export interface TextureOptions {
 export function createTexture(
     gl: WebGL2RenderingContext, image: ImageData,
     {
-        flipY,
+        flipY, premultiply,
         format = GL.RGBA8,
         mipmaps = GL.NEAREST,
         wrap = GL.REPEAT,
@@ -32,6 +33,7 @@ export function createTexture(
     gl.activeTexture(GL.TEXTURE0)
     gl.bindTexture(type, texture)
     gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, flipY)
+    gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply)
     const pow2 = int32pow2(image.width) && int32pow2(image.height)
 
     if(pow2 && mipmaps){

@@ -7,14 +7,15 @@ uniform sampler2D uSampler;
 uniform vec2 uScreenSize;
 uniform float uScale;
 
-vec3 calculateNormal(in float height){
+void main(){
+    float alpha = texture(uSampler, vUV).b;
+    float height = alpha / uScale;
+    //vec2 screenSize = vec2(textureSize(uSampler));
     float dhdx = dFdx(height) * uScreenSize.x;
     float dhdy = dFdy(height) * uScreenSize.y;
     vec3 normal = normalize(vec3(-dhdx, -dhdy, 1));
-    return 0.5+0.5*normal;
-}
-
-void main(){
-    float height = texture(uSampler, vUV).b;
-    fragColor = vec4(calculateNormal(height / uScale), height);
+#ifdef PREMULTIPLY
+    normal.rgb *= smoothstep(0.0,0.8,alpha);
+#endif
+    fragColor = vec4(0.5+0.5*normal, alpha);
 }

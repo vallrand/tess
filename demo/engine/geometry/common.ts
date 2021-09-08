@@ -1,5 +1,5 @@
 import { lerp, mat3, mat4, vec2, vec3, vec4, quat } from '../math'
-import { IVertexAttribute } from '../webgl'
+import { IVertexAttribute, VertexDataFormat } from '../webgl'
 
 export interface IGeometry {
     format: IVertexAttribute[]
@@ -65,4 +65,54 @@ export function doubleSided(geometry: IGeometry): IGeometry {
     }
     indexArray.set(geometry.indexArray, geometry.indexArray.length)
     return { ...geometry, indexArray }
+}
+
+function signedPolygonArea(vertices: vec2[], start: number = 0, end: number = vertices.length): number {
+    let total = 0
+    for(let i = start, j = end - 1; i < end; j = i++)
+        total += (vertices[j][0] - vertices[i][0]) * (vertices[j][1] + vertices[i][1])
+    return -0.5 * total
+}
+
+export function extrudePolygon(path: vec2[], height: number): IGeometry {
+    const ccw = signedPolygonArea(path) < 0
+    const stride = (3 + 3 + 2)
+    const vertexArray = new Float32Array(path.length * 4 * stride)
+    const indexArray = new Uint16Array(path.length * 6)
+    const normal = vec2()
+    for(let i = path.length - 1, j = 0; i >= 0; j = i, i--){
+        const prev = path[i], next = path[j]
+        vec2.subtract(next, prev, normal)
+        if(ccw) vec2.rotate90cw(normal, normal)
+        else vec2.rotate90ccw(normal, normal)
+        vec2.normalize(normal, normal)
+        const i00 = (i*4+0) * stride
+        const i01 = (i*4+1) * stride
+        const i11 = (i*4+2) * stride
+        const i10 = (i*4+3) * stride
+
+        vertexArray[i00 + 0] = vertexArray[i10 + 0] = prev[0]
+        vertexArray[i01 + 0] = vertexArray[i11 + 0] = next[0]
+        vertexArray[i00 + 2] = vertexArray[i10 + 2] = prev[1]
+        vertexArray[i01 + 2] = vertexArray[i11 + 2] = next[1]
+        vertexArray[i00 + 1] = vertexArray[i01 + 1] = 0
+        vertexArray[i11 + 1] = vertexArray[i10 + 1] = height
+
+        vertexArray[i00 + 3] = vertexArray[i01 + 3] = vertexArray[i11 + 3] = vertexArray[i10 + 3] = normal[0]
+        vertexArray[i00 + 5] = vertexArray[i01 + 5] = vertexArray[i11 + 5] = vertexArray[i10 + 5] = normal[1]
+
+        vertexArray[i00 + 6] = vertexArray[i10 + 6] = i / (path.length - 1)
+        vertexArray[i01 + 6] = vertexArray[i11 + 6] = j / (path.length - 1)
+        vertexArray[i00 + 7] = vertexArray[i01 + 7] = 0
+        vertexArray[i10 + 7] = vertexArray[i11 + 7] = 1
+
+        indexArray[i * 6 + 0] = i*4
+        indexArray[i * 6 + 1] = i*4 + 1
+        indexArray[i * 6 + 2] = i*4 + 2
+        indexArray[i * 6 + 3] = i*4 + 2
+        indexArray[i * 6 + 4] = i*4 + 3
+        indexArray[i * 6 + 5] = i*4
+    }
+
+    return { format: VertexDataFormat.Static, vertexArray, indexArray }
 }

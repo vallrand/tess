@@ -80,6 +80,13 @@ void main(){
     f0 = mix(0.01 / f0, 0.1 / f0, f0);
     f0 *= smoothstep(1.0,0.5,uvp.y);
     float alpha = f0;
+#elif defined(CRACKS)
+    vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
+    polar.y += 0.08*(1.-2.*noise2D(polar*vec2(4,8)+12.4, vec2(4,8)));
+    float width = pow(mix(1.2,0.0,polar.x),4.0);
+    float f0 = smoothstep(1.0-width,1.0,.5+.5*cos(polar.y*TAU*12.0));
+    f0 = max(1.2*f0, 1.4*fbm(vec2(64.0, 48.*polar.y), 4, vec2(1e3,48)));
+    float alpha = smoothstep(0.0, 1.0, f0 - polar.x);
 #else
     vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
     vec2 period = vec2(1000,36);

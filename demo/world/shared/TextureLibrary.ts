@@ -156,6 +156,9 @@ export function TextureLibrary(context: Application){
     const white = createTexture(context.gl, {
         width: 1, height: 1, data: new Uint8Array([0xFF,0xFF,0xFF,0xFF])
     })
+    const black = createTexture(context.gl, {
+        width: 1, height: 1, data: new Uint8Array([0x00,0x00,0x00,0x00])
+    })
 
     const noise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
@@ -168,10 +171,22 @@ export function TextureLibrary(context: Application){
 
     const indexedTexture = TextureArray(context)
 
+    const cracks = materials.addRenderTexture(
+        materials.createRenderTexture(256, 256, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { CRACKS: true }), {  }, 0
+    ).target
+    const cracksNormal = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.bumpmap_frag, { PREMULTIPLY: true }), {
+        uSampler: cracks, uScale: -MaterialSystem.heightmapScale,
+        uScreenSize: [128, 128]
+    }, 0).target
+
     return {
         particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
-        white, grey: materials.white.diffuse,
+        white, black, grey: materials.white.diffuse, cracksNormal, cracks,
 
         indexedTexture
     }

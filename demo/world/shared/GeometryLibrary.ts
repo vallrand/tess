@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
-import { mat4, quat, vec3 } from '../../engine/math'
-import { createBox, createCylinder, createSphere, doubleSided, applyTransform } from '../../engine/geometry'
+import { vec2, vec3, quat, mat4 } from '../../engine/math'
+import { createPlane, createBox, createCylinder, createSphere, doubleSided, applyTransform, extrudePolygon } from '../../engine/geometry'
 import { MeshSystem } from '../../engine/components/Mesh'
 
 export function GeometryLibrary(context: Application){
@@ -28,11 +28,15 @@ export function GeometryLibrary(context: Application){
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }))
 
+    const cross = doubleSided(extrudePolygon([
+        [-1,-3],[-1,-1],[-3,-1],[-3,1],[-1,1],[-1,3],[1,3],[1,1],[3,1],[3,-1],[1,-1],[1,-3]
+    ], 1))
+
     const openBox = doubleSided(applyTransform(createBox({
         width: 1, height: 1, depth: 1, open: true
     }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, mat4())))
 
     return {
-        sphere, lowpolySphere, hemisphere, cylinder, openBox, sphereMesh
+        sphere, lowpolySphere, hemisphere, cylinder, openBox, sphereMesh, cross
     }
 }

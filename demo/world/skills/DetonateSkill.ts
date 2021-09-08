@@ -112,7 +112,7 @@ export class DetonateSkill extends CubeSkill {
             uVerticalMask: vec4(0.0,0.5,0.8,1.0),
         })
         this.tube.material['gradient'] = GradientRamp(this.context.gl, [
-            0xffffff00, 0xebdada00, 0xd18a9770, 0x94063ca0, 0x512e3c70, 0x29202330, 0x00000000, 0x00000000
+            0xffffffff, 0xebdadad0, 0xd18a9790, 0x94063ca0, 0x512e3c70, 0x29202330, 0x00000000, 0x00000000
         ], 1)
         this.tube.material.diffuse = SharedSystem.textures.boxStripes
 
