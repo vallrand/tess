@@ -176,6 +176,11 @@ export function TextureLibrary(context: Application){
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/rays_frag.glsl'), { CRACKS: true }), {  }, 0
     ).target
+    const groundDust = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { GROUND: true }), {  }, 0
+    ).target
     const cracksNormal = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.bumpmap_frag, { PREMULTIPLY: true }), {
@@ -186,7 +191,7 @@ export function TextureLibrary(context: Application){
     return {
         particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
-        white, black, grey: materials.white.diffuse, cracksNormal, cracks,
+        white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 
         indexedTexture
     }

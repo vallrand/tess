@@ -1454,19 +1454,32 @@
       ]
     },
     {
+      "name": "missile",
+      "texture": 10,
+      "format": 0,
+      "indices": {
+        "byteOffset": 1906714,
+        "byteLength": 408
+      },
+      "vertices": {
+        "byteOffset": 1907124,
+        "byteLength": 2544
+      }
+    },
+    {
       "name": "scarab",
       "texture": 11,
       "format": 1,
       "indices": {
-        "byteOffset": 1906714,
+        "byteOffset": 1909670,
         "byteLength": 4284
       },
       "vertices": {
-        "byteOffset": 1911000,
+        "byteOffset": 1913956,
         "byteLength": 38304
       },
       "inverseBindPose": {
-        "byteOffset": 1949308,
+        "byteOffset": 1952264,
         "byteLength": 256
       },
       "armature": [
@@ -1531,15 +1544,15 @@
       "texture": 12,
       "format": 1,
       "indices": {
-        "byteOffset": 1949566,
+        "byteOffset": 1952522,
         "byteLength": 26928
       },
       "vertices": {
-        "byteOffset": 1976496,
+        "byteOffset": 1979452,
         "byteLength": 243168
       },
       "inverseBindPose": {
-        "byteOffset": 2219668,
+        "byteOffset": 2222624,
         "byteLength": 832
       },
       "armature": [
@@ -1741,15 +1754,15 @@
       "texture": 13,
       "format": 1,
       "indices": {
-        "byteOffset": 2220502,
+        "byteOffset": 2223458,
         "byteLength": 16872
       },
       "vertices": {
-        "byteOffset": 2237376,
+        "byteOffset": 2240332,
         "byteLength": 151392
       },
       "inverseBindPose": {
-        "byteOffset": 2388772,
+        "byteOffset": 2391728,
         "byteLength": 320
       },
       "armature": [
@@ -1824,11 +1837,11 @@
       "texture": 14,
       "format": 0,
       "indices": {
-        "byteOffset": 2389094,
+        "byteOffset": 2392050,
         "byteLength": 3720
       },
       "vertices": {
-        "byteOffset": 2392816,
+        "byteOffset": 2395772,
         "byteLength": 22200
       }
     },
@@ -1837,11 +1850,11 @@
       "texture": 14,
       "format": 0,
       "indices": {
-        "byteOffset": 2415018,
+        "byteOffset": 2417974,
         "byteLength": 4632
       },
       "vertices": {
-        "byteOffset": 2419652,
+        "byteOffset": 2422608,
         "byteLength": 30048
       }
     },
@@ -1850,15 +1863,15 @@
       "texture": 14,
       "format": 1,
       "indices": {
-        "byteOffset": 2449702,
+        "byteOffset": 2452658,
         "byteLength": 18930
       },
       "vertices": {
-        "byteOffset": 2468636,
+        "byteOffset": 2471592,
         "byteLength": 173024
       },
       "inverseBindPose": {
-        "byteOffset": 2641664,
+        "byteOffset": 2644620,
         "byteLength": 384
       },
       "armature": [
@@ -1947,15 +1960,15 @@
       "texture": 15,
       "format": 1,
       "indices": {
-        "byteOffset": 2642050,
+        "byteOffset": 2645006,
         "byteLength": 9528
       },
       "vertices": {
-        "byteOffset": 2651580,
+        "byteOffset": 2654536,
         "byteLength": 73856
       },
       "inverseBindPose": {
-        "byteOffset": 2725440,
+        "byteOffset": 2728396,
         "byteLength": 448
       },
       "armature": [
@@ -2053,15 +2066,15 @@
       "texture": 16,
       "format": 1,
       "indices": {
-        "byteOffset": 2725890,
+        "byteOffset": 2728846,
         "byteLength": 26688
       },
       "vertices": {
-        "byteOffset": 2752580,
+        "byteOffset": 2755536,
         "byteLength": 200800
       },
       "inverseBindPose": {
-        "byteOffset": 2953384,
+        "byteOffset": 2956340,
         "byteLength": 384
       },
       "armature": [
@@ -2127,15 +2140,15 @@
       "texture": 17,
       "format": 1,
       "indices": {
-        "byteOffset": 2953770,
+        "byteOffset": 2956726,
         "byteLength": 15192
       },
       "vertices": {
-        "byteOffset": 2968964,
+        "byteOffset": 2971920,
         "byteLength": 114688
       },
       "inverseBindPose": {
-        "byteOffset": 3083656,
+        "byteOffset": 3086612,
         "byteLength": 320
       },
       "armature": [
@@ -2186,15 +2199,15 @@
       "texture": 18,
       "format": 1,
       "indices": {
-        "byteOffset": 3083978,
+        "byteOffset": 3086934,
         "byteLength": 12084
       },
       "vertices": {
-        "byteOffset": 3096064,
+        "byteOffset": 3099020,
         "byteLength": 92896
       },
       "inverseBindPose": {
-        "byteOffset": 3188964,
+        "byteOffset": 3191920,
         "byteLength": 256
       },
       "armature": [

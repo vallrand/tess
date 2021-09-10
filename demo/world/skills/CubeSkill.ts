@@ -36,5 +36,9 @@ export class CubeSkill {
             yield _ActionSignal.WaitNextFrame
         }
         state.open = 0
+        this.clear()
+    }
+    protected clear(): void {
+
     }
 }

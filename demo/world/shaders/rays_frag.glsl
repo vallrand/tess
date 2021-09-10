@@ -28,10 +28,11 @@ float fbm(in vec2 x, in int octaves, in vec2 period) {
 	vec2 shift = vec2(100);
     const mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
 	for(int i = 0; i < octaves; ++i){
-		v += 0.5 * a * noise2D(x / a, period * a);
+		v += 0.5 * a * noise2D(x * period, period);
         x += shift;
         shift = rot * shift;
 		a *= 0.5;
+        period *= 2.0;
 	}
 	return v;
 }
@@ -54,13 +55,12 @@ void main(){
     
 #if defined(RING)
     vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
-    vec2 period = vec2(1000,36);
-    float f0 = fbm(vec2(0.0, period.y*polar.y), 4, period);
+    float f0 = fbm(vec2(0.0, polar.y), 4, vec2(1e3,36));
     float y0 = mix(0.5,0.75,f0);
     float alpha = smoothstep(1.0-y0,0.0,abs(polar.x-y0)) * f0 * 1.5;
 #elif defined(BEAM)
-    float f0 = fbm(vec2(0.0, uv.y*4.0), 8, vec2(4.0));
-    float f1 = fbm(vec2(0.0, uv.y*16.0), 4, vec2(32.0));
+    float f0 = fbm(vec2(0.0, uv.y), 8, vec2(4.0));
+    float f1 = fbm(vec2(0.0, uv.y), 4, vec2(16.0));
     float alpha = smoothstep(1.0,mix(0.9,-2.0,f0),uv.x - 0.2*f1 + 2.0*pow(abs(uv.y),2.0)) * pow(1.0-abs(uv.y),2.0);
 #elif defined(CONE)
     float angle = abs(atan(uv.y,uv.x+1.0)/TAU);
@@ -85,12 +85,17 @@ void main(){
     polar.y += 0.08*(1.-2.*noise2D(polar*vec2(4,8)+12.4, vec2(4,8)));
     float width = pow(mix(1.2,0.0,polar.x),4.0);
     float f0 = smoothstep(1.0-width,1.0,.5+.5*cos(polar.y*TAU*12.0));
-    f0 = max(1.2*f0, 1.4*fbm(vec2(64.0, 48.*polar.y), 4, vec2(1e3,48)));
+    f0 = max(1.2*f0, 1.4*fbm(vec2(64.0, polar.y), 4, vec2(1e3,48)));
     float alpha = smoothstep(0.0, 1.0, f0 - polar.x);
+#elif defined(GROUND)
+    float f0 = fbm(uv,8,vec2(3,6));
+    float f1 = fbm(uv + 0.3*f0,4,vec2(4,8));
+    float alpha = smoothstep(1.0,mix(0.0,-4.0,f1),uv.x -f0 + 2.0*pow(abs(uv.y),2.0));
+    float angle = abs(atan(uv.y,uv.x+1.5)/TAU);
+    alpha *= smoothstep(0.2,0.0,angle) * smoothstep(-1.0,-0.5,uv.x);
 #else
     vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
-    vec2 period = vec2(1000,36);
-    float f0 = 2.0*fbm(vec2(0.0, period.y*polar.y), 4, period);
+    float f0 = 2.0*fbm(vec2(0.0, polar.y), 4, vec2(1e3,36));
     f0 += smoothstep(1.0, -1.0, polar.x - max(0.0,0.5-f0));
     float alpha = smoothstep(0.0, 1.0, f0 - 1.5*polar.x);
 #endif

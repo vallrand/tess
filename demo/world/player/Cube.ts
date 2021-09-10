@@ -138,6 +138,7 @@ export class Cube implements IActor {
                         else yield iterator.value
                     }
                 }
+                case CubeModule.Missile:
                 case CubeModule.Machinegun: {
                     if(state.open != 1) break
                     if(!trigger || direction === Direction.None) break
@@ -162,6 +163,7 @@ export class Cube implements IActor {
                 }
                 case CubeModule.Shield: {
                     if(state.open != 1) break
+                    break
                 }
             }
             movement: {

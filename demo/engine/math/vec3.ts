@@ -79,6 +79,22 @@ vec3.lerp = (a: vec3, b: vec3, t: number, out: vec3): vec3 => {
     return out
 }
 
+vec3.angle = (a: vec3, b: vec3): number => {
+    const magnitude = Math.sqrt(vec3.magnitudeSquared(a) * vec3.magnitudeSquared(b))
+    const cosine = magnitude && vec3.dot(a, b) / magnitude
+    return Math.acos(Math.min(Math.max(cosine, -1), 1))
+}
+
+vec3.random = (r: number, z: number, out: vec3): vec3 => {
+    r = r * 2 * Math.PI
+    z = z * 2 - 1
+    out[2] = z
+    z = Math.sqrt(1 - z*z)
+    out[0] = Math.cos(r) * z
+    out[1] = Math.sin(r) * z
+    return out
+}
+
 vec3.ZERO = vec3(0, 0, 0)
 vec3.ONE = vec3(1, 1, 1)
 vec3.AXIS_X = vec3(1, 0, 0)

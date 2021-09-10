@@ -1,4 +1,4 @@
-import { lerp, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { random, lerp, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, EventTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
@@ -68,7 +68,7 @@ const actionTimeline = {
         { frame: 1.8, value: vec3.ZERO, ease: ease.sineIn }
     ], vec4.lerp),
     'cracks.transform.rotation': EventTrigger(0, (rotation: quat) =>
-    quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*Math.random(), rotation)),
+    quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*random(), rotation)),
     'smoke.rate': PropertyAnimation([
         { frame: 0, value: 0.05 },
         { frame: 0.5, value: 0.01, ease: ease.quadIn },
@@ -150,6 +150,9 @@ export class ExtractSkill extends CubeSkill {
             else yield iterator.value
         }
     }
+    protected clear(): void {
+        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
+    }
     public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
@@ -178,7 +181,7 @@ export class ExtractSkill extends CubeSkill {
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.ring.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.ring)
 
-        this.smoke = SharedSystem.particles.smoke.add({
+        this.smoke = this.smoke || SharedSystem.particles.smoke.add({
             uLifespan: [1.0,2.0,0,0],
             uOrigin: vec3.add([0,4,0], origin, vec3()),
             uRotation: [0,2*Math.PI],
@@ -192,14 +195,12 @@ export class ExtractSkill extends CubeSkill {
 
         excavation: for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            animate(elapsedTime % duration, this.context.deltaTime)
-            armatureAnimation.loop(elapsedTime % duration, mesh.armature)
+            animate(elapsedTime, this.context.deltaTime)
+            armatureAnimation.loop(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame
         }
-
-        SharedSystem.particles.smoke.remove(this.smoke)
 
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)

@@ -1,3 +1,10 @@
+export const random = (seed => function mulberry32(): number {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+})(0X1F6)
+
 export const lerp = (start: number, end: number, factor: number): number => start + (end - start) * factor
 export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
 export const mod = (n: number, m: number): number => ((n % m) + m) % m

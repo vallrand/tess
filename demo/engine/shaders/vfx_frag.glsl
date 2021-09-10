@@ -29,6 +29,9 @@ uniform EffectUniforms {
 #ifdef VERTICAL_MASK
     uniform vec4 uVerticalMask;
 #endif
+#ifdef HORIZONTAL_MASK
+    uniform vec4 uHorizontalMask;
+#endif
 #ifdef FRESNEL
     uniform vec2 uFresnelMask;
 #endif
@@ -108,6 +111,10 @@ void main(){
     color *= smoothstep(uVerticalMask.x,uVerticalMask.y,uv.y);
     color *= smoothstep(uVerticalMask.w,uVerticalMask.z,uv.y);
 #endif
+#ifdef HORIZONTAL_MASK
+    color *= smoothstep(uHorizontalMask.x,uHorizontalMask.y,uv.x);
+    color *= smoothstep(uHorizontalMask.w,uHorizontalMask.z,uv.x);
+#endif
 
 #ifdef FRESNEL
     vec3 position = vPosition;
@@ -119,7 +126,11 @@ void main(){
 
     float value = color.a;
 #ifdef GRADIENT
+#ifdef DISSOLVE
     color = texture(uGradientMap, vec2(1.-value,vColor.a));
+#else
+    color = texture(uGradientMap, vec2(1.-value,uv.y));
+#endif
 #endif
 
 #ifdef DISSOLVE

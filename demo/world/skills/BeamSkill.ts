@@ -132,16 +132,9 @@ export class BeamSkill extends CubeSkill {
         this.flash = new Sprite()
         this.flash.billboard = BillboardType.Sphere
         this.flash.material = raysMaterial
-
-        this.smoke = SharedSystem.particles.smoke.add({
-            uOrigin: vec3.ZERO,
-            uLifespan: [1.6,2,-1,0],
-            uRotation: [0,2*Math.PI],
-            uGravity: [0,3.2,0],
-            uSize: [1,3],
-            uFieldDomain: vec4.ONE,
-            uFieldStrength: vec2.ZERO
-        })
+    }
+    protected clear(): void {
+        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
     public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
         const origin = vec3(0.6,1.5,0)
@@ -196,6 +189,16 @@ export class BeamSkill extends CubeSkill {
             uRadius: [0.2,0.5],
             uForce: [4,10],
             uTarget: origin
+        })
+
+        this.smoke = this.smoke || SharedSystem.particles.smoke.add({
+            uOrigin: vec3.ZERO,
+            uLifespan: [1.6,2,-1,0],
+            uRotation: [0,2*Math.PI],
+            uGravity: [0,3.2,0],
+            uSize: [1,3],
+            uFieldDomain: vec4.ONE,
+            uFieldStrength: vec2.ZERO
         })
 
         const mesh = this.cube.meshes[this.cube.state.side]

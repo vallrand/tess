@@ -1,7 +1,7 @@
 import { Application } from '../../engine/framework'
 import { ease, lerp, mat4, mod, quat, range, vec2, vec3, vec4 } from '../../engine/math'
 import { uintNorm4x8 } from '../../engine/pipeline/batch'
-import { BatchMesh, BillboardType, Line, Mesh, Sprite, Trail } from '../../engine/components'
+import { BatchMesh, BillboardType, Line, Mesh, Sprite, FollowTrail } from '../../engine/components'
 import { DecalMaterial, EffectMaterial, SpriteMaterial } from '../../engine/materials'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
@@ -325,7 +325,7 @@ export class ProjectileSkill extends CubeSkill {
         const duration = Math.sqrt(vec3.distanceSquared(origin, target)) * 0.05 / 2
         const animate = AnimationTimeline(effect, {
             'particles': EmitterTrigger({ frame: duration, value: 24*3 }),
-            'trail': Trail(effect.transform.position, vec2(0, 0), 0.5),
+            'trail': FollowTrail(effect.transform.position, vec2(0, 0), 0.5),
             'transform.position.1': PropertyAnimation([
                 { frame: 0, value: origin[1] },
                 { frame: duration, value: target[1], ease: ease.cubicIn }

@@ -1,5 +1,5 @@
 import { Application } from '../../../engine/framework'
-import { randomFloat, vec3, aabb3 } from '../../../engine/math'
+import { random, randomFloat, vec3, aabb3 } from '../../../engine/math'
 import { GL, ShaderProgram } from '../../../engine/webgl'
 import { shaders } from '../../../engine/shaders'
 import { CameraSystem } from '../../../engine/scene/Camera'
@@ -34,9 +34,9 @@ export class MistEffect extends ParticleSystem<void> {
         const { gl } = this.context
         const vertexArray = new Float32Array(this.instances * 3)
         for(let i = 0; i < this.instances; i++){
-            vertexArray[i * 3 + 0] = randomFloat(bounds[0], bounds[3], Math.random)
-            vertexArray[i * 3 + 1] = randomFloat(bounds[1], bounds[4], Math.random)
-            vertexArray[i * 3 + 2] = randomFloat(bounds[2], bounds[5], Math.random)
+            vertexArray[i * 3 + 0] = randomFloat(bounds[0], bounds[3], random)
+            vertexArray[i * 3 + 1] = randomFloat(bounds[1], bounds[4], random)
+            vertexArray[i * 3 + 2] = randomFloat(bounds[2], bounds[5], random)
         }
         gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[0])
         gl.bufferSubData(GL.ARRAY_BUFFER, 0, vertexArray)

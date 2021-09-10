@@ -33,7 +33,7 @@ export class BoundingVolume {
             this.position[1] += vertices[i + offset + 1]
             this.position[2] += vertices[i + offset + 2]
         }
-        vec3.scale(this.position, stride / vertices.length, this.position)
+        vec3.scale(this.position, vertices.length && stride / vertices.length, this.position)
         this.radius = calculateBoundingRadius(vertices, stride, offset, this.position)
         this.frame = frame
     }

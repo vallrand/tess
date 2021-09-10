@@ -34,29 +34,43 @@ export class Transform {
     }
 }
 
-export class TransformSystem extends Factory<Transform> implements ISystem {
-    constructor(private readonly context: Application){super(Transform)}
-    public delete(transform: Transform): void {
-        super.delete(transform)
-        transform.frame = 0
-        transform.parent = null
-        vec3.copy(vec3.ZERO, transform.position)
-        vec3.copy(vec3.ONE, transform.scale)
-        quat.copy(quat.IDENTITY, transform.rotation)
-        //TODO detach connected nodes? defer delete untill update loop?
+export class TransformSystem implements ISystem {
+    private readonly pool: Transform[] = []
+    private readonly list: Transform[] = []
+    constructor(private readonly context: Application){}
+    public create(position?: vec3, rotation?: quat, scale?: vec3, parent?: Transform): Transform {
+        const component = this.pool.pop() || new Transform
+        component.index = this.list.push(component) - 1
+
+        component.frame = 0
+        component.parent = parent || null
+        vec3.copy(position || vec3.ZERO, component.position)
+        vec3.copy(scale || vec3.ONE, component.scale)
+        quat.copy(rotation || quat.IDENTITY, component.rotation)
+
+        return component
+    }
+    public delete(component: Transform): void {
+        if(component.index == -1) return
+        this.list[component.index] = this.list[this.list.length - 1]
+        this.list[component.index].index = component.index
+        this.list.length--
+        this.pool.push(component)
+        component.index = -1
     }
     public update(): void {
         for(let index = this.list.length - 1; index >= 0; index--){
             const transform = this.list[index]
-            if(transform.frame && (!transform.parent || transform.frame >= transform.parent.frame)) continue
-            if(transform.parent && transform.parent.index == -1) transform.parent = null
-            if(transform.parent && transform.parent.index < index){
+            if(transform.parent && transform.parent.index < index)
+            if(transform.parent.index == -1) transform.parent = null
+            else{
                 this.list[transform.parent.index] = transform
                 this.list[index] = transform.parent
                 transform.index = transform.parent.index
                 transform.parent.index = index++
                 continue
             }
+            if(transform.frame && (!transform.parent || transform.frame >= transform.parent.frame)) continue
             transform.recalculate(this.context.frame)
         }
     }

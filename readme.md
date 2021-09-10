@@ -96,6 +96,9 @@ linear depth https://gist.github.com/kovrov/a26227aeadde77b78092b8a962bd1a91
 linear depth2 https://learnopengl.com/Advanced-OpenGL/Depth-testing
 recover depth https://stackoverflow.com/questions/11277501/how-to-recover-view-space-position-given-view-space-depth-value-and-ndc-xy/46118945#46118945
 
+projectile arcs https://answers.unity.com/questions/650526/how-can-i-make-an-missilerocket-home-to-an-enemy-i.html
+https://gamedev.stackexchange.com/questions/52988/implementing-a-homing-missile/53534
+orbiting missiles https://gamedev.stackexchange.com/questions/17313/how-does-one-prevent-homing-missiles-from-orbiting-their-targets
 fire ring https://www.shadertoy.com/view/tslSDX
 glow lines https://www.shadertoy.com/user/remonvv
 

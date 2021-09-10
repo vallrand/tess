@@ -108,6 +108,43 @@ quat.rotationTo = (a: vec3, b: vec3, out: quat): quat => {
     return quat.normalize(out, out)
 }
 
+quat.fromNormal = (forward: vec3, up: vec3, out: quat): quat => {
+    const m20 = forward[0], m21 = forward[1], m22 = forward[2]
+    const temp: vec3 = out as any
+    vec3.cross(up, forward, temp)
+    vec3.normalize(temp, temp)
+    const m00 = temp[0], m01 = temp[1], m02 = temp[2]
+    vec3.cross(forward, temp, temp)
+    const m10 = temp[0], m11 = temp[1], m12 = temp[2]
+    const trace = m00 + m11 + m22
+    if(trace > 0){
+        let root = 0.5 / Math.sqrt(trace + 1)
+        out[0] = (m12 - m21) * root
+        out[1] = (m20 - m02) * root
+        out[2] = (m01 - m10) * root
+        out[3] = 0.25 / root
+    }else if (m00 >= m11 && m00 >= m22){
+         let root = 0.5 / Math.sqrt(1 + m00 - m11 - m22)
+         out[0] = 0.25 / root
+         out[1] = (m01 + m10) * root
+         out[2] = (m02 + m20) * root
+         out[3] = (m12 - m21) * root
+     }else if(m11 > m22){
+         let root = 0.5 / Math.sqrt(1 + m11 - m00 - m22)
+         out[0] = (m10 + m01) * root
+         out[1] = 0.25 / root
+         out[2] = (m21 + m12) * root
+         out[3] = (m20 - m02) * root
+     }else{
+         let root = 0.5 / Math.sqrt(1 + m22 - m00 - m11)
+         out[0] = (m20 + m02) * root
+         out[1] = (m21 + m12) * root
+         out[2] = 0.25 / root
+         out[3] = (m01 - m10) * root
+     }
+     return out
+}
+
 quat.angle = (a: quat, b: quat): number => {
     const dot = vec4.dot(a, b)
     return Math.acos(2 * dot * dot - 1)
