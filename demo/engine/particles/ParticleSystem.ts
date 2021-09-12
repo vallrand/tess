@@ -30,7 +30,7 @@ export class ParticleSystem<T> implements IEffect {
     public readonly emitters: ParticleEmitter[] = []
     constructor(
         protected context: Application,
-        private readonly options: ParticleSystemOptions,
+        protected readonly options: ParticleSystemOptions,
         private readonly mesh?: MeshBuffer,
         protected readonly program?: ShaderProgram,
         protected readonly transform?: ShaderProgram

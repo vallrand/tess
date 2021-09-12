@@ -3,6 +3,7 @@ import { IMaterial } from '../pipeline'
 
 export class ShaderMaterial implements IMaterial {
     public static readonly Add = [[GL.FUNC_ADD],[GL.ONE,GL.ONE]]
+    public static readonly Blend = [[GL.FUNC_ADD],[GL.SRC_ALPHA,GL.ONE_MINUS_SRC_ALPHA,GL.ZERO, GL.ONE]]
     public static readonly Premultiply = [[GL.FUNC_ADD],[GL.ONE,GL.ONE_MINUS_SRC_ALPHA,GL.ZERO,GL.ONE]]
     depthWrite: boolean = false
     cullFace: number = GL.BACK

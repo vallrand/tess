@@ -126,6 +126,15 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
+    const perlinNoise = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
+            PERLIN: true
+        }), {
+            uColor: vec4.ONE
+        }, 0
+    ).target
+
     const sineNoise = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, shaders.noise_frag, {
@@ -190,7 +199,7 @@ export function TextureLibrary(context: Application){
 
     return {
         particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
-        noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, sineNoise,
+        noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, perlinNoise, sineNoise,
         white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 
         indexedTexture

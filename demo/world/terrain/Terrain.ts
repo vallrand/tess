@@ -9,6 +9,8 @@ import { TurnBasedSystem, IActor } from '../Actor'
 import { LevelGenerator } from './LevelGenerator'
 
 import { TerrainChunk } from './TerrainChunk'
+import { ResourceDeposit } from './ResourceDeposit'
+import { SharedSystem } from '../shared'
 
 export class TerrainSystem implements ISystem {
     private static readonly pool: TerrainChunk[] = []
@@ -17,24 +19,8 @@ export class TerrainSystem implements ISystem {
     private readonly gridBounds: aabb2 = aabb2()
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
     private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context)
-
-    private readonly dunesMaterial: MeshMaterial
-    constructor(private readonly context: Application){
-        const materials = this.context.get(MaterialSystem)
-        this.dunesMaterial = materials.create()
-        this.dunesMaterial.diffuse = materials.addRenderTexture(
-            materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-            ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/sandstone_frag.glsl')), {
-                uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
-            }, 0
-        ).target
-        this.dunesMaterial.normal = materials.addRenderTexture(
-            materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-            ShaderProgram(this.context.gl, shaders.fullscreen_vert, require('../shaders/dunes_frag.glsl')), {
-                uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
-            }, 0
-        ).target
-    }
+    public readonly resources: ResourceDeposit = new ResourceDeposit(this.context)
+    constructor(private readonly context: Application){}
     public update(): void {
         const position = this.context.get(PlayerSystem).cameraTarget
         const offsetX = Math.floor(position[0] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
@@ -73,9 +59,9 @@ export class TerrainSystem implements ISystem {
             chunk.offsetX = -column * TerrainChunk.chunkTiles
             chunk.offsetZ = -row * TerrainChunk.chunkTiles
             this.chunks[x + z * this.gridSize] = chunk
-            this.levelGenerator.populate(chunk, column, row)
+            this.levelGenerator.populate(chunk)
             chunk.build()
-            chunk.mesh.material = this.dunesMaterial
+            chunk.mesh.material = SharedSystem.materials.dunesMaterial
         }
     }
     public chunk(column: number, row: number): TerrainChunk {

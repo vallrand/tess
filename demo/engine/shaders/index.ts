@@ -2,6 +2,7 @@ export const shaders = {
     batch_vert: <string> require('./batch_vert.glsl'),
     batch_frag: <string> require('./batch_frag.glsl'),
     stripe_vert: <string> require('./stripe_vert.glsl'),
+    verlet_vert: <string> require('./verlet_vert.glsl'),
     billboard_vert: <string> require('./billboard_vert.glsl'),
     billboard_frag: <string> require('./billboard_frag.glsl'),
     decal_vert: <string> require('./decal_vert.glsl'),

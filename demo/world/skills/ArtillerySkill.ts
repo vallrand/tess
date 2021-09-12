@@ -1,4 +1,4 @@
-import { random, randomInt, shortestAngle, range, clamp, lerp, mod, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { AnimationTimeline, PropertyAnimation, IAnimationTrigger, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
@@ -19,7 +19,7 @@ import { TerrainSystem } from '../terrain'
 const steeringTimeline = {
     'burn.transform.scale': PropertyAnimation([
         { frame: 0, value: [0,4,0] },
-        { frame: 0.4, value: [12,4,12], ease: ease.cubicOut }
+        { frame: 0.4, value: [8,4,8], ease: ease.cubicOut }
     ], vec3.lerp),
     'burn.color': PropertyAnimation([
         { frame: 0, value: [0,0,0,1] },
@@ -146,6 +146,7 @@ class Missile {
         this.burn = this.context.get(DecalPass).create(0)
         this.burn.transform = this.context.get(TransformSystem).create()
         vec3.copy(target, this.burn.transform.position)
+        quat.axisAngle(vec3.AXIS_Y, randomFloat(0, 2 * Math.PI, random), this.burn.transform.rotation)
         this.burn.material = this.parent.burnMaterial
 
         this.wave.transform = this.context.get(TransformSystem).create()
@@ -376,6 +377,21 @@ export class ArtillerySkill extends CubeSkill {
 
             if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame
+        }
+    }
+    public *close(): Generator<_ActionSignal> {
+        const mesh = this.cube.meshes[this.cube.state.side]
+        const rotate = PropertyAnimation([
+            { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },
+            { frame: 0.4, value: quat.IDENTITY, ease: ease.quadInOut }
+        ], quat.slerp)
+
+        for(const generator = super.close(), startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            rotate(elapsedTime, mesh.armature.nodes[1].rotation)
+            const iterator = generator.next()
+            if(iterator.done) return iterator.value
+            else yield iterator.value
         }
     }
     private findTarget(direction: Direction): vec2[] {

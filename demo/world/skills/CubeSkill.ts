@@ -10,6 +10,7 @@ export class CubeSkill {
         return mod(this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
     }
     public *open(): Generator<_ActionSignal> {
+        if(!this.validate()) return
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
@@ -38,6 +39,7 @@ export class CubeSkill {
         state.open = 0
         this.clear()
     }
+    protected validate(): boolean { return true }
     protected clear(): void {
 
     }

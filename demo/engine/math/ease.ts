@@ -50,6 +50,8 @@ export const elasticOut = (amplitude: number, period: number): IEase => {
     return x => amplitude * Math.pow(2, -10 * x) * Math.sin((x - s) * p) + 1
 }
 
+export const fadeInOut: IEase = x => 4*(1-x)*x
+
 export const quadIn: IEase = x => x*x
 export const cubicIn: IEase = x => x*x*x
 export const quartIn: IEase = x => x*x*x*x

@@ -103,13 +103,16 @@ export class Cube implements IActor {
         const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
         const skill = this.context.get(PlayerSystem).skills[state.type]
 
-        idle: while(true){
+        idle: for(let frame = 0; true;){
+            if(frame === this.context.frame) yield _ActionSignal.WaitNextFrame
+            
             let direction = Direction.None
             if(keys.down('KeyA')) direction = Direction.Right
             else if(keys.down('KeyD')) direction = Direction.Left
             else if(keys.down('KeyW')) direction = Direction.Down
             else if(keys.down('KeyS')) direction = Direction.Up
             const trigger = keys.down('Space')
+            frame = this.context.frame
 
             if(state.open == 0 && trigger)
                 for(const generator = skill.open(); true;){
@@ -173,7 +176,6 @@ export class Cube implements IActor {
                 this.prevAction = this.context.get(TurnBasedSystem).start(move, false)
                 break idle
             }
-            yield _ActionSignal.WaitNextFrame
         }
     }
     private moveTransition(direction: Direction): Generator<_ActionSignal> {
@@ -181,8 +183,6 @@ export class Cube implements IActor {
         const nextDirection = nextOrientation & 0x3
         const nextFace = nextOrientation >>> 2
         const nextTile = vec2.copy(this.state.tile, vec2())
-
-        console.log(`F ${this.state.side}-${nextFace} D ${this.state.direction}-${nextDirection} > ${direction}`)
 
         const prevRotation = quat()
         const nextRotation = DirectionAngle[(nextDirection + this.state.sides[nextFace].direction) % 4]
@@ -214,6 +214,8 @@ export class Cube implements IActor {
             }
         }
         if(this.context.get(TerrainSystem).getTile(nextTile[0], nextTile[1]) != null) return
+
+        console.log(`%cF ${this.state.side}-${nextFace} D ${this.state.direction}-${nextDirection} > ${direction}`,'color:#80dfaf;text-decoration:underline')
 
         this.meshes[this.state.side].color[3] = 0
         this.meshes[nextFace].color[3] = 1

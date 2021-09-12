@@ -1,4 +1,4 @@
-import { vec3, vec4, quat } from '../../engine/math'
+import { vec2, vec3, vec4, quat } from '../../engine/math'
 
 export const enum CubeFace {
     Top = 0 << 2,
@@ -23,6 +23,13 @@ export const DirectionAngle = {
     [Direction.Down]: quat.axisAngle(vec3.AXIS_Y, 1.5 * Math.PI, quat()),
     [Direction.Right]: quat.axisAngle(vec3.AXIS_Y, 2.0 * Math.PI, quat())
 }
+
+export const DirectionTile = [
+    vec2(0,1),
+    vec2(1,0),
+    vec2(0,-1),
+    vec2(-1,0)
+]
 
 export const CubeOrientation = (face: number, direction: Direction): number => (face << 2) | direction
 CubeOrientation.rotate = (orientation: number, direction: Direction): number => {

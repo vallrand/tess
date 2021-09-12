@@ -12,8 +12,9 @@ import { shaders } from '../../engine/shaders'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
 import { _ActionSignal } from '../Actor'
-import { Cube } from '../player'
+import { Cube, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
+import { TerrainSystem } from '../terrain'
 
 const activateTimeline = {
     'tubeX.transform.scale': PropertyAnimation([
@@ -274,5 +275,14 @@ export class RestoreSkill extends CubeSkill {
             if(iterator.done) return iterator.value
             else yield iterator.value
         }
+    }
+    protected validate(): boolean {
+        const tile = vec2()
+        const terrain = this.context.get(TerrainSystem)
+        for(let i = DirectionTile.length - 1; i >= 0; i--){
+            vec2.add(this.cube.state.tile, DirectionTile[i], tile)
+            if(terrain.getTile(tile[0], tile[1]) != null) return false
+        }
+        return true
     }
 }

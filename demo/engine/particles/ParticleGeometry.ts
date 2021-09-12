@@ -40,14 +40,16 @@ export function AttributeCurveSampler(
 }
 
 export interface ParticleOvertimeAttributes {
-    size0: IEase
-    size1: IEase
-    linear0: IEase
-    linear1: IEase
-    rotational0: IEase
-    rotational1: IEase
-    radial0: IEase
-    radial1: IEase
+    size0?: IEase
+    size1?: IEase
+    linear0?: IEase
+    linear1?: IEase
+    rotational0?: IEase
+    rotational1?: IEase
+    radial0?: IEase
+    radial1?: IEase
+    displacement0?: IEase
+    displacement1?: IEase
 }
 
 export class ParticleGeometry {

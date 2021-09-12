@@ -15,7 +15,8 @@ export class TerrainChunk {
     public column: number
     public row: number
     public mesh: Mesh
-    public grid: IActor[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
+    public readonly list: IActor[] = []
+    public readonly grid: IActor[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
     public offsetX: number
     public offsetZ: number
 
@@ -97,9 +98,15 @@ export class TerrainChunk {
         for(let i = this.grid.length - 1; i >= 0; i--)
             if(this.grid[i]) this.grid[i].kill()
         this.grid.fill(null)
-        //this.context.get(MeshSystem).unloadVertexData(chunk.mesh.buffer)
+
+        for(let i = this.list.length - 1; i >= 0; i--) this.list[i].kill()
+        this.list.length = 0
+
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
         this.mesh = null
+    }
+    delete(){
+        this.context.get(MeshSystem).unloadVertexData(this.vertexBuffer)
     }
 }

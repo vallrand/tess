@@ -102,6 +102,9 @@ orbiting missiles https://gamedev.stackexchange.com/questions/17313/how-does-one
 fire ring https://www.shadertoy.com/view/tslSDX
 glow lines https://www.shadertoy.com/user/remonvv
 
+gold //https://www.shadertoy.com/view/XtcfRn
+//https://www.shadertoy.com/view/4tSGW3
+
 circuit
 https://www.shadertoy.com/view/ttVfzR
 https://www.shadertoy.com/view/Wds3z7

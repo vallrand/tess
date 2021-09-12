@@ -15,6 +15,7 @@ import { shaders } from '../../engine/shaders'
 import { ShaderProgram } from '../../engine/webgl'
 import { SharedSystem } from '../shared'
 import { MeshSystem } from '../../engine/components'
+import { TerrainSystem } from '../terrain'
 
 export class PlayerSystem implements ISystem {
     public readonly cameraTarget: vec3 = vec3(0,0,0)
@@ -37,9 +38,10 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Missile)
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Auger)
             window['quat'] = quat
             window['vec3'] = vec3
+            this.context.get(TerrainSystem).resources.create(5,6)
             //window['app'].systems[17].cameraOffset= [4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
         this.tilemap.renderFaceTiles(this.cube)

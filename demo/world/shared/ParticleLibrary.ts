@@ -1,10 +1,13 @@
 import { Application, One, Zero } from '../../engine/framework'
-import { vec2, vec3, vec4, ease, quat } from '../../engine/math'
+import { random, randomInt, randomFloat, vec2, vec3, vec4, ease, quat } from '../../engine/math'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
-import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
+import { ParticleEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
-import { MaterialSystem } from '../../engine/materials/Material'
-import { AttributeCurveSampler, GradientRamp, ParticleGeometry, ParticleOvertimeAttributes, ParticleSystem } from '../../engine/particles'
+import { MaterialSystem, EmitterMaterial } from '../../engine/materials'
+import {
+    AttributeCurveSampler, GradientRamp, ParticleGeometry, ParticleOvertimeAttributes,
+    ParticleSystem, StaticParticleSystem
+} from '../../engine/particles'
 import { SharedSystem } from './index'
 
 export function ParticleLibrary(context: Application){
@@ -194,7 +197,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 516, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             ALIGNED: true, GRADIENT: true, STRETCH: 0.04
@@ -226,7 +229,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uRadius: vec2
     }>(
-        context, { limit: 516, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/fire_frag.glsl'), {
             ALIGNED: true
@@ -237,6 +240,72 @@ export function ParticleLibrary(context: Application){
     )
     fire.diffuse = SharedSystem.textures.noise
 
-    context.get(ParticleEffectPass).effects.push(dust, smoke, energy, sparks, bolts, embers, fire)
-    return { dust, smoke, energy, sparks, bolts, embers, fire }
+    const glow = new StaticParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uGravity: vec3
+        uSize: vec2
+        uRadius: vec2
+    }>(
+        context, { limit: 512, format: VertexDataFormat.Particle },
+        ParticleGeometry.quad(context.gl),
+        ShaderProgram(context.gl, shaders.verlet_vert, shaders.billboard_frag, {
+            SPHERICAL: true, GRADIENT: true, VECTOR_FIELD: true, LUT: true
+        }), {
+            aLifetime(options, offset, buffer){
+                buffer[offset + 0] = context.currentTime - randomFloat(options.uLifespan[2], options.uLifespan[3], random)
+                buffer[offset + 1] = randomFloat(options.uLifespan[0], options.uLifespan[1], random)
+                buffer[offset + 2] = random()
+                buffer[offset + 3] = -options.uLifespan[2]
+            },
+            aSize(options, offset, buffer){
+                buffer[offset + 0] = randomFloat(options.uSize[0], options.uSize[1], random)
+                buffer[offset + 1] = buffer[offset + 0]
+                buffer[offset + 2] = 0
+                buffer[offset + 3] = 1
+            },
+            aTransform(options, offset, buffer){
+                const angle = randomFloat(0, 2 * Math.PI, random)
+                const radius = randomFloat(options.uRadius[0], options.uRadius[1], random)
+                const nx = radius * Math.cos(angle), nz = radius * Math.sin(angle)
+
+                buffer[offset + 0] = options.uOrigin[0] + nx
+                buffer[offset + 1] = options.uOrigin[1]
+                buffer[offset + 2] = options.uOrigin[2] + nz
+                buffer[offset + 3] = 0
+            },
+            aVelocity(options, offset, buffer){
+                buffer[offset + 0] = 0
+                buffer[offset + 1] = 0
+                buffer[offset + 2] = 0
+                buffer[offset + 3] = 0
+            },
+            aAcceleration(options, offset, buffer){
+                buffer[offset + 0] = options.uGravity[0]
+                buffer[offset + 1] = options.uGravity[1]
+                buffer[offset + 2] = options.uGravity[2]
+                buffer[offset + 3] = 0
+            }
+        }
+    )
+    glow.material = new EmitterMaterial()
+    glow.material.diffuse = SharedSystem.textures.glow
+    glow.material.gradientRamp = GradientRamp(context.gl, [
+        0xf7f7eb00, 0x95958fd0,
+        0xd8da9a10, 0x5b5265a0,
+        0x47374340, 0x33282e80,
+        0x00000000, 0x00000000
+    ], 4)
+    glow.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
+        Object.values(<ParticleOvertimeAttributes> {
+            size0: ease.fadeInOut,
+            size1: ease.fadeInOut,
+            displacement0: ease.quadIn,
+            displacement1: ease.sineIn
+        })
+    )
+    glow.material.displacementMap = SharedSystem.textures.perlinNoise
+
+    context.get(ParticleEffectPass).effects.push(glow, dust, smoke, energy, sparks, bolts, embers, fire)
+    return { glow, dust, smoke, energy, sparks, bolts, embers, fire }
 }

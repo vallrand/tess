@@ -53,6 +53,26 @@ vec3 noise21d(in vec2 uv, in vec2 period, float seed){
     return vec3(value * 2.0 - 1.0, derivative);
 }
 
+float perlin2D(vec2 uv, vec2 period, float seed){
+    uv *= period;
+    vec4 i = floor(uv).xyxy + vec2(0,1).xxyy;
+    vec4 f = uv.xyxy - i.xyxy - vec2(0,1).xxyy;
+    i = mod(i, period.xyxy) + seed;
+    vec2 a = hash22(i.xy);
+    vec2 b = hash22(i.zy);
+    vec2 c = hash22(i.xw);
+    vec2 d = hash22(i.zw);
+    vec4 gradientX = vec4(a.x,b.x,c.x,d.x)-.5;
+    vec4 gradientY = vec4(a.y,b.y,c.y,d.y)-.5;
+    vec4 gradients = inversesqrt(gradientX * gradientX + gradientY * gradientY) * (gradientX * f.xzxz + gradientY * f.yyww);
+    gradients *= 2.3703703703703703703703703703704;
+    vec4 lengthSq = f * f;
+    lengthSq = lengthSq.xzxz + lengthSq.yyww;
+    vec4 xSq = 1.0 - min(vec4(1.0), lengthSq); 
+    xSq = xSq * xSq * xSq;
+    return .5+.5*dot(xSq, gradients);
+}
+
 float fbm(vec2 uv, vec2 frequency, int octaves, float shift, float gain, float lacunarity, float factor, float seed){
     uv *= frequency;
     vec2 offset = vec2(shift,0);
@@ -172,15 +192,24 @@ void main(){
 #if defined(CELLULAR)
     vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
     float alpha = 1.0-(1.0-1.5*w.y);
+    vec4 color = vec4(alpha);
 #elif defined(VORONOI)
     vec4 w = voronoi(uv, vec2(8), 1.0, 0.0, 0.0);
     float alpha = smoothstep(0.8,-0.2,w.x);
+    vec4 color = vec4(alpha);
+#elif defined(PERLIN)
+    float nx = perlin2D(uv, vec2(8.0), 0.0);
+    float ny = perlin2D(uv + vec2(0.3), vec2(8.0), 0.0);
+    float nz = perlin2D(uv + vec2(0.7), vec2(8.0), 0.0);
+    vec4 color = vec4(nx,ny,nz,0);
 #elif defined(RECTANGULAR)
     vec4 minmax = rectangularNoise(uv, vec2(8));
     float alpha = min(min(abs(minmax.x), abs(minmax.y)), min(abs(minmax.z),abs(minmax.w)));
+    vec4 color = vec4(alpha);
 #elif defined(SINE)
     float alpha = sineNoise(uv*TAU, 8, 411.37);
     alpha = smoothstep(0.2,1.0,alpha);
+    vec4 color = vec4(alpha);
 #elif defined(WARP)
     const float gain = 0.5, slopeness = 0.5, factor = 0.94, seed = 0.0;
     const vec2 lacunarity = vec2(2), frequency = vec2(8.0);
@@ -189,9 +218,11 @@ void main(){
     float f1 = fbmd(uv, frequency, 7, vec2(235), gain, lacunarity, slopeness, factor, seed).x;
     uv = uv + 0.2 * vec2(f0, f1);
     float alpha = fbmd(uv, frequency, 7, vec2(0.0), gain, lacunarity, slopeness, factor, seed).x;
+    vec4 color = vec4(alpha);
 #else
     float f0 = fbm(uv, vec2(8.0), 7, 23.0, 0.5, 2.0, 0.95, 0.0);
     float alpha = smoothstep(0.2, 1.0, f0);
+    vec4 color = vec4(alpha);
 #endif
-	fragColor = uColor * vec4(alpha);
+	fragColor = uColor * color;
 }

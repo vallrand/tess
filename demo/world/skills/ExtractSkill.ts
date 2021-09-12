@@ -12,8 +12,9 @@ import { shaders } from '../../engine/shaders'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
 import { _ActionSignal } from '../Actor'
-import { Cube } from '../player'
+import { Cube, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
+import { TerrainSystem } from '../terrain'
 
 const actionTimeline = {
     'cube.light.intensity': PropertyAnimation([
@@ -153,7 +154,10 @@ export class ExtractSkill extends CubeSkill {
     protected clear(): void {
         this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(): Generator<_ActionSignal> {
+        const resource = this.context.get(TerrainSystem).resources.get(this.cube.state.tile[0], this.cube.state.tile[1])
+        if(!resource) return
+
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
@@ -193,14 +197,23 @@ export class ExtractSkill extends CubeSkill {
 
         const animate = AnimationTimeline(this, actionTimeline)
 
+        resource.amount--
+        const drain = PropertyAnimation([
+            { frame: 0, value: resource.decal.threshold },
+            { frame: 2, value: lerp(1, 0, resource.amount / resource.capacity), ease: ease.linear }
+        ], lerp)
+
         excavation: for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             armatureAnimation.loop(elapsedTime, mesh.armature)
+            resource.decal.threshold = drain(elapsedTime, resource.decal.threshold)
 
             if(elapsedTime > duration) break
             yield _ActionSignal.WaitNextFrame
         }
+
+        if(resource.amount <= 0) resource.kill()
 
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)
@@ -214,5 +227,14 @@ export class ExtractSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).remove(this.ring)
 
         this.context.get(DecalPass).delete(this.cracks)
+    }
+    protected validate(): boolean {
+        const tile = vec2()
+        const terrain = this.context.get(TerrainSystem)
+        for(let i = DirectionTile.length - 1; i >= 0; i--){
+            vec2.add(this.cube.state.tile, DirectionTile[i], tile)
+            if(terrain.getTile(tile[0], tile[1]) != null) return false
+        }
+        return true
     }
 }
