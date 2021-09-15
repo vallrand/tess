@@ -1,6 +1,6 @@
 import { Application, ISystem } from '../framework'
-import { CameraSystem } from '../scene/Camera'
-import { MeshSystem } from '../components/Mesh'
+import { CameraSystem, FrustumCulling } from '../scene'
+import { MeshSystem, Mesh } from '../components'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { shaders } from '../shaders'
 import { PipelinePass, IEffect } from './PipelinePass'
@@ -56,10 +56,14 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
         this.context.get(CameraSystem).uniform.bind(gl, UniformBlockBindings.GlobalUniforms)
 
         const meshes = this.context.get(MeshSystem).list
-        for(let program: ShaderProgram = null, i = meshes.length - 1; i >= 0; i--){
-            const mesh = meshes[i]
+        this.render(meshes, camera.culling)
+    }
+    public render(list: Mesh[], culling: FrustumCulling): void {
+        const { gl } = this.context
+        for(let program: ShaderProgram = null, i = list.length - 1; i >= 0; i--){
+            const mesh = list[i]
             if(mesh.color[3] === 0) continue
-            if(!camera.culling.cull(mesh.bounds)) continue
+            if(!culling.cull(mesh.bounds, mesh.layer)) continue
             if(program !== mesh.material.program) gl.useProgram((program = mesh.material.program).target)
             mesh.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
             
@@ -85,9 +89,9 @@ export class DeferredGeometryPass extends PipelinePass implements ISystem {
         gl.bindFramebuffer(GL.FRAMEBUFFER, this.gbuffer)
     
         gl.framebufferRenderbuffer(GL.FRAMEBUFFER, GL.DEPTH_ATTACHMENT, GL.RENDERBUFFER, this.depth)
-        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.position, 0)
+        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.albedo, 0)
         gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT1, GL.TEXTURE_2D, this.normal, 0)
-        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT2, GL.TEXTURE_2D, this.albedo, 0)
+        gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT2, GL.TEXTURE_2D, this.position, 0)
         gl.drawBuffers([ GL.COLOR_ATTACHMENT0, GL.COLOR_ATTACHMENT1, GL.COLOR_ATTACHMENT2 ])
         if(gl.checkFramebufferStatus(GL.FRAMEBUFFER) != GL.FRAMEBUFFER_COMPLETE) throw new Error('Framebuffer incomplete!')
         gl.bindFramebuffer(GL.FRAMEBUFFER, null)

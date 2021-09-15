@@ -76,7 +76,7 @@ export class PointLightPass extends PipelinePass implements ISystem {
         for(let i = lights.length - 1; i >= 0; i--){
             const light = lights[i]
             light.update(this.context)
-            if(!camera.culling.cull(light.bounds)) continue
+            if(!camera.culling.cull(light.bounds, 0xFFFF)) continue
 
             light.uniform.bind(gl, UniformBlockBindings.LightUniforms)
             gl.drawElements(GL.TRIANGLES, this.sphere.indexCount, GL.UNSIGNED_SHORT, this.sphere.indexOffset)

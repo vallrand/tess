@@ -124,7 +124,15 @@ billboard line https://community.khronos.org/t/billboarded-line/37173
 align billboards https://www.gamedev.net/forums/topic/696694-stretched-billboard-projected-particles/
 align billboards2 https://gamedev.stackexchange.com/questions/38695/billboarding-aligning-with-velocity-direction
 
+cubemap blending https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+IBL https://learnopengl.com/PBR/IBL/Specular-IBL
+
 VULKAN https://therealmjp.github.io/posts/bindless-texturing-for-deferred-rendering-and-decals/
+HDR http://marcinignac.com/blog/pragmatic-pbr-hdr/
+more BRDF https://google.github.io/filament/Filament.md.html#materialsystem/specularbrdf
+BRDF LUT https://www.shadertoy.com/view/3lXXDB
+
+ScreenSpaceReflections https://lettier.github.io/3d-game-shaders-for-beginners/screen-space-reflection.html
 
 bind gbuffer
 render static geometry

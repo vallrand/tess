@@ -76,6 +76,7 @@ export function locateUniforms(gl: WebGL2RenderingContext, program: WebGLProgram
             case GL.INT:
             case GL.SAMPLER_2D:
             case GL.SAMPLER_2D_ARRAY:
+            case GL.SAMPLER_CUBE:
                 upload = uniform.size > 1 ? gl.uniform1iv.bind(gl, location) : gl.uniform1i.bind(gl, location)
                 break
             case GL.FLOAT:

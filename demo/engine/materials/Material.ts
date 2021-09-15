@@ -1,8 +1,9 @@
 import { Application, ISystem, ILoadedData } from '../framework'
 import { GL, createTexture, TextureOptions, ShaderProgram, UniformSamplerBindings } from '../webgl'
-import { DeferredGeometryPass, IMaterial, PostEffectPass } from '../pipeline'
+import { DeferredGeometryPass, IMaterial } from '../pipeline'
 import { shaders } from '../shaders'
 import { MeshMaterial } from './MeshMaterial'
+import { MeshSystem } from '../components'
 
 export interface RenderTexture {
     width: number
@@ -84,7 +85,7 @@ export class MaterialSystem implements ISystem {
             }else
                 program.uniforms[key] = uniforms[key]
 
-        const plane = this.context.get(PostEffectPass).plane
+        const plane = this.context.get(MeshSystem).plane
         gl.bindVertexArray(plane.vao)
         gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
 

@@ -1,7 +1,8 @@
-import { vec2, vec3, quat, aabb2, ease } from '../engine/math'
 import { Application } from '../engine/framework'
-import { TransformSystem } from '../engine/scene/Transform'
-import { MeshSystem, Mesh } from '../engine/components/Mesh'
+import { vec2, vec3, quat, aabb2, ease } from '../engine/math'
+import { OpaqueLayer } from '../engine/webgl'
+import { TransformSystem } from '../engine/scene'
+import { MeshSystem, Mesh } from '../engine/components'
 import { KeyboardSystem } from '../engine/Keyboard'
 import { TerrainSystem } from './terrain'
 import { modelAnimations } from './animations/animations'
@@ -23,6 +24,7 @@ export class Workshop implements IActor {
     place(column: number, row: number){
         vec2.set(column, row, this.tile)
         this.mesh = this.context.get(MeshSystem).loadModel('dock')
+        this.mesh.layer = OpaqueLayer.Static
         this.mesh.transform = this.context.get(TransformSystem).create()
         const { position } = this.mesh.transform
 

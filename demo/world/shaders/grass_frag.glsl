@@ -5,9 +5,9 @@ in vec2 vUV;
 in vec3 vNormal;
 in vec3 vPosition;
 
-layout(location=0) out vec4 fragPosition;
+layout(location=0) out vec4 fragAlbedo;
 layout(location=1) out vec4 fragNormal;
-layout(location=2) out vec4 fragAlbedo;
+layout(location=2) out vec4 fragPosition;
 
 uniform sampler2D uSampler;
 

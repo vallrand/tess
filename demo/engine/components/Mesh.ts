@@ -1,9 +1,10 @@
 import { vec3, quat, mat4, aabb3, vec4, mat3 } from '../math'
 import { Application, ISystem, ILoadedData, Factory } from '../framework'
-import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings } from '../webgl'
+import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings, OpaqueLayer } from '../webgl'
 import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { IMesh, IMaterial, DeferredGeometryPass } from '../pipeline'
+import { createPlane } from '../geometry'
 
 interface IBufferRange {
     buffer: number
@@ -90,7 +91,7 @@ export class Mesh implements IMesh {
     public index: number = -1
     public frame: number = 0
     public order: number = 0
-    public layer: number = 0
+    public layer: OpaqueLayer = 0
     public startTime: number = 0
     public transform: Transform
     public material: IMaterial
@@ -106,7 +107,7 @@ export class Mesh implements IMesh {
         this.bounds.update(this.transform, this.buffer.radius)
         this.uniform.data.set(this.transform?.matrix || mat4.IDENTITY, 0)
         this.uniform.data.set(this.color, 16)
-        this.uniform.data[20] = this.layer + 1
+        this.uniform.data[20] = this.layer
         this.uniform.data[21] = this.startTime
     }
 }
@@ -118,7 +119,12 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         model: IModelData
         material?: MeshMaterial
     }> = Object.create(null)
-    constructor(private readonly context: Application){super(Mesh)}
+    public readonly plane: MeshBuffer
+    constructor(private readonly context: Application){
+        super(Mesh)
+        const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
+        this.plane = this.uploadVertexData(plane.vertexArray, plane.indexArray, plane.format)
+    }
     public delete(mesh: Mesh): void {
         super.delete(mesh)
         mesh.frame = mesh.layer = mesh.order = 0
@@ -212,7 +218,7 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
     public loadModel(name: string): Mesh {
         const mesh = this.create()
         const { model, inverseBindPose, buffer, material } = this.models[name]
-        mesh.layer = 1
+        mesh.layer = model.armature ? OpaqueLayer.Skinned : OpaqueLayer.Static
         mesh.buffer = buffer
         mesh.material = material
         if(model.armature) mesh.armature = new Armature(inverseBindPose, model.armature)

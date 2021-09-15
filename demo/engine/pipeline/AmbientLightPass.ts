@@ -1,10 +1,12 @@
 import { vec3, quat, mat4 } from '../math'
 import { Application, ISystem } from '../framework'
-import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
+import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { DeferredGeometryPass } from './GeometryPass'
 import { PostEffectPass } from './PostEffectPass'
 import { shaders } from '../shaders'
 import { PipelinePass } from './PipelinePass'
+import { LightField, ReflectionProbe } from './effects'
+import { CameraSystem } from '../scene'
 
 export class HemisphereLight {
     public frame: number = 0
@@ -25,12 +27,21 @@ export class HemisphereLight {
 export class AmbientLightPass extends PipelinePass implements ISystem {
     public environment: HemisphereLight = new HemisphereLight
     private readonly program: ShaderProgram
+    public reflection: LightField
     constructor(context: Application){
         super(context)
-        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.ambient_frag)
+        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.ambient_frag, {
+            REFLECTION_MAP: true, IRRADIANCE_MAP: false, IBL: true
+        })
+        this.program.uniforms['uBRDFLUT'] = UniformSamplerBindings.uAttributes
+
+        this.reflection = new LightField(this.context)
     }
     public update(): void {
         const { gl } = this.context
+        const { camera, controller } = this.context.get(CameraSystem)
+        this.reflection.relocateProbes(controller.cameraTarget)
+        camera.uniform.bind(gl, UniformBlockBindings.CameraUniforms)
 
         this.context.get(PostEffectPass).swapRenderTarget(false, false)
         gl.depthMask(false)
@@ -46,9 +57,23 @@ export class AmbientLightPass extends PipelinePass implements ISystem {
         this.environment.update(this.context)
         const plane = this.context.get(PostEffectPass).plane
 
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAttributes)
+        gl.bindTexture(GL.TEXTURE_2D, this.reflection.brdfLUT)
+
         gl.useProgram(this.program.target)
         gl.bindVertexArray(plane.vao)
         this.environment.uniform.bind(gl, UniformBlockBindings.LightUniforms)
-        gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
+
+        for(let i = this.reflection.probes.length - 1; i >= 0; i--){
+            const probe = this.reflection.probes[i]
+            const weight = this.reflection.calculateWeight(controller.cameraTarget, probe)
+            if(!weight) continue
+
+            this.program.uniforms['uWeight'] = weight
+            gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uEnvironmentMap)
+            gl.bindTexture(GL.TEXTURE_CUBE_MAP, probe.cubemap)
+
+            gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
+        }
     }
 }

@@ -41,6 +41,6 @@ export class SharedSystem implements ISystem {
 
         this.grid.enabled = false
         this.mist.enabled = false
-        this.sky.enabled = false
+        //this.sky.enabled = false
     }
 }

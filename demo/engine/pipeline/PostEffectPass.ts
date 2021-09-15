@@ -52,6 +52,7 @@ export class PostEffectPass extends PipelinePass implements ISystem {
         gl.bindTexture(GL.TEXTURE_2D, this.renderTarget[this.index])
         if(last) gl.bindFramebuffer(GL.FRAMEBUFFER, null)
         else gl.bindFramebuffer(GL.FRAMEBUFFER, this.fbo[this.index ^= 1])
+        gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight)
 
         if(blit){
             gl.bindFramebuffer(GL.DRAW_FRAMEBUFFER, last ? null : this.fbo[this.index])

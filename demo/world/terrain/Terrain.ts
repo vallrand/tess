@@ -1,5 +1,6 @@
 import { vec3, quat, aabb2 } from '../../engine/math'
 import { Application, ISystem } from '../../engine/framework'
+import { CameraSystem } from '../../engine/scene'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
@@ -22,7 +23,7 @@ export class TerrainSystem implements ISystem {
     public readonly resources: ResourceDeposit = new ResourceDeposit(this.context)
     constructor(private readonly context: Application){}
     public update(): void {
-        const position = this.context.get(PlayerSystem).cameraTarget
+        const position = this.context.get(CameraSystem).controller.cameraTarget
         const offsetX = Math.floor(position[0] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
         const offsetZ = Math.floor(position[2] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
         if(this.gridBounds[0] == offsetX && this.gridBounds[1] == offsetZ) return

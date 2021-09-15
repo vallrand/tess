@@ -1,5 +1,6 @@
 import { vec3, aabb2 } from '../../engine/math'
 import { createPlane } from '../../engine/geometry'
+import { OpaqueLayer } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components/Mesh'
 import { TransformSystem } from '../../engine/scene/Transform'
@@ -89,6 +90,7 @@ export class TerrainChunk {
 
         this.mesh = this.context.get(MeshSystem).create()
         this.context.get(MeshSystem).updateVertexData(this.vertexBuffer, this.vertexArray)
+        this.mesh.layer = OpaqueLayer.Terrain
         this.mesh.buffer = this.vertexBuffer
         this.mesh.buffer.frame = 0
         this.mesh.transform = this.context.get(TransformSystem).create()

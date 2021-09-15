@@ -1,4 +1,5 @@
 import { vec3, mat4 } from '../math'
+import { OpaqueLayer } from '../webgl'
 import { PerspectiveCamera } from './Camera'
 import { Transform } from './Transform'
 
@@ -41,35 +42,60 @@ export class BoundingVolume {
 
 export class FrustumCulling {
     private static temp: vec3 = vec3(0,0,0)
+    public layerMask: number = OpaqueLayer.All
+    private near: number
+    private far: number
+    private fieldOfView: number
+    private aspectRatio: number
     private tangent: number
     private sphereFactorX: number
     private sphereFactorY: number
-    private readonly AXIS_X: vec3 = vec3(1,0,0)
-    private readonly AXIS_Y: vec3 = vec3(0,1,0)
-    private readonly AXIS_Z: vec3 = vec3(0,0,1)
-    private readonly position: vec3 = vec3(0,0,0)
-    constructor(private readonly camera: PerspectiveCamera){}
-    update(camera: PerspectiveCamera){
-        this.tangent = Math.tan(this.camera.fieldOfView / 2)
-        this.sphereFactorY = 1 / Math.cos(this.camera.fieldOfView / 2)
-        this.sphereFactorX = 1 / Math.cos(Math.atan(this.tangent * this.camera.aspectRatio))
+    private readonly modelMatrix: mat4 & Float32Array = mat4() as any
+    private readonly AXIS_X: vec3 = this.modelMatrix.subarray(0, 3) as any
+    private readonly AXIS_Y: vec3 = this.modelMatrix.subarray(4, 7) as any
+    private readonly AXIS_Z: vec3 = this.modelMatrix.subarray(8, 11) as any
+    private readonly position: vec3 = this.modelMatrix.subarray(12, 14) as any
+    update(view: mat4, projection: mat4){
+        this.near = projection[14] / (projection[10] - 1.0)
+        this.far = projection[14] / (projection[10] + 1.0)
+        this.fieldOfView = 2 * Math.atan(1 / projection[5])
+        this.aspectRatio = projection[5] / projection[0]
 
-        const modelMatrix = this.camera.transform?.matrix || mat4.IDENTITY
+        mat4.invert(view, this.modelMatrix)
+
+        this.tangent = Math.tan(this.fieldOfView / 2)
+        this.sphereFactorY = 1 / Math.cos(this.fieldOfView / 2)
+        this.sphereFactorX = 1 / Math.cos(Math.atan(this.tangent * this.aspectRatio))
+    }
+    updateCamera(camera: PerspectiveCamera){
+        this.fieldOfView = camera.fieldOfView
+        this.aspectRatio = camera.aspectRatio
+        this.near = camera.zNear
+        this.far = camera.zFar
+
+        this.tangent = Math.tan(this.fieldOfView / 2)
+        this.sphereFactorY = 1 / Math.cos(this.fieldOfView / 2)
+        this.sphereFactorX = 1 / Math.cos(Math.atan(this.tangent * this.aspectRatio))
+
+        const modelMatrix = camera.transform?.matrix || mat4.IDENTITY
         vec3.set(modelMatrix[0], modelMatrix[1], modelMatrix[2], this.AXIS_X)
         vec3.set(modelMatrix[4], modelMatrix[5], modelMatrix[6], this.AXIS_Y)
         vec3.set(-modelMatrix[8], -modelMatrix[9], -modelMatrix[10], this.AXIS_Z)
         vec3.set(modelMatrix[12], modelMatrix[13], modelMatrix[14], this.position)
     }
-    public cull(bounds: BoundingVolume): boolean { return this.cullSphere(bounds.position, bounds.radius) }
+    public cull(bounds: BoundingVolume, layer: OpaqueLayer): boolean {
+        return (this.layerMask & layer) != 0
+        && this.cullSphere(bounds.position, bounds.radius)
+    }
     private cullSphere(center: vec3, radius: number): boolean {
         const direction = vec3.subtract(center, this.position, FrustumCulling.temp)
-        const dz = vec3.dot(direction, this.AXIS_Z)
-        if(dz > this.camera.zFar + radius || dz < this.camera.zNear - radius) return false
+        const dz = -vec3.dot(direction, this.AXIS_Z)
+        if(dz > this.far + radius || dz < this.near - radius) return false
         const dy = vec3.dot(direction, this.AXIS_Y)
         const edgeY = dz * this.tangent + radius * this.sphereFactorY
         if(dy > edgeY || dy < -edgeY) return false
         const dx = vec3.dot(direction, this.AXIS_X)
-        const edgeX = dz * this.tangent * this.camera.aspectRatio + radius * this.sphereFactorX
+        const edgeX = dz * this.tangent * this.aspectRatio + radius * this.sphereFactorX
         if(dx > edgeX || dx < -edgeX) return false
         return true
     }

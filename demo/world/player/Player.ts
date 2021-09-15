@@ -18,13 +18,7 @@ import { MeshSystem } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
 
 export class PlayerSystem implements ISystem {
-    public readonly cameraTarget: vec3 = vec3(0,0,0)
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
-    private readonly cameraPivot: vec3 = vec3(0,0,0)
-    private readonly cameraYaw: quat = quat()
-    private readonly cameraPitch: quat = quat()
-    private readonly cameraSmoothness: number = 0.1
-
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
     public readonly skills = CubeSkills(this.context, this.cube)
@@ -49,25 +43,8 @@ export class PlayerSystem implements ISystem {
         this.cube.meshes[this.cube.state.side].armature.frame = 0
         window['a'] = this.cube.meshes[this.cube.state.side].armature
         
-        vec3.copy(this.cube.transform.position, this.cameraTarget)
-        this.adjustCamera(this.cameraTarget)
-    }
-    private adjustCamera(target: vec3){
-        const camera = this.context.get(CameraSystem).camera
-        
-        vec3.add(this.cameraOffset, target, this.cameraPivot)
-        vec3.lerp(camera.transform.position, this.cameraPivot, this.cameraSmoothness, camera.transform.position)
-
-        const dx = camera.transform.position[0] - target[0]
-        const dy = camera.transform.position[1] - target[1]
-        const dz = camera.transform.position[2] - target[2]
-        const dw = Math.sqrt(dx*dx+dz*dz)
-        
-        quat.axisAngle(vec3.AXIS_Y, Math.atan2(dx, dz), this.cameraYaw)
-        quat.axisAngle(vec3.AXIS_X, Math.atan2(-dy, dw), this.cameraPitch)
-        quat.multiply(this.cameraYaw, this.cameraPitch, camera.transform.rotation)
-        quat.normalize(camera.transform.rotation, camera.transform.rotation)
-        camera.transform.frame = 0
+        vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
+        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
     }
     load(){
         this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform

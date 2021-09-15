@@ -59,12 +59,40 @@ class Monitor {
 
 export class DebugSystem implements ISystem {
     public texture: WebGLTexture
-    private readonly program: ShaderProgram
+    public cubemap: WebGLTexture
+    private readonly textureProgram: ShaderProgram
+    private readonly cubemapProgram: ShaderProgram
     constructor(private readonly context: Application){
         window['app'] = context
-        this.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)
-        this.program.uniforms['uMask'] = vec4.ONE
+        this.textureProgram = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)
+        this.textureProgram.uniforms['uMask'] = vec4.ONE
+        this.cubemapProgram = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag, { CUBEMAP: true })
+        this.cubemapProgram.uniforms['uMask'] = vec4.ONE
         this.attachDebugPanel()
+    }
+    update(){
+        if(this.texture) this.renderDebugTexture(this.texture, GL.TEXTURE_2D)
+        if(this.cubemap) this.renderDebugTexture(this.cubemap, GL.TEXTURE_CUBE_MAP)
+    }
+    renderDebugTexture(texture: WebGLTexture, type: number = GL.TEXTURE_2D){
+        const gl = this.context.gl
+        const plane = this.context.get(PostEffectPass).plane
+
+        gl.bindFramebuffer(GL.FRAMEBUFFER, null)
+        gl.bindVertexArray(plane.vao)
+        switch(type){
+            case GL.TEXTURE_2D:
+                gl.useProgram(this.textureProgram.target)
+                break
+            case GL.TEXTURE_CUBE_MAP:
+                gl.useProgram(this.cubemapProgram.target)
+                break
+        }
+
+        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
+        gl.bindTexture(type, texture)
+
+        gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
     }
     private attachDebugPanel(){
         const panel = document.createElement('div')
@@ -104,21 +132,5 @@ export class DebugSystem implements ISystem {
         panel.appendChild(DC.dom)
     
         document.body.appendChild(panel)
-    }
-    update(){
-        if(this.texture) this.renderDebugTexture(this.texture)
-    }
-    renderDebugTexture(texture: WebGLTexture){
-        const gl = this.context.gl
-        const plane = this.context.get(PostEffectPass).plane
-
-        gl.bindFramebuffer(GL.FRAMEBUFFER, null)
-        gl.bindVertexArray(plane.vao)
-        gl.useProgram(this.program.target)
-
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
-        gl.bindTexture(GL.TEXTURE_2D, texture)
-
-        gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
     }
 }

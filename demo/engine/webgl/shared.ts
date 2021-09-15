@@ -11,6 +11,7 @@ export const UniformBlockBindings = {
 }
 
 export const UniformSamplerBindings = {
+    uEnvironmentMap: 0,
     uSampler: 0,
     uGradient: 1,
     uGradientMap: 1,
@@ -22,6 +23,14 @@ export const UniformSamplerBindings = {
     uNormalBuffer: 3,
     uAlbedoBuffer: 4,
     uArrayMap: 7
+}
+
+export const enum OpaqueLayer {
+    Skybox = 0x0000,
+    Terrain = 0x0001,
+    Static = 0x0002,
+    Skinned = 0x0004,
+    All = 0xFFFF
 }
 
 export interface IVertexAttribute {

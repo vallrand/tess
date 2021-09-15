@@ -12,9 +12,9 @@ in vec2 vUV;
 in vec4 vColor;
 #endif
 
-layout(location=0) out vec4 fragPosition;
+layout(location=0) out vec4 fragAlbedo;
 layout(location=1) out vec4 fragNormal;
-layout(location=2) out vec4 fragAlbedo;
+layout(location=2) out vec4 fragPosition;
 
 uniform CameraUniforms {
     mat4 uViewProjectionMatrix;
@@ -99,11 +99,9 @@ void main(){
 #endif
 #endif
     vec4 diffuse = texture(uDiffuseMap, uv);
-    float metallic = 0.5 * smoothstep(0.25, 0.0, diffuse.a);
 
 #ifdef COLOR_INDEX
 #ifdef VERTEX_COLOR
-    metallic = 0.0;
     diffuse = texture(uArrayMap, vec3(4.*uv, uArrayMapLayers * vColor.a));
     diffuse.rgb *= vColor.rgb;
 #else
@@ -114,6 +112,7 @@ void main(){
     diffuse.rgb *= ao;
 #endif
 #endif
+    float metallic = 2.0 * 0.5 * smoothstep(0.25, 0.0, diffuse.a);
 
     fragPosition = vec4(position, uLayer);
     fragNormal = vec4(normal, metallic);

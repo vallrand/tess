@@ -10,9 +10,9 @@ in vec4 vColor;
 in float vMaterial;
 layout(location=0) out vec4 fragColor;
 #else
-layout(location=0) out vec4 fragPosition;
+layout(location=0) out vec4 fragAlbedo;
 layout(location=1) out vec4 fragNormal;
-layout(location=2) out vec4 fragAlbedo;
+layout(location=2) out vec4 fragPosition;
 #endif
 
 uniform GlobalUniforms {

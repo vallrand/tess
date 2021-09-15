@@ -3,7 +3,7 @@ import { vec3 } from '../../../engine/math'
 import { IEffect, PostEffectPass } from '../../../engine/pipeline'
 import { MeshBuffer } from '../../../engine/components'
 import { ShaderMaterial } from '../../../engine/materials'
-import { GL, ShaderProgram } from '../../../engine/webgl'
+import { GL, ShaderProgram, OpaqueLayer } from '../../../engine/webgl'
 import { shaders } from '../../../engine/shaders'
 
 export class SkyEffect implements IEffect {
@@ -21,7 +21,7 @@ export class SkyEffect implements IEffect {
         this.material.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.sky_frag, {
             RAYCAST: true
         })
-        this.material.program.uniforms['uLayer'] = 0
+        this.material.program.uniforms['uLayer'] = OpaqueLayer.Skybox
         this.material.program.uniforms['uFogColor'] = this.context.get(PostEffectPass).fog.color
         this.material.program.uniforms['uSkyColor'] = this.color
     }

@@ -62,7 +62,7 @@ export class ParticleEffectPass extends PipelinePass implements ISystem {
         for(let i = list.length - 1; i >= 0; i--){
             const item = list[i]
             item.update(this.context, camera)
-            if(!camera.culling.cull(item.bounds)) continue
+            if(!camera.culling.cull(item.bounds, 0xFFFF)) continue
 
             if(!material) if(!(item as IBatched).vertices){
                 gl.bindVertexArray(item.buffer.vao)

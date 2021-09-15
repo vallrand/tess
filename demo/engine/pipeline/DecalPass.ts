@@ -87,7 +87,7 @@ export class DecalPass extends PipelinePass implements ISystem {
         for(let i = this.list.length - 1; i >= 0; i--){
             const decal: Decal = this.list[i]
             decal.update(this.context.frame, this.context)
-            if(!camera.culling.cull(decal.bounds)) continue
+            if(!camera.culling.cull(decal.bounds, 0xFFFF)) continue
 
             if(!material) material = decal.material
             if(decal.material.diffuse !== material.diffuse || decal.material.program !== material.program) i++
