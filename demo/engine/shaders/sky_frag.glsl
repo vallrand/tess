@@ -56,18 +56,18 @@ float fbm(vec3 p, int octaves, float scale, float offset){
 }
 
 vec3 sky(in vec3 ray){
-    const vec3 sun = normalize(vec3(0,1,1));
+    const vec3 sun = normalize(vec3(0,1,0.5));
 
     ray.y = max(ray.y, 0.);
 
     vec3 color = vec3(0);
-    color += vec3(.2,.3,.4) * dot(ray,vec3(0,1,0));
+    color += vec3(.4,.1,.3) * dot(ray,vec3(0,1,0));
     
     float f0 = fbm(ray * 10.0 + vec3(0,0,1)*uTime.x*0.1, 4,2.,1.);
     float f1 = fbm(ray * 8.0 + f0, 2,1.,0.);
     
-    color += mix(vec3(0), vec3(1,0.4,0.6), f1 * f1 - 0.2 * f0) * ray.y;
-    color += 2.0 * vec3(0.9,0.7,0.7) * pow(max(0.,dot(ray, sun)),8.);
+    color += vec3(1.0,0.8,0.8) * (f1 * f1 - 0.2 * f0) * ray.y;
+    color += vec3(1.4,1.2,1.0) * pow(max(0.,dot(ray, sun)),16.);
     return color * color;
 }
 
@@ -76,7 +76,7 @@ void main(){
     vec3 ray = normalize(vRay);
     gl_FragDepth = gl_DepthRange.far;
     fragPosition = vec4(position,uLayer);
-    fragNormal = vec4(-ray*0.0,0.5);
+    fragNormal = vec4(-ray*0.0,0);
 
     float rayDotUp = max(0.0,dot(vec3(0,1,0),ray));
     vec3 color = mix(uFogColor.rgb, sky(ray), rayDotUp);

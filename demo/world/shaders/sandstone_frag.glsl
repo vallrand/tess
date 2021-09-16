@@ -52,6 +52,6 @@ void main(){
     color.gb += step(0.48, max(abs(0.5-vUV.x),abs(0.5-vUV.y)));
 #endif
 
-    float roughness = mix(0.5,1.0,color.g);
+    float roughness = mix(0.8,1.0,color.g);
     fragColor = vec4(color,.5*roughness);
 }

@@ -66,4 +66,5 @@ void main(){
     vec3 ambient = (kD * indirectDiffuse + indirectSpecular);
 
     fragColor = uWeight * vec4(ambient, emission);
+    fragColor.rgb = mix(albedo.rgb, fragColor.rgb, step(0.5, position.w));
 }

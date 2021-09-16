@@ -51,7 +51,7 @@ export class TurnBasedSystem implements ISystem {
                 this.turn++
                 this.index = 0
             }
-            const lastAction = this.queue[0] ? this.queue[0].index : this.actionIndex-1
+            const lastAction = this.queue[0] ? this.queue[0].index : this.actionIndex
             while(this.index < this.actors.length){
                 const actor = this.actors[this.index++]
                 if(actor.prevAction >= lastAction) break turn

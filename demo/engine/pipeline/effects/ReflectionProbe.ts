@@ -106,16 +106,20 @@ export class ReflectionProbe {
         }
     }
     public update(target: vec3): void {
-        vec3.copy(target, this.position)
-        this.frame = this.context.frame
-        for(let i = this.faces.length - 1; i >= 0; i--)
-            this.faces[i].update(this.position)
-        
-        console.log(`%cenv cubemap ${this.width}x${this.height} at ${this.position}`,'color:#a0d050')
+        if(this.frame >= this.faces.length) return
+
+        if(this.frame == 0){
+            vec3.copy(target, this.position)
+            for(let i = this.faces.length - 1; i >= 0; i--)
+                this.faces[i].update(this.position)
+            
+            console.log(`%cenv cubemap ${this.width}x${this.height} - [${this.position}]`,'color:#a0d050')
+        }
 
         const { gl } = this.context
         for(let i = this.faces.length - 1; i >= 0; i--){
             const face = this.faces[i]
+            if(i !== this.frame) continue
 
             gl.viewport(0,0,this.width,this.height)
             gl.bindFramebuffer(GL.FRAMEBUFFER, this.fbo[i])
@@ -123,11 +127,10 @@ export class ReflectionProbe {
             gl.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT)
 
             face.bind(gl, UniformBlockBindings.CameraUniforms)
-            //TODO cull dynamic objects?
             this.context.get(DeferredGeometryPass).render(this.context.get(MeshSystem).list, face.culling)
         }
-
-        if(ReflectionProbe.mipmaps){
+        this.frame++
+        if(ReflectionProbe.mipmaps && this.frame === this.faces.length){
             gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uEnvironmentMap)
             gl.bindTexture(GL.TEXTURE_CUBE_MAP, this.cubemap)
             gl.generateMipmap(GL.TEXTURE_CUBE_MAP)
@@ -174,8 +177,10 @@ export class LightField {
             const mz = iz + mod(z - iz, this.gridSize)
 
             const position = vec3.set(mx * size, iy * size + 2, mz * size, LightField.target)
-            if(position[0] !== probe.position[0] || position[2] !== probe.position[2] || probe.frame === 0)
-                probe.update(position)
+            if(position[0] !== probe.position[0] || position[2] !== probe.position[2]) probe.frame = 0
+            const skip = probe.frame < 6
+            probe.update(position)
+            if(skip) return
         }
     }
     public calculateWeight(target: vec3, probe: ReflectionProbe): number {

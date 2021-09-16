@@ -51,6 +51,6 @@ void main(){
     color += 0.1*(cos(2.0*TAU*uv.y));
     color *= uColor;
     	
-    float roughness = mix(0.5,0.2,color.b);
+    float roughness = mix(0.2,0.8,color.b);
 	fragColor = vec4(color,.5*roughness);
 }

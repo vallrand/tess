@@ -235,7 +235,7 @@ class Missile {
         vec3.scale(this.normal, dot0, control2)
         vec3.subtract(target, control2, control2)
 
-        const heightRange = vec2(1, 6), offset = vec3()
+        const heightRange = vec2(1, Math.max(0, this.origin[1]) + 6), offset = vec3()
         for(let distance = 0, i = 0; i <= length; i++){
             const prev = path[path.length - 1]
             const next = cubicBezier3D(control0, control1, control2, target, i / length, vec3())

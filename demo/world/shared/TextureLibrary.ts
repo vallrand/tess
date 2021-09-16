@@ -10,20 +10,20 @@ function TextureArray(context: Application){
     const layers = [
         { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0,0,0,0.5] }},
         { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.91, 0.23, 0.52, 1] }}, 
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.69, 0.71, 0.73, 0] }}, 
+        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.2, 0.2, 0.2, 0.12] }}, 
         { shader: require('../shaders/circuit_frag.glsl'), rate: 2, uniforms: {  }}, 
-        { shader: require('../shaders/hatch_frag.glsl'), rate: 0, uniforms: { uColor: [0.8,0.9,1.0] }}, 
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.61, 0.7, 0.5] }}, 
+        { shader: require('../shaders/hatch_frag.glsl'), rate: 0, uniforms: { uColor: [0.8,0.9,1.0] }},
+        { shader: require('../shaders/rust_frag.glsl'), define: { RUST: false }, rate: 0, uniforms: {  }}, 
         { shader: require('../shaders/wires_frag.glsl'), rate: 2, uniforms: {  }}, 
-        { shader: require('../shaders/rust_frag.glsl'), rate: 0, uniforms: {  }}, 
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.46, 0.6, 0.62, 0.5] }}
+        { shader: require('../shaders/rust_frag.glsl'), define: { RUST: true }, rate: 0, uniforms: {  }}, 
+        { shader: require('../shaders/rust_frag.glsl'), define: { PIPE: true }, rate: 0, uniforms: {  }}
     ]
 
     const textureArray = materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize, layers.length)
     for(let index = 0; index < layers.length; index++)
     materials.addRenderTexture(
         textureArray, index,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, layers[index].shader),
+        ShaderProgram(context.gl, shaders.fullscreen_vert, layers[index].shader, layers[index].define),
         layers[index].uniforms, layers[index].rate
     )
 
