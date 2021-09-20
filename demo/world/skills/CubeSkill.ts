@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { mod } from '../../engine/math'
-import { _ActionSignal } from '../Actor'
+import { ActionSignal } from '../../engine/scene'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube, Direction } from '../player'
 
@@ -9,7 +9,7 @@ export class CubeSkill {
     get direction(): Direction {
         return mod(this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
     }
-    public *open(): Generator<_ActionSignal> {
+    public *open(): Generator<ActionSignal> {
         if(!this.validate()) return
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
@@ -20,11 +20,11 @@ export class CubeSkill {
 
             armatureAnimation.open(elapsedTime / duration, mesh.armature)
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
         state.open = 1
     }
-    public *close(): Generator<_ActionSignal> {
+    public *close(): Generator<ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
@@ -34,7 +34,7 @@ export class CubeSkill {
 
             armatureAnimation.open(1.0 - elapsedTime / duration, mesh.armature)
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
         state.open = 0
         this.clear()

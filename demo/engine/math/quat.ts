@@ -5,6 +5,7 @@ export type quat = vec4
 export const quat = (): quat => vec4(0,0,0,1)
 
 quat.copy = vec4.copy
+quat.set = vec4.set
 quat.normalize = vec4.normalize
 
 quat.multiply = (q1: quat, q2: quat, out: quat): quat => {
@@ -90,21 +91,67 @@ quat.euler = (x: number, y: number, z: number, order: EulerOrder, out: quat): qu
     return out
 }
 
-quat.rotationTo = (a: vec3, b: vec3, out: quat): quat => {
+quat.extractEuler = (q: quat, order: EulerOrder, out: vec3): vec3 => {
+    const x = q[0], y = q[1], z = q[2], w = q[3]
+    const x2 = x*x, y2 = y*y, z2 = x*x
+    switch(order){
+        case 'yzx': {
+            const det = x*y + z*w, sign = det < 0 ? -1 : 1
+            if(det * sign > 0.5 - Number.EPSILON){
+                out[1] = sign * 2 * Math.atan2(x, w)
+                out[2] = sign * 0.5 * Math.PI
+                out[0] = 0
+            }else{
+                out[1] = Math.atan2(2*y*w - 2*x*z, 1 - 2*y2 - 2*z2)
+                out[2] = Math.asin(2 * det)
+                out[0] = Math.atan2(2*x*w - 2*y*z , 1 - 2*x2 - 2*z2)
+            }
+            break
+        }
+        case 'xyz': {
+            const det = x*w - y*z, sign = det < 0 ? -1 : 1
+            if(det * sign > 0.5 - Number.EPSILON){
+                out[1] = sign * 2 * Math.atan2(y, x)
+                out[0] = sign * 0.5 * Math.PI
+                out[2] = 0
+            }else{
+                out[1] = Math.atan2(2*w*y + 2*z*x, 1 - 2*x2 - 2*y2)
+                out[0] = Math.asin(2 * det)
+                out[2] = Math.atan2(2*w*z + 2*x*y, 1 - 2*z2 - 2*x2)
+            }
+            break
+        }
+    }
+    return out
+}
+
+
+quat.rotation = (a: vec3, b: vec3, out: quat): quat => {
     const dot = vec3.dot(a, b)
     const magnitude = Math.sqrt(vec3.magnitudeSquared(a) * vec3.magnitudeSquared(b))
     const cosTheta = dot / magnitude
     if(cosTheta >= 1) return quat.copy(quat.IDENTITY, out)
     else if(cosTheta <= -1){
-        const x = Math.abs(a[0]), y = Math.abs(a[1]), z = Math.abs(a[2])
-        const orthogonal = x < y ? (x < z ? vec3.AXIS_X : vec3.AXIS_Z) : (y < z ? vec3.AXIS_Y : vec3.AXIS_Z)
-        vec3.cross(a, orthogonal, out as any)
+        vec3.orthogonal(a, out as any)
         vec3.normalize(out as any, out as any)
         out[3] = 0
         return out
     }
     vec3.cross(a, b, out as any)
     out[3] = magnitude + dot
+    return quat.normalize(out, out)
+}
+
+quat.unitRotation = (start: vec3, end: vec3, out: quat): quat => {
+    const dot = vec3.dot(start, end)
+    if(dot >= 1) return quat.copy(quat.IDENTITY, out)
+    else if(dot <= -1){
+        vec3.orthogonal(start, out as any)
+        out[3] = 0
+    }else{
+        vec3.cross(start, end, out as any)
+        out[3] = 1 + dot
+    }
     return quat.normalize(out, out)
 }
 
@@ -148,6 +195,32 @@ quat.fromNormal = (forward: vec3, up: vec3, out: quat): quat => {
 quat.angle = (a: quat, b: quat): number => {
     const dot = vec4.dot(a, b)
     return Math.acos(2 * dot * dot - 1)
+}
+
+quat.pow = (q: quat, power: number, out: quat): quat => {
+    const angle = 2 * Math.acos(q[3])
+    vec3.normalize(q as any, out as any)
+    const halfcos = Math.cos(0.5 * power * angle)
+    const halfsin = Math.sin(0.5 * power * angle)
+    out[0] *= halfsin
+    out[1] *= halfsin
+    out[2] *= halfsin
+    out[3] = halfcos
+    return out
+}
+
+quat.decompose = (quaternion: quat, twistAxis: vec3, swing: quat, twist: quat): void => {
+	const dot = vec3.dot(twistAxis, quaternion as any)
+	vec3.scale(twistAxis, dot, twist as any)
+	twist[3] = quaternion[3]
+	 if(vec4.dot(twist, twist) < Number.EPSILON){
+		quat.copy(quaternion, swing)
+		quat.copy(quat.IDENTITY, twist)
+		return
+	}
+	quat.normalize(twist, twist)
+	quat.conjugate(twist, swing)
+	quat.multiply(quaternion, swing, swing)
 }
 
 quat.IDENTITY = quat()

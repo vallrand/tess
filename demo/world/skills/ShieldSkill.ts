@@ -11,7 +11,6 @@ import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
@@ -145,7 +144,7 @@ export class ShieldSkill extends CubeSkill {
         this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = this.tube.material
     }
-    public *open(): Generator<_ActionSignal> {
+    public *open(): Generator<ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
@@ -198,11 +197,11 @@ export class ShieldSkill extends CubeSkill {
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             if(elapsedTime <= 1) armatureAnimation.open(elapsedTime, mesh.armature)
-            else if(this.idleIndex == -1) this.idleIndex = this.context.get(AnimationSystem).start(this.idle())
+            else if(this.idleIndex == -1) this.idleIndex = this.context.get(AnimationSystem).start(this.idle(), true)
 
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
         state.open = 1
 
@@ -219,14 +218,14 @@ export class ShieldSkill extends CubeSkill {
 
         this.context.get(DecalPass).delete(this.wave)
     }
-    public *close(): Generator<_ActionSignal> {
+    public *close(): Generator<ActionSignal> {
         const state = this.cube.state.sides[this.cube.state.side]
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
         this.idleIndex = -1
-        while(!waiter.continue) yield _ActionSignal.WaitNextFrame
+        while(!waiter.continue) yield ActionSignal.WaitNextFrame
 
         const animate = AnimationTimeline(this, outroTimeline)
         for(const duration = 1, startTime = this.context.currentTime; true;){
@@ -234,7 +233,7 @@ export class ShieldSkill extends CubeSkill {
             armatureAnimation.open(1.0 - elapsedTime, mesh.armature)
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
         state.open = 0
 

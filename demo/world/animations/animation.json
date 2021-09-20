@@ -56,7 +56,7 @@
     "death":{"open":[]},
     "cube_0":{
         "close":[
-            {"index":1,"frame":0,"position":[-0.2,0.2,0],"rotation":[0,0,0,1]},
+            {"index":1,"frame":0,"position":[-0.2,0.4,0],"rotation":[0,0,0,1]},
             {"index":2,"frame":0,"position":[0.3,0.7,0]},
             {"index":3,"frame":0,"position":[-0.2,0.7,0]},
             {"index":4,"frame":0,"position":[0.1,2,-0.1]},
@@ -326,7 +326,7 @@
             {"index":2,"frame":0,"position":[-0.5,0.5,0.5]},
             {"index":3,"frame":0,"position":[0.5,0.5,-0.5]},
             {"index":4,"frame":0,"position":[0.5,0.5,0.5]},
-            {"index":5,"frame":0,"position":[0,0,0]},
+            {"index":5,"frame":0,"position":[0,0,0],"scale":[0,0,0]},
             {"index":6,"frame":0,"position":[0,-0.02,0]},
             {"index":7,"frame":0,"position":[0,0,0]}
         ],
@@ -347,7 +347,7 @@
             {"index":4,"frame":0.4,"position":[1,1,1],"ease":"quadOut"},
             {"index":4,"frame":1,"position":[1,0.5,1],"ease":"cubicIn"},
 
-            {"index":5,"frame":0.5,"position":[0,-0.2,0]},
+            {"index":5,"frame":0.5,"position":[0,-0.2,0],"scale":[1,1,1]},
             {"index":5,"frame":1,"position":[0,1,0],"ease":"sineOut"},
 
             {"index":6,"frame":0.5,"position":[0,-0.5,0]},
@@ -386,9 +386,9 @@
             {"index":2,"frame":0,"rotation":[0,0,0,1]},
             {"index":6,"frame":0,"rotation":[-0,-0.707107,-0,0.707107]},
             {"index":7,"frame":0,"rotation":[-0,0.707107,0,0.707107]},
-            {"index":3,"frame":0,"position":[0,0.1,0]},
+            {"index":3,"frame":0,"position":[0,0.1,0],"scale":[0,0,0]},
             {"index":4,"frame":0,"position":[0,0,0]},
-            {"index":5,"frame":0,"position":[0,0,0],"scale":[0.5,0.5,0.5]}
+            {"index":5,"frame":0,"position":[0,0,0]}
         ],
         "open":[
             {"index":1,"frame":0,"rotation":[0,0,0,1]},
@@ -400,7 +400,7 @@
             {"index":7,"frame":0,"rotation":[-0,0.707107,0,0.707107]},
             {"index":7,"frame":1,"rotation":[-0.5,0.5,0.5,0.5],"ease":"cubicIn"},
 
-            {"index":3,"frame":0.0,"position":[0,0,0]},
+            {"index":3,"frame":0.0,"position":[0,0,0],"scale":[1,1,1]},
             {"index":3,"frame":0.4,"position":[0,2,0],"ease":"sineIn"},
             {"index":4,"frame":0.2,"position":[0,0,0]},
             {"index":4,"frame":0.8,"position":[0,1,0],"ease":"quadOut"},
@@ -530,5 +530,49 @@
             {"index":6,"frame":0.8,"rotation":[-0.630037,-0.32102,-0.630037,0.32102],"ease":"quadInOut"},
             {"index":6,"frame":1.2,"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"quartOut"}
         ]
+    },
+    "scarab":{
+        "activate":[
+            {"index":0,"frame":0,"position":[0,0.5,0],"rotation":[0,-0.707107,0,0.707107]},
+
+            {"index":1,"frame":0.1,"scale":[0.8,0.5,0.8]},
+            {"index":1,"frame":0.3,"scale":[1,0.8,1],"position":[-0.6,0.5,0],"rotation":[0,0,-0.707107,0.707107],"ease":"quartOut"},
+            {"index":1,"frame":0.8,"scale":[1,1,1],"position":[0,0.5,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"expoOut"},
+            {"index":1,"frame":1.0,"scale":[0.8,0.5,0.8],"position":[-0.6,0.5,0],"ease":"quadIn"},
+
+            {"index":2,"frame":0,"position":[0,0.5,0.1]},
+            {"index":2,"frame":0.4,"position":[0.1,0.5,-0.3],"ease":"cubicInOut"},
+            {"index":2,"frame":0.7,"position":[0,0.5,-0.2],"ease":"quadOut"},
+            {"index":2,"frame":1.0,"position":[0,0.5,0.1],"ease":"cubicIn"},
+
+            {"index":3,"frame":0,"position":[0,0.5,-0.1]},
+            {"index":3,"frame":0.4,"position":[0.1,0.5,0.3],"ease":"cubicInOut"},
+            {"index":3,"frame":0.7,"position":[0,0.5,0.2],"ease":"quadOut"},
+            {"index":3,"frame":1.0,"position":[0,0.5,-0.1],"ease":"cubicIn"}
+        ]
+    },
+    "tarantula":{
+        "activate":[
+            {"index":9,"frame":0,"scale":[0,0,0]},
+            {"index":11,"frame":0,"scale":[0,0,0]}   
+        ]
+    },
+    "stingray":{
+
+    },
+    "locust":{
+
+    },
+    "obelisk":{
+
+    },
+    "monolith":{
+
+    },
+    "decapod":{
+
+    },
+    "isopod":{
+
     }
 }

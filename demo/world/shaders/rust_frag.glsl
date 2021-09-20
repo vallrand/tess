@@ -106,7 +106,7 @@ void main(){
     vec3 color = vec3(f1*f1*f1,f1*f1*(f1+0.5),f1*(f1+0.5));
     color -= vec3(f1*abs(f0));
     float roughness = mix(0.8, 0.4, color.r);
-    color = mix(vec3(1.0,0.85,0.95)-color.bgr, color.ggb, color.b*color.g);
+    color = mix((vec3(1.0,0.85,0.95)-color.bgr)*0.5, color.ggb, color.b*color.g);
 
     fragColor = vec4(color,.5*roughness);
 #else

@@ -1,16 +1,16 @@
-import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat, ease } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { MeshSystem, Mesh } from '../../engine/components/Mesh'
-import { TransformSystem, Transform } from '../../engine/scene/Transform'
+import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat, ease } from '../../engine/math'
+import { MeshSystem, Mesh } from '../../engine/components'
+import { TransformSystem, Transform, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
-import { KeyboardSystem } from '../../engine/Keyboard'
-import { PointLightPass, PointLight } from '../../engine/pipeline/PointLightPass'
-import { TerrainSystem, TerrainChunk } from '../terrain'
-import { modelAnimations, CubeModuleModel } from '../animations/animations'
-import { EmitterTrigger } from '../../engine/scene/Animation'
+import { KeyboardSystem } from '../../engine/device'
+import { PointLightPass, PointLight } from '../../engine/pipeline'
+
+import { modelAnimations, CubeModuleModel } from '../animations'
+import { TurnBasedSystem, IActor } from '../mechanics'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
-import { IActor, TurnBasedSystem, _ActionSignal } from '../Actor'
 import { PlayerSystem } from './Player'
+import { TerrainSystem, TerrainChunk, IUnit } from '../terrain'
 import { CubeModule } from './CubeModules'
 import { SharedSystem } from '../shared'
 
@@ -28,9 +28,9 @@ export interface CubeState {
     }[]
 }
 
-export class Cube implements IActor {
+export class Cube implements IActor, IUnit {
     order: number = 0
-    prevAction: number
+    actionIndex: number
     hash: number = 0
     public transform: Transform
     public readonly meshes: Mesh[] = []
@@ -96,7 +96,7 @@ export class Cube implements IActor {
         ), 0)
     }
     kill(){}
-    *execute(turn: number): Generator<_ActionSignal> {
+    *execute(): Generator<ActionSignal, void> {
         const keys = this.context.get(KeyboardSystem)
         const state = this.state.sides[this.state.side]
         const mesh = this.meshes[this.state.side]
@@ -104,7 +104,7 @@ export class Cube implements IActor {
         const skill = this.context.get(PlayerSystem).skills[state.type]
 
         idle: for(let frame = 0; true;){
-            if(frame === this.context.frame) yield _ActionSignal.WaitNextFrame
+            if(frame === this.context.frame) yield ActionSignal.WaitNextFrame
             
             let direction = Direction.None
             if(keys.down('KeyA')) direction = Direction.Right
@@ -173,12 +173,12 @@ export class Cube implements IActor {
                 if(state.open != 0 || direction == Direction.None) break movement
                 const move = this.moveTransition(direction)
                 if(!move) break movement
-                this.prevAction = this.context.get(TurnBasedSystem).start(move, false)
+                this.actionIndex = this.context.get(AnimationSystem).start(move, true)
                 break idle
             }
         }
     }
-    private moveTransition(direction: Direction): Generator<_ActionSignal> {
+    private moveTransition(direction: Direction): Generator<ActionSignal> {
         const nextOrientation = CubeOrientation.roll(CubeOrientation(this.state.side, this.state.direction), direction)
         const nextDirection = nextOrientation & 0x3
         const nextFace = nextOrientation >>> 2
@@ -235,6 +235,8 @@ export class Cube implements IActor {
         quat.multiply(prevRotation, nextRotation, prevRotation)
         const pivotOffset = vec3.subtract(nextPosition, pivot, vec3())
         quat.transform(pivot, quat.conjugate(nextRotation, quat()), pivot)
+
+        this.context.get(PlayerSystem).tilemap.renderFaceTiles(this)
         
         return function*(this: Cube){
             const dustTrigger = EmitterTrigger({
@@ -260,7 +262,7 @@ export class Cube implements IActor {
                 dustTrigger(elapsedTime, this.context.deltaTime, this.dust)
 
                 if(fraction >= 1) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
         }.call(this)
     }

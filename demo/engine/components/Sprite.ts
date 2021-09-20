@@ -15,8 +15,8 @@ export const enum BillboardType {
 export class Sprite implements IBatched {
     private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
     private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1])
-    private static readonly normal: vec3 = vec3()
     private static readonly tangent: vec3 = vec3()
+    private static readonly binormal: vec3 = vec3()
     private static readonly forward: vec3 = vec3()
 
     public billboard: BillboardType = BillboardType.None
@@ -42,48 +42,56 @@ export class Sprite implements IBatched {
 
         if(!this.frame || this.frame < this.transform.frame) this.bounds.update(this.transform, Math.max(width, height))
         const transform = this.transform.matrix
-        const { normal, tangent } = Sprite
+        const { tangent, binormal, forward } = Sprite
+        const { normal } = this
 
         switch(this.billboard){
             case BillboardType.None:
-                vec3.set(transform[0], transform[1], transform[2], normal)
-                vec3.set(transform[4], transform[5], transform[6], tangent)
+                vec3.set(transform[0], transform[1], transform[2], tangent)
+                vec3.set(transform[4], transform[5], transform[6], binormal)
+                //TODO if flip enabled
+                vec3.set(transform[8], transform[9], transform[10], normal)
+                vec3.set(camera.viewMatrix[2], camera.viewMatrix[6], camera.viewMatrix[10], forward)
+
+                vec3.scale(tangent, Math.sign(vec3.dot(forward, normal)), tangent)
                 break
             case BillboardType.Sphere:
-                vec3.set(camera.viewMatrix[0], camera.viewMatrix[4], camera.viewMatrix[8], normal)
-                vec3.set(camera.viewMatrix[1], camera.viewMatrix[5], camera.viewMatrix[9], tangent)
-                vec3.scale(normal, this.transform.scale[0], normal)
-                vec3.scale(tangent, this.transform.scale[1], tangent)
-                //mat4.transformNormal(normal, transform, normal)
+                vec3.set(camera.viewMatrix[0], camera.viewMatrix[4], camera.viewMatrix[8], tangent)
+                vec3.set(camera.viewMatrix[1], camera.viewMatrix[5], camera.viewMatrix[9], binormal)
+
+                vec3.scale(tangent, this.transform.scale[0], tangent)
+                vec3.scale(binormal, this.transform.scale[1], binormal)
                 //mat4.transformNormal(tangent, transform, tangent)
+                //mat4.transformNormal(binormal, transform, binormal)
+                vec3.cross(tangent, binormal, normal)
                 break
             case BillboardType.Cylinder:
-                vec3.set(transform[4], transform[5], transform[6], normal)
-                const forward = vec3.set(transform[12], transform[13], transform[14], Sprite.forward)
+                vec3.set(transform[4], transform[5], transform[6], tangent)
+                vec3.set(transform[12], transform[13], transform[14], forward)
                 vec3.subtract(camera.position, forward, forward)
                 //const forward = vec3.set(camera.viewMatrix[2], camera.viewMatrix[6], camera.viewMatrix[10], Sprite.forward) //flat
-                vec3.cross(forward, normal, tangent)
-                vec3.normalize(tangent, tangent)
-                vec3.scale(tangent, Math.hypot(transform[0], transform[1], transform[2]), tangent)
+                vec3.cross(forward, tangent, binormal)
+                vec3.normalize(binormal, binormal)
+                vec3.scale(binormal, Math.hypot(transform[0], transform[1], transform[2]), binormal)
+                vec3.cross(tangent, binormal, normal)
                 break
         }
-        this.vertices[0] = normal[0] * left + tangent[0] * top + transform[12]
-        this.vertices[1] = normal[1] * left + tangent[1] * top + transform[13]
-        this.vertices[2] = normal[2] * left + tangent[2] * top + transform[14]
+        this.vertices[0] = tangent[0] * left + binormal[0] * top + transform[12]
+        this.vertices[1] = tangent[1] * left + binormal[1] * top + transform[13]
+        this.vertices[2] = tangent[2] * left + binormal[2] * top + transform[14]
 
-        this.vertices[3] = normal[0] * right + tangent[0] * top + transform[12]
-        this.vertices[4] = normal[1] * right + tangent[1] * top + transform[13]
-        this.vertices[5] = normal[2] * right + tangent[2] * top + transform[14]
+        this.vertices[3] = tangent[0] * right + binormal[0] * top + transform[12]
+        this.vertices[4] = tangent[1] * right + binormal[1] * top + transform[13]
+        this.vertices[5] = tangent[2] * right + binormal[2] * top + transform[14]
 
-        this.vertices[6] = normal[0] * right + tangent[0] * bottom + transform[12]
-        this.vertices[7] = normal[1] * right + tangent[1] * bottom + transform[13]
-        this.vertices[8] = normal[2] * right + tangent[2] * bottom + transform[14]
+        this.vertices[6] = tangent[0] * right + binormal[0] * bottom + transform[12]
+        this.vertices[7] = tangent[1] * right + binormal[1] * bottom + transform[13]
+        this.vertices[8] = tangent[2] * right + binormal[2] * bottom + transform[14]
 
-        this.vertices[9] = normal[0] * left + tangent[0] * bottom + transform[12]
-        this.vertices[10] = normal[1] * left + tangent[1] * bottom + transform[13]
-        this.vertices[11] = normal[2] * left + tangent[2] * bottom + transform[14]
+        this.vertices[9] = tangent[0] * left + binormal[0] * bottom + transform[12]
+        this.vertices[10] = tangent[1] * left + binormal[1] * bottom + transform[13]
+        this.vertices[11] = tangent[2] * left + binormal[2] * bottom + transform[14]
 
-        vec3.cross(normal, tangent, this.normal)
         this.frame = context.frame
     }
 }

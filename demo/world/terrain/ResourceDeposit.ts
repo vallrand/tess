@@ -7,9 +7,10 @@ import { StaticParticleEmitter } from '../../engine/particles'
 import { Decal, DecalPass } from '../../engine/pipeline'
 import { DecalMaterial } from '../../engine/materials'
 import { TerrainSystem } from './Terrain'
+import { IUnit } from './TerrainChunk'
 import { SharedSystem } from '../shared'
 
-export class ResourceSpot {
+export class ResourceSpot implements IUnit {
     readonly tile: vec2 = vec2()
     decal: Decal
     emitter: StaticParticleEmitter

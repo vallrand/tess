@@ -151,7 +151,7 @@ export class Minefield {
     activate(mine: LandMine){
         const index = this.list.indexOf(mine)
         this.list.splice(index, 1)
-        this.context.get(AnimationSystem).start(this.detonate(mine))
+        this.context.get(AnimationSystem).start(this.detonate(mine), true)
     }
     private createExplosion(): ExplosionEffect {
         if(this.pool.length) return this.pool.pop()

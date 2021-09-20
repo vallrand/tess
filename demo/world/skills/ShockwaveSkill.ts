@@ -1,14 +1,13 @@
 import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
-import { TransformSystem, AnimationTimeline, PropertyAnimation } from '../../engine/scene'
+import { TransformSystem, AnimationTimeline, PropertyAnimation, ActionSignal } from '../../engine/scene'
 import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
 import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
 import { shaders } from '../../engine/shaders'
 
-import { _ActionSignal } from '../Actor'
 import { modelAnimations, CubeModuleModel } from '../animations'
 import { Cube } from '../player'
 import { SharedSystem } from '../shared'
@@ -164,7 +163,7 @@ export class ShockwaveSkill extends CubeSkill {
         this.cylinder.material.program = this.context.get(ParticleEffectPass).program
         this.cylinder.material.diffuse = SharedSystem.textures.wind
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const origin: vec3 = mat4.transform([0, 0, 0], transform, vec3() as any) as any
 
         this.ring = this.context.get(DecalPass).create(0)
@@ -215,7 +214,7 @@ export class ShockwaveSkill extends CubeSkill {
             armatureAnimation.activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
 

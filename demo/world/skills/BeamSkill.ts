@@ -5,12 +5,11 @@ import { ShaderProgram } from '../../engine/webgl'
 import { PointLight, PointLightPass, ParticleEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
 import { SpriteMaterial } from '../../engine/materials'
-import { TransformSystem, PropertyAnimation, EmitterTrigger, AnimationTimeline } from '../../engine/scene'
+import { TransformSystem, PropertyAnimation, EmitterTrigger, AnimationTimeline, ActionSignal } from '../../engine/scene'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, BatchMesh, Line } from '../../engine/components'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
@@ -136,7 +135,7 @@ export class BeamSkill extends CubeSkill {
     protected clear(): void {
         this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const origin = vec3(0.6,1.5,0)
         const target = vec3(20,1.5,0)
         quat.transform(origin, orientation, origin)
@@ -149,7 +148,7 @@ export class BeamSkill extends CubeSkill {
 
         this.cone.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.cone.transform.position)
-        quat.rotationTo([0,0,-1], this._direction, this.cone.transform.rotation)
+        quat.rotation([0,0,-1], this._direction, this.cone.transform.rotation)
 
         this.center.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.center.transform.position)
@@ -221,7 +220,7 @@ export class BeamSkill extends CubeSkill {
             armatureAnimation.activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.energy.remove(this.energy)

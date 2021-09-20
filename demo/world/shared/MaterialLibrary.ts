@@ -1,8 +1,11 @@
 import { Application } from '../../engine/framework'
+import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
-import { MaterialSystem, MeshMaterial } from '../../engine/materials'
+import { GradientRamp } from '../../engine/particles'
+import { MaterialSystem, MeshMaterial, EffectMaterial } from '../../engine/materials'
 import { DeferredGeometryPass } from '../../engine/pipeline'
+import { SharedSystem } from '../shared'
 
 export function MaterialLibrary(context: Application){
     const materials = context.get(MaterialSystem)
@@ -12,9 +15,6 @@ export function MaterialLibrary(context: Application){
     const chromaticAberration = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
         CHROMATIC_ABERRATION: true
     })
-
-    
-
 
     const dunesMaterial = new MeshMaterial()
     dunesMaterial.program = context.get(DeferredGeometryPass).programs[0]
@@ -31,7 +31,32 @@ export function MaterialLibrary(context: Application){
         }, 0
     ).target
 
+
+
+    const coneTealMaterial = new EffectMaterial(context.gl, {
+        VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true
+    }, {
+        uUVTransform: vec4(0,0,2,0.2),
+        uVerticalMask: vec4(0,0.5,0,0),
+        uUVPanning: vec2(-0.2, -0.4),
+        uUV2Transform: vec4(0,0,1,0.5),
+        uUV2Panning: vec2(0.3, -0.7),
+        uColorAdjustment: vec3(1,0.8,0)
+    })
+    coneTealMaterial.diffuse = SharedSystem.textures.cellularNoise
+    coneTealMaterial.gradient = GradientRamp(context.gl, [
+        0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
+    ], 1)
+
+
+
+
+
+
+
     return {
-        distortion, chromaticAberration, dunesMaterial
+        distortion, chromaticAberration, dunesMaterial,
+
+        coneTealMaterial
     }
 }

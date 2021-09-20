@@ -11,7 +11,6 @@ import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube, DirectionAngle, Direction } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
@@ -135,7 +134,7 @@ class Missile {
             uLifespan: [0.3,0.5,-0.04,0],
             uOrigin: vec3.add(this.origin, vec3.scale(this.normal, -1, vec3()), vec3()),
             uRadius: [0,0.04],
-            uOrientation: quat.rotationTo(vec3.AXIS_Y, this.normal, quat()),
+            uOrientation: quat.rotation(vec3.AXIS_Y, this.normal, quat()),
             uGravity: vec3.ZERO,
             uRotation: vec2.ZERO,
             uSize: [0.2,0.7],
@@ -341,7 +340,7 @@ export class ArtillerySkill extends CubeSkill {
         this.flashMaterial.program = this.context.get(ParticleEffectPass).program
         this.flashMaterial.diffuse = SharedSystem.textures.ring
     }
-    public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
@@ -371,15 +370,15 @@ export class ArtillerySkill extends CubeSkill {
                 const missile = missiles.pop()
                 const tile = targets[i]
                 const target = this.context.get(TerrainSystem).tilePosition(tile[0], tile[1], vec3())
-                this.context.get(AnimationSystem).start(missile.launch(target, i))
+                this.context.get(AnimationSystem).start(missile.launch(target, i), true)
             }
             
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
     }
-    public *close(): Generator<_ActionSignal> {
+    public *close(): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const rotate = PropertyAnimation([
             { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },

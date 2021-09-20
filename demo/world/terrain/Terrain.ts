@@ -1,15 +1,15 @@
-import { vec3, quat, aabb2 } from '../../engine/math'
+import { vec2, vec3, quat, aabb2 } from '../../engine/math'
 import { Application, ISystem } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { PlayerSystem } from '../player'
-import { TurnBasedSystem, IActor } from '../Actor'
 
 import { LevelGenerator } from './LevelGenerator'
+import { Pathfinder } from './Pathfinder'
 
-import { TerrainChunk } from './TerrainChunk'
+import { TerrainChunk, IUnit } from './TerrainChunk'
 import { ResourceDeposit } from './ResourceDeposit'
 import { SharedSystem } from '../shared'
 
@@ -21,6 +21,7 @@ export class TerrainSystem implements ISystem {
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
     private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context)
     public readonly resources: ResourceDeposit = new ResourceDeposit(this.context)
+    public readonly pathfinder: Pathfinder = new Pathfinder(this.context, this.gridSize * TerrainChunk.chunkTiles)
     constructor(private readonly context: Application){}
     public update(): void {
         const position = this.context.get(CameraSystem).controller.cameraTarget
@@ -49,6 +50,8 @@ export class TerrainSystem implements ISystem {
             }
         }
         aabb2.set(offsetX, offsetZ, offsetX + this.gridSize - 1, offsetZ + this.gridSize - 1, this.gridBounds)
+        vec2.set(-offsetX * TerrainChunk.chunkTiles, -offsetZ * TerrainChunk.chunkTiles, this.pathfinder.offset)
+        this.pathfinder.frame = 0
 
         for(let x = this.gridSize - 1; x >= 0; x--)
         for(let z = this.gridSize - 1; z >= 0; z--){
@@ -71,10 +74,10 @@ export class TerrainSystem implements ISystem {
         if(x < 0 || z < 0 || x >= this.gridSize || z >= this.gridSize) return null
         return this.chunks[x + z * this.gridSize]
     }
-    public getTile<T extends IActor>(column: number, row: number): T | void {
+    public getTile<T extends IUnit>(column: number, row: number): T | void {
         return this.chunk(column, row)?.get<T>(column, row)
     }
-    public setTile<T extends IActor>(column: number, row: number, value: T): void {
+    public setTile<T extends IUnit>(column: number, row: number, value: T): void {
         this.chunk(column, row)?.set<T>(column, row, value)
     }
     public tilePosition(column: number, row: number, out: vec3): vec3 {

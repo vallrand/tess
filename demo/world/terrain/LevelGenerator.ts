@@ -2,7 +2,7 @@ import { vec2, range, vec3, quat, aabb2, smoothstep, randomInt, noise1D, noise2D
 import { Application } from '../../engine/framework'
 import { perlin2D } from './perlin'
 import { TerrainChunk } from './TerrainChunk'
-import { Workshop } from '../Workshop'
+import { Workshop } from '../mechanics'
 import { TerrainSystem } from './Terrain'
 
 export class LevelGenerator {

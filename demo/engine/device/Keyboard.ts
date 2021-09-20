@@ -1,4 +1,4 @@
-import { Application, ISystem } from './framework'
+import { Application, ISystem } from '../framework'
 
 export class KeyboardSystem implements ISystem {
     private readonly keys: Record<string, number> = Object.create(null)

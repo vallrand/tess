@@ -11,7 +11,6 @@ import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
@@ -133,7 +132,7 @@ export class ExtractSkill extends CubeSkill {
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.ring
     }
-    public *open(): Generator<_ActionSignal> {
+    public *open(): Generator<ActionSignal> {
         const origin = mat4.transform(vec3.ZERO, this.cube.transform.matrix, vec3())
         const trigger = EmitterTrigger({ frame: 0.6, value: 36, origin: origin, target: origin })
         for(const generator = super.open(), startTime = this.context.currentTime; true;){
@@ -144,7 +143,7 @@ export class ExtractSkill extends CubeSkill {
             else yield iterator.value
         }
     }
-    public *close(): Generator<_ActionSignal> {
+    public *close(): Generator<ActionSignal> {
         for(const generator = super.close(); true;){
             const iterator = generator.next()
             if(iterator.done) return iterator.value
@@ -154,7 +153,7 @@ export class ExtractSkill extends CubeSkill {
     protected clear(): void {
         this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
-    public *activate(): Generator<_ActionSignal> {
+    public *activate(): Generator<ActionSignal> {
         const resource = this.context.get(TerrainSystem).resources.get(this.cube.state.tile[0], this.cube.state.tile[1])
         if(!resource) return
 
@@ -210,7 +209,7 @@ export class ExtractSkill extends CubeSkill {
             resource.decal.threshold = drain(elapsedTime, resource.decal.threshold)
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
         if(resource.amount <= 0) resource.kill()

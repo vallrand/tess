@@ -152,6 +152,7 @@ export class LightField {
     private innerSize: number = 18
     private outerSize: number = 22
     public readonly brdfLUT: WebGLTexture
+    public enabled: boolean = true
     constructor(private readonly context: Application){
         for(let i = this.gridSize * this.gridSize - 1; i >= 0; i--)
             this.probes[i] = new ReflectionProbe(this.context)
@@ -163,6 +164,7 @@ export class LightField {
         ).target
     }
     public relocateProbes(target: vec3): void {
+        if(!this.enabled) return
         if(this.context.frame == 1) return
         const size = 0.5 * (this.innerSize + this.outerSize)
         const ix = Math.floor(target[0] / size)

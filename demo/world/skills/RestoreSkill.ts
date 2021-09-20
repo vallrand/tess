@@ -11,7 +11,6 @@ import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
@@ -171,7 +170,7 @@ export class RestoreSkill extends CubeSkill {
         })
         this.conduit.material.diffuse = SharedSystem.textures.stripes
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
@@ -235,7 +234,7 @@ export class RestoreSkill extends CubeSkill {
             armatureAnimation.activate(elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
         this.active = true
 
@@ -245,7 +244,7 @@ export class RestoreSkill extends CubeSkill {
         this.context.get(DecalPass).delete(this.ring)
         this.context.get(ParticleEffectPass).remove(this.flash)
     }
-    public *close(): Generator<_ActionSignal> {
+    public *close(): Generator<ActionSignal> {
         deactivate: {
             if(!this.active) break deactivate
 
@@ -255,7 +254,7 @@ export class RestoreSkill extends CubeSkill {
                 const elapsedTime = this.context.currentTime - startTime
                 animate(elapsedTime, this.context.deltaTime)
                 if(elapsedTime > duration) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
             this.active = false
 

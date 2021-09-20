@@ -5,6 +5,7 @@ import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { IMesh, IMaterial, DeferredGeometryPass } from '../pipeline'
 import { createPlane } from '../geometry'
+import { IKSystem } from './InverseKinematics'
 
 interface IBufferRange {
     buffer: number
@@ -120,6 +121,7 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         material?: MeshMaterial
     }> = Object.create(null)
     public readonly plane: MeshBuffer
+    public readonly ik: IKSystem = new IKSystem
     constructor(private readonly context: Application){
         super(Mesh)
         const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
@@ -176,6 +178,7 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         }
     }
     public update(){
+        this.ik.update()
         for(let i = this.list.length - 1; i >= 0; i--){
             if(this.list[i].color[3] == 0) continue
             if(i > 0 && this.list[i-1].order > this.list[i].order){

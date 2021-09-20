@@ -1,5 +1,4 @@
 import { Application } from '../../engine/framework'
-import { _ActionSignal } from '../Actor'
 import { Cube } from './Cube'
 
 export const enum CubeModule {

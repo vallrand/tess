@@ -14,18 +14,18 @@ export class AnimationSystem implements ISystem {
     private readonly pending: Array<ActionSignal & { target: number }> = []
     private readonly queue: {
         generator: Generator<ActionSignal>
-        iterator: IteratorResult<ActionSignal>
+        iterator: IteratorResult<ActionSignal, ActionSignal>
         index: number
     }[] = []
     constructor(private readonly context: Application){}
     private indexOf(index: number): number {
         for(let i = 0; i < this.queue.length; i++)
             if(this.queue[i].index > index) return -1
-            else if(this.queue[i].index) return i
+            else if(this.queue[i].index === index) return i
         return -1
     }
     public await(index: number): ActionSignal {
-        if(this.indexOf(index) == -1) return ActionSignal.WaitNextFrame
+        if(index == null || this.indexOf(index) == -1) return ActionSignal.WaitNextFrame
         const signal = { target: index, continue: false }
         this.pending.push(signal)
         return signal
@@ -45,7 +45,8 @@ export class AnimationSystem implements ISystem {
             const routine = this.queue[i]
             if(
                 !routine.iterator ||
-                routine.iterator.value === ActionSignal.WaitNextFrame
+                routine.iterator.value === ActionSignal.WaitNextFrame ||
+                routine.iterator.value.continue
             ) routine.iterator = routine.generator.next()
 
             if(routine.iterator.done) this.dispatch(routine.index)
@@ -55,8 +56,10 @@ export class AnimationSystem implements ISystem {
         }
         this.queue.length -= removed
     }
-    public start(generator: Generator<ActionSignal>): number {
-        this.queue.push({ generator, iterator: null, index: this.index })
+    public start(generator: Generator<ActionSignal>, defer: boolean): number {
+        const routine = { generator, iterator: null, index: this.index }
+        if(!defer && (routine.iterator = routine.generator.next()).done) return
+        this.queue.push(routine)
         return this.index++
     }
 }

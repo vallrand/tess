@@ -8,7 +8,6 @@ import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { shaders } from '../../engine/shaders'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass, PostEffectPass } from '../../engine/pipeline'
 import { AnimationTimeline, PropertyAnimation, EmitterTrigger, TransformSystem, ActionSignal, AnimationSystem, Transform } from '../../engine/scene'
-import { _ActionSignal } from '../Actor'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube, Direction, DirectionAngle } from '../player'
 import { CubeSkill } from './CubeSkill'
@@ -157,7 +156,7 @@ export class ProjectileSkill extends CubeSkill {
         ], 1)
         this.flash.material = flashMaterial
     }
-    public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
         const mesh = this.mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
         const rotationalIndex = mod(direction - this.cube.state.direction - this.cube.state.sides[this.cube.state.side].direction, 4)
@@ -183,7 +182,7 @@ export class ProjectileSkill extends CubeSkill {
                 rotate(elapsedTime, mesh.armature.nodes[1].rotation)
                 mesh.armature.frame = 0
                 if(elapsedTime > duration) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
         }
 
@@ -224,7 +223,7 @@ export class ProjectileSkill extends CubeSkill {
             'particles': EmitterTrigger({ frame: 0, value: 36 })
         })
 
-        this.context.get(AnimationSystem).start(this.animateProjectile(worldTransform, this.findTarget(direction)))
+        this.context.get(AnimationSystem).start(this.animateProjectile(worldTransform, this.findTarget(direction)), true)
 
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -233,7 +232,7 @@ export class ProjectileSkill extends CubeSkill {
             armatureAnimation[`activate${rotationalIndex}`](elapsedTime, mesh.armature)
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.embers.remove(this.particles)

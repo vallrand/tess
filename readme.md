@@ -1,31 +1,8 @@
 # TESS
 
-TODO:
-decal system texturing/ alpha test
-ring + cylinders for anticipation
-expandin cracks
-AOE decal/ burn decal?
-lightning spritesheet + particle emitter
-distortion wave
-
-normal gun
-path trace bullet + light
-cone for muzzle flash
-
-
-
-
-
-Particle effects:
-* dust air static points
-* grass static mesh
-* wave oriented
-* sparks - strip
-* energy inward emitter
-* explosion sphere
-* 
-
 ## Data Format
+
+## References
 
 cubic bezier ease https://cubic-bezier.com/#.17,.67,.83,.67
 optimization https://emscripten.org/docs/optimizing/Optimizing-WebGL.html
@@ -134,34 +111,26 @@ BRDF LUT https://www.shadertoy.com/view/3lXXDB
 
 ScreenSpaceReflections https://lettier.github.io/3d-game-shaders-for-beginners/screen-space-reflection.html
 
-bind gbuffer
-render static geometry
-render skinned geometry
+astar https://github.com/bgrins/javascript-astar
 
-bind lbuffer
-render lights
+IK - //https://github.com/lo-th/fullik
+//https://github.com/jsantell/THREE.IK
+//https://github.com/mrdoob/three.js/blob/dev/examples/js/animation/CCDIKSolver.js
+//https://github.com/notrueblood/FABRIK-for-threejs-and-beyond
+//https://discourse.threejs.org/t/does-three-js-supports-fk-forward-kinematics-and-ik-inverse-kinematics/2380/18
 
-final render
-post effects
-
-
-
-entity {
-    transform
-    geometry
-    material
-    behaviour
-}
-
-
-Application([
-    Renderer,
-    Updater,
-    etc
-])
-
-
+mat3.orthonormal = //https://graphics.pixar.com/library/OrthonormalB/paper.pdf
+perpendicular vec3 https://blog.selfshadow.com/2011/10/17/perp-vectors/
+quats https://gabormakesgames.com/blog_quats_interpolate.html
+quat decompose https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis
+http://allenchou.net/2018/05/game-math-swing-twist-interpolation-sterp/
 
 action ->
 execute -> next -> endTurn -> next -> end
-next = wait for next 
+next = wait for next
+
+
+
+
+turn-
+    execute -> / animation

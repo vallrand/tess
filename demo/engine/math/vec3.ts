@@ -41,13 +41,14 @@ vec3.cross = (a: vec3, b: vec3, out: vec3): vec3 => {
 }
   
 vec3.magnitudeSquared = (vec: vec3): number => vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]
-vec3.magnitude = (vec: vec3): number => Math.sqrt(vec3.magnitudeSquared(vec))
 vec3.distanceSquared = (a: vec3, b: vec3): number => {
     const dx = a[0] - b[0]
     const dy = a[1] - b[1]
     const dz = a[2] - b[2]
     return dx*dx + dy*dy + dz*dz
 }
+vec3.magnitude = (vec: vec3): number => Math.sqrt(vec3.magnitudeSquared(vec))
+vec3.distance = (a: vec3, b: vec3): number => Math.sqrt(vec3.distanceSquared(a, b))
 vec3.normalize = (vec: vec3, out: vec3): vec3 => {
     const x = vec[0], y = vec[1], z = vec[2]
     const lengthSqrt = x*x + y*y + z*z
@@ -93,6 +94,41 @@ vec3.random = (r: number, z: number, out: vec3): vec3 => {
     out[0] = Math.cos(r) * z
     out[1] = Math.sin(r) * z
     return out
+}
+
+vec3.equals = (a: vec3, b: vec3, tolerance: number): boolean => (
+    Math.abs(a[0] - b[0]) <= tolerance &&
+    Math.abs(a[1] - b[1]) <= tolerance &&
+    Math.abs(a[2] - b[2]) <= tolerance
+)
+
+vec3.orthogonal = (v: vec3, out: vec3): vec3 => {
+    const x = Math.abs(v[0]), y = Math.abs(v[1]), z = Math.abs(v[2])
+    const axis = x < y ? (x < z ? vec3.AXIS_X : vec3.AXIS_Z) : (y < z ? vec3.AXIS_Y : vec3.AXIS_Z)
+    vec3.cross(v, axis, out)
+    return out
+}
+
+vec3.slerp = (from: vec3, to: vec3, t: number, out: vec3): vec3 => {
+    const theta = vec3.angle(from, to)
+    const sin = Math.sin(theta)
+    const a = Math.sin((1-t) * theta) / sin
+    const b = Math.sin(t * theta) / sin
+    out[0] = from[0] * a + to[0] * b
+    out[1] = from[1] * a + to[1] * b
+    out[2] = from[2] * a + to[2] * b
+    return out
+}
+
+vec3.project = (vector: vec3, normal: vec3, out: vec3): vec3 => {
+    const squareMagnitude = vec3.magnitudeSquared(normal)
+    const scale = squareMagnitude && vec3.dot(vector, normal) / squareMagnitude
+    return vec3.scale(normal, scale, out)
+}
+
+vec3.projectPlane = (vector: vec3, normal: vec3, out: vec3): vec3 => {
+    vec3.project(vector, normal, out)
+    return vec3.subtract(vector, out, out)
 }
 
 vec3.ZERO = vec3(0, 0, 0)

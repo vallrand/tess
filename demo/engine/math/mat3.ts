@@ -107,6 +107,16 @@ mat3.transform = (vec: vec3, mat: mat3, out: vec3): vec3 => {
     return out
 }
 
+mat3.normalize = (mat: mat3, out: mat3): mat3 => {
+    let sx = Math.hypot(mat[0], mat[1], mat[2]); sx = sx && 1/sx
+    let sy = Math.hypot(mat[3], mat[4], mat[5]); sy = sy && 1/sy
+    let sz = Math.hypot(mat[6], mat[7], mat[8]); sz = sz && 1/sz
+    out[0] = mat[0] * sx; out[1] = mat[1] * sx; out[2] = mat[2] * sx
+    out[3] = mat[3] * sy; out[4] = mat[4] * sy; out[5] = mat[5] * sy
+    out[6] = mat[6] * sz; out[7] = mat[7] * sz; out[8] = mat[8] * sz
+    return out
+}
+
 mat3.normalMatrix = (mat: mat4, out: mat3): mat3 => {
     const m00 = mat[0], m01 = mat[1], m02 = mat[2],
     m10 = mat[4], m11 = mat[5], m12 = mat[6],
@@ -124,13 +134,40 @@ mat3.normalMatrix = (mat: mat4, out: mat3): mat3 => {
     out[7] = m02 * m10 - m00 * m12
     out[8] = m00 * m11 - m01 * m10
 
-    let sx = Math.hypot(out[0], out[1], out[2]); sx = sx && 1/sx
-    let sy = Math.hypot(out[3], out[4], out[5]); sy = sy && 1/sy
-    let sz = Math.hypot(out[6], out[7], out[8]); sz = sz && 1/sz
-    out[0] /= sx; out[1] /= sx; out[2] /= sx
-    out[3] /= sy; out[4] /= sy; out[5] /= sy
-    out[6] /= sz; out[7] /= sz; out[8] /= sz
+    mat3.normalize(out, out)
+    return out
+}
 
+mat3.orthonormal = (normal: vec3, out: mat3): mat3 => {
+    const sign = normal[2] >= 0 ? 1 : -1
+    const a = -1 / (sign + normal[2])
+    const b = normal[0] * normal[1] * a
+    out[0] = 1 + sign * normal[0] * normal[0] * a
+    out[1] = sign * b
+    out[2] = -sign * normal[0]
+    out[3] = b
+    out[4] = sign + normal[1] * normal[1] * a
+    out[5] = -normal[1]
+    out[6] = normal[0]
+    out[7] = normal[1]
+    out[8] = normal[2]
+    mat3.normalize(out, out)
+    return out
+}
+
+mat3.rotation = (axis: vec3, angle: number, out: mat3): mat3 => {
+    const x = axis[0], y = axis[1], z = axis[2]
+    const sin = Math.sin(angle), cos = Math.cos(angle), ics = 1 - cos
+    const xy = x * y * ics, xz = x * z * ics, yz = y * z * ics
+    out[0] = x * x * ics + cos
+    out[1] = xy + z * sin
+    out[2] = xz - y * sin
+    out[3] = xy - z * sin
+    out[4] = y * y * ics + cos
+    out[5] = yz + x * sin
+    out[6] = xz + y * sin
+    out[7] = yz - x * sin
+    out[8] = z * z * ics + cos
     return out
 }
 

@@ -4,7 +4,11 @@ import { OpaqueLayer } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components/Mesh'
 import { TransformSystem } from '../../engine/scene/Transform'
-import { IActor } from '../Actor'
+
+export interface IUnit {
+    place(column: number, row: number): void
+    kill(): void
+}
 
 export class TerrainChunk {
     public static readonly chunkLOD = 16
@@ -16,8 +20,8 @@ export class TerrainChunk {
     public column: number
     public row: number
     public mesh: Mesh
-    public readonly list: IActor[] = []
-    public readonly grid: IActor[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
+    public readonly list: IUnit[] = []
+    public readonly grid: IUnit[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
     public offsetX: number
     public offsetZ: number
 
@@ -64,11 +68,11 @@ export class TerrainChunk {
             this.heightmap[index] = brush(x, z)
         }
     }
-    public get<T extends IActor>(column: number, row: number): T | void {
+    public get<T extends IUnit>(column: number, row: number): T | void {
         const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
         return this.grid[tileIndex] as T
     }
-    public set<T extends IActor>(column: number, row: number, value: T): void {
+    public set<T extends IUnit>(column: number, row: number, value: T): void {
         const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
         this.grid[tileIndex] = value
     }

@@ -1,22 +1,23 @@
-import { Application } from '../engine/framework'
-import { vec2, vec3, quat, aabb2, ease } from '../engine/math'
-import { OpaqueLayer } from '../engine/webgl'
-import { TransformSystem } from '../engine/scene'
-import { MeshSystem, Mesh } from '../engine/components'
-import { KeyboardSystem } from '../engine/Keyboard'
-import { TerrainSystem } from './terrain'
-import { modelAnimations } from './animations/animations'
-import { IActor, TurnBasedSystem, _ActionSignal } from './Actor'
-import { PlayerSystem, Cube, CubeModule, Direction } from './player'
+import { Application } from '../../engine/framework'
+import { vec2, vec3, quat, aabb2, ease } from '../../engine/math'
+import { OpaqueLayer } from '../../engine/webgl'
+import { TransformSystem, AnimationSystem, ActionSignal } from '../../engine/scene'
+import { MeshSystem, Mesh } from '../../engine/components'
+import { KeyboardSystem } from '../../engine/device'
 
-export class Workshop implements IActor {
+import { TerrainSystem, IUnit } from '../terrain'
+import { modelAnimations } from '../animations'
+import { IActor, TurnBasedSystem } from '../mechanics'
+import { PlayerSystem, Cube, CubeModule, Direction } from '../player'
+
+export class Workshop implements IActor, IUnit {
     public static readonly area: vec2[] = [
         [-1,-1],[1,-1],
         [-1,0],[1,0],
         [-1,1],[1,1]
     ]
     order: number = 1
-    prevAction: number
+    actionIndex: number
     mesh: Mesh
     tile: vec2 = vec2()
     opened: boolean = false
@@ -53,7 +54,7 @@ export class Workshop implements IActor {
         this.context.get(MeshSystem).delete(this.mesh)
         this.mesh = null
     }
-    *execute(turn: number): Generator<_ActionSignal> {
+    *execute(): Generator<ActionSignal> {
         const armature = this.mesh.armature
         let cube: Cube = null
         for(let z = -2; z <= 2; z++){
@@ -69,7 +70,7 @@ export class Workshop implements IActor {
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 modelAnimations.dock.open(fraction, armature)
                 if(fraction >= 1) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
         }else if(!cube){
             this.opened = false
@@ -77,10 +78,10 @@ export class Workshop implements IActor {
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
                 modelAnimations.dock.open(1 - fraction, armature)
                 if(fraction >= 1) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
         }else if(cube && cube.state.tile[1] === this.tile[1]){
-            yield _ActionSignal.WaitQueueEnd
+            yield this.context.get(AnimationSystem).await(cube.actionIndex)
             const mesh = cube.meshes[cube.state.side]
             const prevPosition = vec3.copy(mesh.transform.position, vec3())
             const nextPosition = vec3.add(this.mesh.transform.position, [0,2,0], vec3())
@@ -105,7 +106,7 @@ export class Workshop implements IActor {
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(fraction), cameraOffset)
                 mesh.transform.frame = 0
                 if(fraction >= 1) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
             const keys = this.context.get(KeyboardSystem)
             upgradeMenu: while(true){
@@ -120,7 +121,7 @@ export class Workshop implements IActor {
                     const forward = (4-cube.state.direction)%4
                     cube.installModule(cube.state.side, forward, availableModules[0])
                 }
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
             lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
@@ -129,7 +130,7 @@ export class Workshop implements IActor {
                 vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(1-fraction), cameraOffset)
                 mesh.transform.frame = 0
                 if(fraction >= 1) break
-                yield _ActionSignal.WaitNextFrame
+                yield ActionSignal.WaitNextFrame
             }
         }
     }

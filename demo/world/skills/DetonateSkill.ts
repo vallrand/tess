@@ -6,8 +6,7 @@ import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass } from
 import { DecalMaterial, EffectMaterial, MaterialSystem, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
 import { BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { AnimationTimeline, EmitterTrigger, PropertyAnimation, EventTrigger, TransformSystem } from '../../engine/scene'
-import { _ActionSignal } from '../Actor'
+import { AnimationTimeline, EmitterTrigger, PropertyAnimation, TransformSystem, ActionSignal } from '../../engine/scene'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube } from '../player'
 import { SharedSystem } from '../shared'
@@ -130,7 +129,7 @@ export class DetonateSkill extends CubeSkill {
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
         vec2.set(0,0.5,this.beam.origin)
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
@@ -187,7 +186,7 @@ export class DetonateSkill extends CubeSkill {
                 mine.place(this.cube.state.tile[0], this.cube.state.tile[1])
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(this.chargeX.transform)

@@ -12,7 +12,6 @@ import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
-import { _ActionSignal } from '../Actor'
 import { Cube, Direction, DirectionAngle } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
@@ -222,22 +221,8 @@ export class OrbSkill extends CubeSkill {
         applyTransform(cone, mat4.fromRotationTranslationScale(
             quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat()), vec3(0,0,-2), vec3.ONE, mat4()))
         this.cone = new BatchMesh(doubleSided(cone))
-        const coneMaterial = this.cone.material = new EffectMaterial(this.context.gl, {
-            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true
-        }, {
-            uUVTransform: vec4(0,0,2,0.2),
-            uVerticalMask: vec4(0,0.5,0,0),
-            uUVPanning: vec2(-0.2, -0.4),
-            uUV2Transform: vec4(0,0,1,0.5),
-            uUV2Panning: vec2(0.3, -0.7),
-            uColorAdjustment: vec3(1,0.8,0)
-        })
-        coneMaterial.diffuse = SharedSystem.textures.cellularNoise
-        coneMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
-        ], 1)
-
-
+        this.cone.material = SharedSystem.materials.coneTealMaterial
+        
         this.glow = new Sprite()
         this.glow.order = -8
         this.glow.billboard = BillboardType.Sphere
@@ -254,7 +239,7 @@ export class OrbSkill extends CubeSkill {
         this.ring.material.diffuse = SharedSystem.textures.swirl
 
         this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
-        this.sphere.material = coneMaterial
+        this.sphere.material = SharedSystem.materials.coneTealMaterial
 
         this.distortion = new Sprite()
         this.distortion.billboard = BillboardType.None
@@ -264,7 +249,7 @@ export class OrbSkill extends CubeSkill {
         this.distortion.material.program = SharedSystem.materials.chromaticAberration
         this.distortion.material.diffuse = SharedSystem.textures.wave
     }
-    public *activate(transform: mat4, orientation: quat): Generator<_ActionSignal> {
+    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
 
@@ -321,7 +306,7 @@ export class OrbSkill extends CubeSkill {
         vec2.add(this.cube.state.tile, tile, tile)
 
         //TODO remove
-        if(this.list.length > 0) this.context.get(AnimationSystem).start(this.list[0].dissolve())
+        if(this.list.length > 0) this.context.get(AnimationSystem).start(this.list[0].dissolve(), true)
 
         for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -331,11 +316,11 @@ export class OrbSkill extends CubeSkill {
             if(elapsedTime > 0.8 && !orb.enabled){
                 this.list.push(orb)
                 orb.place(tile[0], tile[1])
-                this.context.get(AnimationSystem).start(orb.appear(target))
+                this.context.get(AnimationSystem).start(orb.appear(target), true)
             }
 
             if(elapsedTime > duration) break
-            yield _ActionSignal.WaitNextFrame
+            yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(parentTransform)

@@ -2,20 +2,16 @@ import { clamp, lerp, vec2, vec3, vec4, mat4, quat, ease, aabb2, mat3x2 } from '
 import { Application, ISystem } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene/Camera'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
+import { AnimationSystem } from '../../engine/scene'
 import { Cube } from './Cube'
-import { DebugSystem } from '../../engine/Debug'
 import { CubeTileMap } from './CubeTileMap'
-import { Transform, TransformSystem } from '../../engine/scene/Transform'
-import { DecalPass } from '../../engine/pipeline/DecalPass'
-import { ParticleEffectPass } from '../../engine/pipeline/ParticleEffectPass'
 import { CubeModule } from './CubeModules'
-import { TurnBasedSystem } from '../Actor'
 import { CubeSkills } from '../skills'
-import { shaders } from '../../engine/shaders'
-import { ShaderProgram } from '../../engine/webgl'
 import { SharedSystem } from '../shared'
 import { MeshSystem } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
+import { AISystem } from '../mechanics'
+import { KeyboardSystem } from '../../engine/device'
 
 export class PlayerSystem implements ISystem {
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
@@ -33,18 +29,40 @@ export class PlayerSystem implements ISystem {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
             this.cube.installModule(this.cube.state.side, 0, CubeModule.Auger)
+            this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
-            this.context.get(TerrainSystem).resources.create(5,6)
-            //window['app'].systems[17].cameraOffset= [4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
+            //this.context.get(TerrainSystem).resources.create(5,6)
+
+            window['u0'] = this.context.get(AISystem).create(6,7,0)
+            window['u1'] = this.context.get(AISystem).create(7,7,1)
+            window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
+            window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
+            window['app'].systems[17].cameraOffset= [2,3,2]//[4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
+        const mainUnit = window['u1']
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0
         window['a'] = this.cube.meshes[this.cube.state.side].armature
+
+        for(let i = 0; i <= 7; i++){
+            const unit = window[`u${i}`]
+            if(!unit) continue
+           unit.mesh.armature.frame = 0
+            window[`a${i}`] =unit.mesh.armature
+        }
+
+        const keys = this.context.get(KeyboardSystem)
+        if(keys.trigger('KeyA')) window['move']([vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
+        else if(keys.trigger('KeyD')) window['move']([vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
+        else if(keys.trigger('KeyW')) window['move']([vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
+        else if(keys.trigger('KeyS')) window['move']([vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
+        else if(keys.trigger('Space')) window['strike']([], mainUnit)
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
-        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
+        // this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
+        this.context.get(CameraSystem).controller.adjustCamera(mainUnit.mesh.transform.position || this.cube.transform.position)
     }
     load(){
         this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform
