@@ -15,9 +15,11 @@ export class Stingray extends ControlUnit {
 
     constructor(context: Application){super(context)}
     public place(column: number, row: number): void {
+        vec2.set(column, row, this.tile)
         this.mesh = this.context.get(MeshSystem).loadModel(Stingray.model)
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.context.get(TerrainSystem).tilePosition(column, row, this.mesh.transform.position)
+        modelAnimations[Stingray.model].activate(0, this.mesh.armature)
     }
     public kill(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)

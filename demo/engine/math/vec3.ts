@@ -134,6 +134,20 @@ vec3.projectPlane = (vector: vec3, normal: vec3, out: vec3): vec3 => {
     return out
 }
 
+vec3.centroid = <(...vectors: vec3[]) => vec3> function(){
+    const last = arguments.length - 1, inv = 1 / last
+    let x = 0, y = 0, z = 0
+    for(let i = last - 1; i >= 0; i--){
+        x += arguments[i][0]
+        y += arguments[i][1]
+        z += arguments[i][2]
+    }
+    arguments[last][0] = x * inv
+    arguments[last][1] = y * inv
+    arguments[last][2] = z * inv
+    return arguments[last]
+}
+
 vec3.ZERO = vec3(0, 0, 0)
 vec3.ONE = vec3(1, 1, 1)
 vec3.AXIS_X = vec3(1, 0, 0)

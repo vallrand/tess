@@ -143,7 +143,6 @@ class Spider4Rig extends IKRig {
 
 export class Tarantula extends ControlUnit {
     private static readonly model: string = 'tarantula'
-    private readonly tile: vec2 = vec2()
     private mesh: Mesh
 
     constructor(context: Application){super(context)}
@@ -165,13 +164,13 @@ export class Tarantula extends ControlUnit {
     }
     public *move(path: vec2[]): Generator<ActionSignal> {
         const prevPosition = vec3.copy(this.mesh.transform.position, vec3())
-        const prevRotation = quat.copy(this.mesh.transform.rotation, quat())
-        const nextPosition = vec3(), nextRotation = quat()
+        //const prevRotation = quat.copy(this.mesh.transform.rotation, quat())
+        const nextPosition = vec3()//, nextRotation = quat()
         for(let i = 0; i < path.length; i++){
-            const prev = i ? path[i - 1] : this.tile
+            //const prev = i ? path[i - 1] : this.tile
             const next = path[i]
-            const rotation = Math.atan2(next[0]-prev[0], next[1]-prev[1])
-            quat.axisAngle(vec3.AXIS_Y, rotation, nextRotation)
+            //const rotation = Math.atan2(next[0]-prev[0], next[1]-prev[1])
+            //quat.axisAngle(vec3.AXIS_Y, rotation, nextRotation)
             this.context.get(TerrainSystem).tilePosition(next[0], next[1], nextPosition)
             vec2.copy(next, this.tile)
 
@@ -180,12 +179,13 @@ export class Tarantula extends ControlUnit {
                 const t = Math.min(1, elapsedTime / duration)
                 vec3.lerp(prevPosition, nextPosition, ease.sineInOut(t), this.mesh.transform.position)
                 //quat.slerp(prevRotation, nextRotation, ease.quartOut(t), this.mesh.transform.rotation)
+                this.mesh.transform.position[1] += 0.5 * ease.fadeInOut(t)
                 this.mesh.transform.frame = 0
                 if(elapsedTime > duration) break
                 yield ActionSignal.WaitNextFrame
             }
             vec3.copy(nextPosition, prevPosition)
-            quat.copy(nextRotation, prevRotation)
+            //quat.copy(nextRotation, prevRotation)
         }
     }
     public *strike(target: vec3): Generator<ActionSignal> {

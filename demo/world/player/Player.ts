@@ -36,11 +36,17 @@ export class PlayerSystem implements ISystem {
 
             window['u0'] = this.context.get(AISystem).create(6,7,0)
             window['u1'] = this.context.get(AISystem).create(7,7,1)
+            window['u2'] = this.context.get(AISystem).create(7,8,2)
+            // window['u3'] = this.context.get(AISystem).create(7,9,3)
+            window['u4'] = this.context.get(AISystem).create(7,10,4)
+            // window['u5'] = this.context.get(AISystem).create(7,11,5)
+            window['u6'] = this.context.get(AISystem).create(5,10,6)
+            window['u7'] = this.context.get(AISystem).create(3,10,7)
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
-            window['app'].systems[17].cameraOffset= [2,3,2]//[4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
+            window['app'].systems[17].cameraOffset= [2,4,3]//[4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
-        const mainUnit = window['u1']
+        const mainUnit = window['u7']
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0
@@ -54,10 +60,10 @@ export class PlayerSystem implements ISystem {
         }
 
         const keys = this.context.get(KeyboardSystem)
-        if(keys.trigger('KeyA')) window['move']([vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
-        else if(keys.trigger('KeyD')) window['move']([vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
-        else if(keys.trigger('KeyW')) window['move']([vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
-        else if(keys.trigger('KeyS')) window['move']([vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
+        if(keys.trigger('KeyA')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
+        else if(keys.trigger('KeyD')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
+        else if(keys.trigger('KeyW')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
+        else if(keys.trigger('KeyS')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
         else if(keys.trigger('Space')) window['strike']([], mainUnit)
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)

@@ -39,7 +39,7 @@ export class SharedSystem implements ISystem {
         this.mist = new MistEffect(this.context, 256, [-8,0,-8,8,6,8])
         this.context.get(ParticleEffectPass).effects.push(this.mist)
 
-        this.grid.enabled = false
+        // this.grid.enabled = false
         this.mist.enabled = false
         //this.sky.enabled = false
     }

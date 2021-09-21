@@ -16,7 +16,6 @@ import { Direction, DirectionAngle, DirectionTile } from '../player'
 
 export class Scarab extends ControlUnit {
     private static readonly model: string = 'scarab'
-    private readonly tile: vec2 = vec2()
     private mesh: Mesh
     private dust: ParticleEmitter
     private ring: Sprite
@@ -82,11 +81,12 @@ export class Scarab extends ControlUnit {
             this.context.get(TerrainSystem).tilePosition(next[0], next[1], nextPosition)
             vec2.copy(next, this.tile)
 
-            for(const duration = 0.6, startTime = this.context.currentTime; true;){
+            for(const duration = 1.0, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
                 const t = Math.min(1, elapsedTime / duration)
                 vec3.lerp(prevPosition, nextPosition, ease.sineInOut(t), this.mesh.transform.position)
                 quat.slerp(prevRotation, nextRotation, ease.quartOut(t), this.mesh.transform.rotation)
+                this.mesh.transform.position[1] += 0.5 * ease.fadeInOut(t)
                 this.mesh.transform.frame = 0
                 if(elapsedTime > duration) break
                 yield ActionSignal.WaitNextFrame
