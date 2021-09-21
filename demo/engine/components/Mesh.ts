@@ -5,7 +5,7 @@ import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { IMesh, IMaterial, DeferredGeometryPass } from '../pipeline'
 import { createPlane } from '../geometry'
-import { IKSystem } from './InverseKinematics'
+import { IKRig } from './InverseKinematics'
 
 interface IBufferRange {
     buffer: number
@@ -44,10 +44,20 @@ export interface MeshBuffer {
     radius: number
 }
 
+export interface ArmatureNode {
+    parent: number
+    position: vec3
+    rotation: quat
+    scale: vec3
+    globalTransform: mat4
+    transform: Float32Array
+}
+
 export class Armature {
     private static readonly tempMat4: mat4 = mat4()
     public frame: number = 0
     public boneMatrix: Float32Array
+    public ik: IKRig
     constructor(public readonly inverseBindPose: mat4[], nodes: {
         name: string
         parent: number
@@ -66,14 +76,7 @@ export class Armature {
             transform: new Float32Array(this.boneMatrix.buffer, index * matrixSize * Float32Array.BYTES_PER_ELEMENT, matrixSize)
         }))
     }
-    public nodes: {
-        parent: number
-        position: vec3
-        rotation: quat
-        scale: vec3
-        globalTransform: mat4
-        transform: Float32Array
-    }[]
+    public nodes: ArmatureNode[]
     public update(context: Application): void {
         if(this.frame) return
         this.frame = context.frame
@@ -121,7 +124,6 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         material?: MeshMaterial
     }> = Object.create(null)
     public readonly plane: MeshBuffer
-    public readonly ik: IKSystem = new IKSystem
     constructor(private readonly context: Application){
         super(Mesh)
         const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
@@ -178,7 +180,6 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         }
     }
     public update(){
-        this.ik.update()
         for(let i = this.list.length - 1; i >= 0; i--){
             if(this.list[i].color[3] == 0) continue
             if(i > 0 && this.list[i-1].order > this.list[i].order){
@@ -190,6 +191,7 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
             }
             const mesh = this.list[i]
             mesh.update(this.context)
+            mesh.armature?.ik?.update()
             mesh.armature?.update(this.context)
         }
     }

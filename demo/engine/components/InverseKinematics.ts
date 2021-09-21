@@ -1,4 +1,4 @@
-import { clamp, vec3, mat3, quat, vec4 } from '../math'
+import { clamp, vec3, mat3, quat, vec4, mat4 } from '../math'
 
 interface IJointConstraint {
     apply(bone: IKBone, parent: IKBone, out: quat): void
@@ -59,6 +59,7 @@ export class LocalHingeConstraint implements IJointConstraint {
     private readonly localRotation: quat = quat()
     private readonly localDirection: vec3 = vec3()
     private readonly referenceAxis: vec3 = vec3()
+    private readonly projectedDirection: vec3 = vec3()
     min: number = -Math.PI
     max: number = Math.PI
     readonly axis: vec3 = vec3(1,0,0)
@@ -73,7 +74,7 @@ export class LocalHingeConstraint implements IJointConstraint {
         quat.normalize(out, out)
     }
     limitAxis(axis: vec3, direction: vec3, min: number, max: number, out: quat){
-        const projected = vec3.projectPlane(direction, axis, direction)
+        const projected = vec3.projectPlane(direction, axis, this.projectedDirection)
         if(vec3.dot(projected, projected) < Number.EPSILON) return quat.copy(quat.IDENTITY, out)
         const referenceAxis = vec3.projectPlane(vec3.AXIS_Z, axis, this.referenceAxis)
         const angle = vec3.angle(projected, referenceAxis)
@@ -89,6 +90,7 @@ export class IKBone {
     readonly end: vec3 = vec3()
     readonly direction: vec3 = vec3()
     readonly rotation: quat = quat()
+    readonly inverseBind: quat = quat()
     length: number = 0
     set(start: vec3, end: vec3){
         vec3.copy(start, this.start)
@@ -103,7 +105,7 @@ export class IKBone {
     }
 }
 
-class IKChain {
+export class IKChain {
     private static readonly direction: vec3 = vec3()
     private static readonly rotation: quat = quat()
     private buffer: Float32Array = new Float32Array(0)
@@ -195,7 +197,7 @@ class IKChain {
     }
 }
 
-export class IKSystem {
+export class IKRig {
     private chains: IKChain[] = []
     precision: number = 0.001
     iterations: number = 20
@@ -228,9 +230,10 @@ export class IKSystem {
         }
         return solution   
     }
-    add(target: vec3): IKChain {
+    add(origin: vec3, parent?: IKBone): IKChain {
         const chain = new IKChain()
-        vec3.copy(target, chain.target)
+        vec3.copy(origin, chain.origin)
+        chain.parent = parent
         this.chains.push(chain)
         return chain
     }
