@@ -86,4 +86,9 @@ export class TerrainSystem implements ISystem {
         out[1] = this.chunk(column, row)?.sample(out[0], out[2]) || 0
         return out
     }
+    public snapToGround(position: vec3){
+        const column = Math.round((position[0] - this.positionOffset) / TerrainChunk.tileSize)
+        const row = Math.round((position[1] - this.positionOffset) / TerrainChunk.tileSize)
+        position[1] = this.chunk(column, row)?.sample(position[0], position[2]) || 0
+    }
 }

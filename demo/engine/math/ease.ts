@@ -79,6 +79,8 @@ export const expoIn: IEase = x => x == 0 ? 0 : Math.pow(1024, x -  1)
 export const expoOut = flip(expoIn)
 export const expoInOut = split(0.5, expoIn, expoOut)
 
+export const slowInOut = CubicBezier(0,0.5,1,0.5)
+
 // export const quadIn = CubicBezier(0.26, 0, 0.6, 0.2)
 // export const quadOut = CubicBezier(0.4, 0.8, 0.74, 1)
 // export const quadInOut = CubicBezier(0.48, 0.04, 0.52, 0.96)

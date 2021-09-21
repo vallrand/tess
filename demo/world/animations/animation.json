@@ -553,6 +553,8 @@
     },
     "tarantula":{
         "activate":[
+            {"index":0,"frame":0,"rotation":[0,-0.707107,0,0.707107]},
+
             {"index":9,"frame":0,"scale":[0,0,0]},
             {"index":11,"frame":0,"scale":[0,0,0]}   
         ]

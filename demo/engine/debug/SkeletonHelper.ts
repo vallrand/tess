@@ -1,77 +1,74 @@
-import { Application, ISystem } from '../framework'
+import { Application } from '../framework'
 import { vec3, vec4, quat, mat4 } from '../math'
-import { GL, UniformSamplerBindings, ShaderProgram, createTexture } from '../webgl'
+import { GL, ShaderProgram, createTexture, UniformBlock, UniformBlockBindings } from '../webgl'
 import { shaders } from '../shaders'
 import { createBox, applyTransform } from '../geometry'
-import { DeferredGeometryPass, PostEffectPass } from '../pipeline'
 import { MaterialSystem, MeshMaterial } from '../materials'
-import { TransformSystem } from '../scene'
+import { CameraSystem } from '../scene'
 import { Armature, IKRig, Mesh, MeshBuffer, MeshSystem } from '../components'
 
 export class SkeletonHelper {
-    private readonly rigs: any[] = []
-    iks: any[] = []
     private readonly material: MeshMaterial
-    private readonly meshBuffer: MeshBuffer
+    private readonly buffer: MeshBuffer
+    private readonly uniform: UniformBlock
+    private readonly modelMatrix: mat4
+    private readonly color: vec4
+
+    public enabled: boolean = !true
     constructor(private readonly context: Application){
         this.material = new MeshMaterial()
-        this.material.program = this.context.get(DeferredGeometryPass).programs[0]
-        this.material.depthTest = GL.NONE
-        this.material.depthWrite = false
-        this.material.diffuse = createTexture(this.context.gl, { //TODO mesh default white color
+        this.material.program = ShaderProgram(this.context.gl, shaders.geometry_vert, shaders.geometry_frag, {})
+        this.material.diffuse = createTexture(this.context.gl, {
             width: 1, height: 1, data: new Uint8Array([0xFF,0xFF,0xFF,0x7F])
         })
-        this.material.normal = this.context.get(MaterialSystem).white.normal
 
         const boneShape = applyTransform(createBox({ width: 1, height: 1, depth: 1, open: false }),
-        mat4.fromRotationTranslationScale(quat.IDENTITY, [0,0.5,0], [0.1,1,0.1], mat4()))
-        this.meshBuffer = this.context.get(MeshSystem)
+        mat4.fromRotationTranslationScale(quat.IDENTITY, [0,0,0.5], [0.04,0.04,1], mat4()))
+        this.buffer = this.context.get(MeshSystem)
         .uploadVertexData(boneShape.vertexArray, boneShape.indexArray, boneShape.format, false)
+
+        this.uniform = new UniformBlock(this.context.gl, { byteSize: 4*(16+4+2) }, UniformBlockBindings.ModelUniforms)
+        this.modelMatrix = this.uniform.data.subarray(0, 16) as any
+        this.color = this.uniform.data.subarray(16, 16 + 4) as any
     }
     update(){
-        for(let i = 0; i < this.rigs.length; i++){
-            const { mesh, node, armature } = this.rigs[i]
-            mat4.decompose(node.globalTransform, mesh.transform.position, mesh.transform.scale, mesh.transform.rotation)
-            mesh.transform.frame = 0
-        }
-        this.iks.forEach(ik => {
-            const { mesh, bone } = ik
-            vec3.copy(bone.start, mesh.transform.position)
-            quat.copy(bone.rotation, mesh.transform.rotation)
-            mesh.transform.scale[2] = bone.length
-            mesh.transform.frame = 0
-        })
-    }
-    public add(parent: Mesh){
-        for(let i = 0; i < parent.armature.nodes.length; i++){
-            const mesh = this.context.get(MeshSystem).create()
-            mesh.buffer = this.meshBuffer
-            mesh.material = this.material
-            mesh.order = -16
-            mesh.layer = 1
-            vec4.set(1,0.8,0,1, mesh.color)
-            mesh.transform = this.context.get(TransformSystem).create()
-            mesh.transform.parent = parent.transform
-            this.rigs.push({ mesh, node: parent.armature.nodes[i], armature: parent.armature })
-        }
-    }
-    public addIK(ik: any){
-        const boneShape = applyTransform(createBox({ width: 1, height: 1, depth: 1, open: false }),
-        mat4.fromRotationTranslationScale(quat.IDENTITY, [0,0,0.5], [0.1,0.1,1], mat4()))
-        const meshBuffer = this.context.get(MeshSystem)
-        .uploadVertexData(boneShape.vertexArray, boneShape.indexArray, boneShape.format, false)
+        if(!this.enabled) return
+        const { gl } = this.context
+        const meshes = this.context.get(MeshSystem).list
+        const camera = this.context.get(CameraSystem).camera
 
-        for(let i = 0; i < ik.chains.length; i++)
-        for(let j = 0; j < ik.chains[i].bones.length; j++){
-            const mesh = this.context.get(MeshSystem).create()
-            mesh.buffer = meshBuffer
-            mesh.material = this.material
-            mesh.order = -16
-            mesh.layer = 1
-            vec4.set(1,0,0,1, mesh.color)
-            mesh.transform = this.context.get(TransformSystem).create()
-            mesh.transform.parent = ik.mesh.transform
-            this.iks.push({ mesh, bone: ik.chains[i].bones[j] })
+        gl.useProgram(this.material.program.target)
+        this.material.bind(gl)
+        gl.bindVertexArray(this.buffer.vao)
+
+        for(let i = meshes.length - 1; i >= 0; i--){
+            const mesh: Mesh = meshes[i]
+            if(mesh.color[3] === 0 || !mesh.armature) continue
+            if(!camera.culling.cull(mesh.bounds, mesh.layer)) continue
+
+            for(let j = 0; j < mesh.armature.nodes.length; j++){
+                const node = mesh.armature.nodes[j]
+
+                mat4.multiply(mesh.transform.matrix, node.globalTransform, this.modelMatrix)
+                mat4.rotate(this.modelMatrix, -0.5 * Math.PI, vec3.AXIS_X, this.modelMatrix)
+                vec4.set(0.8,0.7,0.2,1, this.color)
+
+                this.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
+                gl.drawElements(GL.TRIANGLES, this.buffer.indexCount, GL.UNSIGNED_SHORT, this.buffer.indexOffset)
+            }
+            if(!mesh.armature.ik) continue
+            const rig: IKRig = mesh.armature.ik
+            for(let i = 0; i < rig.chains.length; i++)
+            for(let j = 0; j < rig.chains[i].bones.length; j++){
+                const bone = rig.chains[i].bones[j]
+
+                mat4.fromRotationTranslationScale(bone.rotation, bone.start, [2,2, bone.length], this.modelMatrix)
+                mat4.multiply(mesh.transform.matrix, this.modelMatrix, this.modelMatrix)
+                vec4.set(0.8,0.2,0.7,1, this.color)
+
+                this.uniform.bind(gl, UniformBlockBindings.ModelUniforms)
+                gl.drawElements(GL.TRIANGLES, this.buffer.indexCount, GL.UNSIGNED_SHORT, this.buffer.indexOffset)
+            }
         }
     }
 }

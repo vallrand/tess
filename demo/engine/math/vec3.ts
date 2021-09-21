@@ -127,8 +127,11 @@ vec3.project = (vector: vec3, normal: vec3, out: vec3): vec3 => {
 }
 
 vec3.projectPlane = (vector: vec3, normal: vec3, out: vec3): vec3 => {
-    vec3.project(vector, normal, out)
-    return vec3.subtract(vector, out, out)
+    const dot = vec3.dot(vector, normal)
+    out[0] = vector[0] - normal[0] * dot
+    out[1] = vector[1] - normal[1] * dot
+    out[2] = vector[2] - normal[2] * dot
+    return out
 }
 
 vec3.ZERO = vec3(0, 0, 0)

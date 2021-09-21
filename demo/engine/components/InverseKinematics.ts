@@ -1,4 +1,4 @@
-import { clamp, vec3, mat3, quat, vec4, mat4 } from '../math'
+import { clamp, vec3, quat, vec4, mat4 } from '../math'
 
 interface IJointConstraint {
     apply(bone: IKBone, parent: IKBone, out: quat): void
@@ -85,12 +85,12 @@ export class LocalHingeConstraint implements IJointConstraint {
 
 export class IKBone {
     joint: IJointConstraint
-    parent: IKChain
     readonly start: vec3 = vec3()
     readonly end: vec3 = vec3()
     readonly direction: vec3 = vec3()
     readonly rotation: quat = quat()
     readonly inverseBind: quat = quat()
+    index: number = -1
     length: number = 0
     set(start: vec3, end: vec3){
         vec3.copy(start, this.start)
@@ -105,9 +105,12 @@ export class IKBone {
     }
 }
 
+window['counter'] = [0,0]
+
 export class IKChain {
     private static readonly direction: vec3 = vec3()
     private static readonly rotation: quat = quat()
+    private static readonly temp: quat = quat()
     private buffer: Float32Array = new Float32Array(0)
     readonly bones: IKBone[] = []
     length: number = 0
@@ -132,7 +135,8 @@ export class IKChain {
         this.length -= bone.length
         this.bones.splice(index, 1)
     }
-    solveIK(target: vec3, parent?: IKBone): number {
+    solveFABRIK(): number {
+        const { target, parent } = this
         const { direction, rotation } = IKChain
         forward: for(let joint = target, i = this.bones.length - 1; i >= 0; i--){
             const bone = this.bones[i]
@@ -177,6 +181,40 @@ export class IKChain {
         }
         return vec3.distance(this.last.end, target)
     }
+    solveCCD(){
+        const { target, parent } = this
+        const { direction, rotation, temp } = IKChain
+        for(let i = this.bones.length - 1; i >= 0; i--){
+            const bone = this.bones[i]
+
+            const from = vec3.subtract(this.last.end, bone.start, direction)
+            const to = vec3.subtract(target, bone.start, bone.direction)
+
+            const angle = vec3.angle(from, to)
+            const axis = vec3.cross(from, to, direction)
+            vec3.normalize(axis, axis)
+            quat.axisAngle(axis, angle, rotation)
+
+            quat.multiply(rotation, bone.rotation, rotation)
+            quat.normalize(rotation, rotation)
+            bone.joint.apply(bone, this.bones[i - 1] || parent, rotation)
+
+            quat.multiply(rotation, quat.conjugate(bone.rotation, temp), rotation)
+
+            for(let j = i, joint = bone.start; j < this.bones.length; j++){
+                const bone = this.bones[j]
+                vec3.copy(joint, bone.start)
+
+                quat.multiply(rotation, bone.rotation, bone.rotation)
+                quat.normalize(bone.rotation, bone.rotation)
+
+                quat.transform(vec3.AXIS_Z, bone.rotation, bone.direction)
+                vec3.scale(bone.direction, bone.length, bone.end)
+                joint = vec3.add(bone.start, bone.end, bone.end)
+            }
+        }
+        return vec3.distance(this.last.end, target)
+    }
     serialize(): Float32Array {
         if(this.buffer.length != this.bones.length * 4 + 4)
             this.buffer = new Float32Array(this.bones.length * 4 + 4)
@@ -198,11 +236,12 @@ export class IKChain {
 }
 
 export class IKRig {
-    private chains: IKChain[] = []
-    precision: number = 0.001
-    iterations: number = 20
-    distanceThreshold: number = 1.0
-    deltaDistanceThreshold: number = 0.01
+    readonly chains: IKChain[] = []
+    private precision: number = 1e-6
+    private iterations: number = 16
+    private distanceThreshold: number = 0.1
+    private deltaDistanceThreshold: number = 1e-3
+    private mode: number = 0
 
     update(){
         for(let i = this.chains.length - 1; i >= 0; i--){
@@ -220,15 +259,15 @@ export class IKRig {
     private solve(chain: IKChain, target: vec3): Float32Array {
         let solution: Float32Array, minDistance = Infinity, lastDistance = Infinity
         for(let i = this.iterations; i > 0; i--){
-            const distance = chain.solveIK(target, chain.parent)
+            const distance = this.mode ? chain.solveFABRIK() : chain.solveCCD()
             if(distance < minDistance){
                 minDistance = distance
                 solution = chain.serialize()
-                if(minDistance > this.distanceThreshold) break
+                if(minDistance <= this.distanceThreshold) break
             }else if(Math.abs(distance - lastDistance) < this.deltaDistanceThreshold) break
             lastDistance = distance
         }
-        return solution   
+        return solution
     }
     add(origin: vec3, parent?: IKBone): IKChain {
         const chain = new IKChain()
