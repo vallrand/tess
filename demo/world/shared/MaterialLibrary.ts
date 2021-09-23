@@ -3,8 +3,8 @@ import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { GradientRamp } from '../../engine/particles'
-import { MaterialSystem, MeshMaterial, EffectMaterial } from '../../engine/materials'
-import { DeferredGeometryPass } from '../../engine/pipeline'
+import { MaterialSystem, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
+import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
 
 export function MaterialLibrary(context: Application){
@@ -49,14 +49,15 @@ export function MaterialLibrary(context: Application){
     ], 1)
 
 
-
-
-
-
+    const gradientMaterial = new SpriteMaterial()
+    gradientMaterial.program = context.get(ParticleEffectPass).program
+    gradientMaterial.diffuse = GradientRamp(context.gl, [
+        0x00000000, 0xffffffff
+    ], 2)
 
     return {
         distortion, chromaticAberration, dunesMaterial,
 
-        coneTealMaterial
+        coneTealMaterial, gradientMaterial
     }
 }

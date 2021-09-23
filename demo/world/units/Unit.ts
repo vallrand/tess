@@ -16,6 +16,7 @@ interface MovementStrategy {
 
 export abstract class ControlUnit implements IUnit {
     public readonly tile: vec2 = vec2()
+    public readonly size: vec2 = vec2.ONE
     actionIndex: number
     turn: number
 
@@ -32,28 +33,26 @@ export abstract class ControlUnit implements IUnit {
     public abstract move(path: vec2[]): Generator<ActionSignal>
     public abstract strike(target: vec3): Generator<ActionSignal>
 
-    protected *moveAlongPath(path: vec2[], transform: Transform): Generator<ActionSignal> {
-        const shadow = this.context.get(DecalPass).create(4)
-        shadow.transform = this.context.get(TransformSystem).create()
-        shadow.transform.parent = transform
-        vec3.set(6,6,6, shadow.transform.scale)
-        vec4.set(0.2+0.2,0+0.6,0.4+0.6,0*0.8, shadow.color)
-        shadow.material = new DecalMaterial()
-        shadow.material.program = this.context.get(DecalPass).program
-        shadow.material.diffuse = SharedSystem.textures.glow
-
-        const terrain = this.context.get(TerrainSystem)
-        const floatHeight = 1, floatDuration = 0.4, direction = vec3(), previousRotation = quat.copy(transform.rotation, quat())
+    protected snapPosition(tile: vec2, out: vec3){
+        const column = tile[0] + 0.5 * (this.size[0] - 1)
+        const row = tile[1] + 0.5 * (this.size[1] - 1)
+        this.context.get(TerrainSystem).tilePosition(column, row, out)
+    }
+    protected *moveAlongPath(
+        path: vec2[], transform: Transform, floatDuration: number, rotate: boolean
+    ): Generator<ActionSignal> {
+        const direction = vec3(), previousRotation = quat.copy(transform.rotation, quat())
         const entry = vec3(), exit = vec3(), center = vec3()
+
         for(let last = path.length - 1, i = 0; i <= last; i++){
             const tile = path[i]
-            terrain.tilePosition(tile[0], tile[1], center)
+            this.snapPosition(tile, center)
             vec2.copy(tile, this.tile)
 
             if(i == 0) vec3.copy(center, entry)
-            else terrain.tilePosition(path[i - 1][0], path[i - 1][1], entry)
+            else this.snapPosition(path[i - 1], entry)
             if(i == last) vec3.copy(center, exit)
-            else terrain.tilePosition(path[i + 1][0], path[i + 1][1], exit)
+            else this.snapPosition(path[i + 1], exit)
 
             vec3.centroid(entry, center, entry)
             vec3.centroid(exit, center, exit)
@@ -66,14 +65,16 @@ export abstract class ControlUnit implements IUnit {
                 const elapsedTime = this.context.currentTime - startTime
                 const fraction = Math.min(1, elapsedTime / duration)
                 quadraticBezier3D(entry, center, exit, movementEase(fraction), transform.position)
-                quadraticBezierNormal3D(entry, center, exit, movementEase(fraction), direction)
-                quat.fromNormal(vec3.normalize(direction, direction), vec3.AXIS_Y, transform.rotation)
 
-                if(mode == 0) quat.slerp(previousRotation, transform.rotation, ease.quadOut(fraction), transform.rotation)
-
-                if(mode == 0) transform.position[1] += floatHeight * ease.quartOut(fraction)
-                else if(mode == 2) transform.position[1] += floatHeight * (1-ease.quartIn(fraction))
-                else transform.position[1] += floatHeight
+                if(rotate) if(mode == 0){
+                    vec3.subtract(exit, entry, direction)
+                    quat.fromNormal(vec3.normalize(direction, direction), vec3.AXIS_Y, transform.rotation)
+                    quat.slerp(previousRotation, transform.rotation, ease.quadOut(fraction), transform.rotation)
+                }else{
+                    quadraticBezierNormal3D(entry, center, exit, movementEase(fraction), direction)
+                    quat.fromNormal(vec3.normalize(direction, direction), vec3.AXIS_Y, transform.rotation)
+                    quat.normalize(transform.rotation, transform.rotation)
+                }
 
                 transform.frame = 0
 
@@ -81,8 +82,5 @@ export abstract class ControlUnit implements IUnit {
                 yield ActionSignal.WaitNextFrame
             }
         }
-
-        this.context.get(TransformSystem).delete(shadow.transform)
-        this.context.get(DecalPass).delete(shadow)
     }
 }

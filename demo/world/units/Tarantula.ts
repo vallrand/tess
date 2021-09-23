@@ -1,10 +1,10 @@
 import { Application } from '../../engine/framework'
-import { lerp, vec2, vec3, vec4, quat, mat4, ease } from '../../engine/math'
+import { clamp, lerp, vec2, vec3, vec4, quat, mat4, ease } from '../../engine/math'
 import { MeshSystem, Mesh, IKRig, IKBone, IKChain, LocalHingeConstraint, BallJointConstraint, SwingTwistConstraint, ArmatureNode } from '../../engine/components'
 import { MeshMaterial } from '../../engine/materials'
 import { TransformSystem } from '../../engine/scene'
 import { DeferredGeometryPass } from '../../engine/pipeline'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EmitterTrigger } from '../../engine/scene/Animation'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EmitterTrigger, BlendTween } from '../../engine/scene/Animation'
 
 import { TerrainSystem } from '../terrain'
 import { modelAnimations } from '../animations'
@@ -16,6 +16,7 @@ class Spider4Rig extends IKRig {
     private readonly ballJoint = new BallJointConstraint()
     private readonly hingeJoint = new LocalHingeConstraint()
     private readonly inverseModelMatrix: mat4 = mat4()
+    private readonly worldOrientation: quat = quat()
     private readonly targets: {
         world: vec3
         local: vec3
@@ -32,11 +33,11 @@ class Spider4Rig extends IKRig {
     }
     private attachLimb(thighbone: ArmatureNode, shinbone: ArmatureNode){
         const joint0 = vec3(), joint1 = vec3(), joint2 = vec3()
-        const bind0 = quat(), bind1 = quat(), temp = quat()
+        const bind0 = quat(), bind1 = quat()
 
         mat4.decompose(thighbone.globalTransform, joint0, joint2, bind0)
         mat4.decompose(shinbone.globalTransform, joint1, joint2, bind1)
-        mat4.transform([0,1,0], shinbone.globalTransform, joint2)
+        mat4.transform(vec3.AXIS_Y, shinbone.globalTransform, joint2)
 
         const chain = this.add(joint0)
         chain.parent = new IKBone()
@@ -50,8 +51,8 @@ class Spider4Rig extends IKRig {
         femur.joint = this.ballJoint
         tibia.joint = this.hingeJoint
 
-        quat.multiply(quat.conjugate(femur.rotation, temp), bind0, femur.inverseBind)
-        quat.multiply(quat.conjugate(tibia.rotation, temp), bind1, tibia.inverseBind)
+        quat.multiply(quat.conjugate(femur.rotation, femur.inverseBind), bind0, femur.inverseBind)
+        quat.multiply(quat.conjugate(tibia.rotation, tibia.inverseBind), bind1, tibia.inverseBind)
         vec3.copy(joint2, chain.target)
 
         this.targets.push({
@@ -66,7 +67,7 @@ class Spider4Rig extends IKRig {
     build(mesh: Mesh){
         this.mesh = mesh
         mesh.armature.update(this.context)
-        this.mesh.transform.recalculate(this.context.frame)
+        mesh.transform.recalculate(this.context.frame)
 
         this.attachLimb(mesh.armature.nodes[1], mesh.armature.nodes[2])
         this.attachLimb(mesh.armature.nodes[3], mesh.armature.nodes[4])
@@ -88,7 +89,6 @@ class Spider4Rig extends IKRig {
         target.moving = false
     }
     update(){
-        this.mesh.armature.update(this.context)
         mat4.invert(this.mesh.transform.matrix, this.inverseModelMatrix)
 
         let maxDistance = 0, targetIndex = -1, moving = 0
@@ -120,24 +120,16 @@ class Spider4Rig extends IKRig {
 
         super.update()
 
-        const worldOrientation = quat()
-        for(let i = 0; i < this.chains.length; i++)
+        for(let i = this.chains.length - 1; i >= 0; i--)
         for(let j = 0; j < this.chains[i].bones.length; j++){
             const bone = this.chains[i].bones[j]
             if(bone.index == -1) continue
             const node = this.mesh.armature.nodes[bone.index]
 
-            quat.multiply(bone.rotation, bone.inverseBind, node.rotation)
-            const parentTransform = this.mesh.armature.nodes[node.parent].globalTransform
-            mat4.decompose(parentTransform, worldOrientation as any, worldOrientation as any, worldOrientation)
-            quat.normalize(worldOrientation, worldOrientation)
-            quat.conjugate(worldOrientation, worldOrientation)
-            quat.multiply(worldOrientation, node.rotation, node.rotation)
-
-            mat4.fromRotationTranslationScale(node.rotation, node.position, node.scale, node.globalTransform)
-            mat4.multiply(parentTransform, node.globalTransform, node.globalTransform)
+            quat.multiply(bone.rotation, bone.inverseBind, this.worldOrientation)
+            mat4.fromRotationTranslationScale(this.worldOrientation, bone.start, vec3.ONE, node.globalTransform)
+            this.mesh.armature.updateBone(bone.index)
         }
-        this.mesh.armature.frame = 0
     }
 }
 
@@ -147,11 +139,9 @@ export class Tarantula extends ControlUnit {
 
     constructor(context: Application){super(context)}
     public place(column: number, row: number): void {
-        vec2.set(column, row, this.tile)
         this.mesh = this.context.get(MeshSystem).loadModel(Tarantula.model)
         this.mesh.transform = this.context.get(TransformSystem).create()
-        this.context.get(TerrainSystem).tilePosition(column, row, this.mesh.transform.position)
-
+        this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[Tarantula.model].activate(0, this.mesh.armature)
 
         const rig = new Spider4Rig(this.context)
@@ -163,29 +153,25 @@ export class Tarantula extends ControlUnit {
         this.context.get(MeshSystem).delete(this.mesh)
     }
     public *move(path: vec2[]): Generator<ActionSignal> {
-        const prevPosition = vec3.copy(this.mesh.transform.position, vec3())
-        //const prevRotation = quat.copy(this.mesh.transform.rotation, quat())
-        const nextPosition = vec3()//, nextRotation = quat()
-        for(let i = 0; i < path.length; i++){
-            //const prev = i ? path[i - 1] : this.tile
-            const next = path[i]
-            //const rotation = Math.atan2(next[0]-prev[0], next[1]-prev[1])
-            //quat.axisAngle(vec3.AXIS_Y, rotation, nextRotation)
-            this.context.get(TerrainSystem).tilePosition(next[0], next[1], nextPosition)
-            vec2.copy(next, this.tile)
+        
+        const animate = AnimationTimeline(this, {
+            'mesh.transform.position': PropertyAnimation([
+                { frame: 0, value: vec3.ZERO },
+                { frame: 1, value: [0,0.5,0], ease: ease.sineOut }
+            ], BlendTween.vec3)
+        })
+        
+        const floatDuration = 0.8
+        const duration = path.length * floatDuration + 2 * floatDuration
 
-            for(const duration = 1.6, startTime = this.context.currentTime; true;){
-                const elapsedTime = this.context.currentTime - startTime
-                const t = Math.min(1, elapsedTime / duration)
-                vec3.lerp(prevPosition, nextPosition, ease.sineInOut(t), this.mesh.transform.position)
-                //quat.slerp(prevRotation, nextRotation, ease.quartOut(t), this.mesh.transform.rotation)
-                this.mesh.transform.position[1] += 0.5 * ease.fadeInOut(t)
-                this.mesh.transform.frame = 0
-                if(elapsedTime > duration) break
-                yield ActionSignal.WaitNextFrame
-            }
-            vec3.copy(nextPosition, prevPosition)
-            //quat.copy(nextRotation, prevRotation)
+        for(const generator = this.moveAlongPath(path, this.mesh.transform, floatDuration, false), startTime = this.context.currentTime; true;){
+            const iterator = generator.next()
+            const elapsedTime = this.context.currentTime - startTime
+            const floatTime = clamp(Math.min(duration-elapsedTime,elapsedTime)/floatDuration,0,1)
+            animate(floatTime, this.context.deltaTime)
+
+            if(iterator.done) break
+            else yield iterator.value
         }
     }
     public *strike(target: vec3): Generator<ActionSignal> {

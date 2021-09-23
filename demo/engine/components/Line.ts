@@ -1,5 +1,5 @@
 import { Application, One } from '../framework'
-import { vec3, vec4, quat, mat4, vec2, ease, clamp } from '../math'
+import { range, vec3, vec4, quat, mat4, vec2, ease, clamp } from '../math'
 import { ICamera, BoundingVolume, IAnimationTrigger, Transform } from '../scene'
 import { IBatched, uintNorm4x8 } from '../pipeline/batch'
 import { SpriteMaterial } from '../materials'
@@ -22,6 +22,7 @@ export class Line implements IBatched {
     public ease: ease.IEase = One
     public width: number = 1
     public height: number = 0
+    constructor(length?: number){ if(length) this.path = range(8).map(i => vec3()) }
     public update(context: Application, camera: ICamera){
         if(this.frame > 0 && this.frame >= camera.frame) return
         this.frame = context.frame

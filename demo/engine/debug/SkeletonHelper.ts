@@ -63,7 +63,7 @@ export class SkeletonHelper {
                 const bone = rig.chains[i].bones[j]
 
                 mat4.fromRotationTranslationScale(bone.rotation, bone.start, [2,2, bone.length], this.modelMatrix)
-                mat4.multiply(mesh.transform.matrix, this.modelMatrix, this.modelMatrix)
+                if(rig.chains[i].target) mat4.multiply(mesh.transform.matrix, this.modelMatrix, this.modelMatrix)
                 vec4.set(0.8,0.2,0.7,1, this.color)
 
                 this.uniform.bind(gl, UniformBlockBindings.ModelUniforms)

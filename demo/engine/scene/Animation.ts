@@ -1,5 +1,5 @@
 import { Application, ISystem } from '../framework'
-import { clamp, ease, vec3 } from '../math'
+import { clamp, ease, quat, vec3 } from '../math'
 import { ParticleEmitter } from '../particles'
 
 export interface ActionSignal {
@@ -122,8 +122,8 @@ export function AnimationTimeline<T>(
     return function(elapsedTime: number, deltaTime: number){
         for(let i = properties.length - 1; i >= 0; i--){
             const { sampler, property, target } = properties[i]
-            if(sampler.length === 3) sampler(elapsedTime, deltaTime, target[property])
-            else target[property] = sampler(elapsedTime, target[property])
+            if(sampler.length === 3) sampler.call(this, elapsedTime, deltaTime, target[property])
+            else target[property] = sampler.call(this, elapsedTime, target[property])
             if(!isNaN(target.frame)) target.frame = 0
         }
     }
@@ -149,4 +149,19 @@ export const quadraticBezier3D = (a: vec3, b: vec3, c: vec3, t: number, out: vec
     out[1] = it2 * a[1] + 2*t*it * b[1] + t2 * c[1]
     out[2] = it2 * a[2] + 2*t*it * b[2] + t2 * c[2]
     return out
+}
+
+export const BlendTween = {
+    temp: quat(),
+    vec3: function(prev: vec3, next: vec3, t: number, out: vec3): vec3 {
+        out[0] += prev[0] + t * (next[0] - prev[0])
+        out[1] += prev[1] + t * (next[1] - prev[1])
+        out[2] += prev[2] + t * (next[2] - prev[2])
+        return out
+    },
+    quat: function(prev: quat, next: quat, t: number, out: quat): quat {
+        quat.slerp(prev, next, t, BlendTween.temp)
+        quat.multiply(out, BlendTween.temp, out)
+        return out
+    }
 }

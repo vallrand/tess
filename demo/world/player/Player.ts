@@ -34,19 +34,21 @@ export class PlayerSystem implements ISystem {
             window['vec3'] = vec3
             //this.context.get(TerrainSystem).resources.create(5,6)
 
+            window['curUnit'] = 2
+
             window['u0'] = this.context.get(AISystem).create(6,7,0)
             window['u1'] = this.context.get(AISystem).create(7,7,1)
             window['u2'] = this.context.get(AISystem).create(7,8,2)
-            // window['u3'] = this.context.get(AISystem).create(7,9,3)
+            window['u3'] = this.context.get(AISystem).create(2,6,3)
             window['u4'] = this.context.get(AISystem).create(7,10,4)
-            // window['u5'] = this.context.get(AISystem).create(7,11,5)
+            window['u5'] = this.context.get(AISystem).create(0,8,5)
             window['u6'] = this.context.get(AISystem).create(5,10,6)
             window['u7'] = this.context.get(AISystem).create(3,10,7)
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['app'].systems[17].cameraOffset= [2,4,3]//[4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
-        const mainUnit = window['u7']
+        const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
 
         this.cube.meshes[this.cube.state.side].armature.frame = 0
@@ -55,7 +57,7 @@ export class PlayerSystem implements ISystem {
         for(let i = 0; i <= 7; i++){
             const unit = window[`u${i}`]
             if(!unit) continue
-           unit.mesh.armature.frame = 0
+        //    unit.mesh.armature.frame = 0
             window[`a${i}`] =unit.mesh.armature
         }
 

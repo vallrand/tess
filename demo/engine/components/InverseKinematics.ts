@@ -14,7 +14,7 @@ export class SwingTwistConstraint implements IJointConstraint {
         quat.conjugate(parent?.rotation || quat.IDENTITY, this.localRotation)
         quat.multiply(this.localRotation, out, this.localRotation)
 
-        quat.decompose(this.localRotation, vec3.AXIS_Z, this.swing, this.twist)
+        quat.decompose(this.localRotation, IKBone.FORWARD, this.swing, this.twist)
         this.limitRotation(this.swing, this.swingAngle)
         this.limitRotation(this.twist, this.twistAngle)
         quat.multiply(this.swing, this.twist, this.localRotation)
@@ -36,16 +36,16 @@ export class BallJointConstraint implements IJointConstraint {
     private readonly localRotation: quat = quat()
     private readonly localDirection: vec3 = vec3()
     rotor: number = Math.PI
-    readonly axis: vec3 = vec3(0,0,1)
+    readonly axis: vec3 = vec3.copy(IKBone.FORWARD, vec3())
     apply(bone: IKBone, parent: IKBone, out: quat): void {
         quat.conjugate(parent?.rotation || quat.IDENTITY, this.localRotation)
         quat.multiply(this.localRotation, out, this.localRotation)
 
-        quat.transform(vec3.AXIS_Z, this.localRotation, this.localDirection)
+        quat.transform(IKBone.FORWARD, this.localRotation, this.localDirection)
         const angle = vec3.angle(this.axis, this.localDirection)
         if(angle < Number.EPSILON) quat.copy(quat.IDENTITY, this.localRotation)
         else{
-            const correctionAxis = vec3.cross(vec3.AXIS_Z, this.localDirection, this.localDirection)
+            const correctionAxis = vec3.cross(IKBone.FORWARD, this.localDirection, this.localDirection)
             vec3.normalize(correctionAxis, correctionAxis)
             quat.axisAngle(correctionAxis, clamp(angle, 0, this.rotor), this.localRotation)
         }
@@ -62,12 +62,12 @@ export class LocalHingeConstraint implements IJointConstraint {
     private readonly projectedDirection: vec3 = vec3()
     min: number = -Math.PI
     max: number = Math.PI
-    readonly axis: vec3 = vec3(1,0,0)
+    readonly axis: vec3 = vec3.copy(IKBone.LEFT, vec3())
     apply(bone: IKBone, parent: IKBone, out: quat): void {
         quat.conjugate(parent?.rotation || quat.IDENTITY, this.localRotation)
         quat.multiply(this.localRotation, out, this.localRotation)
 
-		quat.transform(vec3.AXIS_Z, this.localRotation, this.localDirection)
+		quat.transform(IKBone.FORWARD, this.localRotation, this.localDirection)
 		this.limitAxis(this.axis, this.localDirection, this.min, this.max, this.localRotation)
 
         quat.multiply(parent?.rotation || quat.IDENTITY, this.localRotation, out)
@@ -76,7 +76,7 @@ export class LocalHingeConstraint implements IJointConstraint {
     limitAxis(axis: vec3, direction: vec3, min: number, max: number, out: quat){
         const projected = vec3.projectPlane(direction, axis, this.projectedDirection)
         if(vec3.dot(projected, projected) < Number.EPSILON) return quat.copy(quat.IDENTITY, out)
-        const referenceAxis = vec3.projectPlane(vec3.AXIS_Z, axis, this.referenceAxis)
+        const referenceAxis = vec3.projectPlane(IKBone.FORWARD, axis, this.referenceAxis)
         const angle = vec3.angle(projected, referenceAxis)
         const sign = vec3.dot(axis, vec3.cross(referenceAxis, projected, projected)) < 0 ? -1 : 1
         quat.axisAngle(axis, clamp(angle * sign, min, max), out)
@@ -84,6 +84,9 @@ export class LocalHingeConstraint implements IJointConstraint {
 }
 
 export class IKBone {
+    public static readonly UP = vec3.AXIS_Y
+    public static readonly FORWARD = vec3.AXIS_Z
+    public static readonly LEFT = vec3.AXIS_X
     joint: IJointConstraint
     readonly start: vec3 = vec3()
     readonly end: vec3 = vec3()
@@ -100,12 +103,10 @@ export class IKBone {
         vec3.subtract(this.end, this.start, this.direction)
         vec3.normalize(this.direction, this.direction)
 
-        quat.fromNormal(this.direction, vec3.AXIS_Y, this.rotation)
+        quat.fromNormal(this.direction, IKBone.UP, this.rotation)
         quat.normalize(this.rotation, this.rotation)
     }
 }
-
-window['counter'] = [0,0]
 
 export class IKChain {
     private static readonly direction: vec3 = vec3()
@@ -116,7 +117,7 @@ export class IKChain {
     length: number = 0
     parent: IKBone
     readonly origin: vec3 = vec3()
-    readonly target: vec3 = vec3()
+    target: vec3 = vec3()
     readonly lastOrigin: vec3 = vec3()
     readonly lastTarget: vec3 = vec3()
 
@@ -138,6 +139,7 @@ export class IKChain {
     solveFABRIK(): number {
         const { target, parent } = this
         const { direction, rotation } = IKChain
+        if(target != null)
         forward: for(let joint = target, i = this.bones.length - 1; i >= 0; i--){
             const bone = this.bones[i]
             vec3.copy(joint, bone.end)
@@ -158,7 +160,7 @@ export class IKChain {
                 quat.normalize(bone.rotation, bone.rotation)
             }
 			
-			quat.transform(vec3.AXIS_Z, bone.rotation, bone.direction)
+			quat.transform(IKBone.FORWARD, bone.rotation, bone.direction)
             vec3.scale(bone.direction, -bone.length, bone.start)
             joint = vec3.add(bone.end, bone.start, bone.start)
         }
@@ -175,11 +177,11 @@ export class IKChain {
 
 			bone.joint.apply(bone, this.bones[i - 1] || parent, bone.rotation)
 			
-			quat.transform(vec3.AXIS_Z, bone.rotation, bone.direction)
+			quat.transform(IKBone.FORWARD, bone.rotation, bone.direction)
             vec3.scale(bone.direction, bone.length, bone.end)
             joint = vec3.add(bone.start, bone.end, bone.end)
         }
-        return vec3.distance(this.last.end, target)
+        return target ? vec3.distance(this.last.end, target) : 0
     }
     solveCCD(){
         const { target, parent } = this
@@ -208,7 +210,7 @@ export class IKChain {
                 quat.multiply(rotation, bone.rotation, bone.rotation)
                 quat.normalize(bone.rotation, bone.rotation)
 
-                quat.transform(vec3.AXIS_Z, bone.rotation, bone.direction)
+                quat.transform(IKBone.FORWARD, bone.rotation, bone.direction)
                 vec3.scale(bone.direction, bone.length, bone.end)
                 joint = vec3.add(bone.start, bone.end, bone.end)
             }
@@ -228,7 +230,7 @@ export class IKChain {
             const bone = this.bones[i], index = 4 + i * 4
             quat.set(buffer[index + 0], buffer[index + 1], buffer[index + 2], buffer[index + 3], bone.rotation)
             vec3.copy(joint, bone.start)
-            quat.transform(vec3.AXIS_Z, bone.rotation, bone.direction)
+            quat.transform(IKBone.FORWARD, bone.rotation, bone.direction)
             vec3.scale(bone.direction, bone.length, bone.end)
             joint = vec3.add(bone.start, bone.end, bone.end)
         }
@@ -241,22 +243,22 @@ export class IKRig {
     private iterations: number = 16
     private distanceThreshold: number = 0.1
     private deltaDistanceThreshold: number = 1e-3
-    private mode: number = 0
+    protected mode: number = 0
 
     update(){
         for(let i = this.chains.length - 1; i >= 0; i--){
             const chain = this.chains[i]
             const origin = chain.parent ? chain.parent.end : chain.origin
-            const target = chain.target
+            const target = chain.target || vec3.ZERO
             if(vec3.equals(origin, chain.lastOrigin, this.precision) &&
             vec3.equals(target, chain.lastTarget, this.precision)) continue
             vec3.copy(origin, chain.lastOrigin)
             vec3.copy(target, chain.lastTarget)
             
-            chain.deserialize(this.solve(chain, target))
+            chain.deserialize(this.solve(chain))
         }
     }
-    private solve(chain: IKChain, target: vec3): Float32Array {
+    private solve(chain: IKChain): Float32Array {
         let solution: Float32Array, minDistance = Infinity, lastDistance = Infinity
         for(let i = this.iterations; i > 0; i--){
             const distance = this.mode ? chain.solveFABRIK() : chain.solveCCD()

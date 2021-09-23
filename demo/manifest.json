@@ -1833,46 +1833,20 @@
       ]
     },
     {
-      "name": "mono_turret",
-      "texture": 14,
-      "format": 0,
-      "indices": {
-        "byteOffset": 2392178,
-        "byteLength": 3720
-      },
-      "vertices": {
-        "byteOffset": 2395900,
-        "byteLength": 22200
-      }
-    },
-    {
-      "name": "mono_spawner",
-      "texture": 14,
-      "format": 0,
-      "indices": {
-        "byteOffset": 2418102,
-        "byteLength": 4632
-      },
-      "vertices": {
-        "byteOffset": 2422736,
-        "byteLength": 30048
-      }
-    },
-    {
       "name": "monolith",
       "texture": 14,
       "format": 1,
       "indices": {
-        "byteOffset": 2452786,
-        "byteLength": 18930
+        "byteOffset": 2392178,
+        "byteLength": 52338
       },
       "vertices": {
-        "byteOffset": 2471720,
-        "byteLength": 173024
+        "byteOffset": 2444520,
+        "byteLength": 444928
       },
       "inverseBindPose": {
-        "byteOffset": 2644748,
-        "byteLength": 384
+        "byteOffset": 2889452,
+        "byteLength": 1152
       },
       "armature": [
         {
@@ -1897,15 +1871,10 @@
         {
           "name": "cover_right",
           "rotation": [
-            0.5,
-            0.5,
-            0.5,
-            0.5
-          ],
-          "scale": [
-            1,
-            1,
-            1
+            0,
+            0.707107,
+            0.707107,
+            0
           ],
           "position": [
             0,
@@ -1932,10 +1901,10 @@
         {
           "name": "cover_front",
           "rotation": [
-            0.707107,
-            0.707107,
-            0,
-            0
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
           ],
           "position": [
             1,
@@ -1952,6 +1921,200 @@
             0
           ],
           "parent": 0
+        },
+        {
+          "name": "spawner_front",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            2,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "spawner_left",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            0,
+            1,
+            -2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "spawner_right",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            0,
+            1,
+            2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "spawner_back",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            -2,
+            1,
+            0
+          ],
+          "parent": 0
+        },
+        {
+          "name": "turret_11",
+          "rotation": [
+            -0.5,
+            -0.5,
+            -0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            2,
+            1,
+            -2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel_11",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 10
+        },
+        {
+          "name": "turret_01",
+          "rotation": [
+            0,
+            0.707107,
+            0.707107,
+            0
+          ],
+          "position": [
+            2,
+            1,
+            2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel_01",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 12
+        },
+        {
+          "name": "turret_00",
+          "rotation": [
+            -0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "position": [
+            -2,
+            1,
+            2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel_00",
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 14
+        },
+        {
+          "name": "turret_10",
+          "rotation": [
+            -0.707107,
+            0,
+            0,
+            0.707107
+          ],
+          "position": [
+            -2,
+            1,
+            -2
+          ],
+          "parent": 0
+        },
+        {
+          "name": "barrel_10",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "parent": 16
         }
       ]
     },
@@ -1960,15 +2123,15 @@
       "texture": 15,
       "format": 1,
       "indices": {
-        "byteOffset": 2645134,
+        "byteOffset": 2890606,
         "byteLength": 9528
       },
       "vertices": {
-        "byteOffset": 2654664,
+        "byteOffset": 2900136,
         "byteLength": 73856
       },
       "inverseBindPose": {
-        "byteOffset": 2728524,
+        "byteOffset": 2973996,
         "byteLength": 448
       },
       "armature": [
@@ -2066,15 +2229,15 @@
       "texture": 16,
       "format": 1,
       "indices": {
-        "byteOffset": 2728974,
+        "byteOffset": 2974446,
         "byteLength": 26688
       },
       "vertices": {
-        "byteOffset": 2755664,
+        "byteOffset": 3001136,
         "byteLength": 200800
       },
       "inverseBindPose": {
-        "byteOffset": 2956468,
+        "byteOffset": 3201940,
         "byteLength": 384
       },
       "armature": [
@@ -2140,15 +2303,15 @@
       "texture": 17,
       "format": 1,
       "indices": {
-        "byteOffset": 2956854,
+        "byteOffset": 3202326,
         "byteLength": 15192
       },
       "vertices": {
-        "byteOffset": 2972048,
+        "byteOffset": 3217520,
         "byteLength": 114688
       },
       "inverseBindPose": {
-        "byteOffset": 3086740,
+        "byteOffset": 3332212,
         "byteLength": 320
       },
       "armature": [
@@ -2199,15 +2362,15 @@
       "texture": 18,
       "format": 1,
       "indices": {
-        "byteOffset": 3087062,
+        "byteOffset": 3332534,
         "byteLength": 12084
       },
       "vertices": {
-        "byteOffset": 3099148,
+        "byteOffset": 3344620,
         "byteLength": 92896
       },
       "inverseBindPose": {
-        "byteOffset": 3192048,
+        "byteOffset": 3437520,
         "byteLength": 256
       },
       "armature": [

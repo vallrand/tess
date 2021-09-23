@@ -89,6 +89,11 @@ export class Armature {
             mat4.transpose(Armature.tempMat4, node.transform as any)
         }
     }
+    public updateBone(index: number){
+        const node = this.nodes[index]
+        mat4.multiply(node.globalTransform, this.inverseBindPose[index], Armature.tempMat4)
+        mat4.transpose(Armature.tempMat4, node.transform as any)
+    }
 }
 
 export class Mesh implements IMesh {
@@ -191,8 +196,8 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
             }
             const mesh = this.list[i]
             mesh.update(this.context)
-            mesh.armature?.ik?.update()
             mesh.armature?.update(this.context)
+            mesh.armature?.ik?.update()
         }
     }
     public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, data: ILoadedData): void {

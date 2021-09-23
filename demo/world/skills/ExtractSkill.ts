@@ -88,11 +88,7 @@ export class ExtractSkill extends CubeSkill {
         super(context, cube)
 
         this.glow = new BatchMesh(SharedSystem.geometry.cross)
-        this.glow.material = new SpriteMaterial()
-        this.glow.material.program = this.context.get(ParticleEffectPass).program
-        this.glow.material.diffuse = GradientRamp(this.context.gl, [
-            0x00000000, 0xffffffff
-        ], 2)
+        this.glow.material = SharedSystem.materials.gradientMaterial
 
         this.cracksMaterial = new DecalMaterial()
         this.cracksMaterial.program = this.context.get(DecalPass).program
