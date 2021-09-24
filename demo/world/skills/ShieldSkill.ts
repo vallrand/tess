@@ -131,15 +131,7 @@ export class ShieldSkill extends CubeSkill {
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
 
         this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
-        this.tube.material = new EffectMaterial(this.context.gl, {
-            FRESNEL: true, PANNING: true, VERTICAL_MASK: true
-        }, {
-            uUVTransform: vec4(0,0,1,1),
-            uUVPanning: vec2(0, -0.6),
-            uVerticalMask: vec4(0,0,0.8,1),
-            uFresnelMask: vec2(0.1,0.5)
-        })
-        this.tube.material.diffuse = SharedSystem.textures.stripes
+        this.tube.material = SharedSystem.materials.stripesMaterial
 
         this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = this.tube.material

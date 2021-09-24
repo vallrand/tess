@@ -158,17 +158,7 @@ export class RestoreSkill extends CubeSkill {
         this.flash.material.diffuse = SharedSystem.textures.sparkle
 
         this.conduit = new BatchMesh(SharedSystem.geometry.openBox)
-        //TODO this material is duplicated from shield vfx
-        this.conduit.material = new EffectMaterial(this.context.gl, {
-            FRESNEL: true, 
-            PANNING: true, VERTICAL_MASK: true
-        }, {
-            uUVTransform: vec4(0,0,1,1),
-            uUVPanning: vec2(0, -0.6),
-            uVerticalMask: vec4(0,0,0.8,1),
-            uFresnelMask: vec2(0.1,0.5)
-        })
-        this.conduit.material.diffuse = SharedSystem.textures.stripes
+        this.conduit.material = SharedSystem.materials.stripesMaterial
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]

@@ -1,6 +1,6 @@
 import { Application } from '../framework'
 import { ICamera } from '../scene/Camera'
-import { lerp, mat4, vec2, vec3, vec4 } from '../math'
+import { lerp, mat3, mat4, vec2, vec3, vec4 } from '../math'
 import { Transform } from '../scene/Transform'
 import { IBatched } from '../pipeline/batch/GeometryBatch'
 import { IVertexAttribute } from '../webgl'
@@ -46,6 +46,7 @@ export class BatchMesh implements IBatched {
 
         const length = this.vertices.length / 3
         const { matrix } = this.transform
+        const normalMatrix = mat3.normalMatrix(matrix, Transform.normalMatrix)
         for(let i = length - 1; i >= 0; i--){
             const x = this._vertices[i * 8 + 0]
             const y = this._vertices[i * 8 + 1]
@@ -58,18 +59,17 @@ export class BatchMesh implements IBatched {
             this.uvs[i * 2 + 1] = this._vertices[i * 8 + 7]
             
             if(!this.normals) continue
-            //TODO use normal matrix?
-            const nx = this._vertices[i * 8 + 3]
-            const ny = this._vertices[i * 8 + 4]
-            const nz = this._vertices[i * 8 + 5]
-            const ntx = matrix[0] * nx + matrix[4] * ny + matrix[8] * nz
-            const nty = matrix[1] * nx + matrix[5] * ny + matrix[9] * nz
-            const ntz = matrix[2] * nx + matrix[6] * ny + matrix[10] * nz
-            const length = Math.hypot(ntx, nty, ntz)
-            const invLength = length && 1 / length
-            this.normals[i * 3 + 0] = ntx * invLength
-            this.normals[i * 3 + 1] = nty * invLength
-            this.normals[i * 3 + 2] = ntz * invLength
+            let nx = this._vertices[i * 8 + 3]
+            let ny = this._vertices[i * 8 + 4]
+            let nz = this._vertices[i * 8 + 5]
+            nx = normalMatrix[0] * nx + normalMatrix[3] * ny + normalMatrix[6] * nz
+            ny = normalMatrix[1] * nx + normalMatrix[4] * ny + normalMatrix[7] * nz
+            nz = normalMatrix[2] * nx + normalMatrix[5] * ny + normalMatrix[8] * nz
+            let nl = Math.hypot(nx, ny, nz)
+            nl = nl && 1 / nl
+            this.normals[i * 3 + 0] = nx * nl
+            this.normals[i * 3 + 1] = ny * nl
+            this.normals[i * 3 + 2] = nz * nl
         }
 
         this.bounds.update(this.transform, this.boundingRadius)

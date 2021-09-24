@@ -244,8 +244,10 @@ export class IKRig {
     private distanceThreshold: number = 0.1
     private deltaDistanceThreshold: number = 1e-3
     protected mode: number = 0
+    enabled: boolean = true
 
     update(){
+        if(!this.enabled) return
         for(let i = this.chains.length - 1; i >= 0; i--){
             const chain = this.chains[i]
             const origin = chain.parent ? chain.parent.end : chain.origin

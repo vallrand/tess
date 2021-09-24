@@ -72,6 +72,24 @@ export class ParticleGeometry {
             ]
         }
     }
+    public static board(gl: WebGL2RenderingContext, width: number): MeshBuffer {
+        const vbo = gl.createBuffer()
+        gl.bindBuffer(GL.ARRAY_BUFFER, vbo)
+        gl.bufferData(GL.ARRAY_BUFFER, new Float32Array([
+            0,width,0, 0,0,
+            0,-width,0, 0,1,
+            1,-width,0, 1,1,
+            1,width,0, 1,0
+        ]), GL.STATIC_DRAW)
+        return {
+            drawMode: GL.TRIANGLE_FAN, vbo, frame: 0, indexOffset: 0, indexCount: 4,
+            vao: null, aabb: null, radius: 0.5,
+            format: [
+                {name:'aPosition',size:3,type:GL.FLOAT,stride:20,offset:0},
+                {name:'aUV',size:2,type:GL.FLOAT,stride:20,offset:12}
+            ]
+        }
+    }
     public static stripe(gl: WebGL2RenderingContext, length: number, ease: IEase): MeshBuffer {
         const vbo = gl.createBuffer()
         gl.bindBuffer(GL.ARRAY_BUFFER, vbo)

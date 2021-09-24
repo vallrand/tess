@@ -1,17 +1,9 @@
 import { Application } from '../framework'
 import { IEffect } from '../pipeline'
 import { GL, ShaderProgram, IVertexAttribute, UniformSamplerBindings, UniformBlockBindings } from '../webgl'
-import { MeshBuffer } from '../components/Mesh'
+import { MeshBuffer } from '../components'
+import { EmitterMaterial } from '../materials'
 import { ParticleEmitter } from './ParticleEmitter'
-
-export interface ParticleSystemOptions {
-    limit: number
-    format: IVertexAttribute[]
-    depthTest: number
-    depthWrite: boolean
-    cull: number
-    blend: number
-}
 
 export class ParticleSystem<T> implements IEffect {
     private readonly pool: ParticleEmitter[] = []
@@ -23,14 +15,15 @@ export class ParticleSystem<T> implements IEffect {
     private vao: WebGLVertexArrayObject[] = []
     protected buffer: WebGLBuffer[] = []
 
-    public diffuse: WebGLTexture
-    public gradientRamp: WebGLTexture
-    public curveSampler: WebGLTexture
+    material: EmitterMaterial
 
     public readonly emitters: ParticleEmitter[] = []
     constructor(
         protected context: Application,
-        protected readonly options: ParticleSystemOptions,
+        protected readonly options: {
+            format: IVertexAttribute[]
+            limit: number
+        },
         private readonly mesh?: MeshBuffer,
         protected readonly program?: ShaderProgram,
         protected readonly transform?: ShaderProgram
@@ -90,28 +83,7 @@ export class ParticleSystem<T> implements IEffect {
         if(!this.instances) return
 
         const { gl } = this.context
-        gl.enable(GL.BLEND)
-        if(this.options.blend == 1)
-            gl.blendFuncSeparate(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
-        else if(this.options.blend == 2)
-            gl.blendFunc(GL.ONE, GL.ONE)
-        else gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
-
-        if(this.options.depthTest){
-            gl.enable(GL.DEPTH_TEST)
-            gl.depthFunc(this.options.depthTest)
-        }else gl.disable(GL.DEPTH_TEST)
-        if(this.options.cull){
-            gl.enable(GL.CULL_FACE)
-            gl.cullFace(this.options.cull)
-        }else gl.disable(GL.CULL_FACE)
-
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
-        gl.bindTexture(GL.TEXTURE_2D, this.diffuse)
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uGradient)
-        gl.bindTexture(GL.TEXTURE_2D, this.gradientRamp)
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uAttributes)
-        gl.bindTexture(GL.TEXTURE_2D, this.curveSampler)
+        this.material.bind(gl)
 
         transform: {
             if(!this.transform || !this.emitters.length) break transform

@@ -36,6 +36,36 @@ uniform sampler2D uNormalMap;
     uniform float uArrayMapLayers;
 #endif
 
+vec2 hash22(in vec2 uv){
+    uvec2 q = floatBitsToUint(uv);
+	q *= uvec2(1597334673U, 3812015801U);
+	q = (q.x ^ q.y) * uvec2(1597334673U, 3812015801U);
+	return vec2(q) * (1.0 / float(0xffffffffU));
+}
+float simplex2D(in vec2 uv){
+    const float K1 = (sqrt(3.)-1.)/2.;
+    const float K2 = (3.-sqrt(3.))/6.;
+
+	vec2 i = floor(uv + (uv.x+uv.y)*K1);
+    vec2 a = uv - i + (i.x+i.y)*K2;
+    float m = step(a.y,a.x); 
+    vec2 o = vec2(m,1.0-m);
+    vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+    vec3 h = max(0.5-vec3(dot(a,a), dot(b,b), dot(c,c)), 0.0);
+    vec2 rx = 1.-2.*hash22(i+0.0);
+    vec2 ry = 1.-2.*hash22(i+o);
+    vec2 rz = 1.-2.*hash22(i+1.0);
+	vec3 n = h*h*h*h*vec3(dot(a,rx), dot(b,ry), dot(c,rz));
+    return 0.5 + 0.5*dot(n, vec3(70.0));
+}
+#ifdef DISSOLVE
+    uniform vec3 uDissolveDirection;
+    uniform float uDissolveThreshold;
+    uniform vec4 uDissolveColor;
+    uniform vec3 uDissolveUVScale;
+#endif
+
 vec2 parallaxMapping(in vec2 uv, in vec3 viewDirection, in float heightScale){
 #ifndef PARALLAX_LAYERS
     float depth = texture(uNormalMap, uv).w;
@@ -112,8 +142,17 @@ void main(){
     diffuse.rgb *= ao;
 #endif
 #endif
-    float metallic = 2.0 * 0.5 * smoothstep(0.25, 0.0, diffuse.a);
+
+#ifdef DISSOLVE
+    diffuse = mix(uColor.rrrg, diffuse, uColor.b);
+    float threshold = dot(position, uDissolveDirection) + uDissolveUVScale.z * simplex2D(uv * uDissolveUVScale.xy);
+    if(threshold < uColor.a) discard;
+    diffuse = mix(diffuse, uDissolveColor, smoothstep(-uDissolveThreshold,0.,uColor.a - threshold));
+#else
     diffuse.rgb *= uColor.rgb;
+    diffuse.a = mix(0.5, diffuse.a, uColor.a);
+#endif
+    float metallic = 2.0 * 0.5 * smoothstep(0.25, 0.0, diffuse.a);
 
     fragPosition = vec4(position, uLayer);
     fragNormal = vec4(normal, metallic);

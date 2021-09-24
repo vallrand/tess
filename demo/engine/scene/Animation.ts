@@ -81,21 +81,27 @@ export function PropertyAnimation<T>(frames: {
             if(frame > 0 && frames[frame].frame > time) frame--
             else if(frame < lastIndex && frames[frame+1].frame < time) frame++
             else break
-        if(frame == 0 && frames[0].frame > time) return lerp(out, frames[0].value, 1, out)
-        else if(frame == lastIndex) return lerp(out, frames[lastIndex].value, 1, out)
-        const prev = frames[frame], next = frames[frame + 1]
+        const prev = frames[frame]
+        if(frame === 0 && prev.frame > time) return lerp(out, prev.value, 1, out)
+        else if(frame === lastIndex) return lerp(out, prev.value, 1, out)
+        const next = frames[frame + 1]
         const fraction = clamp((time - prev.frame) / (next.frame - prev.frame), 0, 1)
         return lerp(prev.value, next.value, (next.ease || ease.linear)(fraction), out)
     }
 }
 
-export const EventTrigger = <T>(frame: number, callback: (target: T) => void): IAnimationTrigger<T> =>
+export const EventTrigger = <T, U>(frames: {
+    frame: number
+    value: U
+}[], emitter: (target: T, options: U) => void): IAnimationTrigger<T> =>
 function(elapsedTime: number, deltaTime: number, target: T){
     const prevTime = elapsedTime - deltaTime
-    if(!(elapsedTime >= frame && prevTime < frame)) return
-    callback(target)
+    for(let length = frames.length, i = 0; i < length; i++)
+        if(frames[i].frame > elapsedTime) break
+        else if(frames[i].frame > prevTime) emitter(target, frames[i].value)
 }
 
+//TODO refactor to all use Event Trigger + Emitter.emit
 export const EmitterTrigger = (options: {
     frame: number
     value: number
@@ -111,19 +117,19 @@ export const EmitterTrigger = (options: {
 }
 
 export function AnimationTimeline<T>(
-    target: T, tracks: Record<string, ReturnType<typeof PropertyAnimation> | IAnimationTrigger>
+    root: T, tracks: Record<string, ReturnType<typeof PropertyAnimation> | IAnimationTrigger>
 ){
     const properties = Object.keys(tracks).map(key => {
         const path = key.split('.').reverse()
-        let node = target
+        let node = root
         for(let i = path.length - 1; i > 0; i--) node = node[path[i]]
         return { sampler: tracks[key] as any, property: path[0], target: node as any }
     })
     return function(elapsedTime: number, deltaTime: number){
         for(let i = properties.length - 1; i >= 0; i--){
             const { sampler, property, target } = properties[i]
-            if(sampler.length === 3) sampler.call(this, elapsedTime, deltaTime, target[property])
-            else target[property] = sampler.call(this, elapsedTime, target[property])
+            if(sampler.length === 3) sampler.call(root, elapsedTime, deltaTime, target[property])
+            else target[property] = sampler.call(root, elapsedTime, target[property])
             if(!isNaN(target.frame)) target.frame = 0
         }
     }

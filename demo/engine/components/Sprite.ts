@@ -1,5 +1,5 @@
 import { Application } from '../framework'
-import { vec2, vec3, vec4, mat4, mat3x2 } from '../math'
+import { vec2, vec3, vec4, quat, mat4, mat3x2 } from '../math'
 import { Transform, ICamera, BoundingVolume } from '../scene'
 import { SpriteMaterial } from '../materials'
 import { IBatched } from '../pipeline/batch/GeometryBatch'
@@ -13,6 +13,8 @@ export const enum BillboardType {
 }
 
 export class Sprite implements IBatched {
+    public static readonly FlatUp: quat = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
+
     private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
     private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1])
     private static readonly tangent: vec3 = vec3()

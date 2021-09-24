@@ -219,7 +219,7 @@ export class OrbSkill extends CubeSkill {
             quat.transform(normal, rotation, normal)
         })
         applyTransform(cone, mat4.fromRotationTranslationScale(
-            quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat()), vec3(0,0,-2), vec3.ONE, mat4()))
+            Sprite.FlatUp, vec3(0,0,-2), vec3.ONE, mat4()))
         this.cone = new BatchMesh(doubleSided(cone))
         this.cone.material = SharedSystem.materials.coneTealMaterial
         

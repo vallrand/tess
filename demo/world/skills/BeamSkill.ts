@@ -4,7 +4,7 @@ import { Application } from '../../engine/framework'
 import { ShaderProgram } from '../../engine/webgl'
 import { PointLight, PointLightPass, ParticleEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
-import { SpriteMaterial } from '../../engine/materials'
+import { SpriteMaterial, EffectMaterial } from '../../engine/materials'
 import { TransformSystem, PropertyAnimation, EmitterTrigger, AnimationTimeline, ActionSignal } from '../../engine/scene'
 import { GradientRamp, ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, BatchMesh, Line } from '../../engine/components'
@@ -32,19 +32,25 @@ const actionTimeline = {
         { frame: 3, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
     'cone.transform.scale': PropertyAnimation([
-        { frame: 0, value: [2,2,0] },
-        { frame: 1.0, value: vec3.ONE, ease: ease.quadOut },
-        { frame: 1.5, value: [0,0,2], ease: ease.cubicIn }
+        { frame: 0, value: [6,0,6] },
+        { frame: 1.0, value: [3,3,3], ease: ease.quadOut },
+        { frame: 1.5, value: [0,6,0], ease: ease.cubicIn }
     ], vec3.lerp),
     'cone.color': PropertyAnimation([
         { frame: 0, value: [0,0,0,0] },
         { frame: 1.2, value: [1,1,1,1], ease: ease.quadOut },
         { frame: 1.4, value: [1,1,1,0], ease: ease.quadIn }
     ], vec4.lerp),
-    'cone.material.uvTransform': PropertyAnimation([
-        { frame: 0.4, value: vec2.ZERO },
-        { frame: 1.5, value: [0xFF,0], ease: ease.quartIn }
-    ], vec2.lerp),
+    'cone.material.uniform.uniforms.uUVTransform.1': PropertyAnimation([
+        { frame: 0.4, value: 0 },
+        { frame: 1.5, value: -0xFF*0.0072, ease: ease.quartIn },
+        { frame: 2.0, value: 0, ease: ease.stepped }
+    ], lerp),
+    'cone.material.uniform.uniforms.uUV2Transform.1': PropertyAnimation([
+        { frame: 0.4, value: 0 },
+        { frame: 1.5, value: -0xFF*0.0144, ease: ease.quartIn },
+        { frame: 2.0, value: 0, ease: ease.stepped }
+    ], lerp),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [4,4,4] },
         { frame: 1.1, value: [8,8,8], ease: ease.sineOut },
@@ -86,17 +92,8 @@ export class BeamSkill extends CubeSkill {
     private readonly _direction: vec3 = vec3()
     constructor(context: Application, cube: Cube){
         super(context, cube)
-        const cylinder = createCylinder({
-            radiusTop: 0, radiusBottom: 6, height: 3,
-            horizontal: 4, radial: 16,
-            cap: false, angleStart: 0, angleLength: 2 * Math.PI
-        })
-        applyTransform(cylinder, mat4.fromRotationTranslationScale(
-            quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat()), vec3(0,0,-1.5), vec3.ONE, mat4()))
-        this.cone = new BatchMesh(doubleSided(cylinder))
-        this.cone.material = new SpriteMaterial()
-        this.cone.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/converge_frag.glsl'))
-        this.cone.material.diffuse = SharedSystem.textures.directionalNoise
+        this.cone = new BatchMesh(SharedSystem.geometry.cone)
+        this.cone.material = SharedSystem.materials.absorbTealMaterial
 
         const gradient = GradientRamp(this.context.gl, [
             0x00000000,0x0f112905,0x1b20400a,0x2b345814,0x4155771e,0x597c9628,0x6c9eae23,0x78b8bf19,0xa7d9da0a,0xf0fafa05
@@ -148,7 +145,9 @@ export class BeamSkill extends CubeSkill {
 
         this.cone.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.cone.transform.position)
-        quat.rotation([0,0,-1], this._direction, this.cone.transform.rotation)
+        //quat.rotation([0,0,-1], this._direction, this.cone.transform.rotation)
+        quat.rotation([0,-1,0], this._direction, this.cone.transform.rotation)
+        //quat.multiply(this.cone.transform.rotation, quat.axisAngle(), this.cone.transform.rotation)
 
         this.center.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.center.transform.position)

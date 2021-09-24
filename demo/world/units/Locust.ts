@@ -27,6 +27,9 @@ export class Locust extends ControlUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
+    public disappear(): Generator<ActionSignal> {
+        return this.dissolveRigidMesh(this.mesh)
+    }
     public *move(path: vec2[]): Generator<ActionSignal> {
         const floatDuration = 0.8, floatHeight = 0.0
         const duration = path.length * floatDuration + 2 * floatDuration

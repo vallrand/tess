@@ -67,8 +67,9 @@ const actionTimeline = {
         { frame: 1.2, value: [0.92, 0.94, 0.74,0] },
         { frame: 1.8, value: vec3.ZERO, ease: ease.sineIn }
     ], vec4.lerp),
-    'cracks.transform.rotation': EventTrigger(0, (rotation: quat) =>
-    quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*random(), rotation)),
+    'cracks.transform.rotation': EventTrigger([
+        { frame: 0, value: null }
+    ], (rotation: quat) => quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*random(), rotation)),
     'smoke.rate': PropertyAnimation([
         { frame: 0, value: 0.05 },
         { frame: 0.5, value: 0.01, ease: ease.quadIn },

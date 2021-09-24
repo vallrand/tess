@@ -2,11 +2,12 @@ import { Application } from '../../engine/framework'
 import { random, randomFloat, vec3, aabb3 } from '../../engine/math'
 import { GL, createTexture, ShaderProgram } from '../../engine/webgl'
 import { ParticleSystem, ParticleGeometry } from '../../engine/particles'
+import { EmitterMaterial } from '../../engine/materials'
 
 export class GrassEffect extends ParticleSystem<void> {
     constructor(context: Application){
         super(
-            context, { limit: 1024, depthTest: GL.LEQUAL, depthWrite: true, cull: GL.NONE, blend: 0, format: [
+            context, { limit: 1024, format: [
                 { name: 'aTransform', size: 3, type: GL.FLOAT, normalized: false, stride: 12, offset: 0 }
             ] }, ParticleGeometry.quad(context.gl),
             ShaderProgram(context.gl,
@@ -14,6 +15,10 @@ export class GrassEffect extends ParticleSystem<void> {
                 require('../shaders/grass_frag.glsl'),
             {  }), null
         )
+        this.material = new EmitterMaterial()
+        this.material.blendMode = null
+        this.material.cullFace = GL.NONE
+        this.material.depthWrite = true
     }
     public fill(amount: number, bounds: aabb3){
         this.instances = amount

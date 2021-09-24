@@ -3,6 +3,7 @@ import { binarySearch } from './common'
 export type IEase = (x: number) => number
 export const split = (edge: number, easeA: IEase, easeB: IEase): IEase => x => x < edge ? edge * easeA(x / edge) : edge + (1 - edge) * easeB((x - edge) / (1 - edge))
 export const flip = (ease: IEase): IEase => x => 1 - ease(1 - x)
+export const reverse = (ease: IEase): IEase => x => 1 - ease(x)
 
 export function CubicBezier(x1: number, y1: number, x2: number, y2: number, epsilon: number = 1e-5): IEase {
     const cx = 3.0 * x1, bx = 3.0 * (x2 - x1) - cx, ax = 1.0 - cx - bx

@@ -46,5 +46,5 @@ void main(){
 
     float f0 = smoothstep(0.0,0.9,uv.y)*smoothstep(1.0,0.9,uv.y);
 
-	fragColor = vec4(f0,f1,f2,1);
+	fragColor = vec4(f1,f2,f0,f2);
 }

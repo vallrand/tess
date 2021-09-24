@@ -49,15 +49,51 @@ export function MaterialLibrary(context: Application){
     ], 1)
 
 
+    const absorbTealMaterial = new EffectMaterial(context.gl, {
+        PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
+    }, {
+        uVerticalMask: vec4(0,0.9,0.9,1),
+        uUVTransform: vec4(0,0,1,1),
+        uUVPanning: vec2(0,-0.32),
+        uUV2Transform: vec4(0,0,1,1),
+        uUV2Panning: vec2(0,-0.64),
+        uColorAdjustment: vec3(1.4,0.9,0)
+    })
+    absorbTealMaterial.gradient = GradientRamp(context.gl, [
+        0xFFFFFF00, 0xFFFFFF00, 0xEFF4F705, 0xC9DBE412, 0x99C7D44C, 0x5AA4AD9D, 0x1E51527B, 0x00000000
+    ], 1)
+    absorbTealMaterial.diffuse = SharedSystem.textures.directionalNoise
+
+
+    const stripesMaterial = new EffectMaterial(context.gl, {
+        FRESNEL: true, PANNING: true, VERTICAL_MASK: true
+    }, {
+        uUVTransform: vec4(0,0,1,1),
+        uUVPanning: vec2(0, -0.6),
+        uVerticalMask: vec4(0,0,0.8,1),
+        uFresnelMask: vec2(0.1,0.5)
+    })
+    stripesMaterial.diffuse = SharedSystem.textures.stripes
+
+
+
     const gradientMaterial = new SpriteMaterial()
     gradientMaterial.program = context.get(ParticleEffectPass).program
     gradientMaterial.diffuse = GradientRamp(context.gl, [
         0x00000000, 0xffffffff
     ], 2)
 
-    return {
-        distortion, chromaticAberration, dunesMaterial,
+    const dissolveProgram = ShaderProgram(context.gl, shaders.geometry_vert, shaders.geometry_frag, {
+        SKINNING: true, NORMAL_MAPPING: true, COLOR_INDEX: true, DISSOLVE: true
+    })
+    dissolveProgram.uniforms.uDissolveDirection = vec3(0,-1,0)
+    dissolveProgram.uniforms.uDissolveThreshold = 0.36
+    dissolveProgram.uniforms.uDissolveColor = vec4(1.0,0.2,0.4,0.8)
+    dissolveProgram.uniforms.uDissolveUVScale = vec3(16,16, 0.8)
 
-        coneTealMaterial, gradientMaterial
+    return {
+        distortion, chromaticAberration, dunesMaterial, dissolveProgram,
+
+        coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial
     }
 }

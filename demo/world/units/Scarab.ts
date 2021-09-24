@@ -68,11 +68,14 @@ export class Scarab extends ControlUnit {
 
         SharedSystem.particles.dust.remove(this.dust)
     }
+    public disappear(): Generator<ActionSignal> {
+        return this.dissolveRigidMesh(this.mesh)
+    }
     public *move(path: vec2[]): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
             'mesh.transform.position': PropertyAnimation([
                 { frame: 0, value: vec3.ZERO },
-                { frame: 1, value: [0,0.4,0], ease: ease.quadOut }
+                { frame: 1, value: [0,0.2,0], ease: ease.quadIn }
             ], BlendTween.vec3),
             'mesh.transform.rotation': PropertyAnimation([
                 { frame: 0, value: quat.IDENTITY },

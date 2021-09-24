@@ -134,7 +134,6 @@ mat3.normalMatrix = (mat: mat4, out: mat3): mat3 => {
     out[7] = m02 * m10 - m00 * m12
     out[8] = m00 * m11 - m01 * m10
 
-    mat3.normalize(out, out)
     return out
 }
 

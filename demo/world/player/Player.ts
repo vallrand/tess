@@ -28,25 +28,26 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Auger)
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Railgun)
             this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
             //this.context.get(TerrainSystem).resources.create(5,6)
 
-            window['curUnit'] = 2
+            window['curUnit'] = 0
 
             window['u0'] = this.context.get(AISystem).create(6,7,0)
             window['u1'] = this.context.get(AISystem).create(7,7,1)
             window['u2'] = this.context.get(AISystem).create(7,8,2)
             window['u3'] = this.context.get(AISystem).create(2,6,3)
-            window['u4'] = this.context.get(AISystem).create(7,10,4)
+            window['u4'] = this.context.get(AISystem).create(6,11,4)
             window['u5'] = this.context.get(AISystem).create(0,8,5)
             window['u6'] = this.context.get(AISystem).create(5,10,6)
             window['u7'] = this.context.get(AISystem).create(3,10,7)
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
-            window['app'].systems[17].cameraOffset= [2,4,3]//[4,8,5]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
+            window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
+            window['app'].systems[17].cameraOffset= [-2,4,4]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
@@ -57,7 +58,7 @@ export class PlayerSystem implements ISystem {
         for(let i = 0; i <= 7; i++){
             const unit = window[`u${i}`]
             if(!unit) continue
-        //    unit.mesh.armature.frame = 0
+           unit.mesh.armature.frame = 0
             window[`a${i}`] =unit.mesh.armature
         }
 
@@ -67,6 +68,7 @@ export class PlayerSystem implements ISystem {
         else if(keys.trigger('KeyW')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
         else if(keys.trigger('KeyS')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
         else if(keys.trigger('Space')) window['strike']([], mainUnit)
+        else if(keys.trigger('KeyX')) window['die'](mainUnit)
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
         // this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)

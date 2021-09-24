@@ -152,6 +152,9 @@ export class Tarantula extends ControlUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
+    public disappear(): Generator<ActionSignal> {
+        return this.dissolveRigidMesh(this.mesh)
+    }
     public *move(path: vec2[]): Generator<ActionSignal> {
         
         const animate = AnimationTimeline(this, {

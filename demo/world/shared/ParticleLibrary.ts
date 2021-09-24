@@ -23,7 +23,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 512, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             ALIGNED: true, SOFT: false, MASK: false, GRADIENT: true, STRETCH: 0.04
@@ -32,20 +32,21 @@ export function ParticleLibrary(context: Application){
             SPHERE: true, TARGETED: true, LUT: true, RADIAL: true
         })
     )
-    energy.diffuse = materials.addRenderTexture(
+    energy.material = new EmitterMaterial()
+    energy.material.diffuse = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { BLINK: true }), {
                 uColor: [1,1,1,1]
             }, 0
     ).target
-    energy.gradientRamp = GradientRamp(context.gl, [
+    energy.material.gradientRamp = GradientRamp(context.gl, [
         0x00000000, 0x3238317f, 0x264d3e3f, 0x8db8b600,
         0x00000000, 0x111c134f, 0x1d4a3b3f, 0x3f999600,
         0x00000000, 0x08120a2f, 0x0d261f2f, 0x395c5b1f,
         0x00000000, 0x00000000, 0x00000000, 0x00000000
     ], 4)
-    energy.curveSampler = AttributeCurveSampler(context.gl, 32, 
+    energy.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
         Object.values(<ParticleOvertimeAttributes> {
             size0: x => 1 - ease.quadIn(x),
             size1: x => 1 - ease.quartIn(x),
@@ -67,7 +68,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 1024, format: VertexDataFormat.Particle },
         ParticleGeometry.stripe(context.gl, 8, (x: number) => x * 2),
         ShaderProgram(context.gl, shaders.stripe_vert, shaders.billboard_frag, {
             STRIP: true, SOFT: false, MASK: true, GRADIENT: true
@@ -76,14 +77,15 @@ export function ParticleLibrary(context: Application){
             SPHERE: true, TARGETED: true, STATIC: true, TRAIL: true
         })
     )
-    sparks.diffuse = materials.addRenderTexture(
+    sparks.material = new EmitterMaterial()
+    sparks.material.diffuse = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { ROUNDED_BOX: true }), {
                 uColor: [1,1,1,1], uRadius: 0.4, uSize: 0.2
             }, 0
     ).target
-    sparks.gradientRamp = GradientRamp(context.gl, [
+    sparks.material.gradientRamp = GradientRamp(context.gl, [
         0x00000000, 0xc7fcf0af, 0x8ee3e67f, 0x4383ba3f, 0x21369400, 0x09115400,
         0x00000000, 0x81d4cd7f, 0x4f94a13f, 0x27588a00, 0x13236300, 0x060c3300,
         0x00000000, 0x2a828700, 0x204c7800, 0x101c5700, 0x06092b00, 0x00000000,
@@ -102,7 +104,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 1024, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             SPHERICAL: true, SOFT: false, MASK: true, GRADIENT: true, UV_OFFSET: 0.2
@@ -111,12 +113,13 @@ export function ParticleLibrary(context: Application){
             CIRCLE: true, TARGETED: true, LUT: true, ANGULAR: true
         })
     )
-    dust.diffuse = SharedSystem.textures.cloudNoise
-    dust.gradientRamp = GradientRamp(context.gl, [
+    dust.material = new EmitterMaterial()
+    dust.material.diffuse = SharedSystem.textures.cloudNoise
+    dust.material.gradientRamp = GradientRamp(context.gl, [
         0xBFB9AEFF, 0x706A5FFF, 0x1917125f, 0x00000000,
         0x1917127f, 0x00000000, 0x00000000, 0x00000000
     ], 2)
-    dust.curveSampler = AttributeCurveSampler(context.gl, 32, 
+    dust.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
         Object.values(<ParticleOvertimeAttributes> {
             size0: ease.cubicOut, size1: ease.cubicOut,
             linear0: x => 1 - 0.2 * ease.linear(x),
@@ -136,7 +139,7 @@ export function ParticleLibrary(context: Application){
         uFieldDomain: vec4
         uFieldStrength: vec2
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 1024, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/smoke_frag.glsl'), {
             SPHERICAL: true, MASK: true, GRADIENT: true
@@ -145,12 +148,13 @@ export function ParticleLibrary(context: Application){
             LUT: true, VECTOR_FIELD: true
         })
     )
-    smoke.diffuse = SharedSystem.textures.sineNoise
-    smoke.gradientRamp = GradientRamp(context.gl, [
+    smoke.material = new EmitterMaterial()
+    smoke.material.diffuse = SharedSystem.textures.sineNoise
+    smoke.material.gradientRamp = GradientRamp(context.gl, [
         0x0A0A1AAF, 0x0E0E107F, 0x1A1A1F3F, 0x00000000,
         0x00000000, 0x00000000, 0x00000000, 0x00000000
     ], 2)
-    smoke.curveSampler = AttributeCurveSampler(context.gl, 32, 
+    smoke.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
         Object.values(<ParticleOvertimeAttributes> {
             size0: ease.linear, size1: ease.quadOut,
             linear0: x => 0.98, linear1: x => 0.98,
@@ -169,7 +173,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uFrame: vec2
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 1024, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             FRAMES: true, SWIPE: 0.1
@@ -178,7 +182,8 @@ export function ParticleLibrary(context: Application){
             CIRCLE: true, FRAMES: true
         })
     )
-    bolts.diffuse = materials.addRenderTexture(
+    bolts.material = new EmitterMaterial()
+    bolts.material.diffuse = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/lightning_frag.glsl'), {
         }), {
@@ -197,7 +202,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 512, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             ALIGNED: true, GRADIENT: true, STRETCH: 0.04
@@ -206,12 +211,13 @@ export function ParticleLibrary(context: Application){
             CIRCLE: true, TARGETED: true, LUT: true
         })
     )
-    embers.diffuse = SharedSystem.textures.particle
-    embers.gradientRamp = GradientRamp(context.gl, [
+    embers.material = new EmitterMaterial()
+    embers.material.diffuse = SharedSystem.textures.particle
+    embers.material.gradientRamp = GradientRamp(context.gl, [
         0xffffff00, 0xfaf8ca00, 0xf2d57c00, 0xcf8f4210, 0xb3461730, 0x82100820, 0x30030010, 0x00000000,
         0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
     ], 2)
-    embers.curveSampler = AttributeCurveSampler(context.gl, 32, 
+    embers.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
         Object.values(<ParticleOvertimeAttributes> {
             size0: x => 1 - ease.sineIn(x),
             size1: x => 1 - ease.quadIn(x),
@@ -229,7 +235,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uRadius: vec2
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle, depthTest: GL.LEQUAL, depthWrite: false, cull: GL.NONE, blend: 0 },
+        context, { limit: 512, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
         ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/fire_frag.glsl'), {
             ALIGNED: true
@@ -238,7 +244,53 @@ export function ParticleLibrary(context: Application){
             SPHERE: true, RELATIVE: true
         })
     )
-    fire.diffuse = SharedSystem.textures.noise
+    fire.material = new EmitterMaterial()
+    fire.material.diffuse = SharedSystem.textures.noise
+
+    const spikes = new ParticleSystem<{
+        uLifespan: vec4
+        uOrigin: vec3
+        uRotation: vec2
+        uGravity: vec3
+        uSize: vec2
+        uRadius: vec2
+        uForce: vec2
+        uTarget: vec3
+        uFrame: vec2
+    }>(
+        context, { limit: 256, format: VertexDataFormat.Particle },
+        ParticleGeometry.board(context.gl, 0.2),
+        ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
+            ALIGNED: true, GRADIENT: true, FRAMES: true
+        }),
+        ShaderProgram(context.gl, shaders.particle_vert, null, {
+            SPHERE: true, TARGETED: true, LUT: true, FRAMES: true
+        })
+    )
+    spikes.material = new EmitterMaterial()
+    spikes.material.diffuse = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/rays_frag.glsl'), {
+            SPIKE: true, TILED: true
+        }), {
+            uTiles: [2,2]
+        }, 0
+    ).target
+
+    spikes.material.gradientRamp = GradientRamp(context.gl, [
+        0xedecd100, 0x6b2d47ff,
+        0xc7264b70, 0x422e36d0,
+        0x75132950, 0x261d22a0,
+        0x00000000, 0x00000000
+    ], 4)
+    spikes.material.curveSampler = AttributeCurveSampler(context.gl, 32, 
+        Object.values(<ParticleOvertimeAttributes> {
+            size0: x => Math.sqrt(ease.fadeInOut(ease.cubicOut(x))),
+            size1: x => Math.sqrt(ease.fadeInOut(ease.cubicOut(x))),
+            linear0: ease.reverse(ease.sineIn), linear1: ease.reverse(ease.sineIn),
+            rotational0: Zero, rotational1: Zero, radial0: Zero, radial1: Zero,
+        })
+    )
 
     const glow = new StaticParticleSystem<{
         uLifespan: vec4
@@ -306,6 +358,6 @@ export function ParticleLibrary(context: Application){
     )
     glow.material.displacementMap = SharedSystem.textures.perlinNoise
 
-    context.get(ParticleEffectPass).effects.push(glow, dust, smoke, energy, sparks, bolts, embers, fire)
-    return { glow, dust, smoke, energy, sparks, bolts, embers, fire }
+    context.get(ParticleEffectPass).effects.push(glow, dust, spikes, smoke, energy, sparks, bolts, embers, fire)
+    return { glow, dust, spikes, smoke, energy, sparks, bolts, embers, fire }
 }

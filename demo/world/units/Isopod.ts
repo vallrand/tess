@@ -38,6 +38,9 @@ export class Isopod extends ControlUnit {
         this.context.get(MeshSystem).delete(this.mesh)
         SharedSystem.particles.dust.remove(this.dust)
     }
+    public disappear(): Generator<ActionSignal> {
+        return this.dissolveRigidMesh(this.mesh)
+    }
     public *move(path: vec2[]): Generator<ActionSignal> {
         this.shadow = this.context.get(DecalPass).create(4)
         this.shadow.transform = this.context.get(TransformSystem).create()

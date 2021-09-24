@@ -1,4 +1,4 @@
-import { vec2, vec3, quat, mat3x2, mat4 } from '../math'
+import { vec2, vec3, quat, mat3x2, mat4, mat3 } from '../math'
 import { Application, ISystem, Factory } from '../framework'
 
 export class Transform2D {
@@ -20,6 +20,8 @@ export class Transform2D {
 }
 
 export class Transform {
+    static readonly matrix: mat4 = mat4()
+    static readonly normalMatrix: mat3 = mat3()
     public index: number = -1
     public frame: number = 0
     public readonly position: vec3 = vec3(0,0,0)

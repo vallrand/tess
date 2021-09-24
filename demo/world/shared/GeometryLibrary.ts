@@ -19,14 +19,26 @@ export function GeometryLibrary(context: Application){
         phiStart: 0, phiLength: 2 * Math.PI
     }), mat4.fromRotationTranslationScale(
         quat.axisAngle(vec3.AXIS_X,0.5*Math.PI,quat()),
-        vec3(0,0,-1), vec3.ONE, mat4())
-    )
+        vec3(0,0,-1), vec3.ONE, mat4()
+    ))
 
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
         radial: 32, horizontal: 1,
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }))
+
+    const cone = doubleSided(applyTransform(createCylinder({
+        radiusTop: 0, radiusBottom: 2, height: 1,
+        horizontal: 4, radial: 16,
+        cap: false, angleStart: 0, angleLength: 2 * Math.PI
+    }), mat4.translate(mat4.IDENTITY, vec3(0,-0.5,0), mat4())))
+
+    const lowpolyCylinder = doubleSided(applyTransform(createCylinder({
+        radiusTop: 0.5, radiusBottom: 0.5, height: 1,
+        radial: 16, horizontal: 1,
+        cap: false, angleStart: 0, angleLength: 2*Math.PI
+    }), mat4.translate(mat4.IDENTITY, vec3(0,0.5,0), mat4())))
 
     const cross = doubleSided(extrudePolygon([
         [-1,-3],[-1,-1],[-3,-1],[-3,1],[-1,1],[-1,3],[1,3],[1,1],[3,1],[3,-1],[1,-1],[1,-3]
@@ -36,7 +48,9 @@ export function GeometryLibrary(context: Application){
         width: 1, height: 1, depth: 1, open: true
     }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, mat4())))
 
+    //TODO factory pool for batched meshes?
+
     return {
-        sphere, lowpolySphere, hemisphere, cylinder, openBox, sphereMesh, cross
+        sphere, lowpolySphere, hemisphere, cylinder, cone, openBox, sphereMesh, cross, lowpolyCylinder
     }
 }

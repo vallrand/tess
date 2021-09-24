@@ -81,6 +81,18 @@ export function TextureLibrary(context: Application){
             require('../shaders/rays_frag.glsl'), { RING: true }), {  }, 0
     ).target
 
+    const raysInner = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { INNER: true }), {  }, 0
+    ).target
+
+    const raysWrap = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/rays_frag.glsl'), { WRAP: true }), {  }, 0
+    ).target
+
     const raysBeam = materials.addRenderTexture(
         materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -198,7 +210,7 @@ export function TextureLibrary(context: Application){
     }, 0).target
 
     return {
-        particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysBeam, wind, stripes, boxStripes, trail,
+        particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, perlinNoise, sineNoise,
         white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 

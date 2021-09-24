@@ -54,6 +54,7 @@ void main(){
     float alpha = smoothstep(uBlur, 0.0, distance);
 #elif defined(SPARKLE)
     uv = abs(uv);
+    uv += mix(0.0,-0.2*(1.0-max(uv.x,uv.y)),max(uv.x,uv.y));
     float sparkle = max(0.0, 1.0 - (8.0*uv.x*uv.y + 0.8*(uv.x+uv.y)));
     sparkle = pow(1.0/(1.0-sparkle),0.2) - 1.0;
     float alpha = sparkle * 2.0;

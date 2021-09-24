@@ -561,10 +561,17 @@
     },
     "stingray":{
         "activate":[
-            {"index":0,"frame":0,"rotation":[-0,0.707107,0.707107,0]},
-
-            {"index":1,"frame":0,"position":[-0.5,-1,0]},
-            {"index":6,"frame":0,"position":[0.5,-1,0]}
+            {"index":0,"frame":0,"rotation":[-0,0.707107,0.707107,0],"position":[0,1.3,0]},
+            {"index":0,"frame":0.6,"position":[0,1.7,-0.8],"rotation":[0,0.55557,0.83147,0],"ease":"quadInOut"},
+            {"index":0,"frame":0.8,"position":[0,1.2,0.4],"rotation":[-0,0.707107,0.707107,0],"ease":"cubicIn"},
+            {"index":0,"frame":1.6,"position":[0,1.3,0],"ease":"quadOut"},
+                        
+            {"index":1,"frame":0.6,"position":[-0.5,-1,0],"rotation":[0,0,0,1]},
+            {"index":6,"frame":0.6,"position":[0.5,-1,0],"rotation":[0,0,0,1]},
+            {"index":1,"frame":0.8,"position":[-0.5,1,0],"rotation":[0,1,0,0],"ease":"quartIn"},
+            {"index":6,"frame":0.8,"position":[0.5,1,0],"rotation":[0,-1,0,0],"ease":"quartIn"},
+            {"index":1,"frame":2,"position":[-0.5,-1,0],"rotation":[0,0,0,1],"ease":"sineOut"},
+            {"index":6,"frame":2,"position":[0.5,-1,0],"rotation":[0,0,0,1],"ease":"sineOut"}
         ]
     },
     "locust":{
