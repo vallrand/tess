@@ -86,6 +86,6 @@ void main(){
     float d0 = abs(uv.y+0.5*f0)-0.5*smoothstep(0.1,.0,uv.y);
 #endif
 
-    vec4 color = texture(uSampler, vec2(smoothstep(1.0,-0.25,d0), 0.0));
+    vec4 color = texture(uSampler, vec2(smoothstep(-0.25,1.0,d0), 0.0));
     fragColor = vColor * color * fade;
 }

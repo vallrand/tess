@@ -136,7 +136,7 @@ export class RestoreSkill extends CubeSkill {
             uUVTransform: vec4(0,0,1,0.3),
             uUVPanning: vec2(0.2, -0.2),
             uVerticalMask: vec4(0.0,0.4,0.6,1.0),
-            uColorAdjustment: vec3(3,1,),
+            uColorAdjustment: vec3(3,1,0),
             uUV2Transform: vec4(0,0,1,0.6),
             uUV2Panning: vec2(-0.2, -0.3)
         })

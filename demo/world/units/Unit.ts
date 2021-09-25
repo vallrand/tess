@@ -134,7 +134,8 @@ export abstract class ControlUnit implements IUnit {
                 { frame: 0.5, value: vec4.ZERO, ease: ease.sineIn }
             ], vec4.lerp),
             'mesh.color': PropertyAnimation([
-                { frame: 0, value: [0.2,0.5,1,-2*mesh.buffer.radius] },
+                { frame: 0, value: [1,1,1,-2*mesh.buffer.radius] },
+                { frame: 0.1, value: [0.8,1,0, -2*mesh.buffer.radius], ease: ease.sineIn },
                 { frame: 0.4, value: [0.2,0.5,0,-mesh.buffer.radius], ease: ease.quadOut },
                 { frame: 3, value: [0.2,0.5,0,1], ease: ease.slowInOut }
             ], vec4.lerp),

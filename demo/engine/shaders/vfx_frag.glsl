@@ -45,8 +45,8 @@ uniform EffectUniforms {
 #endif
 #endif
 #ifdef DISPLACEMENT
-    uniform vec4 uUVTransform2;
-    uniform vec2 uPanning2;
+    uniform vec4 uUV3Transform;
+    uniform vec2 uUV3Panning;
     uniform float uDisplacementAmount;
 #endif
 #ifdef DISSOLVE
@@ -81,8 +81,9 @@ void main(){
 #endif
 
 #ifdef DISPLACEMENT
-    vec2 uv2 = uUVTransform2.xy + uv * uUVTransform2.zw;
-    vec2 displacement = uDisplacementAmount*(texture(uDisplacementMap, uv2).xy*2.-1.);
+    vec2 uv3 = uUV3Transform.xy + uv * uUV3Transform.zw;
+    uv3 += uTime.x * uUV3Panning.xy;
+    vec2 displacement = uDisplacementAmount*(texture(uDisplacementMap, uv3).xy*2.-1.);
     uv0 += displacement;
 #endif
 

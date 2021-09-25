@@ -91,9 +91,32 @@ export function MaterialLibrary(context: Application){
     dissolveProgram.uniforms.uDissolveColor = vec4(1.0,0.2,0.4,0.8)
     dissolveProgram.uniforms.uDissolveUVScale = vec3(16,16, 0.8)
 
+
+    const beamLinearProgram = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
+    const beamRadialProgram = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
+
+
+
+    const stripesBlockyMaterial = new EffectMaterial(context.gl, {
+        VERTICAL_MASK: true, PANNING: true, HALF: true, DISSOLVE: true, GRADIENT: true, DISPLACEMENT: true
+    }, {
+        uUVTransform: vec4(0,0,1,1.4),
+        uUVPanning: vec2(-0.2, -0.4),
+        uVerticalMask: vec4(0.2,0.4,0.4,1.0),
+        uDissolveColor: vec4(1,0.2,0.4,0.8),
+        uDissolveThreshold: vec3(0.1,0.02,0.1),
+        uDisplacementAmount: [0.08],
+        uUV3Transform: vec4(0,0,1,3),
+        uUV3Panning: vec2(0,0.1)
+    })
+    stripesBlockyMaterial.diffuse = SharedSystem.textures.boxStripes
+    stripesBlockyMaterial.gradient = GradientRamp(context.gl, [ 0xffffffff, 0x00000000 ], 1)
+    stripesBlockyMaterial.displacement = SharedSystem.textures.boxStripes
+
     return {
         distortion, chromaticAberration, dunesMaterial, dissolveProgram,
 
-        coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial
+        coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial,
+        beamLinearProgram, beamRadialProgram, stripesBlockyMaterial
     }
 }

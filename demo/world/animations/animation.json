@@ -585,12 +585,31 @@
     },
     "obelisk":{
         "activate":[
-            {"index":0,"frame":0,"rotation":[0,-0.707107,0,0.707107]},
-
+            {"index":0,"frame":0,"position":[0,0,0]},
             {"index":1,"frame":0,"position":[0,1,-0.612],"rotation":[0,0,0,1]},
             {"index":2,"frame":0,"position":[0,1,0.612],"rotation":[0,1,0,0]},
             {"index":3,"frame":0,"position":[0.612,1,0],"rotation":[0,-0.707107,0,0.707107]},
-            {"index":4,"frame":0,"position":[-0.612,1,0],"rotation":[0,0.707107,0,0.707107]}
+            {"index":4,"frame":0,"position":[-0.612,1,0],"rotation":[0,0.707107,0,0.707107]},
+
+            {"index":0,"frame":0.56,"position":[0,-2,0],"ease":"cubicIn"},
+            {"index":0,"frame":1.2,"position":[0,-1,0],"ease":"cubicOut"},
+            {"index":1,"frame":0.8,"position":[0,0,-0.5],"rotation":[-0.707107,0,0,0.707107],"ease":"bounceIn,0.04,0.7"},
+            {"index":2,"frame":0.8,"position":[0,0,0.5],"rotation":[0,0.707107,0.707107,0],"ease":"bounceIn,0.04,0.7"},
+            {"index":3,"frame":0.8,"position":[0.5,0,0],"rotation":[-0.5,-0.5,-0.5,0.5],"ease":"bounceIn,0.04,0.7"},
+            {"index":4,"frame":0.8,"position":[-0.5,0,0],"rotation":[-0.5,0.5,0.5,0.5],"ease":"bounceIn,0.04,0.7"}
+        ],
+        "deactivate":[
+            {"index":0,"frame":0.6,"position":[0,-1,0]},
+            {"index":1,"frame":0.2,"position":[0,0,-0.5],"rotation":[-0.707107,0,0,0.707107]},
+            {"index":2,"frame":0.2,"position":[0,0,0.5],"rotation":[0,0.707107,0.707107,0]},
+            {"index":3,"frame":0.2,"position":[0.5,0,0],"rotation":[-0.5,-0.5,-0.5,0.5]},
+            {"index":4,"frame":0.2,"position":[-0.5,0,0],"rotation":[-0.5,0.5,0.5,0.5]},
+
+            {"index":0,"frame":1,"position":[0,0,0],"ease":"quartIn"},
+            {"index":1,"frame":1,"position":[0,1,-0.612],"rotation":[0,0,0,1],"ease":"quadIn"},
+            {"index":2,"frame":1,"position":[0,1,0.612],"rotation":[0,1,0,0],"ease":"quadIn"},
+            {"index":3,"frame":1,"position":[0.612,1,0],"rotation":[0,-0.707107,0,0.707107],"ease":"quadIn"},
+            {"index":4,"frame":1,"position":[-0.612,1,0],"rotation":[0,0.707107,0,0.707107],"ease":"quadIn"}
         ]
     },
     "monolith":{

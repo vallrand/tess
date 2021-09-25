@@ -96,20 +96,20 @@ export class BeamSkill extends CubeSkill {
         this.cone.material = SharedSystem.materials.absorbTealMaterial
 
         const gradient = GradientRamp(this.context.gl, [
-            0x00000000,0x0f112905,0x1b20400a,0x2b345814,0x4155771e,0x597c9628,0x6c9eae23,0x78b8bf19,0xa7d9da0a,0xf0fafa05
+            0xf0fafa05,0xa7d9da0a,0x78b8bf19,0x6c9eae23,0x597c9628,0x4155771e,0x2b345814,0x1b20400a,0x0f112905,0x00000000
         ], 1)
 
         this.center = new Sprite()
         this.center.billboard = BillboardType.Sphere
         this.center.material = new SpriteMaterial()
-        this.center.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
+        this.center.material.program = SharedSystem.materials.beamRadialProgram
         vec2.set(8, 4, this.center.material.uvTransform as any)
         this.center.material.diffuse = gradient
 
         this.beam = new Line()
         this.beam.path = [vec3(), vec3()]
         this.beam.material = new SpriteMaterial()
-        this.beam.material.program = ShaderProgram(this.context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
+        this.beam.material.program = SharedSystem.materials.beamLinearProgram
         vec2.set(4, 8, this.beam.material.uvTransform as any)
         this.beam.material.diffuse = gradient
 

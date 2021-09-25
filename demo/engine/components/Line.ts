@@ -22,7 +22,7 @@ export class Line implements IBatched {
     public ease: ease.IEase = One
     public width: number = 1
     public height: number = 0
-    constructor(length?: number){ if(length) this.path = range(8).map(i => vec3()) }
+    constructor(length?: number){ if(length) this.path = range(length).map(i => vec3()) }
     public update(context: Application, camera: ICamera){
         if(this.frame > 0 && this.frame >= camera.frame) return
         this.frame = context.frame
