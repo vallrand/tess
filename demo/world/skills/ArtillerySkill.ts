@@ -1,4 +1,4 @@
-import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, ease, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { AnimationTimeline, PropertyAnimation, IAnimationTrigger, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
@@ -78,11 +78,10 @@ class Missile {
         this.trail = new Line()
         this.trail.order = 4
         this.trail.width = 0.4
-        const cubicScale = 1/(Math.pow(1-1/3,2)*(1/3))
-        this.trail.ease = x => cubicScale*Math.pow(1-x,2)*x
+        this.trail.ease = ease.cubicFadeInOut
         this.trail.path = range(16).map(i => vec3())
         this.trail.addColorFade(this.trail.ease)
-        this.trail.material = this.parent.trailMaterial
+        this.trail.material = SharedSystem.materials.trailSmokeMaterial
 
         this.exhaust = new BatchMesh(SharedSystem.geometry.hemisphere)
         this.exhaust.order = 2
@@ -216,13 +215,6 @@ class Missile {
     }
     private buildPath(target: vec3, length: number): { path: vec3[], intervals: number[] } {
         const path = [this.origin], intervals = [0]
-        const cubicBezier3D = (a: vec3, b: vec3, c: vec3, d: vec3, t: number, out: vec3): vec3 => {
-            const t2 = t*t, t3 = t*t*t, it = 1-t, it2 = it*it, it3 = it2*it
-            out[0] = it3 * a[0] + 3 * t * it2 * b[0] + 3 * t2 * it * c[0] + t3 * d[0]
-            out[1] = it3 * a[1] + 3 * t * it2 * b[1] + 3 * t2 * it * c[1] + t3 * d[1]
-            out[2] = it3 * a[2] + 3 * t * it2 * b[2] + 3 * t2 * it * c[2] + t3 * d[2]
-            return out
-        }
         const control0 = vec3.scale(this.normal, 1, vec3())
         vec3.add(this.origin, control0, control0)
 
@@ -261,7 +253,6 @@ export class ArtillerySkill extends CubeSkill {
         vec3(-1.0, 4.4, 2.1),
         vec3(-1.6, 3.8, 2.1)
     ]
-    trailMaterial: EffectMaterial<any>
     exhaustMaterial: EffectMaterial<any>
     burnMaterial: DecalMaterial
     waveMaterial: SpriteMaterial
@@ -270,25 +261,6 @@ export class ArtillerySkill extends CubeSkill {
     flashMaterial: SpriteMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
-
-        this.trailMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, HORIZONTAL_MASK: true, GREYSCALE: true, GRADIENT: true
-        }, {
-            uHorizontalMask: vec4(0,0.4,0.6,1.0),
-            uUVTransform: vec4(0,0,0.4,1.7),
-            uUVPanning: vec2(-0.1,0.7+0.4),
-            uUV2Transform: vec4(0,0,0.7,1.5),
-            uUV2Panning: vec2(0.1,0.5+0.4),
-            uColorAdjustment: vec3(1,0.8,0.2)
-        })
-        this.trailMaterial.gradient = GradientRamp(this.context.gl, [
-            0xd5f5f500, 0x9c386f20, 0x42172510, 0x00000000,
-            0x50505fff, 0x20202fff, 0x0a0a0fff, 0x00000000,
-            0x30303fff, 0x10101fff, 0x0a0a0fff, 0x00000000,
-            0x000000ff, 0x000000af, 0x0000007f, 0x00000000
-        ], 4)
-        this.trailMaterial.diffuse = SharedSystem.textures.cloudNoise
-
         this.exhaustMaterial = new EffectMaterial(this.context.gl, {
             PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
         }, {

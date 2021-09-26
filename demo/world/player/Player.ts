@@ -38,7 +38,7 @@ export class PlayerSystem implements ISystem {
 
             // window['u0'] = this.context.get(AISystem).create(6,7,0)
             window['u1'] = this.context.get(AISystem).create(7,7,1)
-            //window['u2'] = this.context.get(AISystem).create(7,8,2)
+            // window['u2'] = this.context.get(AISystem).create(7,8,2)
             window['u3'] = this.context.get(AISystem).create(2,6,3)
             // window['u4'] = this.context.get(AISystem).create(6,11,4)
             window['u5'] = this.context.get(AISystem).create(0,8,5)
@@ -47,7 +47,7 @@ export class PlayerSystem implements ISystem {
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [2,5,3]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
+            window['app'].systems[17].cameraOffset= [4,6,3]//[2,5,3]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)

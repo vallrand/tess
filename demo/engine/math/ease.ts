@@ -52,6 +52,8 @@ export const elasticOut = (amplitude: number, period: number): IEase => {
 }
 
 export const fadeInOut: IEase = x => 4*(1-x)*x
+const cubicScale = 1/(Math.pow(1-1/3,2)*(1/3))
+export const cubicFadeInOut: IEase = x => cubicScale*Math.pow(1-x,2)*x
 
 export const quadIn: IEase = x => x*x
 export const cubicIn: IEase = x => x*x*x

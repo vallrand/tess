@@ -34,6 +34,10 @@ export class Transform {
         if(this.parent) mat4.multiply(this.parent.matrix, this.matrix, this.matrix)
         this.frame = frame
     }
+    public calculateNormalMatrix(): mat3 {
+        const normalMatrix = mat3.normalMatrix(this.matrix, Transform.normalMatrix)
+        return mat3.normalize(normalMatrix, normalMatrix)
+    }
 }
 
 export class TransformSystem implements ISystem {

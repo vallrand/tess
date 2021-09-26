@@ -73,7 +73,6 @@ export class DetonateSkill extends CubeSkill {
     private stampMaterial: DecalMaterial
     private chargeX: Decal
     private chargeY: Decal
-    private chargeMaterial: DecalMaterial
     private beam: Sprite
     private minefield: Minefield = new Minefield(this.context)
     constructor(context: Application, cube: Cube){
@@ -115,13 +114,6 @@ export class DetonateSkill extends CubeSkill {
         ], 1)
         this.tube.material.diffuse = SharedSystem.textures.boxStripes
 
-        this.chargeMaterial = new DecalMaterial()
-        this.chargeMaterial.program = ShaderProgram(this.context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
-            INSTANCED: true
-        })
-        this.chargeMaterial.program.uniforms['uLayer'] = this.chargeMaterial.layer
-        this.chargeMaterial.program.uniforms['uDissolveEdge'] = 1
-
         this.beam = new Sprite()
         this.beam.billboard = BillboardType.Cylinder
         this.beam.material = new SpriteMaterial()
@@ -145,12 +137,12 @@ export class DetonateSkill extends CubeSkill {
         vec3.copy(origin, this.stamp.transform.position)
 
         this.chargeX = this.context.get(DecalPass).create(0)
-        this.chargeX.material = this.chargeMaterial
+        this.chargeX.material = SharedSystem.materials.glowSquaresLinearMaterial
         this.chargeX.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.chargeX.transform.position)
 
         this.chargeY = this.context.get(DecalPass).create(0)
-        this.chargeY.material = this.chargeMaterial
+        this.chargeY.material = SharedSystem.materials.glowSquaresLinearMaterial
         this.chargeY.transform = this.context.get(TransformSystem).create()
         vec3.copy(origin, this.chargeY.transform.position)
         quat.axisAngle(vec3.AXIS_Y, 0.5 * Math.PI, this.chargeY.transform.rotation)

@@ -1,6 +1,7 @@
 import { Application, ISystem } from '../../engine/framework'
 import { DeferredGeometryPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { TextureLibrary } from './TextureLibrary'
+import { GradientLibrary } from './GradientLibrary'
 import { MaterialLibrary } from './MaterialLibrary'
 import { ParticleLibrary } from './ParticleLibrary'
 import { GeometryLibrary } from './GeometryLibrary'
@@ -12,6 +13,7 @@ import {
 
 export class SharedSystem implements ISystem {
     public static textures: ReturnType<typeof TextureLibrary>
+    public static gradients: ReturnType<typeof GradientLibrary>
     public static materials: ReturnType<typeof MaterialLibrary>
     public static particles: ReturnType<typeof ParticleLibrary>
     public static geometry: ReturnType<typeof GeometryLibrary>
@@ -24,6 +26,7 @@ export class SharedSystem implements ISystem {
 
     constructor(private readonly context: Application){
         SharedSystem.textures = TextureLibrary(this.context)
+        SharedSystem.gradients = GradientLibrary(this.context)
         SharedSystem.materials = MaterialLibrary(this.context)
         SharedSystem.geometry = GeometryLibrary(this.context)
         SharedSystem.particles = ParticleLibrary(this.context)

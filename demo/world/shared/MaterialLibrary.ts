@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
-import { ShaderProgram } from '../../engine/webgl'
+import { ShaderProgram, GL } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { GradientRamp } from '../../engine/particles'
 import { MaterialSystem, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
@@ -113,10 +113,68 @@ export function MaterialLibrary(context: Application){
     stripesBlockyMaterial.gradient = GradientRamp(context.gl, [ 0xffffffff, 0x00000000 ], 1)
     stripesBlockyMaterial.displacement = SharedSystem.textures.boxStripes
 
+
+    const glowSquaresLinearMaterial = new DecalMaterial()
+    glowSquaresLinearMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
+        INSTANCED: true
+    })
+    glowSquaresLinearMaterial.program.uniforms['uLayer'] = glowSquaresLinearMaterial.layer
+    glowSquaresLinearMaterial.program.uniforms['uDissolveEdge'] = 1
+
+    const glowSquaresRadialMaterial = new DecalMaterial()
+    glowSquaresRadialMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
+        INSTANCED: true, POLAR: true
+    })
+    glowSquaresRadialMaterial.program.uniforms['uLayer'] = glowSquaresRadialMaterial.layer
+    glowSquaresRadialMaterial.program.uniforms['uDissolveEdge'] = 1
+
+    const reticleMaterial = new DecalMaterial()
+    reticleMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/reticle_frag.glsl'), {
+        INSTANCED: true
+    })
+    reticleMaterial.program.uniforms['uLayer'] = reticleMaterial.layer
+
+
+    const trailSmokeMaterial = new EffectMaterial(context.gl, {
+        PANNING: true, HORIZONTAL_MASK: true, GREYSCALE: true, GRADIENT: true
+    }, {
+        uHorizontalMask: vec4(0,0.4,0.6,1.0),
+        uUVTransform: vec4(0,0,0.4,1.7),
+        uUVPanning: vec2(-0.1,0.7+0.4),
+        uUV2Transform: vec4(0,0,0.7,1.5),
+        uUV2Panning: vec2(0.1,0.5+0.4),
+        uColorAdjustment: vec3(1,0.8,0.2)
+    })
+    trailSmokeMaterial.gradient = GradientRamp(context.gl, [
+        0xd5f5f500, 0x9c386f20, 0x42172510, 0x00000000,
+        0x50505fff, 0x20202fff, 0x0a0a0fff, 0x00000000,
+        0x30303fff, 0x10101fff, 0x0a0a0fff, 0x00000000,
+        0x000000ff, 0x000000af, 0x0000007f, 0x00000000
+    ], 4)
+    trailSmokeMaterial.diffuse = SharedSystem.textures.cloudNoise
+
+    //TODO material duplicated from artillery, textures are different though? reuse only shader?
+    const exhaustYellowMaterial = new EffectMaterial(context.gl, {
+        PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
+    }, {
+        uVerticalMask: vec4(0,0.4,0.6,0.8),
+        uUVTransform: vec4(-0.1,0,1,0.5),
+        uUVPanning: vec2(-0.1,1.4),
+        uUV2Transform: vec4(0,0,1,0.7),
+        uUV2Panning: vec2(0.2, 1.8),
+        uColorAdjustment: vec3(2.0,2.0,0.2)
+    })
+    exhaustYellowMaterial.gradient = SharedSystem.gradients.yellowViolet
+    exhaustYellowMaterial.diffuse = SharedSystem.textures.cloudNoise
+   
+
     return {
         distortion, chromaticAberration, dunesMaterial, dissolveProgram,
 
         coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial,
-        beamLinearProgram, beamRadialProgram, stripesBlockyMaterial
+        beamLinearProgram, beamRadialProgram, stripesBlockyMaterial,
+
+        glowSquaresLinearMaterial, glowSquaresRadialMaterial, reticleMaterial, trailSmokeMaterial,
+        exhaustYellowMaterial
     }
 }

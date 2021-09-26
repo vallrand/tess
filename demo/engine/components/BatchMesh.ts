@@ -45,31 +45,26 @@ export class BatchMesh implements IBatched {
         this.frame = context.frame
 
         const length = this.vertices.length / 3
-        const { matrix } = this.transform
-        const normalMatrix = mat3.normalMatrix(matrix, Transform.normalMatrix)
+        const modelMatrix = this.transform.matrix
+        const normalMatrix = this.transform.calculateNormalMatrix()
         for(let i = length - 1; i >= 0; i--){
             const x = this._vertices[i * 8 + 0]
             const y = this._vertices[i * 8 + 1]
             const z = this._vertices[i * 8 + 2]
-            this.vertices[i * 3 + 0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]
-            this.vertices[i * 3 + 1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]
-            this.vertices[i * 3 + 2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]
+            this.vertices[i * 3 + 0] = modelMatrix[0] * x + modelMatrix[4] * y + modelMatrix[8] * z + modelMatrix[12]
+            this.vertices[i * 3 + 1] = modelMatrix[1] * x + modelMatrix[5] * y + modelMatrix[9] * z + modelMatrix[13]
+            this.vertices[i * 3 + 2] = modelMatrix[2] * x + modelMatrix[6] * y + modelMatrix[10] * z + modelMatrix[14]
 
             this.uvs[i * 2 + 0] = this._vertices[i * 8 + 6]
             this.uvs[i * 2 + 1] = this._vertices[i * 8 + 7]
             
             if(!this.normals) continue
-            let nx = this._vertices[i * 8 + 3]
-            let ny = this._vertices[i * 8 + 4]
-            let nz = this._vertices[i * 8 + 5]
-            nx = normalMatrix[0] * nx + normalMatrix[3] * ny + normalMatrix[6] * nz
-            ny = normalMatrix[1] * nx + normalMatrix[4] * ny + normalMatrix[7] * nz
-            nz = normalMatrix[2] * nx + normalMatrix[5] * ny + normalMatrix[8] * nz
-            let nl = Math.hypot(nx, ny, nz)
-            nl = nl && 1 / nl
-            this.normals[i * 3 + 0] = nx * nl
-            this.normals[i * 3 + 1] = ny * nl
-            this.normals[i * 3 + 2] = nz * nl
+            const nx = this._vertices[i * 8 + 3]
+            const ny = this._vertices[i * 8 + 4]
+            const nz = this._vertices[i * 8 + 5]
+            this.normals[i * 3 + 0] = normalMatrix[0] * nx + normalMatrix[3] * ny + normalMatrix[6] * nz
+            this.normals[i * 3 + 1] = normalMatrix[1] * nx + normalMatrix[4] * ny + normalMatrix[7] * nz
+            this.normals[i * 3 + 2] = normalMatrix[2] * nx + normalMatrix[5] * ny + normalMatrix[8] * nz
         }
 
         this.bounds.update(this.transform, this.boundingRadius)

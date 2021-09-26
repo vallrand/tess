@@ -100,6 +100,7 @@ function(elapsedTime: number, deltaTime: number, target: T){
         if(frames[i].frame > elapsedTime) break
         else if(frames[i].frame > prevTime) emitter(target, frames[i].value)
 }
+EventTrigger.emit = (emitter: ParticleEmitter, amount: number) => emitter.count += amount
 
 //TODO refactor to all use Event Trigger + Emitter.emit
 export const EmitterTrigger = (options: {

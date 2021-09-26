@@ -43,14 +43,25 @@ float sdfBox(in vec2 p, in vec2 size){
 
 float glow(in float distance){return pow(max(0.,0.02/abs(distance)-0.1),0.8);}
 
+#define TAU 6.283185307179586
 vec4 calcColor(in vec2 uv){
+#ifdef POLAR
+    uv = uv*2.-1.;
+    uv = vec2(.5+atan(uv.y,uv.x)/TAU,length(uv));
+    uv = vec2(uv.x + 0.06*uTime.x, uv.y);
+#endif
     vec2 uv0 = uv*2.-1.;
     vec2 uv1 = vec2(round(uv0.x*4.)/4.,0);
     vec2 uv2 = round(uv0*8.)/8.;
-
+#ifdef POLAR
+    float t0 = smoothstep(1.0+uDissolveEdge, 1.0, abs(uv0.y-vThreshold));
+    float t1 = smoothstep(1.0+uDissolveEdge, 1.0, abs(uv0.y-vThreshold));
+    float t2 = smoothstep(1.0+uDissolveEdge, 1.0, abs(uv0.y-vThreshold));
+#else
     float t0 = smoothstep(1.0+uDissolveEdge, 1.0, abs(abs(uv0.x)*2.-1.-vThreshold));
     float t1 = smoothstep(1.0+uDissolveEdge, 1.0, abs(abs(uv1.x)*2.-1.-vThreshold));
     float t2 = smoothstep(1.0+uDissolveEdge, 1.0, abs(abs(uv2.x)*2.-1.-vThreshold));
+#endif
 
     uv0.y -= 0.4*(1.0-t2)*(1.-2.*hash21(round(uv0 * 8.0)));
 
@@ -64,7 +75,9 @@ vec4 calcColor(in vec2 uv){
     color.rgb += vec3(0.4,0.1,0.16) * t0 * glow(d2);
     color.a = smoothstep(0.0,1.0,color.r);
     color.rgb = mix(color.rgb,color.gbr*2.,1.-t0);
+#ifndef POLAR
     color *= smoothstep(1.,1.-0.25,abs(uv0.x));
+#endif
     return min(color,vec4(1));
 }
 

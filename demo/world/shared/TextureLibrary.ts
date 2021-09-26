@@ -63,6 +63,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { WAVE: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
+    const reticle = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { RETICLE: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
     const swirl = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -210,7 +216,7 @@ export function TextureLibrary(context: Application){
     }, 0).target
 
     return {
-        particle, glow, sparkle, ring, wave, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
+        particle, glow, sparkle, ring, wave, reticle, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, perlinNoise, sineNoise,
         white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 

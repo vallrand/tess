@@ -1,6 +1,6 @@
 import { Application, One } from '../framework'
 import { range, vec3, vec4, quat, mat4, vec2, ease, clamp } from '../math'
-import { ICamera, BoundingVolume, IAnimationTrigger, Transform } from '../scene'
+import { ICamera, BoundingVolume, IAnimationTrigger, IAnimationTween, Transform } from '../scene'
 import { IBatched, uintNorm4x8 } from '../pipeline/batch'
 import { SpriteMaterial } from '../materials'
 
@@ -76,17 +76,18 @@ export class Line implements IBatched {
             this.uvs[i*4+2] = 1
         }
     }
-    public addColorFade(fade: ease.IEase){
+    public addColorFade(fade: ease.IEase, rgb: vec3 = vec3.ONE){
         if(!this.colors || this.colors.length != this.path.length * 2)
             this.colors = new Uint32Array(this.path.length * 2)
         for(let i = 0; i < this.colors.length; i++){
             let f = Math.floor(i / 2) / (this.path.length - 1)
             const strength = fade(f)
-            this.colors[i] = uintNorm4x8(strength,strength,strength,strength)
+            this.colors[i] = uintNorm4x8(rgb[0]*strength,rgb[1]*strength,rgb[2]*strength,strength)
         }
     }
 }
 
+//TODO move to animations?
 export const FollowTrail = (target: vec3, range: vec2, stiffness: number = 1): IAnimationTrigger<Line> =>
 function(elapsedTime: number, deltaTime: number, line: Line){
     vec3.copy(target, line.path[0])
@@ -107,6 +108,7 @@ function(elapsedTime: number, deltaTime: number, line: Line){
     line.frame = 0
 }
 
+//TODO use animation.FollowPath
 export function FollowPath(options: {
     path: vec3[]
     frames: number[]

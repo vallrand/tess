@@ -638,8 +638,37 @@
 
             {"index":1,"frame":0,"position":[0,0.7,-0.1]},
             {"index":2,"frame":0,"position":[0,0.7,0.1]},
-            {"index":3,"frame":0,"scale":[0,0,0]},
-            {"index":4,"frame":0,"position":[0,0,0]}
+            {"index":3,"frame":0,"scale":[1,0,0],"rotation":[0,0,0.707107,0.707107]},
+            {"index":4,"frame":0,"position":[0,-0.2,0]},
+
+            {"index":1,"frame":0.3,"position":[0,0.7,-0.7],"ease":"quadOut"},
+            {"index":2,"frame":0.3,"position":[0,0.7,0.7],"ease":"quadOut"},
+            {"index":1,"frame":0.6,"position":[0,0.7,-0.5],"ease":"quadIn"},
+            {"index":2,"frame":0.6,"position":[0,0.7,0.5],"ease":"quadIn"},
+
+            {"index":3,"frame":0.4,"scale":[1,1,1],"rotation":[0,0,0,1],"ease":"cubicOut"},
+            {"index":3,"frame":0.8,"rotation":[0,0,-0.309017,0.951057],"ease":"sineIn"},
+
+            {"index":4,"frame":0.5,"position":[0,0.5,0],"rotation":[0,1,0,0],"ease":"sineIn"},
+            {"index":4,"frame":1.0,"position":[0,0,0],"rotation":[0,0,0,1],"ease":"sineOut"}
+        ],
+        "deactivate":[
+            {"index":4,"frame":0,"position":[0,0,0],"rotation":[0,0,0,1]},
+            {"index":4,"frame":0.5,"position":[0,1,0],"rotation":[0,-1,0,0],"ease":"sineInOut"},
+            {"index":4,"frame":0.7,"position":[0,-1,0],"rotation":[0,-1,0,0],"ease":"cubicIn"},
+            {"index":4,"frame":1.2,"position":[0,0.2,0],"rotation":[0,0,0,-1],"ease":"quadOut"},
+            {"index":4,"frame":1.6,"position":[0,-0.2,0],"ease":"cubicIn"},
+
+            {"index":3,"frame":0.7,"rotation":[0,0,-0.309017,0.951057],"position":[0,1.8,0]},
+            {"index":3,"frame":1.2,"rotation":[0,0,-0.156434,0.987688],"scale":[1,1,1],"position":[0,1.6,0],"ease":"cubicOut"},
+            {"index":3,"frame":1.5,"rotation":[0,0,0.707107,0.707107],"ease":"sineIn"},
+            {"index":3,"frame":1.6,"scale":[1,0,0],"position":[0,1.8,0],"ease":"quintIn"},
+            {"index":1,"frame":0.7,"position":[0,0.7,-0.5]},
+            {"index":2,"frame":0.7,"position":[0,0.7,0.5]},
+            {"index":1,"frame":1.2,"position":[0,0.5,-0.7],"ease":"quadOut"},
+            {"index":2,"frame":1.2,"position":[0,0.5,0.7],"ease":"quadOut"},
+            {"index":1,"frame":1.6,"position":[0,0.7,-0.1],"ease":"sineIn"},
+            {"index":2,"frame":1.6,"position":[0,0.7,0.1],"ease":"sineIn"}
         ]
     },
     "isopod":{

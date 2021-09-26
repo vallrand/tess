@@ -46,16 +46,28 @@ void main(){
     //distance -= smoothstep(1.0,0.0,uv.y) * smoothstep(0.0,1.0,abs(fract(uv.x * 9.0)-0.5));
     float alpha = smoothstep(0.0,0.1,distance) * smoothstep(0.5,0.0,distance);
     alpha = pow(alpha, 1.4);
+#elif defined(RETICLE)
+    const float edge = 0.02;
+    vec2 polar = vec2(.5+atan(uv.y,uv.x)/TAU,length(uv));
+    polar.y *= max(abs(uv.x),abs(uv.y)) * 1.2;
+    float outer = smoothstep(.9,.9-edge,polar.y)*smoothstep(.7-edge,.7,polar.y);
+    outer *= smoothstep(.7,.7-edge,abs(fract(polar.x*4.)*2.-1.));
+    float plus = smoothstep(.04+edge,.04,min(abs(uv.x),abs(uv.y)));
+    plus = max(0., plus - smoothstep(.04,.04-edge,polar.y));
+    float inner = smoothstep(.3,.3-edge,polar.y)*smoothstep(.2-edge,.2,polar.y);
+    inner = max(0., inner - smoothstep(.1+edge,.1,min(abs(uv.x),abs(uv.y))));
+    float alpha = plus + outer + inner;
 #elif defined(ROUNDED_BOX)
     float distance = length(max(abs(uv)-uSize+uRadius,0.0))-uRadius;
     float alpha = 1.0-smoothstep(0.0, 1.0 - uSize, distance);
 #elif defined(TRIANGLE)
+    //TODO NOT USED
     float distance = triangle(uv, vec2(-uSize.x,uSize.y), vec2(-uSize.x,-uSize.y), vec2(uSize.x,0.0));
     float alpha = smoothstep(uBlur, 0.0, distance);
 #elif defined(SPARKLE)
     uv = abs(uv);
-    uv += mix(0.0,-0.2*(1.0-max(uv.x,uv.y)),max(uv.x,uv.y));
-    float sparkle = max(0.0, 1.0 - (8.0*uv.x*uv.y + 0.8*(uv.x+uv.y)));
+    uv += mix(0.0,-0.16*(1.0-max(uv.x,uv.y)),max(uv.x,uv.y));
+    float sparkle = max(0.0, 1.0 - (16.0*uv.x*uv.y + 0.8*(uv.x+uv.y)));
     sparkle = pow(1.0/(1.0-sparkle),0.2) - 1.0;
     float alpha = sparkle * 2.0;
 #elif defined(BLINK)
