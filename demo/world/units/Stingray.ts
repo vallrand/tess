@@ -219,7 +219,7 @@ export class Stingray extends ControlUnit {
             else yield iterator.value
         }
     }
-    public *strike(target: vec3): Generator<ActionSignal> {
+    public *strike(target: vec2): Generator<ActionSignal> {
         this.spikesLeft = SharedSystem.particles.energy.add({
             uLifespan: [0.8,1.2,0,0],
             uOrigin: mat4.transform(vec3(0.5,1.5,-0.5), this.mesh.transform.matrix, vec3()),

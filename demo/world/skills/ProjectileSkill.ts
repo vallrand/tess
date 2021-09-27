@@ -74,7 +74,6 @@ export class ProjectileSkill extends CubeSkill {
     private light: PointLight
     private particles: ParticleEmitter
     private trailMaterial: SpriteMaterial
-    private sphereMaterial: EffectMaterial<any>
     private glowMaterial: SpriteMaterial
     private burnMaterial: DecalMaterial
     private waveMaterial: SpriteMaterial
@@ -86,27 +85,6 @@ export class ProjectileSkill extends CubeSkill {
         this.trailMaterial.diffuse = GradientRamp(this.context.gl, [
             0x00000000, 0x57100320, 0xf7f3ba00, 0x57100320, 0x00000000
         ], 1)
-
-        this.sphereMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true, FRESNEL: true
-        }, {
-            uUVTransform: vec4(0,0,1,1.8),
-            uUVPanning: vec2(-0.3,0),
-            uDissolveColor: vec4.ZERO,
-            uDissolveThreshold: vec3(0,0.04,0),
-            uColorAdjustment: vec3(1,0.8,0),
-            uUV2Transform: vec4(0.71,0.29,1,3.8),
-            uUV2Panning: vec2(-0.5,0.2),
-            uVerticalMask: vec4(0.2,0.5,0.8,1.0),
-            uFresnelMask: vec2(0.1,0.5)
-        })
-        this.sphereMaterial.diffuse = SharedSystem.textures.cellularNoise
-        this.sphereMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xffffaf00, 0xffaf9f00, 0xff7f0000,
-            0xffffffff, 0xf7f7cbaf, 0xffea5e7f, 0xcc49080f,
-            0xbdb9b9af, 0x7d70707f, 0x422f2f3f, 0x00000000,
-            0x000000ff, 0x000000af, 0x0000007f, 0x00000000
-        ], 4)
 
         this.glowMaterial = new SpriteMaterial()
         this.glowMaterial.diffuse = SharedSystem.textures.raysRing
@@ -137,24 +115,7 @@ export class ProjectileSkill extends CubeSkill {
 
         this.flash = new Sprite()
         this.flash.billboard = BillboardType.None
-        const flashMaterial = new EffectMaterial(this.context.gl, {
-            POLAR: true, VERTICAL_MASK: true, PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true
-        }, {
-            uUVTransform: vec4(0.1,0,2,2.4),
-            uUV2Transform: vec4(0.3,0,1.0,0.6),
-            uColorAdjustment: vec3(1,0.8,0),
-            uUVPanning: vec2(0,-0.8),
-            uUV2Panning: vec2(0.1,-0.2),
-            uVerticalMask: vec4(0.2,0.5,0.8,1.0),
-            uDissolveColor: vec4(1,0,0,1),
-            uDissolveThreshold: vec3(0.2,0,0)
-        })
-        flashMaterial.cullFace = GL.NONE
-        flashMaterial.diffuse = SharedSystem.textures.cellularNoise
-        flashMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xfffcd600, 0xf0eba800, 0xc2bd7430, 0xa60f5050, 0x00000000,
-        ], 1)
-        this.flash.material = flashMaterial
+        this.flash.material = SharedSystem.materials.flashYellowMaterial
     }
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
         const mesh = this.mesh = this.cube.meshes[this.cube.state.side]
@@ -260,7 +221,7 @@ export class ProjectileSkill extends CubeSkill {
 
         const sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         sphere.order = 8
-        sphere.material = this.sphereMaterial
+        sphere.material = SharedSystem.materials.coreYellowMaterial
 
         const glow = new Sprite()
         glow.billboard = BillboardType.None

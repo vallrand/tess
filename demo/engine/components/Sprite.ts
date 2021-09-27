@@ -14,6 +14,7 @@ export const enum BillboardType {
 
 export class Sprite implements IBatched {
     public static readonly FlatUp: quat = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
+    public static readonly FlatDown: quat = quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, quat())
 
     private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
     private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1])

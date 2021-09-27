@@ -97,22 +97,7 @@ export class ExtractSkill extends CubeSkill {
         this.cracksMaterial.normal = SharedSystem.textures.cracksNormal
 
         this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
-        //TODO material from minefield
-        const tubeMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, GREYSCALE: true, GRADIENT: true, VERTICAL_MASK: true
-        }, {
-            uUVTransform: vec4(0,0,3,2),
-            uUVPanning: vec2(-0.4,-0.8),
-            uColorAdjustment: vec3(1,1,0),
-            uUV2Transform: vec4(0,0.04,2,2),
-            uUV2Panning: vec2(0.4,-0.8),
-            uVerticalMask: vec4(0.0,0.5,0.8,1.0),
-        })
-        tubeMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffffff, 0xebdadad0, 0xd18a9790, 0x94063ca0, 0x512e3c70, 0x29202330, 0x00000000, 0x00000000
-        ], 1)
-        tubeMaterial.diffuse = SharedSystem.textures.boxStripes
-        this.tube.material = tubeMaterial
+        this.tube.material = SharedSystem.materials.stripesRedMaterial
 
 
         this.beam = new Sprite()

@@ -1,6 +1,6 @@
 {
-    "dock": {
-        "open": [
+    "dock":{
+        "open":[
             {"index":1,"frame":0,"position":[0,0,0]},
             {"index":1,"frame":1,"position":[0,2,0],"ease":"quadInOut"},
 
@@ -15,7 +15,7 @@
             {"index":5,"frame":0,"position":[0,0,0]},
             {"index":5,"frame":1,"position":[0,-1,0],"ease":"quadOut"}
         ],
-        "lift": [
+        "lift":[
             {"index":1,"frame":0,"position":[0,2,0]},
             {"index":1,"frame":0.5,"position":[0,0,0],"ease":"quadIn"},
 
@@ -32,14 +32,14 @@
             {"index":5,"frame":1,"position":[0,1,0],"ease":"sineOut"}
         ]
     },
-    "cube_open": {
+    "cube_open":{
         "close":[
             {"index":1,"frame":0,"rotation":[-1.0,0,0,0]},
             {"index":2,"frame":0,"rotation":[-0,0,1.0,0]},
             {"index":3,"frame":0,"rotation":[-0.707107,0,-0.707107,0]},
             {"index":4,"frame":0,"rotation":[-0.707107,0,0.707107,0]}
         ],
-        "open": [
+        "open":[
             {"index":1,"frame":0,"rotation":[-1.0,0,0,0]},
             {"index":1,"frame":1,"rotation":[-0.707107,0,0,0.707107],"ease":"quadOut"},
 
@@ -677,7 +677,16 @@
 
             {"index":1,"frame":0,"rotation":[0,0.382683,0,0.92388],"position":[0,0,0]},
             {"index":2,"frame":0,"position":[0,-0.5,0]},
-            {"index":3,"frame":0,"position":[0,0,-1]}
+            {"index":3,"frame":0.2,"position":[0,-1,0],"rotation":[0,0,0,1]},
+
+            {"index":1,"frame":0.6,"rotation":[-0.146447,0.353553,0.353553,0.853554],"position":[-0.2,1.1,0],"ease":"quadInOut"},
+            {"index":1,"frame":1.8,"rotation":[0,0.382683,0,0.92388],"position":[0,0,0],"ease":"quartIn"},
+            {"index":2,"frame":0.6,"position":[0.5,0.7,0],"ease":"quadInOut"},
+            {"index":2,"frame":1.2,"position":[-0.2,0.7,0],"ease":"cubicInOut"},
+            {"index":2,"frame":1.6,"position":[0,-0.5,0],"ease":"quadIn"},
+            {"index":3,"frame":0.6,"position":[0,1.4,0],"rotation":[0,-1,0,0],"ease":"sineOut"},
+            {"index":3,"frame":1.2,"position":[0,0.5,0],"rotation":[0,0,0,-1],"ease":"cubicInOut"},
+            {"index":3,"frame":1.6,"position":[0,-1,0],"ease":"sineIn"}
         ]
     }
 }

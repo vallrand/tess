@@ -86,29 +86,12 @@ interface ExplosionEffect {
 export class Minefield {
     pool: ExplosionEffect[] = []
     list: LandMine[] = []
-    coreMaterial: EffectMaterial<any>
     burnMaterial: DecalMaterial
     perimeterMaterial: DecalMaterial
     waveMaterial: SpriteMaterial
-    ringMaterial: EffectMaterial<any>
     sparkMaterial: SpriteMaterial
 
-    constructor(private readonly context: Application){
-        this.coreMaterial = new EffectMaterial(this.context.gl, {
-            FRESNEL: true, PANNING: true, GRADIENT: true, GREYSCALE: true
-        }, {
-            uUVTransform: vec4(0,0,2,1.7),
-            uUVPanning: vec2(-0.1,0.9),
-            uFresnelMask: vec2(0.2,0.6),
-            uColorAdjustment: vec3(1,0.9,0),
-            uUV2Transform: vec4(0,0.7,3,2.9),
-            uUV2Panning: vec2(0.1,0.7),
-        })
-        this.coreMaterial.diffuse = SharedSystem.textures.sineNoise
-        this.coreMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffffff, 0xffffffff, 0xffffafef, 0xffffafaf, 0xffaf9f7f, 0xe0808060, 0xa0202040, 0x00000000
-        ], 1)
-        
+    constructor(private readonly context: Application){ 
         this.burnMaterial = new DecalMaterial()
         this.burnMaterial.diffuse = SharedSystem.textures.glow
 
@@ -119,24 +102,6 @@ export class Minefield {
         this.waveMaterial.blendMode = null
         this.waveMaterial.program = SharedSystem.materials.chromaticAberration
         this.waveMaterial.diffuse = SharedSystem.textures.ring
-
-        this.ringMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true
-        }, {
-            uUVTransform: vec4(0,0,1,0.6),
-            uUVPanning: vec2(-0.3,-0.04),
-            uDissolveColor: vec4.ZERO,
-            uDissolveThreshold: vec3(0,0.04,0),
-            uColorAdjustment: vec3(1,0.64,0.1),
-            uUV2Transform: vec4(0,0,1,1.7),
-            uUV2Panning: vec2(-0.5,0.1),
-            uVerticalMask: vec4(0.4,0.5,0.9,1.0),
-        })
-        this.ringMaterial.diffuse = SharedSystem.textures.cellularNoise
-        this.ringMaterial.gradient = GradientRamp(this.context.gl, [
-            0xf5f0d700, 0xbd7d7d00, 0x524747ff, 0x00000000,
-            0x7f7f7fff, 0x202020ff, 0x000000ff, 0x00000000
-        ], 2)
 
         this.sparkMaterial = new SpriteMaterial()
         this.sparkMaterial.program = this.context.get(ParticleEffectPass).program
@@ -158,14 +123,14 @@ export class Minefield {
 
         const core = new BatchMesh(SharedSystem.geometry.lowpolySphere)
         core.order = 4
-        core.material = this.coreMaterial
+        core.material = SharedSystem.materials.coreWhiteMaterial
 
         const wave = new Sprite()
         wave.billboard = BillboardType.None
         wave.material = this.waveMaterial
 
         const ring = new BatchMesh(SharedSystem.geometry.cylinder)
-        ring.material = this.ringMaterial
+        ring.material = SharedSystem.materials.ringDustMaterial
 
         const spark = new Sprite()
         spark.billboard = BillboardType.Sphere

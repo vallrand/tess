@@ -35,8 +35,7 @@ export class Transform {
         this.frame = frame
     }
     public calculateNormalMatrix(): mat3 {
-        const normalMatrix = mat3.normalMatrix(this.matrix, Transform.normalMatrix)
-        return mat3.normalize(normalMatrix, normalMatrix)
+        return mat3.normalMatrix(this.matrix, Transform.normalMatrix)
     }
 }
 

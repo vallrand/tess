@@ -90,6 +90,6 @@ export class Monolith extends ControlUnit {
         this.context.get(PointLightPass).delete(this.light)
         this.context.get(ParticleEffectPass).remove(this.glow)
     }
-    public *strike(target: vec3): Generator<ActionSignal> {
+    public *strike(target: vec2): Generator<ActionSignal> {
     }
 }

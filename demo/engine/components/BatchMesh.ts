@@ -65,6 +65,11 @@ export class BatchMesh implements IBatched {
             this.normals[i * 3 + 0] = normalMatrix[0] * nx + normalMatrix[3] * ny + normalMatrix[6] * nz
             this.normals[i * 3 + 1] = normalMatrix[1] * nx + normalMatrix[4] * ny + normalMatrix[7] * nz
             this.normals[i * 3 + 2] = normalMatrix[2] * nx + normalMatrix[5] * ny + normalMatrix[8] * nz
+            const length = Math.hypot(this.normals[i * 3 + 0], this.normals[i * 3 + 1], this.normals[i * 3 + 2])
+            const invLength = length && 1 / length
+            this.normals[i * 3 + 0] *= invLength
+            this.normals[i * 3 + 1] *= invLength
+            this.normals[i * 3 + 2] *= invLength
         }
 
         this.bounds.update(this.transform, this.boundingRadius)

@@ -85,11 +85,11 @@ class Missile {
 
         this.exhaust = new BatchMesh(SharedSystem.geometry.hemisphere)
         this.exhaust.order = 2
-        this.exhaust.material = this.parent.exhaustMaterial
+        this.exhaust.material = SharedSystem.materials.exhaustMaterial
 
         this.ring = new BatchMesh(SharedSystem.geometry.cylinder)
         this.ring.order = 6
-        this.ring.material = this.parent.ringMaterial
+        this.ring.material = SharedSystem.materials.ringDustMaterial
 
         this.wave = new Sprite()
         this.wave.billboard = BillboardType.None
@@ -253,29 +253,12 @@ export class ArtillerySkill extends CubeSkill {
         vec3(-1.0, 4.4, 2.1),
         vec3(-1.6, 3.8, 2.1)
     ]
-    exhaustMaterial: EffectMaterial<any>
     burnMaterial: DecalMaterial
     waveMaterial: SpriteMaterial
-    ringMaterial: EffectMaterial<any>
     pillarMaterial: SpriteMaterial
     flashMaterial: SpriteMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
-        this.exhaustMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
-        }, {
-            uVerticalMask: vec4(0,0.4,0.6,0.8),
-            uUVTransform: vec4(-0.1,0,1,0.5),
-            uUVPanning: vec2(-0.1,1.4),
-            uUV2Transform: vec4(0,0,1,0.7),
-            uUV2Panning: vec2(0.2, 1.8),
-            uColorAdjustment: vec3(2.0,2.0,0.2)
-        })
-        this.exhaustMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xc5e0e300, 0x88a8bd00, 0x6e84c420, 0x4e3ba130, 0x820c4920, 0x38031510, 0x00000000
-        ], 1)
-        this.exhaustMaterial.diffuse = SharedSystem.textures.cellularNoise
-
         this.burnMaterial = new DecalMaterial()
         this.burnMaterial.program = this.context.get(DecalPass).program
         this.burnMaterial.diffuse = SharedSystem.textures.rays
@@ -284,25 +267,6 @@ export class ArtillerySkill extends CubeSkill {
         this.waveMaterial.blendMode = null
         this.waveMaterial.program = SharedSystem.materials.chromaticAberration
         this.waveMaterial.diffuse = SharedSystem.textures.wave
-
-        //TODO duplicate from minefield
-        this.ringMaterial = new EffectMaterial(this.context.gl, {
-            PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true
-        }, {
-            uUVTransform: vec4(0,0,1,0.6),
-            uUVPanning: vec2(-0.3,-0.04),
-            uDissolveColor: vec4.ZERO,
-            uDissolveThreshold: vec3(0,0.04,0),
-            uColorAdjustment: vec3(1,0.64,0.1),
-            uUV2Transform: vec4(0,0,1,1.7),
-            uUV2Panning: vec2(-0.5,0.1),
-            uVerticalMask: vec4(0.4,0.5,0.9,1.0),
-        })
-        this.ringMaterial.diffuse = SharedSystem.textures.cellularNoise
-        this.ringMaterial.gradient = GradientRamp(this.context.gl, [
-            0xf5f0d700, 0xbd7d7d00, 0x524747ff, 0x00000000,
-            0x7f7f7fff, 0x202020ff, 0x000000ff, 0x00000000
-        ], 2)
 
         this.pillarMaterial = new SpriteMaterial()
         this.pillarMaterial.program = this.context.get(ParticleEffectPass).program

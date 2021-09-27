@@ -130,22 +130,7 @@ export class RestoreSkill extends CubeSkill {
         this.tubeX = new BatchMesh(SharedSystem.geometry.cylinder)
         this.tubeZ = new BatchMesh(SharedSystem.geometry.cylinder)
 
-        const tubeMaterial = new EffectMaterial(this.context.gl, {
-            VERTICAL_MASK: true, PANNING: true, HALF: true, GREYSCALE: true, GRADIENT: true
-        }, {
-            uUVTransform: vec4(0,0,1,0.3),
-            uUVPanning: vec2(0.2, -0.2),
-            uVerticalMask: vec4(0.0,0.4,0.6,1.0),
-            uColorAdjustment: vec3(3,1,0),
-            uUV2Transform: vec4(0,0,1,0.6),
-            uUV2Panning: vec2(-0.2, -0.3)
-        })
-        tubeMaterial.diffuse = SharedSystem.textures.voronoiNoise
-        tubeMaterial.gradient = GradientRamp(this.context.gl, [
-            0xdfecf0f0, 0x8cb3db80, 0x5e56c460, 0x6329a640, 0x4f0c5420, 0x00000000
-        ], 1)
-
-        this.tubeX.material = this.tubeZ.material = tubeMaterial
+        this.tubeX.material = this.tubeZ.material = SharedSystem.materials.energyHalfPurpleMaterial
 
         this.ringMaterial = new DecalMaterial()
         this.ringMaterial.program = this.context.get(DecalPass).program

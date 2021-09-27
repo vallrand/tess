@@ -32,7 +32,7 @@ const actionTimeline = {
     ], vec3.lerp),
     'glow.transform.scale': PropertyAnimation([
         { frame: 0.5, value: vec3.ZERO },
-        { frame: 0.8, value: [10,10,10], ease: ease.quartOut }
+        { frame: 0.8, value: [8,8,8], ease: ease.quartOut }
     ], vec3.lerp),
     'glow.color': PropertyAnimation([
         { frame: 0.5, value: [0.7,1,0.9,0] },
@@ -84,24 +84,24 @@ class CorrosiveOrb {
     constructor(private readonly context: Application, private readonly parent: OrbSkill){}
     public get enabled(): boolean { return !!this.orb }
     public place(column: number, row: number): void {
+        vec2.set(column, row, this.tile)
         this.transform = this.context.get(TransformSystem).create()
         this.context.get(TerrainSystem).tilePosition(column, row, this.transform.position)
         this.transform.position[1] += 1
-        vec2.set(column, row, this.tile)
 
         this.orb = new Mesh()
         this.orb.buffer = SharedSystem.geometry.sphereMesh
         this.orb.order = 3
         this.orb.layer = 2
         this.context.get(MeshSystem).list.push(this.orb)
-        this.orb.material = this.parent.orbMaterial
+        this.orb.material = SharedSystem.materials.orbMaterial
         this.orb.transform = this.context.get(TransformSystem).create()
         this.orb.transform.parent = this.transform
 
         this.aura = new Sprite()
         this.aura.order = 4
         this.aura.billboard = BillboardType.Sphere
-        this.aura.material = this.parent.auraMaterial
+        this.aura.material = SharedSystem.materials.auraTealMaterial
         this.aura.transform = this.context.get(TransformSystem).create()
         this.aura.transform.parent = this.transform
         this.context.get(ParticleEffectPass).add(this.aura)
@@ -182,30 +182,8 @@ export class OrbSkill extends CubeSkill {
     private distortion: Sprite
     private particles: ParticleEmitter
 
-    orbMaterial: MeshMaterial
-    auraMaterial: EffectMaterial<any>
-
     constructor(context: Application, cube: Cube){
         super(context, cube)
-
-        this.orbMaterial = new MeshMaterial()
-        this.orbMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
-
-        this.auraMaterial = new EffectMaterial(this.context.gl, {
-            VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, DEPTH_OFFSET: 5.2
-        }, {
-            uUVTransform: vec4(0,0,1,0.8),
-            uVerticalMask: vec4(0.2,0.4,0.6,1),
-            uUVPanning: vec2(0.2, -0.1),
-            uUV2Transform: vec4(0,0,1,1.6),
-            uUV2Panning: vec2(-0.2, -0.3),
-            uColorAdjustment: vec3(1,0.9,0)
-        })
-        this.auraMaterial.diffuse = SharedSystem.textures.cellularNoise
-        this.auraMaterial.gradient = GradientRamp(this.context.gl, [
-            0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
-        ], 1)
-
         const cone = createCylinder({
             radiusTop: 0.5, radiusBottom: 4, height: 4,
             horizontal: 8, radial: 8,

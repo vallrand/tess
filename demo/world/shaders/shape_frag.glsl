@@ -34,6 +34,8 @@ void main(){
 #if defined(CIRCLE)
     float distance = max(0.0, 1.0-length(uv));
     float alpha = distance*distance;
+#elif defined(BULGE)
+    float alpha = 1.0-pow(length(uv),4.0);
 #elif defined(GLOW)
     float alpha = 0.5*(1.0/length(uv)-1.0);
 #elif defined(WAVE)

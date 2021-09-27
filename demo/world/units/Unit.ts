@@ -34,7 +34,7 @@ export abstract class ControlUnit implements IUnit {
     public abstract disappear(): Generator<ActionSignal>
     //public abstract damage(): Generator<ActionSignal>
     public abstract move(path: vec2[]): Generator<ActionSignal>
-    public abstract strike(target: vec3): Generator<ActionSignal>
+    public abstract strike(target: vec2): Generator<ActionSignal>
 
     protected *dissolveRigidMesh(mesh: Mesh): Generator<ActionSignal> {
         mesh.material.program = SharedSystem.materials.dissolveProgram

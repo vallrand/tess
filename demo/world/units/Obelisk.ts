@@ -69,7 +69,7 @@ export class Obelisk extends ControlUnit {
             else yield iterator.value
         }
     }
-    public strike(target: vec3): Generator<ActionSignal> {
+    public strike(target: vec2): Generator<ActionSignal> {
         if(this.active) return this.deactivate()
         else return this.activate()   
     }

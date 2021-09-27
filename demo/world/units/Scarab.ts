@@ -96,7 +96,7 @@ export class Scarab extends ControlUnit {
             else yield iterator.value
         }
     }
-    public *strike(target: vec3): Generator<ActionSignal> {
+    public *strike(target: vec2): Generator<ActionSignal> {
         this.cone = new BatchMesh(SharedSystem.geometry.hemisphere)
         this.cone.material = SharedSystem.materials.coneTealMaterial
 

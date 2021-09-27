@@ -40,14 +40,14 @@ void main(){
     vec3 position = vec3(rotate(aTransform.w) * aPosition.xy, aPosition.z);
 #ifdef VIEWPLANE
     vec3 forward = -vec3(uViewMatrix[0][2], uViewMatrix[1][2], uViewMatrix[2][2]);
+    vec3 right = vec3(uViewMatrix[0][0], uViewMatrix[1][0], uViewMatrix[2][0]);
 #else
     vec3 forward = normalize(aTransform.xyz - uEyePosition);
 #endif
 
 #if defined(ALIGNED)
-    vec3 direction = -normalize(aVelocity.xyz);
-    vec3 up = cross(forward, direction);
-    vec3 right = cross(forward, up);
+    vec3 right = normalize(aVelocity.xyz);
+    vec3 up = cross(forward, right);
     forward = cross(right, up);
     mat3 matrix = mat3(right, up, forward);
     position = size * matrix * position;
@@ -57,7 +57,6 @@ void main(){
 
 #elif defined(CYLINDRICAL)
     vec3 up = vec3(0,1,0);
-    //vec3 right = vec3(uViewMatrix[0][0], uViewMatrix[1][0], uViewMatrix[2][0]);
     vec3 right = cross(forward, up);
     position = size * (right * position.x + up * position.y);
 #elif defined(SPHERICAL)

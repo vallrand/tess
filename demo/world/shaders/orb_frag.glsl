@@ -80,6 +80,7 @@ void main(){
     color = mix(color, vec4(0.6,0.4,0.8,0.0), n1 * n1);
     color = mix(color, vec4(0.4,0.8,0.8,0.0), 2.0 * (1.0-n1) * n0);
     color = mix(color, vec4(0.08,0.32,0.22,0.2), min(8.0,0.04/n0-1.0));
+    color.rgb = mix(color.grb, color.rgb, uColor.r);
 
     color *= 0.2+0.8*max(0.,dot(vec3(0,1,0),normal));
 
@@ -91,9 +92,9 @@ void main(){
     float threshold = mix(1.0,-uThresholdEdge,uColor.a);
     color.rgb = mix(color.rgb, vec3(0.3,0.1,0.5), smoothstep(-uThresholdEdge,0.0,threshold - alpha));
     if(alpha <= threshold) discard; 
-    const float metallic = 0.5;
+    const float metallic = 0.0;
     fragPosition = vec4(vPosition, uLayer);
     fragNormal = vec4(0,0,0, metallic);
-    fragAlbedo = color;
+    fragAlbedo = vec4(color.rgb,.5+.5*color.a);
 #endif
 }

@@ -28,26 +28,26 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Railgun)
+            this.cube.installModule(this.cube.state.side, 0, CubeModule.Voidgun)
             this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
             //this.context.get(TerrainSystem).resources.create(5,6)
 
-            window['curUnit'] = 6
+            window['curUnit'] = 7
 
-            // window['u0'] = this.context.get(AISystem).create(6,7,0)
-            window['u1'] = this.context.get(AISystem).create(7,7,1)
-            // window['u2'] = this.context.get(AISystem).create(7,8,2)
-            window['u3'] = this.context.get(AISystem).create(2,6,3)
-            // window['u4'] = this.context.get(AISystem).create(6,11,4)
-            window['u5'] = this.context.get(AISystem).create(0,8,5)
-            window['u6'] = this.context.get(AISystem).create(5,10,6)
-            window['u7'] = this.context.get(AISystem).create(3,10,7)
+            // window['u0'] = this.context.get(AISystem).create(6,7,0) //scarab
+            window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
+            // window['u2'] = this.context.get(AISystem).create(7,8,2) //stingray
+            window['u3'] = this.context.get(AISystem).create(2,6,3) //locust
+            // window['u4'] = this.context.get(AISystem).create(6,11,4) //obelisk
+            window['u5'] = this.context.get(AISystem).create(0,8,5) //monolith
+            // window['u6'] = this.context.get(AISystem).create(5,10,6) //decapod
+            window['u7'] = this.context.get(AISystem).create(3,10,7) //isopod
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [4,6,3]//[2,5,3]//[5,6,2]//[3,7,6]//[3,6,-5]//[2,6,3]//[4,4,3]//[-4,5,-5]//[-4,8,3]//
+            window['app'].systems[17].cameraOffset= [4,4,0]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)

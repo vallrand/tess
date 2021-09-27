@@ -110,7 +110,7 @@ export class Decapod extends ControlUnit {
         this.context.get(TransformSystem).delete(this.shadow.transform)
         this.context.get(DecalPass).delete(this.shadow)
     }
-    public strike(target: vec3): Generator<ActionSignal> {
+    public strike(target: vec2): Generator<ActionSignal> {
         const targetTile = vec2.add([2,-2], this.tile, vec2())
         const targetPosition = this.context.get(TerrainSystem).tilePosition(targetTile[0], targetTile[1], vec3())
 
