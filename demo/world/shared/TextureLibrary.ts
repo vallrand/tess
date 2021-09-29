@@ -111,6 +111,7 @@ export function TextureLibrary(context: Application){
             require('../shaders/rays_frag.glsl'), { BEAM: true }), {  }, 0
     ).target
 
+    //TODO not used
     const trail = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,

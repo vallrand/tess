@@ -11,10 +11,12 @@ export function MaterialLibrary(context: Application){
     const materials = context.get(MaterialSystem)
 
     const distortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {})
+    distortion.uniforms['uDistortionStrength'] = 0.01
 
     const chromaticAberration = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
         CHROMATIC_ABERRATION: true
     })
+    chromaticAberration.uniforms['uDistortionStrength'] = 0.01
 
     const dunesMaterial = new MeshMaterial()
     dunesMaterial.program = context.get(DeferredGeometryPass).programs[0]
@@ -277,6 +279,24 @@ export function MaterialLibrary(context: Application){
     ], 4)
     trailSmokeMaterial.diffuse = SharedSystem.textures.cloudNoise
 
+    const energyPurpleMaterial = new EffectMaterial(context.gl, {
+        PANNING: true, VERTICAL_MASK: true, FRESNEL: true, GRADIENT: true, DISPLACEMENT: true
+    }, {
+        uUVTransform: vec4(0,0,1,0.6),
+        uUVPanning: vec2(0,0.16),
+        uVerticalMask: vec4(0.0,0.2,0.8,1.0),
+        uFresnelMask: vec2(1.2,0.5),
+        uDisplacementAmount: [0.1],
+        uUV3Transform: vec4(0,0,1,1),
+        uUV3Panning: vec2(0,-0.2)
+    })
+    energyPurpleMaterial.diffuse = SharedSystem.textures.sineNoise
+    //TODO duplicate from half purple
+    energyPurpleMaterial.gradient = GradientRamp(context.gl, [
+        0xdfecf0f0, 0x8cb3db80, 0x5e56c460, 0x6329a640, 0x4f0c5420, 0x00000000
+    ], 1)
+    energyPurpleMaterial.displacement = SharedSystem.textures.perlinNoise
+
     const exhaustMaterial = new EffectMaterial(context.gl, {
         PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
@@ -316,6 +336,6 @@ export function MaterialLibrary(context: Application){
 
         glowSquaresLinearMaterial, glowSquaresRadialMaterial, reticleMaterial, trailSmokeMaterial,
         exhaustMaterial, exhaustYellowMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
-        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial
+        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial
     }
 }

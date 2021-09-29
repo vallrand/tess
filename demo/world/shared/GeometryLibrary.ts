@@ -44,6 +44,12 @@ export function GeometryLibrary(context: Application){
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }), mat4.translate(mat4.IDENTITY, vec3(0,0.5,0), transform)))
 
+    const lopolyCylinderFlip = doubleSided(applyTransform(createCylinder({
+        radiusTop: 0.5, radiusBottom: 0.5, height: 1,
+        radial: 16, horizontal: 1,
+        cap: false, angleStart: 0, angleLength: 2*Math.PI
+    }), mat4.translate(mat4.IDENTITY, vec3(0,-0.5,0), transform)))
+
     const cross = doubleSided(extrudePolygon([
         [-1,-3],[-1,-1],[-3,-1],[-3,1],[-1,1],[-1,3],[1,3],[1,1],[3,1],[3,-1],[1,-1],[1,-3]
     ], 1))
@@ -72,6 +78,6 @@ export function GeometryLibrary(context: Application){
     funnel = doubleSided(funnel)
 
     return {
-        sphere, lowpolySphere, hemisphere, cylinder, cone, openBox, sphereMesh, cross, lowpolyCylinder, funnel
+        sphere, lowpolySphere, hemisphere, cylinder, cone, openBox, sphereMesh, cross, lowpolyCylinder, funnel, lopolyCylinderFlip
     }
 }

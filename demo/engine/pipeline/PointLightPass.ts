@@ -45,9 +45,13 @@ export class PointLightPass extends PipelinePass implements ISystem {
         const sphere = createSphere({ longitude: 32, latitude: 32, radius: 1 })
         this.sphere = this.context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format)
     }
-    public create(): PointLight {
+    public create(color?: vec3): PointLight {
         const item = this.pool.pop() || new PointLight()
         item.index = this.list.push(item) - 1
+        item.frame = 0
+        vec3.copy(color || vec3.ONE, item.color)
+        item.intensity = 1
+        item.radius = 1
         return item
     }
     public delete(item: PointLight): void {
@@ -57,10 +61,6 @@ export class PointLightPass extends PipelinePass implements ISystem {
         this.list.length--
         item.index = -1
         this.pool.push(item)
-
-        item.frame = 0
-        vec3.copy(vec3.ONE, item.color)
-        item.intensity = item.radius = 1
     }
     public update(): void {
         const gl = this.context.gl

@@ -121,15 +121,15 @@ mat3.normalMatrix = (mat: mat4, out: mat3): mat3 => {
     const m00 = mat[0], m01 = mat[1], m02 = mat[2],
     m10 = mat[4], m11 = mat[5], m12 = mat[6],
     m20 = mat[8], m21 = mat[9], m22 = mat[10]
-    
+
     out[0] = m11 * m22 - m12 * m21
     out[1] = m12 * m20 - m10 * m22
     out[2] = m10 * m21 - m11 * m20
 
     out[3] = m02 * m21 - m01 * m22
-    out[5] = m00 * m22 - m02 * m20
-    out[7] = m01 * m20 - m00 * m21
-    
+    out[4] = m00 * m22 - m02 * m20
+    out[5] = m01 * m20 - m00 * m21
+
     out[6] = m01 * m12 - m02 * m11
     out[7] = m02 * m10 - m00 * m12
     out[8] = m00 * m11 - m01 * m10

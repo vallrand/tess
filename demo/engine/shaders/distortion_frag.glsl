@@ -23,6 +23,8 @@ out vec4 fragColor;
 uniform sampler2D uAlbedoBuffer;
 uniform sampler2D uSampler;
 
+uniform float uDistortionStrength;
+
 void main(){
     vec4 color = texture(uSampler,vUV);
 #ifdef MESH
@@ -38,7 +40,7 @@ void main(){
     vec2 duvdy = dFdy(vUV);
     float dhdx = dFdx(height) / length(duvdx);
     float dhdy = dFdy(height) / length(duvdy);
-    vec2 distortion = 0.01 * color.a * vec2(dhdx, dhdy);
+    vec2 distortion = uDistortionStrength * color.a * vec2(dhdx, dhdy);
 #endif
     vec2 uv = vec2(gl_FragCoord.xy) / vec2(textureSize(uAlbedoBuffer, 0));
     uv += distortion;

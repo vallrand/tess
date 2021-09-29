@@ -27,10 +27,10 @@ const actionTimeline = {
         { frame: 0, value: vec3.ZERO },
         { frame: 0.5, value: [4,4,4], ease: ease.cubicOut }
     ], vec3.lerp),
-    'flash.material.uniform.uniforms.uDissolveThreshold': PropertyAnimation([
-        { frame: 0.2, value: [0.2,0,0] },
-        { frame: 0.5, value: [1,0,0], ease: ease.sineIn }
-    ], vec3.lerp),
+    'flash.color': PropertyAnimation([
+        { frame: 0.2, value: vec4.ONE },
+        { frame: 0.5, value: [1,1,1,0.2], ease: ease.sineIn }
+    ], vec4.lerp),
     'core.transform.scale': PropertyAnimation([
         { frame: 0, value: vec3.ZERO },
         { frame: 0.1, value: [4,4,4], ease: ease.cubicIn },

@@ -26,6 +26,16 @@ FollowPath.Line = function FollowPathLine(tween: IAnimationTween<vec3>, options:
     }
 }
 
+//TODO move AnimationProperty.vec3 ? elsewhere?
+FollowPath.separate = (
+    x: IAnimationTween<number>, y: IAnimationTween<number>, z: IAnimationTween<number>
+): IAnimationTween<vec3> => function(elapsedTime: number, out: vec3): vec3 {
+    out[0] = x(elapsedTime, out[0])
+    out[1] = y(elapsedTime, out[1])
+    out[2] = z(elapsedTime, out[2])
+    return out
+}
+
 FollowPath.curve = (sampler: (time: number, out: vec3) => vec3, options: {
     frame: number
     ease: ease.IEase
