@@ -16,7 +16,6 @@ import { Direction, DirectionAngle, DirectionTile } from '../player'
 
 export class Scarab extends ControlUnit {
     private static readonly model: string = 'scarab'
-    private mesh: Mesh
     private dust: ParticleEmitter
     private ring: Sprite
     private rays: Sprite

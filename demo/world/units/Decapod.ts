@@ -15,7 +15,6 @@ import { ControlUnit } from './Unit'
 
 export class Decapod extends ControlUnit {
     private static readonly model: string = 'decapod'
-    private mesh: Mesh
     public active: boolean = false
 
     dust: ParticleEmitter

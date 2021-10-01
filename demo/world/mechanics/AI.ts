@@ -6,11 +6,13 @@ import { PlayerSystem } from '../player'
 import { ControlUnit, UnitFactory } from '../units'
 import { TerrainSystem } from '../terrain'
 
+type IUnitFactory = ReturnType<typeof UnitFactory>
+
 export class AISystem implements IActor, ISystem {
     readonly order: number = 2
     actionIndex: number
 
-    private readonly factory = UnitFactory(this.context)
+    private readonly factory: IUnitFactory = UnitFactory(this.context)
     private readonly list: ControlUnit[] = []
     constructor(private readonly context: Application){
         this.context.get(TurnBasedSystem).add(this)
@@ -26,10 +28,10 @@ export class AISystem implements IActor, ISystem {
             
         }
     }
-    create(column: number, row: number, type: number): ControlUnit {
+    public create<K extends keyof IUnitFactory>(column: number, row: number, type: K): InstanceType<IUnitFactory[K]> {
         const unit = new this.factory[type](this.context)
         this.list.push(unit) //remove when dead?
         unit.place(column, row)
-        return unit
+        return unit as any
     }
 }

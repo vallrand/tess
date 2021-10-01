@@ -34,21 +34,21 @@ export class PlayerSystem implements ISystem {
             window['vec3'] = vec3
             //this.context.get(TerrainSystem).resources.create(5,6)
 
-            window['curUnit'] = 8
+            window['curUnit'] = 5
 
             // window['u0'] = this.context.get(AISystem).create(6,7,0) //scarab
             // window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
             // window['u2'] = this.context.get(AISystem).create(7,8,2) //stingray
-            window['u3'] = this.context.get(AISystem).create(2,6,3) //locust
+            window['u3'] = this.context.get(AISystem).create(2+3,6,3) //locust
             // window['u4'] = this.context.get(AISystem).create(6,11,4) //obelisk
             window['u5'] = this.context.get(AISystem).create(0,8,5) //monolith
             // window['u6'] = this.context.get(AISystem).create(5,10,6) //decapod
             // window['u7'] = this.context.get(AISystem).create(3,10,7) //isopod
-            window['u8'] = this.context.get(AISystem).create(8,7,8) //tarantula variant
+            // window['u8'] = this.context.get(AISystem).create(8,7,8) //tarantula variant
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [5,5,-1]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [2,5,5]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)

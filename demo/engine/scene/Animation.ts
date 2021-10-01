@@ -10,6 +10,18 @@ export const ActionSignal = {
 }
 
 export class AnimationSystem implements ISystem {
+    public static *zip(generators: Generator<ActionSignal>[]): Generator<ActionSignal> {
+        while(true){
+            let signal = null
+            for(let i = generators.length - 1; i >= 0; i--){
+                const iterator = generators[i].next()
+                if(!iterator.done) signal = iterator.value
+            }
+            if(!signal) break
+            else yield signal
+        }
+    }
+
     private index: number = 1
     private readonly pending: Array<ActionSignal & { target: number }> = []
     private readonly queue: {

@@ -103,10 +103,10 @@ export class DetonateSkill extends CubeSkill {
 
         this.beam = new Sprite()
         this.beam.billboard = BillboardType.Cylinder
+        vec2.set(0,0.5,this.beam.origin)
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
-        vec2.set(0,0.5,this.beam.origin)
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
         const mesh = this.cube.meshes[this.cube.state.side]

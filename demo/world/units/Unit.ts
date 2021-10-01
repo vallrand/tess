@@ -23,6 +23,8 @@ export abstract class ControlUnit implements IUnit {
     actionIndex: number
     turn: number
 
+    public mesh: Mesh
+
     movementStrategy: any
     actionStrategy: any
 

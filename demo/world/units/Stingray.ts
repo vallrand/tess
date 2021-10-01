@@ -159,7 +159,6 @@ function LookAtTween(tween: IAnimationTween<vec3>): IAnimationTween<quat> {
 
 export class Stingray extends ControlUnit {
     private static readonly model: string = 'stingray'
-    private mesh: Mesh
 
     private spikesLeft: ParticleEmitter
     private spikesRight: ParticleEmitter

@@ -16,7 +16,6 @@ import { ControlUnit } from './Unit'
 
 export class Obelisk extends ControlUnit {
     private static readonly model: string = 'obelisk'
-    private mesh: Mesh
     public active: boolean = false
 
     private beams: Line[] = []

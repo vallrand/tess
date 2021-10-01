@@ -138,7 +138,6 @@ class Spider4Rig extends IKRig {
 
 export class Tarantula extends ControlUnit {
     private static readonly model: string = 'tarantula'
-    private mesh: Mesh
 
     private beam: Sprite
     private cracks: Decal
@@ -371,7 +370,6 @@ export class Tarantula extends ControlUnit {
 
 export class TarantulaVariant extends ControlUnit {
     private static readonly model: string = 'tarantula'
-    private mesh: Mesh
 
     private ring: Sprite
     private flash: Sprite
@@ -467,9 +465,7 @@ export class TarantulaVariant extends ControlUnit {
         this.trail.addColorFade(this.trail.ease)
         this.trail.material = new SpriteMaterial()
         this.trail.material.program = this.context.get(ParticleEffectPass).program
-        this.trail.material.diffuse = GradientRamp(this.context.gl, [
-            0x00000000, 0x04467840, 0x21ccaa20, 0xc9f2e600, 0x21ccaa20, 0x04467840, 0x00000000
-        ], 1)
+        this.trail.material.diffuse = SharedSystem.gradients.tealLine
         this.context.get(ParticleEffectPass).add(this.trail)
 
         const originPosition = mat4.transform([0,1.8,0], this.mesh.transform.matrix, vec3())

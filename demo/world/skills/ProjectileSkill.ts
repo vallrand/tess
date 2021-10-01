@@ -82,9 +82,7 @@ export class ProjectileSkill extends CubeSkill {
 
         this.trailMaterial = new SpriteMaterial()
         this.trailMaterial.program = this.context.get(ParticleEffectPass).program
-        this.trailMaterial.diffuse = GradientRamp(this.context.gl, [
-            0x00000000, 0x57100320, 0xf7f3ba00, 0x57100320, 0x00000000
-        ], 1)
+        this.trailMaterial.diffuse = SharedSystem.gradients.yellowLine
 
         this.glowMaterial = new SpriteMaterial()
         this.glowMaterial.diffuse = SharedSystem.textures.raysRing

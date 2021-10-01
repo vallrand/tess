@@ -177,7 +177,7 @@ export function MaterialLibrary(context: Application){
         uColorAdjustment: vec3(1,0.64,0.1),
         uUV2Transform: vec4(0,0,1,1.7),
         uUV2Panning: vec2(-0.5,0.1),
-        uVerticalMask: vec4(0.4,0.5,0.9,1.0),
+        uVerticalMask: vec4(0.0,0.1,0.9,1.0),
     })
     ringDustMaterial.diffuse = SharedSystem.textures.cellularNoise
     ringDustMaterial.gradient = GradientRamp(context.gl, [
@@ -297,6 +297,22 @@ export function MaterialLibrary(context: Application){
     ], 1)
     energyPurpleMaterial.displacement = SharedSystem.textures.perlinNoise
 
+
+    const planeDissolveMaterial = new EffectMaterial(context.gl, {
+        GRADIENT: true, DISSOLVE: true, DISPLACEMENT: true, PANNING: true
+    }, {
+        uUVTransform: vec4(0,0,1,1),
+        uUVPanning: vec2(0,0.1),
+        uDissolveColor: vec4(1,0.8,0.6,1),
+        uDissolveThreshold: vec3(0,0.01,0.2),
+        uDisplacementAmount: [0.05],
+        uUV3Transform: vec4(0,0,1,1),
+        uUV3Panning: vec2(0,0.2)
+    })
+    planeDissolveMaterial.diffuse = SharedSystem.textures.sineNoise
+    planeDissolveMaterial.gradient = GradientRamp(context.gl, [ 0xffffffff, 0x00000000 ], 1)
+    planeDissolveMaterial.displacement = SharedSystem.textures.perlinNoise
+
     const exhaustMaterial = new EffectMaterial(context.gl, {
         PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
@@ -336,6 +352,6 @@ export function MaterialLibrary(context: Application){
 
         glowSquaresLinearMaterial, glowSquaresRadialMaterial, reticleMaterial, trailSmokeMaterial,
         exhaustMaterial, exhaustYellowMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
-        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial
+        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial, planeDissolveMaterial
     }
 }

@@ -96,7 +96,6 @@ class StaticOrb {
 
 export class Isopod extends ControlUnit {
     private static readonly model: string = 'isopod'
-    private mesh: Mesh
 
     private dust: ParticleEmitter
     private shadow: Decal
