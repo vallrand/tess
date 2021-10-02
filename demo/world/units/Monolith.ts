@@ -58,6 +58,8 @@ export class Monolith extends ControlUnit {
     private speedlines: ParticleEmitter
     private cone: BatchMesh
     private flash: Sprite
+    private core: BatchMesh
+    private sparkle: Sprite
 
     constructor(context: Application){super(context)}
     public place(column: number, row: number): void {
@@ -150,7 +152,8 @@ export class Monolith extends ControlUnit {
     public strike(target: vec2): Generator<ActionSignal> {
         target = [this.tile[0] + 2 + 2, this.tile[1] + 2 - 2]
         //return AnimationSystem.zip(this.turrets.map(turret => this.activateTurret(turret, target)))
-        return AnimationSystem.zip(this.spawners.map(spawner => this.activateSpawner(spawner)))
+        // return AnimationSystem.zip(this.spawners.map(spawner => this.activateSpawner(spawner)))
+        return this.activate()
     }
     private *activateTurret(effect: TurretEffect, target: vec2): Generator<ActionSignal> {
         const originPosition = mat4.transform(vec3.ZERO, this.mesh.armature.nodes[effect.index].globalTransform, vec3())
@@ -508,6 +511,21 @@ export class Monolith extends ControlUnit {
         .create([0,5,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
 
+        this.core = new BatchMesh(doubleSided(SharedSystem.geometry.lowpolySphere))
+        this.core.material = SharedSystem.materials.energyPurpleMaterial
+        this.core.transform = this.context.get(TransformSystem)
+        .create([0,4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
+        this.context.get(ParticleEffectPass).add(this.core)
+
+        this.sparkle = new Sprite()
+        this.sparkle.billboard = BillboardType.Sphere
+        this.sparkle.material = new SpriteMaterial()
+        this.sparkle.material.program = this.context.get(ParticleEffectPass).program
+        this.sparkle.material.diffuse = SharedSystem.textures.sparkle
+        this.sparkle.transform = this.context.get(TransformSystem)
+        .create([0,5.4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
+        this.context.get(ParticleEffectPass).add(this.sparkle)
+
         const animate = AnimationTimeline(this, {
             'mesh.armature': modelAnimations[Monolith.model].activate,
             'mesh.color': PropertyAnimation([
@@ -523,6 +541,23 @@ export class Monolith extends ControlUnit {
             'pulse.color': PropertyAnimation([
                 { frame: 1.4, value: vec4.ONE },
                 { frame: 2.0, value: vec4.ZERO, ease: ease.quadIn }
+            ], vec4.lerp),
+
+            'core.transform.scale': PropertyAnimation([
+                { frame: 0.8, value: vec3.ZERO },
+                { frame: 1.3, value: [2.6,2.6,2.6], ease: ease.cubicOut }
+            ], vec3.lerp),
+            'core.color': PropertyAnimation([
+                { frame: 0.8, value: [0.4,1,0.8,1] },
+                { frame: 1.3, value: vec4.ZERO, ease: ease.sineIn }
+            ], vec4.lerp),
+            'sparkle.transform.scale': PropertyAnimation([
+                { frame: 0.7, value: vec3.ZERO },
+                { frame: 0.9, value: [6,2,2], ease: ease.cubicOut }
+            ], vec3.lerp),
+            'sparkle.color': PropertyAnimation([
+                { frame: 0.7, value: [0.6,1,1,0] },
+                { frame: 0.9, value: vec4.ZERO, ease: ease.quadIn }
             ], vec4.lerp),
 
             'ring.transform.scale': PropertyAnimation([
@@ -563,11 +598,28 @@ export class Monolith extends ControlUnit {
         })
 
         while(true)
-        for(const duration = 2.5, startTime = this.context.currentTime; true;){
+        for(const duration = 2.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }
+
+        this.context.get(TransformSystem).delete(this.core.transform)
+        this.context.get(TransformSystem).delete(this.sparkle.transform)
+        this.context.get(TransformSystem).delete(this.flash.transform)
+        this.context.get(TransformSystem).delete(this.cone.transform)
+        this.context.get(TransformSystem).delete(this.cylinder.transform)
+        this.context.get(TransformSystem).delete(this.ring.transform)
+        this.context.get(TransformSystem).delete(this.pulse.transform)
+
+        SharedSystem.particles.energy.remove(this.speedlines)
+        this.context.get(ParticleEffectPass).remove(this.core)
+        this.context.get(ParticleEffectPass).remove(this.sparkle)
+        this.context.get(ParticleEffectPass).remove(this.flash)
+        this.context.get(ParticleEffectPass).remove(this.cylinder)
+        this.context.get(ParticleEffectPass).remove(this.cone)
+        this.context.get(ParticleEffectPass).remove(this.ring)
+        this.context.get(PostEffectPass).remove(this.pulse)
     }
 }

@@ -3,12 +3,20 @@ import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram, GL } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { GradientRamp } from '../../engine/particles'
-import { MaterialSystem, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
+import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
 
 export function MaterialLibrary(context: Application){
     const materials = context.get(MaterialSystem)
+
+    const heatDistortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
+        PANNING: true, VERTICAL_MASK: true
+    })
+    heatDistortion.uniforms['uDistortionStrength'] = 0.01
+    heatDistortion.uniforms['uUVTransform'] = vec4(0,0,4,2)
+    heatDistortion.uniforms['uUVPanning'] = vec2(0,-0.8)
+    heatDistortion.uniforms['uVerticalMask'] = vec4(0.0,0.2,0.8,1.0)
 
     const distortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {})
     distortion.uniforms['uDistortionStrength'] = 0.01
@@ -35,6 +43,14 @@ export function MaterialLibrary(context: Application){
 
     const orbMaterial = new MeshMaterial()
     orbMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
+
+    const shieldMaterial = new ShaderMaterial()
+    shieldMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), {})
+    shieldMaterial.cullFace = GL.NONE
+    shieldMaterial.blendMode = ShaderMaterial.Add
+
+    const shieldDisplacementMaterial = new ShaderMaterial()
+    shieldDisplacementMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
 
 
     const coneTealMaterial = new EffectMaterial(context.gl, {
@@ -106,10 +122,7 @@ export function MaterialLibrary(context: Application){
         uUV2Panning: vec2(-0.2, -0.3)
     })
     energyHalfPurpleMaterial.diffuse = SharedSystem.textures.voronoiNoise
-    energyHalfPurpleMaterial.gradient = GradientRamp(context.gl, [
-        0xdfecf0f0, 0x8cb3db80, 0x5e56c460, 0x6329a640, 0x4f0c5420, 0x00000000
-    ], 1)
-
+    energyHalfPurpleMaterial.gradient = SharedSystem.gradients.purple
 
 
     const flashYellowMaterial = new EffectMaterial(context.gl, {
@@ -279,6 +292,19 @@ export function MaterialLibrary(context: Application){
     ], 4)
     trailSmokeMaterial.diffuse = SharedSystem.textures.cloudNoise
 
+    const trailEnergyMaterial = new EffectMaterial(context.gl, {
+        PANNING: true, HORIZONTAL_MASK: true, GREYSCALE: true, GRADIENT: true
+    }, {
+        uHorizontalMask: vec4(0,0.5,0.5,1.0),
+        uUVTransform: vec4(0,0,0.4,1),
+        uUVPanning: vec2(0.04,-0.6),
+        uUV2Transform: vec4(0,0,0.25,0.8),
+        uUV2Panning: vec2(-0.08,-0.4),
+        uColorAdjustment: vec3(1,1.2,0.1)
+    })
+    trailEnergyMaterial.diffuse = SharedSystem.textures.sineNoise
+    trailEnergyMaterial.gradient = SharedSystem.gradients.purple
+
     const energyPurpleMaterial = new EffectMaterial(context.gl, {
         PANNING: true, VERTICAL_MASK: true, FRESNEL: true, GRADIENT: true, DISPLACEMENT: true
     }, {
@@ -291,10 +317,7 @@ export function MaterialLibrary(context: Application){
         uUV3Panning: vec2(0,-0.2)
     })
     energyPurpleMaterial.diffuse = SharedSystem.textures.sineNoise
-    //TODO duplicate from half purple
-    energyPurpleMaterial.gradient = GradientRamp(context.gl, [
-        0xdfecf0f0, 0x8cb3db80, 0x5e56c460, 0x6329a640, 0x4f0c5420, 0x00000000
-    ], 1)
+    energyPurpleMaterial.gradient = SharedSystem.gradients.purple
     energyPurpleMaterial.displacement = SharedSystem.textures.perlinNoise
 
 
@@ -328,30 +351,16 @@ export function MaterialLibrary(context: Application){
         0xffffff00, 0xc5e0e300, 0x88a8bd00, 0x6e84c420, 0x4e3ba130, 0x820c4920, 0x38031510, 0x00000000
     ], 1)
 
-
-    //TODO material duplicated from artillery, textures are different though? reuse only shader?
-    const exhaustYellowMaterial = new EffectMaterial(context.gl, {
-        PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
-    }, {
-        uVerticalMask: vec4(0,0.4,0.6,0.8),
-        uUVTransform: vec4(-0.1,0,1,0.5),
-        uUVPanning: vec2(-0.1,1.4),
-        uUV2Transform: vec4(0,0,1,0.7),
-        uUV2Panning: vec2(0.2, 1.8),
-        uColorAdjustment: vec3(2.0,2.0,0.2)
-    })
-    exhaustYellowMaterial.diffuse = SharedSystem.textures.cloudNoise
-    exhaustYellowMaterial.gradient = SharedSystem.gradients.yellowViolet
-   
-
     return {
-        distortion, chromaticAberration, dunesMaterial, dissolveProgram, orbMaterial,
+        distortion, chromaticAberration, heatDistortion, dunesMaterial, dissolveProgram, orbMaterial,
 
         coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial,
         beamLinearProgram, beamRadialProgram, stripesBlockyMaterial,
 
         glowSquaresLinearMaterial, glowSquaresRadialMaterial, reticleMaterial, trailSmokeMaterial,
-        exhaustMaterial, exhaustYellowMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
-        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial, planeDissolveMaterial
+        exhaustMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
+        coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial, planeDissolveMaterial,
+
+        shieldDisplacementMaterial, shieldMaterial, trailEnergyMaterial
     }
 }

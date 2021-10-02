@@ -54,6 +54,10 @@ export function GeometryLibrary(context: Application){
         [-1,-3],[-1,-1],[-3,-1],[-3,1],[-1,1],[-1,3],[1,3],[1,1],[3,1],[3,-1],[1,-1],[1,-3]
     ], 1))
 
+    const box = doubleSided(createBox({
+        width: 1, height: 1, depth: 1, open: false
+    }))
+
     const openBox = doubleSided(applyTransform(createBox({
         width: 1, height: 1, depth: 1, open: true
     }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, transform)))
@@ -78,6 +82,6 @@ export function GeometryLibrary(context: Application){
     funnel = doubleSided(funnel)
 
     return {
-        sphere, lowpolySphere, hemisphere, cylinder, cone, openBox, sphereMesh, cross, lowpolyCylinder, funnel, lopolyCylinderFlip
+        sphere, lowpolySphere, hemisphere, cylinder, cone, box, openBox, sphereMesh, cross, lowpolyCylinder, funnel, lopolyCylinderFlip
     }
 }

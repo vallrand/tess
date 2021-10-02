@@ -1,4 +1,5 @@
 import { Application, ISystem } from '../../engine/framework'
+import { vec2 } from '../../engine/math'
 import { ActionSignal } from '../../engine/scene'
 import { IActor, TurnBasedSystem } from './TurnBasedFlow'
 
@@ -33,5 +34,13 @@ export class AISystem implements IActor, ISystem {
         this.list.push(unit) //remove when dead?
         unit.place(column, row)
         return unit as any
+    }
+    public query(origin: vec2, radius: number): ControlUnit[] {
+        const out = []
+        out.push(this.list[0])
+        for(let i = this.list.length - 1; i >= 0; i--){
+
+        }
+        return out
     }
 }

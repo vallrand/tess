@@ -171,7 +171,7 @@ export class Decapod extends ControlUnit {
 
         this.projectile = new BatchMesh(doubleSided(SharedSystem.geometry.hemisphere))
         this.projectile.transform = this.context.get(TransformSystem).create()
-        this.projectile.material = SharedSystem.materials.exhaustYellowMaterial
+        this.projectile.material = SharedSystem.materials.exhaustMaterial
         this.context.get(ParticleEffectPass).add(this.projectile)
 
         this.splash = new Sprite()
@@ -216,6 +216,9 @@ export class Decapod extends ControlUnit {
             'mesh.armature': modelAnimations[Decapod.model].deactivate,
 
             'trail': FollowPath.Line(curve, { length: 0.1 }),
+            'projectile.color': PropertyAnimation([
+                { frame: 0, value: [1,1,0.5,1] }
+            ], vec4.lerp),
             'projectile.transform': FollowPath(curve),
             'projectile.transform.scale': PropertyAnimation([
                 { frame: 0.6, value: vec3.ZERO },

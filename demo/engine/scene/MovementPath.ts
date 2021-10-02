@@ -4,13 +4,16 @@ import { IAnimationTween, IAnimationTrigger } from './Animation'
 import { Transform } from './Transform'
 
 export function FollowPath(tween: IAnimationTween<vec3>): IAnimationTrigger<Transform> {
-    const position = vec3(), normal = vec3()
+    const position = vec3(), velocity = vec3()
     return function(elapsedTime: number, deltaTime: number, target: Transform){
         tween(elapsedTime, position)
-        vec3.subtract(position, target.position, normal)
-        vec3.normalize(normal, normal)
-        quat.fromNormal(normal, vec3.AXIS_Y, target.rotation)
-        quat.normalize(target.rotation, target.rotation)
+        vec3.subtract(position, target.position, velocity)
+        const magnitude = vec3.magnitudeSquared(velocity)
+        if(magnitude > 0){
+            vec3.scale(velocity, 1 / Math.sqrt(magnitude), velocity)
+            quat.fromNormal(velocity, vec3.AXIS_Y, target.rotation)
+            quat.normalize(target.rotation, target.rotation)
+        }
         vec3.copy(position, target.position)
         target.frame = 0
     }

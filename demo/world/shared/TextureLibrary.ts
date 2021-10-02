@@ -63,6 +63,12 @@ export function TextureLibrary(context: Application){
             require('../shaders/shape_frag.glsl'), { RING: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
+    const crescent = materials.addRenderTexture(
+        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert,
+            require('../shaders/shape_frag.glsl'), { CRESCENT: true }), { uColor: [1,1,1,1] }, 0
+    ).target
+
     const wave = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
@@ -223,7 +229,7 @@ export function TextureLibrary(context: Application){
     }, 0).target
 
     return {
-        particle, glow, bulge, sparkle, ring, wave, reticle, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
+        particle, glow, bulge, sparkle, ring, crescent, wave, reticle, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, perlinNoise, sineNoise,
         white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 

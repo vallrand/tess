@@ -201,7 +201,7 @@ void main(){
     float nx = perlin2D(uv, vec2(8.0), 0.0);
     float ny = perlin2D(uv + vec2(0.3), vec2(8.0), 0.0);
     float nz = perlin2D(uv + vec2(0.7), vec2(8.0), 0.0);
-    vec4 color = vec4(nx,ny,nz,0);
+    vec4 color = vec4(nx,ny,nz,1);
 #elif defined(RECTANGULAR)
     vec4 minmax = rectangularNoise(uv, vec2(8));
     float alpha = min(min(abs(minmax.x), abs(minmax.y)), min(abs(minmax.z),abs(minmax.w)));

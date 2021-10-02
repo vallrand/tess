@@ -2,6 +2,7 @@ import { binarySearch } from './common'
 
 export type IEase = (x: number) => number
 export const split = (edge: number, easeA: IEase, easeB: IEase): IEase => x => x < edge ? edge * easeA(x / edge) : edge + (1 - edge) * easeB((x - edge) / (1 - edge))
+export const join = (edge: number, easeA: IEase, easeB: IEase): IEase => x => x < edge ? easeA(x / edge) : easeB((x - edge) / (1 - edge))
 export const flip = (ease: IEase): IEase => x => 1 - ease(1 - x)
 export const reverse = (ease: IEase): IEase => x => 1 - ease(x)
 

@@ -5,28 +5,55 @@ precision highp int;
 in vec2 vUV;
 in vec3 vPosition;
 in vec3 vNormal;
-
-#ifdef MESH
-uniform CameraUniforms {
-    mat4 uViewProjectionMatrix;
-    mat4 uProjectionMatrix;
-    mat4 uViewMatrix;
-    vec3 uEyePosition;
-};
-#else
+#ifndef MESH
 in vec4 vColor;
 in float vMaterial;
 #endif
 
 out vec4 fragColor;
 
+uniform GlobalUniforms {
+    vec4 uTime;
+};
+uniform CameraUniforms {
+    mat4 uViewProjectionMatrix;
+    mat4 uProjectionMatrix;
+    mat4 uViewMatrix;
+    vec3 uEyePosition;
+};
+
 uniform sampler2D uAlbedoBuffer;
 uniform sampler2D uSampler;
 
 uniform float uDistortionStrength;
+#ifdef PANNING
+uniform vec4 uUVTransform;
+uniform vec2 uUVPanning;
+#endif
+#ifdef VERTICAL_MASK
+uniform vec4 uVerticalMask;
+#endif
+#ifdef HORIZONTAL_MASK
+uniform vec4 uHorizontalMask;
+#endif
 
 void main(){
+#ifdef PANNING
+    vec2 uv0 = uUVTransform.xy + uUVTransform.zw * vUV;
+    vec4 color = texture(uSampler,uv0 + uTime.x * uUVPanning);
+#else
     vec4 color = texture(uSampler,vUV);
+#endif
+
+#ifdef VERTICAL_MASK
+    color *= smoothstep(uVerticalMask.x,uVerticalMask.y,vUV.y);
+    color *= smoothstep(uVerticalMask.w,uVerticalMask.z,vUV.y);
+#endif
+#ifdef HORIZONTAL_MASK
+    color *= smoothstep(uHorizontalMask.x,uHorizontalMask.y,vUV.x);
+    color *= smoothstep(uHorizontalMask.w,uHorizontalMask.z,vUV.x);
+#endif
+
 #ifdef MESH
     vec3 normal = normalize(vNormal);
     vec3 view = normalize(uEyePosition - vPosition);

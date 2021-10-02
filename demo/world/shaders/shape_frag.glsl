@@ -36,6 +36,10 @@ void main(){
     float alpha = distance*distance;
 #elif defined(BULGE)
     float alpha = 1.0-pow(length(uv),4.0);
+#elif defined(CRESCENT)
+    float alpha = smoothstep(1.0,0.85,length(uv));
+    alpha -= smoothstep(1.0,0.75,length(uv+vec2(0,0.2)));
+    alpha *= (.5+.5*uv.y) * pow(length(uv),4.0) * 2.0;
 #elif defined(GLOW)
     float alpha = 0.5*(1.0/length(uv)-1.0);
 #elif defined(WAVE)

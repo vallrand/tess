@@ -112,16 +112,12 @@ export class ShieldSkill extends CubeSkill {
         this.shield = new Mesh()
         this.shield.order = 1
         this.shield.buffer = SharedSystem.geometry.sphereMesh
-        const shieldMaterial = this.shield.material = new ShaderMaterial()
-        shieldMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), {})
-        shieldMaterial.cullFace = GL.NONE
-        shieldMaterial.blendMode = ShaderMaterial.Add
+        this.shield.material = SharedSystem.materials.shieldMaterial
 
         this.displacement = new Mesh()
         this.displacement.order = 0
         this.displacement.buffer = SharedSystem.geometry.sphereMesh
-        const displacementMaterial = this.displacement.material = new ShaderMaterial()
-        displacementMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
+        this.displacement.material = SharedSystem.materials.shieldDisplacementMaterial
 
         this.beam = new Sprite()
         this.beam.billboard = BillboardType.Cylinder
