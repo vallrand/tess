@@ -90,3 +90,10 @@ export function insertionSort<T>(list: T[], compare: (a: T, b: T) => number): vo
         list[j+1] = temp
     }
 }
+
+export function solveQuadratic(a: number, b: number, c: number): number {
+    const d = b*b - 4*a*c
+    if(d < 0) return -1
+    const t = -0.5 * (b + Math.sign(b) * Math.sqrt(d))
+    return Math.max(t / a, c / t)
+}

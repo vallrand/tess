@@ -694,9 +694,13 @@
       },
       "inverseBindPose": {
         "byteOffset": 703384,
-        "byteLength": 512
+        "byteLength": 576
       },
       "armature": [
+        {
+          "name": "base",
+          "parent": -1
+        },
         {
           "name": "part_100",
           "position": [
@@ -704,7 +708,7 @@
             -0.6,
             1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_110",
@@ -713,7 +717,7 @@
             -0.6,
             -1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_101",
@@ -722,7 +726,7 @@
             2.6,
             1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_111",
@@ -737,7 +741,7 @@
             2.6,
             -1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_000",
@@ -746,7 +750,7 @@
             -0.6,
             1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_010",
@@ -755,7 +759,7 @@
             -0.6,
             -1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_001",
@@ -764,7 +768,7 @@
             2.6,
             1.6
           ],
-          "parent": -1
+          "parent": 0
         },
         {
           "name": "part_011",
@@ -779,7 +783,7 @@
             2.6,
             -1.6
           ],
-          "parent": -1
+          "parent": 0
         }
       ]
     },
@@ -788,11 +792,11 @@
       "texture": -1,
       "format": 2,
       "indices": {
-        "byteOffset": 703898,
+        "byteOffset": 703962,
         "byteLength": 2856
       },
       "vertices": {
-        "byteOffset": 706756,
+        "byteOffset": 706820,
         "byteLength": 44128
       }
     },
@@ -801,15 +805,15 @@
       "texture": 5,
       "format": 1,
       "indices": {
-        "byteOffset": 750886,
+        "byteOffset": 750950,
         "byteLength": 16344
       },
       "vertices": {
-        "byteOffset": 767232,
+        "byteOffset": 767296,
         "byteLength": 135648
       },
       "inverseBindPose": {
-        "byteOffset": 902884,
+        "byteOffset": 902948,
         "byteLength": 320
       },
       "armature": [
@@ -889,15 +893,15 @@
       "texture": 6,
       "format": 1,
       "indices": {
-        "byteOffset": 903206,
+        "byteOffset": 903270,
         "byteLength": 12714
       },
       "vertices": {
-        "byteOffset": 915924,
+        "byteOffset": 915988,
         "byteLength": 100128
       },
       "inverseBindPose": {
-        "byteOffset": 1016056,
+        "byteOffset": 1016120,
         "byteLength": 448
       },
       "armature": [
@@ -1012,11 +1016,11 @@
       "texture": 7,
       "format": 0,
       "indices": {
-        "byteOffset": 1016506,
+        "byteOffset": 1016570,
         "byteLength": 1128
       },
       "vertices": {
-        "byteOffset": 1017636,
+        "byteOffset": 1017700,
         "byteLength": 6528
       }
     },
@@ -1025,15 +1029,15 @@
       "texture": 7,
       "format": 1,
       "indices": {
-        "byteOffset": 1024166,
+        "byteOffset": 1024230,
         "byteLength": 14184
       },
       "vertices": {
-        "byteOffset": 1038352,
+        "byteOffset": 1038416,
         "byteLength": 136384
       },
       "inverseBindPose": {
-        "byteOffset": 1174740,
+        "byteOffset": 1174804,
         "byteLength": 512
       },
       "armature": [
@@ -1111,15 +1115,15 @@
       "texture": 8,
       "format": 1,
       "indices": {
-        "byteOffset": 1175254,
+        "byteOffset": 1175318,
         "byteLength": 24012
       },
       "vertices": {
-        "byteOffset": 1199268,
+        "byteOffset": 1199332,
         "byteLength": 217248
       },
       "inverseBindPose": {
-        "byteOffset": 1416520,
+        "byteOffset": 1416584,
         "byteLength": 512
       },
       "armature": [
@@ -1236,15 +1240,15 @@
       "texture": 9,
       "format": 1,
       "indices": {
-        "byteOffset": 1417034,
+        "byteOffset": 1417098,
         "byteLength": 32328
       },
       "vertices": {
-        "byteOffset": 1449364,
+        "byteOffset": 1449428,
         "byteLength": 288480
       },
       "inverseBindPose": {
-        "byteOffset": 1737848,
+        "byteOffset": 1737912,
         "byteLength": 512
       },
       "armature": [
@@ -1346,15 +1350,15 @@
       "texture": 10,
       "format": 1,
       "indices": {
-        "byteOffset": 1738362,
+        "byteOffset": 1738426,
         "byteLength": 17976
       },
       "vertices": {
-        "byteOffset": 1756340,
+        "byteOffset": 1756404,
         "byteLength": 150048
       },
       "inverseBindPose": {
-        "byteOffset": 1906392,
+        "byteOffset": 1906456,
         "byteLength": 448
       },
       "armature": [
@@ -1458,11 +1462,11 @@
       "texture": 10,
       "format": 0,
       "indices": {
-        "byteOffset": 1906842,
+        "byteOffset": 1906906,
         "byteLength": 408
       },
       "vertices": {
-        "byteOffset": 1907252,
+        "byteOffset": 1907316,
         "byteLength": 2544
       }
     },
@@ -1471,15 +1475,15 @@
       "texture": 11,
       "format": 1,
       "indices": {
-        "byteOffset": 1909798,
+        "byteOffset": 1909862,
         "byteLength": 4284
       },
       "vertices": {
-        "byteOffset": 1914084,
+        "byteOffset": 1914148,
         "byteLength": 38304
       },
       "inverseBindPose": {
-        "byteOffset": 1952392,
+        "byteOffset": 1952456,
         "byteLength": 256
       },
       "armature": [
@@ -1544,15 +1548,15 @@
       "texture": 12,
       "format": 1,
       "indices": {
-        "byteOffset": 1952650,
+        "byteOffset": 1952714,
         "byteLength": 26928
       },
       "vertices": {
-        "byteOffset": 1979580,
+        "byteOffset": 1979644,
         "byteLength": 242304
       },
       "inverseBindPose": {
-        "byteOffset": 2221888,
+        "byteOffset": 2221952,
         "byteLength": 832
       },
       "armature": [
@@ -1754,15 +1758,15 @@
       "texture": 13,
       "format": 1,
       "indices": {
-        "byteOffset": 2222722,
+        "byteOffset": 2222786,
         "byteLength": 16872
       },
       "vertices": {
-        "byteOffset": 2239596,
+        "byteOffset": 2239660,
         "byteLength": 151392
       },
       "inverseBindPose": {
-        "byteOffset": 2390992,
+        "byteOffset": 2391056,
         "byteLength": 320
       },
       "armature": [
@@ -1837,15 +1841,15 @@
       "texture": 14,
       "format": 1,
       "indices": {
-        "byteOffset": 2391314,
+        "byteOffset": 2391378,
         "byteLength": 52338
       },
       "vertices": {
-        "byteOffset": 2443656,
+        "byteOffset": 2443720,
         "byteLength": 444928
       },
       "inverseBindPose": {
-        "byteOffset": 2888588,
+        "byteOffset": 2888652,
         "byteLength": 1152
       },
       "armature": [
@@ -2123,15 +2127,15 @@
       "texture": 15,
       "format": 1,
       "indices": {
-        "byteOffset": 2889742,
+        "byteOffset": 2889806,
         "byteLength": 9528
       },
       "vertices": {
-        "byteOffset": 2899272,
+        "byteOffset": 2899336,
         "byteLength": 73856
       },
       "inverseBindPose": {
-        "byteOffset": 2973132,
+        "byteOffset": 2973196,
         "byteLength": 448
       },
       "armature": [
@@ -2229,15 +2233,15 @@
       "texture": 16,
       "format": 1,
       "indices": {
-        "byteOffset": 2973582,
+        "byteOffset": 2973646,
         "byteLength": 26688
       },
       "vertices": {
-        "byteOffset": 3000272,
+        "byteOffset": 3000336,
         "byteLength": 200800
       },
       "inverseBindPose": {
-        "byteOffset": 3201076,
+        "byteOffset": 3201140,
         "byteLength": 384
       },
       "armature": [
@@ -2303,15 +2307,15 @@
       "texture": 17,
       "format": 1,
       "indices": {
-        "byteOffset": 3201462,
+        "byteOffset": 3201526,
         "byteLength": 15192
       },
       "vertices": {
-        "byteOffset": 3216656,
+        "byteOffset": 3216720,
         "byteLength": 114688
       },
       "inverseBindPose": {
-        "byteOffset": 3331348,
+        "byteOffset": 3331412,
         "byteLength": 320
       },
       "armature": [
@@ -2362,15 +2366,15 @@
       "texture": 18,
       "format": 1,
       "indices": {
-        "byteOffset": 3331670,
+        "byteOffset": 3331734,
         "byteLength": 12084
       },
       "vertices": {
-        "byteOffset": 3343756,
+        "byteOffset": 3343820,
         "byteLength": 92896
       },
       "inverseBindPose": {
-        "byteOffset": 3436656,
+        "byteOffset": 3436720,
         "byteLength": 256
       },
       "armature": [

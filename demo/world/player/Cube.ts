@@ -178,6 +178,10 @@ export class Cube implements IActor, IUnit {
             }
         }
     }
+    public degrade(){
+        const skill = this.context.get(PlayerSystem).skills[CubeModule.Death]
+        this.context.get(AnimationSystem).start(skill.open(), true)
+    }
     private moveTransition(direction: Direction): Generator<ActionSignal> {
         const nextOrientation = CubeOrientation.roll(CubeOrientation(this.state.side, this.state.direction), direction)
         const nextDirection = nextOrientation & 0x3

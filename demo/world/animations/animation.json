@@ -53,7 +53,37 @@
             {"index":4,"frame":1,"rotation":[-0.5,0.5,0.5,0.5],"ease":"quadOut"}
         ]
     },
-    "death":{"open":[]},
+    "death":{
+        "close":[
+            {"index":1,"frame":0,"position":[0.6,0.4,0.6]},
+            {"index":2,"frame":0,"position":[0.6,0.4,-0.6]},
+            {"index":3,"frame":0,"position":[0.6,1.6,0.6]},
+            {"index":4,"frame":0,"position":[0.6,1.6,-0.6]},
+            {"index":5,"frame":0,"position":[-0.6,0.4,0.6]},
+            {"index":6,"frame":0,"position":[-0.6,0.4,-0.6]},
+            {"index":7,"frame":0,"position":[-0.6,1.6,0.6]},
+            {"index":8,"frame":0,"position":[-0.6,1.6,-0.6]}
+        ],
+        "open":[
+            {"index":1,"frame":0.0125,"position":[0.6,0.4,0.6],"rotation":[0,0,0,1]},
+            {"index":2,"frame":0.0250,"position":[0.6,0.4,-0.6],"rotation":[0,0,0,1]},
+            {"index":3,"frame":0.0375,"position":[0.6,1.6,0.6],"rotation":[0,0,0,1]},
+            {"index":4,"frame":0.0500,"position":[0.6,1.6,-0.6],"rotation":[0,0,0,1]},
+            {"index":5,"frame":0.0625,"position":[-0.6,0.4,0.6],"rotation":[0,0,0,1]},
+            {"index":6,"frame":0.0750,"position":[-0.6,0.4,-0.6],"rotation":[0,0,0,1]},
+            {"index":7,"frame":0.0875,"position":[-0.6,1.6,0.6],"rotation":[0,0,0,1]},
+            {"index":8,"frame":0.1000,"position":[-0.6,1.6,-0.6],"rotation":[0,0,0,1]},
+
+            {"index":1,"frame":0.4,"position":[1.6,1.2,1.6],"ease":"cubicOut"},
+            {"index":2,"frame":0.4,"position":[1.6,1.2,-1.6],"ease":"cubicOut"},
+            {"index":3,"frame":0.4,"position":[1.6,2.6,1.6],"ease":"cubicOut"},
+            {"index":4,"frame":0.4,"position":[1.6,2.6,-1.6],"ease":"cubicOut"},
+            {"index":5,"frame":0.4,"position":[-1.6,1.2,1.6],"ease":"cubicOut"},
+            {"index":6,"frame":0.4,"position":[-1.6,1.2,-1.6],"ease":"cubicOut"},
+            {"index":7,"frame":0.4,"position":[-1.6,2.6,1.6],"ease":"cubicOut"},
+            {"index":8,"frame":0.4,"position":[-1.6,2.6,-1.6],"ease":"cubicOut"}
+        ]
+    },
     "cube_0":{
         "close":[
             {"index":1,"frame":0,"position":[-0.2,0.4,0],"rotation":[0,0,0,1]},

@@ -41,4 +41,8 @@ export class DebrisEffect {
 
         return mesh
     }
+    delete(debris: Mesh){
+        this.context.get(TransformSystem).delete(debris.transform)
+        this.context.get(MeshSystem).delete(debris)
+    }
 }

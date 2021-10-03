@@ -3,6 +3,7 @@ import { GL, ShaderProgram } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { Batch2D } from '../../engine/pipeline/batch'
 import { OverlayPass } from '../../engine/pipeline/OverlayPass'
+import { IMaterial } from '../../engine/pipeline'
 import { Sprite2D, Sprite2DMaterial } from '../../engine/components/Sprite2D'
 import { Transform2D } from '../../engine/scene/Transform'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
@@ -137,6 +138,11 @@ export class CubeTileMap {
         this.side = cube.state.side
 
         const materialIndex = cube.meshes[this.side].material.index
+        const range = this.batchRanges[this.side]
+        this.renderTexture(this.materials[materialIndex], range[1], range[0], this.program)
+    }
+    renderSubstitute(material: IMaterial){
+        const materialIndex = material.index
         const range = this.batchRanges[this.side]
         this.renderTexture(this.materials[materialIndex], range[1], range[0], this.program)
     }

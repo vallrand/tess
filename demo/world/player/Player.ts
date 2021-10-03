@@ -29,7 +29,7 @@ export class PlayerSystem implements ISystem {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
             this.cube.installModule(this.cube.state.side, 0, CubeModule.Voidgun)
-            this.cube['execute'] = function*(){}
+            // this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
             //this.context.get(TerrainSystem).resources.create(5,6)
@@ -48,7 +48,7 @@ export class PlayerSystem implements ISystem {
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [3,8,1]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
@@ -64,16 +64,18 @@ export class PlayerSystem implements ISystem {
         }
 
         const keys = this.context.get(KeyboardSystem)
-        if(keys.trigger('KeyA')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
-        else if(keys.trigger('KeyD')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
-        else if(keys.trigger('KeyW')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
-        else if(keys.trigger('KeyS')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
-        else if(keys.trigger('Space')) window['strike']([], mainUnit)
-        else if(keys.trigger('KeyX')) window['die'](mainUnit)
+        // if(keys.trigger('KeyA')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
+        // else if(keys.trigger('KeyD')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
+        // else if(keys.trigger('KeyW')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
+        // else if(keys.trigger('KeyS')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
+        // else if(keys.trigger('Space')) window['strike']([], mainUnit)
+        // else if(keys.trigger('KeyX')) window['die'](mainUnit)
+
+        if(keys.trigger('KeyX')) this.cube.degrade()
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
-        // this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
-        this.context.get(CameraSystem).controller.adjustCamera(mainUnit.mesh.transform.position || this.cube.transform.position)
+        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
+        // this.context.get(CameraSystem).controller.adjustCamera(mainUnit.mesh.transform.position || this.cube.transform.position)
     }
     load(){
         this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform
