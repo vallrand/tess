@@ -2,7 +2,7 @@ import { vec2, range, vec3, quat, aabb2, smoothstep, randomInt, noise1D, noise2D
 import { Application } from '../../engine/framework'
 import { perlin2D } from './perlin'
 import { TerrainChunk } from './TerrainChunk'
-import { Workshop } from '../mechanics'
+import { EconomySystem, Workshop } from '../economy'
 import { TerrainSystem } from './Terrain'
 
 export class LevelGenerator {
@@ -51,10 +51,10 @@ export class LevelGenerator {
             TerrainChunk.chunkTiles, TerrainChunk.chunkTiles, random
         )
         resources: {
-            const resources = this.context.get(TerrainSystem).resources
+            const resources = this.context.get(EconomySystem)
             for(let i = randomInt(0, 1, random); i > 0; i--){
                 const tile = randomTile.next().value
-                resources.create(tile[0], tile[1])
+                resources.createDeposit(tile[0], tile[1], 4)
             }
         }
     }

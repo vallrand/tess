@@ -1,12 +1,13 @@
 import { Application } from '../../engine/framework'
-import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass } from '../../engine/pipeline'
-import { DecalMaterial, EffectMaterial, MaterialSystem, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { BatchMesh, Sprite, BillboardType } from '../../engine/components'
-import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { AnimationTimeline, EmitterTrigger, PropertyAnimation, TransformSystem, ActionSignal } from '../../engine/scene'
+import { ParticleEmitter } from '../../engine/particles'
+import { TransformSystem } from '../../engine/scene'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube } from '../player'
 import { SharedSystem } from '../shared'
@@ -14,7 +15,7 @@ import { CubeSkill } from './CubeSkill'
 import { Minefield, LandMine } from './Minefield'
 
 const actionTimeline = {
-    'dust': EmitterTrigger({ frame: 1.0, value: 48 }),
+    'dust': EventTrigger([{ frame: 1.0, value: 48 }], EventTrigger.emit),
     'light.radius': PropertyAnimation([
         { frame: 1, value: 0 },
         { frame: 1.5, value: 8, ease: ease.cubicOut }

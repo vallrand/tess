@@ -1,11 +1,11 @@
 import { Application } from '../../engine/framework'
-import { ease, vec2, vec3, vec4, lerp, mat4, quat } from '../../engine/math'
+import { vec2, vec3, vec4, lerp, mat4, quat } from '../../engine/math'
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
-import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { TransformSystem, AnimationSystem, ActionSignal } from '../../engine/scene'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger } from '../../engine/scene/Animation'
+import { ParticleEmitter } from '../../engine/particles'
+import { TransformSystem } from '../../engine/scene'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEffectPass, PointLightPass, DecalPass, PostEffectPass, PointLight, Decal } from '../../engine/pipeline'
-import { EffectMaterial, DecalMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
 
@@ -67,8 +67,8 @@ const actionTimeline = {
         { frame: 0.8, value: [0,0,0,1], ease: ease.cubicIn },
         { frame: 3, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
-    'smoke': EmitterTrigger({ frame: 0, value: 36 }),
-    'particles': EmitterTrigger({ frame: 0, value: 64 }),
+    'smoke': EventTrigger([{ frame: 0, value: 36 }], EventTrigger.emit),
+    'particles': EventTrigger([{ frame: 0, value: 64 }], EventTrigger.emit),
 }
 
 interface ExplosionEffect {

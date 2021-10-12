@@ -64,6 +64,8 @@ vec2.distanceSquared = (a: vec2, b: vec2): number => {
     return dx*dx + dy*dy
 }
 vec2.distance = (a: vec2, b: vec2): number => Math.sqrt(vec2.distanceSquared(a, b))
+vec2.manhattan = (a: vec2, b: vec2): number => Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
+
 vec2.magnitudeSquared = (vec: vec2): number => vec[0]*vec[0] + vec[1]*vec[1]
 vec2.magnitude = (vec: vec2): number => Math.sqrt(vec2.magnitudeSquared(vec))
 vec2.normalize = (vec: vec2, out: vec2): vec2 => {

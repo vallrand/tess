@@ -1,16 +1,17 @@
 import { Application } from '../../engine/framework'
-import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat, ease } from '../../engine/math'
+import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat } from '../../engine/math'
 import { MeshSystem, Mesh } from '../../engine/components'
-import { TransformSystem, Transform, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene'
+import { TransformSystem, Transform } from '../../engine/scene'
+import { AnimationSystem, ActionSignal, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/device'
 import { PointLightPass, PointLight } from '../../engine/pipeline'
 
 import { modelAnimations, CubeModuleModel } from '../animations'
-import { TurnBasedSystem, IActor } from '../mechanics'
+import { TurnBasedSystem, IActor } from '../common'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { PlayerSystem } from './Player'
-import { TerrainSystem, TerrainChunk, IUnit } from '../terrain'
+import { TerrainSystem, TerrainChunk, IUnitTile } from '../terrain'
 import { CubeModule } from './CubeModules'
 import { SharedSystem } from '../shared'
 
@@ -28,7 +29,8 @@ export interface CubeState {
     }[]
 }
 
-export class Cube implements IActor, IUnit {
+export class Cube implements IActor, IUnitTile {
+    readonly weight: number = 0
     order: number = 0
     actionIndex: number
     hash: number = 0
@@ -45,6 +47,7 @@ export class Cube implements IActor, IUnit {
         })),
         armor: 10
     }
+    public get tile(): vec2 { return this.state.tile }
     constructor(private readonly context: Application){
         this.transform = this.context.get(TransformSystem).create()
     }
@@ -56,7 +59,6 @@ export class Cube implements IActor, IUnit {
             this.installModule(i, this.state.sides[i].direction, this.state.sides[i].type)
 
         this.context.get(TerrainSystem).setTile(this.state.tile[0], this.state.tile[1], this)
-        this.context.get(TurnBasedSystem).add(this)
 
         this.light = this.context.get(PointLightPass).create()
         this.light.transform = this.context.get(TransformSystem).create()
@@ -95,7 +97,7 @@ export class Cube implements IActor, IUnit {
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
         ), 0)
     }
-    kill(){}
+    delete(){}
     *execute(): Generator<ActionSignal, void> {
         const keys = this.context.get(KeyboardSystem)
         const state = this.state.sides[this.state.side]
@@ -178,9 +180,9 @@ export class Cube implements IActor, IUnit {
             }
         }
     }
-    public degrade(){
+    public damage(amount: number){
         const skill = this.context.get(PlayerSystem).skills[CubeModule.Death]
-        this.context.get(AnimationSystem).start(skill.open(), true)
+        this.context.get(AnimationSystem).start(skill.damage(), true)
     }
     private moveTransition(direction: Direction): Generator<ActionSignal> {
         const nextOrientation = CubeOrientation.roll(CubeOrientation(this.state.side, this.state.direction), direction)
@@ -243,9 +245,9 @@ export class Cube implements IActor, IUnit {
         this.context.get(PlayerSystem).tilemap.renderFaceTiles(this)
         
         return function*(this: Cube){
-            const dustTrigger = EmitterTrigger({
-                frame: 0.36, value: 16, origin: nextPosition, target: nextPosition
-            })
+            const dustTrigger = EventTrigger([{
+                frame: 0.36, value: { amount: 16, uOrigin: nextPosition, uTarget: nextPosition }
+            }], EventTrigger.emitReset)
             const movementEase = ease.bounceIn(0.064, 0.8)
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime

@@ -1,13 +1,11 @@
-import { ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
 import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -15,6 +13,9 @@ import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
 const introTimeline = {
+    'dust': EventTrigger([
+        { frame: 0.85, value: 36 }
+    ], EventTrigger.emit),
     'shield.transform.scale': PropertyAnimation([
         { frame: 1, value: vec3.ZERO },
         { frame: 3, value: [3,5,3], ease: ease.elasticOut(1,0.75) }
@@ -177,10 +178,7 @@ export class ShieldSkill extends CubeSkill {
             uAngular: [-Math.PI,Math.PI,0,0],
         })
 
-        const animate = AnimationTimeline(this, {
-            ...introTimeline,
-            'dust': EmitterTrigger({ frame: 0.85, value: 36 })
-        })
+        const animate = AnimationTimeline(this, introTimeline)
 
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

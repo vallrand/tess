@@ -1,13 +1,11 @@
-import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, ease, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { AnimationTimeline, PropertyAnimation, IAnimationTrigger, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
-import { ParticleEmitter, GradientRamp } from '../../engine/particles'
-import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Line, FollowPath } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { ParticleEmitter } from '../../engine/particles'
+import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Line } from '../../engine/components'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -167,20 +165,17 @@ class Missile {
 
         const { path, intervals } = this.buildPath(target, 5)
         const travelDuration = 1.0 + 0.25 * index
+        const curve = FollowPath.spline(path, intervals.map(i => travelDuration * i - travelDuration), {
+            ease: ease.CubicBezier(0.5,0.5,1,0.5),
+            tension: 0.5
+        })
+
         const animate = AnimationTimeline(this, {
             ...steeringTimeline,
-            'embers': EmitterTrigger({ frame: -travelDuration, value: 16 }),
-            'smoke': EmitterTrigger({ frame: -travelDuration, value: 24 }),
-            'trail': FollowPath({
-                path, length: 0.08, tension: 0.5,
-                frames: intervals.map(i => travelDuration * i - travelDuration),
-                ease: ease.CubicBezier(0.5,0.5,1,0.5)
-            }, true),
-            'head.transform': FollowPath({
-                path, tension: 0.5,
-                frames: intervals.map(i => travelDuration * i - travelDuration),
-                ease: ease.CubicBezier(0.5,0.5,1,0.5)
-            }, false)
+            'embers': EventTrigger([{ frame: -travelDuration, value: 16 }], EventTrigger.emit),
+            'smoke': EventTrigger([{ frame: -travelDuration, value: 24 }], EventTrigger.emit),
+            'trail': FollowPath.Line(curve, { length: 0.08 }),
+            'head.transform': FollowPath(curve)
         })
 
         for(const duration = travelDuration + 1, startTime = this.context.currentTime; true;){

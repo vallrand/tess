@@ -1,6 +1,7 @@
 import { Application, One } from '../framework'
-import { range, vec3, vec4, quat, mat4, vec2, ease, clamp } from '../math'
-import { ICamera, BoundingVolume, IAnimationTrigger, IAnimationTween, Transform } from '../scene'
+import { range, vec3, vec4, quat, mat4, vec2, clamp } from '../math'
+import { IEase } from '../animation/ease'
+import { ICamera, BoundingVolume, Transform } from '../scene'
 import { IBatched, uintNorm4x8 } from '../pipeline/batch'
 import { SpriteMaterial } from '../materials'
 
@@ -19,7 +20,7 @@ export class Line implements IBatched {
     public material: SpriteMaterial
     public readonly bounds = new BoundingVolume
     public path: vec3[]
-    public ease: ease.IEase = One
+    public ease: IEase = One
     public width: number = 1
     public height: number = 0
     constructor(length?: number){ if(length) this.path = range(length).map(i => vec3()) }
@@ -76,7 +77,7 @@ export class Line implements IBatched {
             this.uvs[i*4+2] = 1
         }
     }
-    public addColorFade(fade: ease.IEase, rgb: vec3 = vec3.ONE){
+    public addColorFade(fade: IEase, rgb: vec3 = vec3.ONE){
         if(!this.colors || this.colors.length != this.path.length * 2)
             this.colors = new Uint32Array(this.path.length * 2)
         for(let i = 0; i < this.colors.length; i++){
@@ -84,60 +85,5 @@ export class Line implements IBatched {
             const strength = fade(f)
             this.colors[i] = uintNorm4x8(rgb[0]*strength,rgb[1]*strength,rgb[2]*strength,strength)
         }
-    }
-}
-
-//TODO move to animations?
-export const FollowTrail = (target: vec3, range: vec2, stiffness: number = 1): IAnimationTrigger<Line> =>
-function(elapsedTime: number, deltaTime: number, line: Line){
-    vec3.copy(target, line.path[0])
-    for(let i = 1; i < line.path.length; i++){
-        const prev = line.path[i-1]
-        const next = line.path[i]
-        const dx = next[0] - prev[0]
-        const dy = next[1] - prev[1]
-        const dz = next[2] - prev[2]
-        const distance = Math.sqrt(dx*dx + dy*dy + dz*dz)
-        if(!distance) continue
-        const offset = Math.max(0, distance - range[1]) + Math.min(0, distance - range[0])
-        const factor = Math.min(1, deltaTime * 60) * stiffness * offset / distance
-        next[0] -= dx * factor
-        next[1] -= dy * factor
-        next[2] -= dz * factor
-    }
-    line.frame = 0
-}
-
-//TODO use animation.FollowPath
-export function FollowPath(options: {
-    path: vec3[]
-    frames: number[]
-    length?: number
-    tension?: number
-    ease: ease.IEase
-}, line: boolean): IAnimationTrigger<Line | Transform> {
-    const { path, frames, length } = options
-    const start = frames[0], duration = frames[frames.length - 1] - start
-    const positions = frames.map(frame => (frame - start) / duration)
-    const curveX = ease.Spline(path.map(value => value[0]), positions, 3, options.tension)
-    const curveY = ease.Spline(path.map(value => value[1]), positions, 3, options.tension)
-    const curveZ = ease.Spline(path.map(value => value[2]), positions, 3, options.tension)
-    if(line) return function(elapsedTime: number, deltaTime: number, line: Line){
-        for(let i = line.path.length - 1; i >= 0; i--){
-            const time = options.ease(clamp((elapsedTime - start - i * length) / duration, 0, 1))
-            vec3.set(curveX(time), curveY(time), curveZ(time), line.path[i])
-        }
-        line.frame = 0
-    }
-    const position = vec3(), normal = vec3()
-    return function(elapsedTime: number, deltaTime: number, transform: Transform){
-        const time = options.ease(clamp((elapsedTime - start) / duration, 0, 1))
-        vec3.set(curveX(time), curveY(time), curveZ(time), position)
-        vec3.subtract(position, transform.position, normal)
-        vec3.normalize(normal, normal)
-        quat.fromNormal(normal, vec3.AXIS_Y, transform.rotation)
-        quat.normalize(transform.rotation, transform.rotation)
-        vec3.copy(position, transform.position)
-        transform.frame = 0
     }
 }

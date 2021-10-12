@@ -1,14 +1,11 @@
-import { random, randomFloat, ease, mat4, quat, vec2, vec3, vec4, mod, lerp, solveQuadratic } from '../../engine/math'
+import { random, randomFloat, mat4, quat, vec2, vec3, vec4, mod, lerp, solveQuadratic } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { createCylinder, applyTransform, doubleSided, modifyGeometry } from '../../engine/geometry'
-import { AnimationTimeline, PropertyAnimation, EventTrigger, IAnimationTween } from '../../engine/scene'
-import { AnimationSystem, ActionSignal, TransformSystem, Transform } from '../../engine/scene'
-import { ParticleEmitter, GradientRamp } from '../../engine/particles'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, IAnimationTween, ease } from '../../engine/animation'
+import { TransformSystem, Transform } from '../../engine/scene'
+import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Armature } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -48,7 +45,7 @@ function ImpulseAnimation(tracks: {
 export class DeathSkill extends CubeSkill {
     private spikes: ParticleEmitter
     private light: PointLight
-    private mesh: Mesh
+    private wreck: Mesh
     private wave: Sprite
     private burn: Decal
     private ring: Sprite
@@ -56,28 +53,27 @@ export class DeathSkill extends CubeSkill {
 
     constructor(context: Application, cube: Cube){
         super(context, cube)
-        
     }
     *open(){
         vec4.copy(vec4.ZERO, this.cube.meshes[this.cube.state.side].color)
-        this.mesh = this.context.get(MeshSystem).loadModel(CubeModuleModel[CubeModule.Death])
-        this.mesh.transform = this.cube.transform
+        this.wreck = this.context.get(MeshSystem).loadModel(CubeModuleModel[CubeModule.Death])
+        this.wreck.transform = this.cube.transform
         const side = this.cube.state.sides[this.cube.state.side]
         const rotation = DirectionAngle[(this.cube.state.direction + side.direction) % 4]
-        quat.copy(rotation, this.mesh.armature.nodes[0].rotation)
-        modelAnimations[CubeModuleModel[CubeModule.Death]].close(0, this.mesh.armature)
-        this.context.get(PlayerSystem).tilemap.renderSubstitute(this.mesh.material)
+        quat.copy(rotation, this.wreck.armature.nodes[0].rotation)
+        modelAnimations[CubeModuleModel[CubeModule.Death]].close(0, this.wreck.armature)
+        this.context.get(PlayerSystem).tilemap.renderSubstitute(this.wreck.material)
 
         this.spikes = SharedSystem.particles.spikes.add({
             uLifespan: [0.5,1,-0.1,0],
-            uOrigin: vec3.add([0,0.2,0], this.mesh.transform.position, vec3()), uTarget: this.mesh.transform.position,
+            uOrigin: vec3.add([0,0.2,0], this.wreck.transform.position, vec3()), uTarget: this.wreck.transform.position,
             uGravity: vec3.ZERO, uRotation: vec2.ZERO,
             uFrame: [0,2], uSize: [1,4],
             uRadius: [0.2,0.4], uForce: [1,4]
         })
         this.light = this.context.get(PointLightPass).create([1,0.4,0.6])
         this.light.transform = this.context.get(TransformSystem)
-        .create([0,1,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
+        .create([0,1,0],quat.IDENTITY,vec3.ONE,this.wreck.transform)
 
         this.wave = new Sprite()
         this.wave.billboard = BillboardType.None
@@ -86,7 +82,7 @@ export class DeathSkill extends CubeSkill {
         this.wave.material.program = SharedSystem.materials.distortion
         this.wave.material.diffuse = SharedSystem.textures.ring
         this.wave.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE,this.mesh.transform)
+        .create([0,1,0], Sprite.FlatUp, vec3.ONE,this.wreck.transform)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.burn = this.context.get(DecalPass).create(4)
@@ -94,7 +90,7 @@ export class DeathSkill extends CubeSkill {
         this.burn.material.program = this.context.get(DecalPass).program
         this.burn.material.diffuse = SharedSystem.textures.rays
         this.burn.transform = this.context.get(TransformSystem)
-        .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
+        .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.wreck.transform)
 
         this.ring = new Sprite()
         this.ring.billboard = BillboardType.None
@@ -102,13 +98,13 @@ export class DeathSkill extends CubeSkill {
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.raysInner
         this.ring.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.wreck.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
-        this.debris = this.context.get(SharedSystem).debris.create(this.mesh.transform.position)
+        this.debris = this.context.get(SharedSystem).debris.create(this.wreck.transform.position)
 
         const animate = AnimationTimeline(this, {
-            'mesh.armature': ImpulseAnimation(this.mesh.armature.nodes.slice(1).map(function(node, index){
+            'wreck.armature': ImpulseAnimation(this.wreck.armature.nodes.slice(1).map(function(node, index){
                 const position = vec3.copy(node.position, vec3())
                 const rotation = quat.copy(node.rotation, quat())
                 const force = vec3.subtract(position, [
@@ -135,7 +131,7 @@ export class DeathSkill extends CubeSkill {
                 { frame: 0, value: vec4.ONE },
                 { frame: 0.6, value: [0,0,0,0.02], ease: ease.quadIn }
             ], vec4.lerp),
-            'mesh.color': PropertyAnimation([
+            'wreck.color': PropertyAnimation([
                 { frame: 0, value: vec4.ONE },
                 { frame: 0.8, value: [0.2,0.2,0.2,0.02], ease: ease.quadIn }
             ], vec4.lerp),
@@ -194,6 +190,55 @@ export class DeathSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(DecalPass).delete(this.burn)
 
-        // this.context.get(MeshSystem).delete(this.mesh)
+        this.context.get(MeshSystem).delete(this.wreck)
+    }
+    public *damage(): Generator<ActionSignal> {
+        const debris = this.context.get(SharedSystem).debris.create(this.cube.transform.position)
+        const ring = new Sprite()
+        ring.billboard = BillboardType.None
+        ring.material = new SpriteMaterial()
+        ring.material.program = this.context.get(ParticleEffectPass).program
+        ring.material.diffuse = SharedSystem.textures.raysInner
+        ring.transform = this.context.get(TransformSystem)
+        .create(vec3.AXIS_Y,Sprite.FlatUp,vec3.ONE,this.cube.transform)
+        this.context.get(ParticleEffectPass).add(ring)
+
+        const spikes = SharedSystem.particles.spikes.add({
+            uLifespan: [0.6,1.0,0,0],
+            uOrigin: vec3.add([0,0.5,0], this.cube.transform.position, vec3()),
+            uTarget: this.cube.transform.position,
+            uGravity: vec3.ZERO, uRotation: vec2.ZERO,
+            uFrame: [0,2], uSize: [2,4],
+            uRadius: [0.2,0.4], uForce: [1,4]
+        })
+
+        const animate = AnimationTimeline({
+            ring, spikes, debris
+        }, {
+            'debris.transform.scale': PropertyAnimation([
+                { frame: 0, value: [1.4,1.4,1.4] }
+            ], vec3.lerp),
+            'ring.transform.scale': PropertyAnimation([
+                { frame: 0.2, value: vec3.ZERO },
+                { frame: 0.7, value: [6,6,6], ease: ease.cubicOut }
+            ], vec3.lerp),
+            'ring.color': PropertyAnimation([
+                { frame: 0.2, value: [0.8,0.6,0.8,0.6] },
+                { frame: 0.7, value: vec4.ZERO, ease: ease.quadIn }
+            ], vec4.lerp),
+            'spikes': EventTrigger([
+                { frame: 0.2, value: 8 }
+            ], EventTrigger.emit)
+        })
+        for(const duration = 2, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            animate(elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
+            else yield ActionSignal.WaitNextFrame
+        }
+        SharedSystem.particles.spikes.remove(spikes)
+        this.context.get(SharedSystem).debris.delete(debris)
+        this.context.get(TransformSystem).delete(ring.transform)
+        this.context.get(ParticleEffectPass).remove(ring)
     }
 }

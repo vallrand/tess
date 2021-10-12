@@ -1,4 +1,5 @@
 export * from './common'
+export * from './BinaryHeap'
 export * from './Factory'
 export * from './Loader'
 export * from './Application'

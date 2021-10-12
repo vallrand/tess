@@ -1,19 +1,18 @@
-import { random, lerp, ease, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { random, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, EventTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
-import { ParticleEmitter, GradientRamp } from '../../engine/particles'
+import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial, MaterialSystem } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
 import { Cube, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
+import { EconomySystem } from '../economy'
 
 const actionTimeline = {
     'cube.light.intensity': PropertyAnimation([
@@ -116,7 +115,7 @@ export class ExtractSkill extends CubeSkill {
     }
     public *open(): Generator<ActionSignal> {
         const origin = mat4.transform(vec3.ZERO, this.cube.transform.matrix, vec3())
-        const trigger = EmitterTrigger({ frame: 0.6, value: 36, origin: origin, target: origin })
+        const trigger = EventTrigger([{ frame: 0.6, value: { amount: 36, uOrigin: origin, uTarget: origin } }], EventTrigger.emitReset)
         for(const generator = super.open(), startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             trigger(elapsedTime, this.context.deltaTime, this.cube.dust)
@@ -136,7 +135,7 @@ export class ExtractSkill extends CubeSkill {
         this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
     public *activate(): Generator<ActionSignal> {
-        const resource = this.context.get(TerrainSystem).resources.get(this.cube.state.tile[0], this.cube.state.tile[1])
+        const resource = this.context.get(EconomySystem).get(this.cube.state.tile[0], this.cube.state.tile[1])
         if(!resource) return
 
         const mesh = this.cube.meshes[this.cube.state.side]
@@ -177,24 +176,17 @@ export class ExtractSkill extends CubeSkill {
         })
 
         const animate = AnimationTimeline(this, actionTimeline)
-
-        resource.amount--
-        const drain = PropertyAnimation([
-            { frame: 0, value: resource.decal.threshold },
-            { frame: 2, value: lerp(1, 0, resource.amount / resource.capacity), ease: ease.linear }
-        ], lerp)
+        const drain = resource.drain(2)
 
         excavation: for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             armatureAnimation.loop(elapsedTime, mesh.armature)
-            resource.decal.threshold = drain(elapsedTime, resource.decal.threshold)
+            drain.next()
 
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }
-
-        if(resource.amount <= 0) resource.kill()
 
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)

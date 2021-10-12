@@ -1,12 +1,10 @@
-import { createCylinder, applyTransform, doubleSided } from '../../engine/geometry'
-import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { ShaderProgram } from '../../engine/webgl'
 import { PointLight, PointLightPass, ParticleEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
-import { SpriteMaterial, EffectMaterial } from '../../engine/materials'
-import { TransformSystem, PropertyAnimation, EmitterTrigger, AnimationTimeline, ActionSignal } from '../../engine/scene'
-import { GradientRamp, ParticleEmitter } from '../../engine/particles'
+import { SpriteMaterial } from '../../engine/materials'
+import { TransformSystem } from '../../engine/scene'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
+import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, BatchMesh, Line } from '../../engine/components'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -95,23 +93,19 @@ export class BeamSkill extends CubeSkill {
         this.cone = new BatchMesh(SharedSystem.geometry.cone)
         this.cone.material = SharedSystem.materials.absorbTealMaterial
 
-        const gradient = GradientRamp(this.context.gl, [
-            0xf0fafa05,0xa7d9da0a,0x78b8bf19,0x6c9eae23,0x597c9628,0x4155771e,0x2b345814,0x1b20400a,0x0f112905,0x00000000
-        ], 1)
-
         this.center = new Sprite()
         this.center.billboard = BillboardType.Sphere
         this.center.material = new SpriteMaterial()
         this.center.material.program = SharedSystem.materials.beamRadialProgram
         vec2.set(8, 4, this.center.material.uvTransform as any)
-        this.center.material.diffuse = gradient
+        this.center.material.diffuse = SharedSystem.gradients.tealBlue
 
         this.beam = new Line()
         this.beam.path = [vec3(), vec3()]
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = SharedSystem.materials.beamLinearProgram
         vec2.set(4, 8, this.beam.material.uvTransform as any)
-        this.beam.material.diffuse = gradient
+        this.beam.material.diffuse = SharedSystem.gradients.tealBlue
 
         const ringMaterial = new SpriteMaterial()
         ringMaterial.diffuse = SharedSystem.textures.ring
@@ -190,7 +184,7 @@ export class BeamSkill extends CubeSkill {
         })
 
         this.smoke = this.smoke || SharedSystem.particles.smoke.add({
-            uOrigin: vec3.ZERO,
+            uOrigin: origin,
             uLifespan: [1.6,2,-1,0],
             uRotation: [0,2*Math.PI],
             uGravity: [0,3.2,0],
@@ -208,9 +202,9 @@ export class BeamSkill extends CubeSkill {
                 { frame: 1.3, value: origin },
                 { frame: 1.6, value: target, ease: ease.cubicOut }
             ], vec3.lerp),
-            'energy': EmitterTrigger({ frame: 0, value: 128, origin, target: origin }),
-            'sparks': EmitterTrigger({ frame: 1.2, value: 32, origin, target: origin }),
-            'smoke': EmitterTrigger({ frame: 2.5, value: 8, origin })
+            'energy': EventTrigger([{ frame: 0, value: { amount: 128, uOrigin: origin, uTarget: origin } }], EventTrigger.emitReset),
+            'sparks': EventTrigger([{ frame: 1.2, value: { amount: 32, uOrigin: origin, uTarget: origin } }], EventTrigger.emitReset),
+            'smoke': EventTrigger([{ frame: 2.5, value: { amount: 8, uOrigin: origin } }], EventTrigger.emitReset)
         })
 
         for(const duration = 3, startTime = this.context.currentTime; true;){

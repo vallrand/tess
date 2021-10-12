@@ -1,13 +1,11 @@
-import { ease, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
-import { ParticleEmitter, GradientRamp } from '../../engine/particles'
+import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -52,7 +50,7 @@ const activateTimeline = {
         { frame: 0, value: vec4.ZERO, ease: ease.quadIn },
         { frame: 0.3, value: [0.7,0.7,1,0.6], ease: ease.quadOut },
     ], vec4.lerp),
-    'sparks': EmitterTrigger({ frame: 0.4, value: 64 }),
+    'sparks': EventTrigger([{ frame: 0.4, value: 64 }], EventTrigger.emit),
     'flash.transform.scale': PropertyAnimation([
         { frame: 0.5, value: vec3.ZERO },
         { frame: 0.9, value: [10,10,10], ease: ease.quartOut }

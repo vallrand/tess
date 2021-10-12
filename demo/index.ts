@@ -1,9 +1,10 @@
 import { Application } from './engine/framework'
 
-import { TransformSystem, CameraSystem, AnimationSystem } from './engine/scene'
+import { TransformSystem } from './engine/scene/Transform'
+import { CameraSystem } from './engine/scene/Camera'
+import { AnimationSystem } from './engine/animation/Animation'
 import { MaterialSystem } from './engine/materials/Material'
 import { MeshSystem } from './engine/components/Mesh'
-import { SpriteSystem } from './engine/components/Sprite2D'
 import { KeyboardSystem } from './engine/device'
 import {
     DeferredGeometryPass,
@@ -17,7 +18,7 @@ import {
 
 import { DebugSystem } from './engine/debug'
 
-import { SharedSystem, TurnBasedSystem, TerrainSystem, PlayerSystem, AISystem } from './world'
+import { SharedSystem, TurnBasedSystem, TerrainSystem, EconomySystem, PlayerSystem, AISystem } from './world'
 import manifest from './manifest.json'
 
 new Application([
@@ -27,7 +28,6 @@ new Application([
     CameraSystem,
     MaterialSystem,
     MeshSystem,
-    SpriteSystem,
 
     DeferredGeometryPass,
     DecalPass,
@@ -40,6 +40,7 @@ new Application([
     SharedSystem,
     TurnBasedSystem,
     TerrainSystem,
+    EconomySystem,
     PlayerSystem,
     AISystem,
 

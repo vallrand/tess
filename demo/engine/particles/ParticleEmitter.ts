@@ -1,5 +1,5 @@
 import { Application } from '../framework'
-import { vec2, vec3, vec4, ease } from '../math'
+import { vec2, vec3, vec4 } from '../math'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
 
 interface ParticleEmitterOptions {

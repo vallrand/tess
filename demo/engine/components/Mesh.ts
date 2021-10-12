@@ -58,13 +58,17 @@ export class Armature {
     public frame: number = 0
     public boneMatrix: Float32Array
     public ik: IKRig
-    constructor(public readonly inverseBindPose: mat4[], nodes: {
-        name: string
-        parent: number
-        position?: vec3
-        rotation?: quat
-        scale?: vec3
-    }[]){
+    constructor(
+        public readonly inverseBindPose: mat4[],
+        public readonly key: string,
+        nodes: {
+            name: string
+            parent: number
+            position?: vec3
+            rotation?: quat
+            scale?: vec3
+        }[]
+    ){
         const matrixSize = 12
         this.boneMatrix = new Float32Array(nodes.length * matrixSize)
         this.nodes = nodes.map(({ position, rotation, scale, parent }, index) => ({
@@ -231,7 +235,7 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
         mesh.layer = model.armature ? OpaqueLayer.Skinned : OpaqueLayer.Static
         mesh.buffer = buffer
         mesh.material = material
-        if(model.armature) mesh.armature = new Armature(inverseBindPose, model.armature)
+        if(model.armature) mesh.armature = new Armature(inverseBindPose, model.name, model.armature)
         mesh.order = model.armature ? 1 : 2
         return mesh
     }

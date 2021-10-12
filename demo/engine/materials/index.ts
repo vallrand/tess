@@ -1,3 +1,4 @@
+export * from './GradientRamp'
 export * from './Material'
 export * from './ShaderMaterial'
 export * from './MeshMaterial'

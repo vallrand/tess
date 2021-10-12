@@ -5,9 +5,9 @@ import { Application } from '../../engine/framework'
 import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components/Mesh'
 import { TransformSystem } from '../../engine/scene/Transform'
 
-export interface IUnit {
-    place(column: number, row: number): void
-    kill(): void
+export interface IUnitTile {
+    weight: number
+    delete(): void
 }
 
 export class TerrainChunk {
@@ -20,8 +20,7 @@ export class TerrainChunk {
     public column: number
     public row: number
     public mesh: Mesh
-    public readonly list: IUnit[] = []
-    public readonly grid: IUnit[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
+    public readonly grid: IUnitTile[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
     public offsetX: number
     public offsetZ: number
 
@@ -68,11 +67,11 @@ export class TerrainChunk {
             this.heightmap[index] = brush(x, z)
         }
     }
-    public get<T extends IUnit>(column: number, row: number): T | void {
+    public get<T extends IUnitTile>(column: number, row: number): T | void {
         const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
         return this.grid[tileIndex] as T
     }
-    public set<T extends IUnit>(column: number, row: number, value: T): void {
+    public set<T extends IUnitTile>(column: number, row: number, value: T): void {
         const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
         this.grid[tileIndex] = value
     }
@@ -102,11 +101,8 @@ export class TerrainChunk {
     }
     clear(){
         for(let i = this.grid.length - 1; i >= 0; i--)
-            if(this.grid[i]) this.grid[i].kill()
+            if(this.grid[i]) this.grid[i].delete()
         this.grid.fill(null)
-
-        for(let i = this.list.length - 1; i >= 0; i--) this.list[i].kill()
-        this.list.length = 0
 
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)

@@ -1,16 +1,11 @@
-import { vec2, vec3, quat, aabb2 } from '../../engine/math'
 import { Application, ISystem } from '../../engine/framework'
+import { vec2, vec3, aabb2, vec4 } from '../../engine/math'
 import { CameraSystem } from '../../engine/scene'
-import { MaterialSystem, MeshMaterial } from '../../engine/materials'
-import { ShaderProgram } from '../../engine/webgl'
-import { shaders } from '../../engine/shaders'
-import { PlayerSystem } from '../player'
 
 import { LevelGenerator } from './LevelGenerator'
 import { Pathfinder } from './Pathfinder'
 
-import { TerrainChunk, IUnit } from './TerrainChunk'
-import { ResourceDeposit } from './ResourceDeposit'
+import { TerrainChunk, IUnitTile } from './TerrainChunk'
 import { SharedSystem } from '../shared'
 
 export class TerrainSystem implements ISystem {
@@ -18,9 +13,10 @@ export class TerrainSystem implements ISystem {
     private readonly positionOffset = -0.5 * TerrainChunk.chunkSize + 0.5 * TerrainChunk.tileSize
     private readonly gridSize = 3
     private readonly gridBounds: aabb2 = aabb2()
+    public readonly bounds: aabb2 = aabb2()
+    public frame: number = 0
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
     private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context)
-    public readonly resources: ResourceDeposit = new ResourceDeposit(this.context)
     public readonly pathfinder: Pathfinder = new Pathfinder(this.context, this.gridSize * TerrainChunk.chunkTiles)
     constructor(private readonly context: Application){}
     public update(): void {
@@ -49,9 +45,19 @@ export class TerrainSystem implements ISystem {
                 i++
             }
         }
-        aabb2.set(offsetX, offsetZ, offsetX + this.gridSize - 1, offsetZ + this.gridSize - 1, this.gridBounds)
-        vec2.set(-offsetX * TerrainChunk.chunkTiles, -offsetZ * TerrainChunk.chunkTiles, this.pathfinder.offset)
-        this.pathfinder.frame = 0
+        this.frame = this.context.frame
+        aabb2.set(offsetX, offsetZ, offsetX + this.gridSize, offsetZ + this.gridSize, this.gridBounds)
+        vec4.scale(this.gridBounds, TerrainChunk.chunkTiles, this.bounds)
+        
+        pathfinder:{
+            const { offset, size, weight } = this.pathfinder
+            vec2.set(-offsetX * TerrainChunk.chunkTiles, -offsetZ * TerrainChunk.chunkTiles, offset)
+            for(let x = size - 1; x >= 0; x--)
+            for(let z = size - 1; z >= 0; z--){
+                const tile = this.getTile(x - offset[0], z - offset[1])
+                weight[x + z * size] = tile ? tile.weight : 1
+            }
+        }
 
         for(let x = this.gridSize - 1; x >= 0; x--)
         for(let z = this.gridSize - 1; z >= 0; z--){
@@ -68,17 +74,18 @@ export class TerrainSystem implements ISystem {
             chunk.mesh.material = SharedSystem.materials.dunesMaterial
         }
     }
-    public chunk(column: number, row: number): TerrainChunk {
+    public chunk(column: number, row: number): TerrainChunk | null {
         const x = Math.floor(column / TerrainChunk.chunkTiles) - this.gridBounds[0]
         const z = Math.floor(row / TerrainChunk.chunkTiles) - this.gridBounds[1]
         if(x < 0 || z < 0 || x >= this.gridSize || z >= this.gridSize) return null
         return this.chunks[x + z * this.gridSize]
     }
-    public getTile<T extends IUnit>(column: number, row: number): T | void {
+    public getTile<T extends IUnitTile>(column: number, row: number): T | void {
         return this.chunk(column, row)?.get<T>(column, row)
     }
-    public setTile<T extends IUnit>(column: number, row: number, value: T): void {
+    public setTile<T extends IUnitTile>(column: number, row: number, value: T): void {
         this.chunk(column, row)?.set<T>(column, row, value)
+        this.pathfinder.weight[this.pathfinder.tileIndex(column, row)] = value ? value.weight : 1
     }
     public tilePosition(column: number, row: number, out: vec3): vec3 {
         out[0] = TerrainChunk.tileSize * column + this.positionOffset

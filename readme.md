@@ -124,6 +124,7 @@ perpendicular vec3 https://blog.selfshadow.com/2011/10/17/perp-vectors/
 quats https://gabormakesgames.com/blog_quats_interpolate.html
 quat decompose https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis
 http://allenchou.net/2018/05/game-math-swing-twist-interpolation-sterp/
+drawing lines https://www.redblobgames.com/grids/line-drawing.html
 
 action ->
 execute -> next -> endTurn -> next -> end

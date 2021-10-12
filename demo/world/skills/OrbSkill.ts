@@ -1,14 +1,13 @@
-import { ease, mat4, quat, vec2, vec3, vec4, mod, lerp } from '../../engine/math'
+import { mat4, quat, vec2, vec3, vec4, mod, lerp } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
 import { createCylinder, applyTransform, doubleSided, modifyGeometry } from '../../engine/geometry'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, AnimationSystem, ActionSignal } from '../../engine/scene/Animation'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
-import { ParticleEmitter, GradientRamp } from '../../engine/particles'
+import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
 
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { SharedSystem } from '../shared'
@@ -17,6 +16,7 @@ import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
 
 const actionTimeline = {
+    'particles': EventTrigger([{ frame: 0.2, value: 48 }], EventTrigger.emit),
     'cone.transform.scale': PropertyAnimation([
         { frame: 0, value: [0.2,0.2,1] },
         { frame: 0.6, value: vec3.ONE, ease: ease.sineOut },
@@ -274,10 +274,7 @@ export class OrbSkill extends CubeSkill {
             uTarget: particleTarget
         })
 
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline,
-            'particles': EmitterTrigger({ frame: 0.2, value: 48 }),
-        })
+        const animate = AnimationTimeline(this, actionTimeline)
 
         const orb = this.pool.pop() || new CorrosiveOrb(this.context, this)
         const tile: vec2 = [vec2(0,-2),vec2(-2,0),vec2(0,2),vec2(2,0)][this.direction]

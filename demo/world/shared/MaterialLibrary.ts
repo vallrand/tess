@@ -2,13 +2,18 @@ import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram, GL } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
-import { GradientRamp } from '../../engine/particles'
 import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
 
 export function MaterialLibrary(context: Application){
     const materials = context.get(MaterialSystem)
+
+    const resourceSpotMaterial = new DecalMaterial()
+    resourceSpotMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/spot_frag.glsl'), {
+        INSTANCED: true, ALPHA_CUTOFF: 0.01
+    })
+    resourceSpotMaterial.program.uniforms['uLayer'] = 1
 
     const heatDistortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
         PANNING: true, VERTICAL_MASK: true
@@ -64,10 +69,7 @@ export function MaterialLibrary(context: Application){
         uColorAdjustment: vec3(1,0.8,0)
     })
     coneTealMaterial.diffuse = SharedSystem.textures.cellularNoise
-    coneTealMaterial.gradient = GradientRamp(context.gl, [
-        0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
-    ], 1)
-
+    coneTealMaterial.gradient = SharedSystem.gradients.teal
 
     const absorbTealMaterial = new EffectMaterial(context.gl, {
         PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
@@ -80,10 +82,7 @@ export function MaterialLibrary(context: Application){
         uColorAdjustment: vec3(1.4,0.9,0)
     })
     absorbTealMaterial.diffuse = SharedSystem.textures.directionalNoise
-    absorbTealMaterial.gradient = GradientRamp(context.gl, [
-        0xFFFFFF00, 0xFFFFFF00, 0xEFF4F705, 0xC9DBE412, 0x99C7D44C, 0x5AA4AD9D, 0x1E51527B, 0x00000000
-    ], 1)
-
+    absorbTealMaterial.gradient = SharedSystem.gradients.darkTeal
 
     const stripesMaterial = new EffectMaterial(context.gl, {
         FRESNEL: true, PANNING: true, VERTICAL_MASK: true
@@ -106,9 +105,7 @@ export function MaterialLibrary(context: Application){
         uColorAdjustment: vec3(1,0.9,0)
     })
     auraTealMaterial.diffuse = SharedSystem.textures.cellularNoise
-    auraTealMaterial.gradient = GradientRamp(context.gl, [
-        0xffffff00, 0xdeffee00, 0x8ad4ad10, 0x68d4a820, 0x1aa17130, 0x075c4f20, 0x03303820, 0x00000000,
-    ], 1)
+    auraTealMaterial.gradient = SharedSystem.gradients.teal
 
 
     const energyHalfPurpleMaterial = new EffectMaterial(context.gl, {
@@ -138,9 +135,7 @@ export function MaterialLibrary(context: Application){
         uDissolveThreshold: vec3(0.2,0,0)
     })
     flashYellowMaterial.diffuse = SharedSystem.textures.cellularNoise
-    flashYellowMaterial.gradient = GradientRamp(context.gl, [
-        0xffffff00, 0xfffcd600, 0xf0eba800, 0xc2bd7430, 0xa60f5050, 0x00000000,
-    ], 1)
+    flashYellowMaterial.gradient = SharedSystem.gradients.yellowViolet
 
 
     const coreYellowMaterial = new EffectMaterial(context.gl, {
@@ -157,12 +152,7 @@ export function MaterialLibrary(context: Application){
         uFresnelMask: vec2(0.1,0.5)
     })
     coreYellowMaterial.diffuse = SharedSystem.textures.cellularNoise
-    coreYellowMaterial.gradient = GradientRamp(context.gl, [
-        0xffffff00, 0xffffaf00, 0xffaf9f00, 0xff7f0000,
-        0xffffffff, 0xf7f7cbaf, 0xffea5e7f, 0xcc49080f,
-        0xbdb9b9af, 0x7d70707f, 0x422f2f3f, 0x00000000,
-        0x000000ff, 0x000000af, 0x0000007f, 0x00000000
-    ], 4)
+    coreYellowMaterial.gradient = SharedSystem.gradients.yellowRed2D
 
 
     const coreWhiteMaterial = new EffectMaterial(context.gl, {
@@ -176,9 +166,7 @@ export function MaterialLibrary(context: Application){
         uUV2Panning: vec2(0.1,0.7),
     })
     coreWhiteMaterial.diffuse = SharedSystem.textures.sineNoise
-    coreWhiteMaterial.gradient = GradientRamp(context.gl, [
-        0xffffffff, 0xffffffff, 0xffffafef, 0xffffafaf, 0xffaf9f7f, 0xe0808060, 0xa0202040, 0x00000000
-    ], 1)
+    coreWhiteMaterial.gradient = SharedSystem.gradients.brightRed
 
     const ringDustMaterial = new EffectMaterial(context.gl, {
         PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true
@@ -193,18 +181,13 @@ export function MaterialLibrary(context: Application){
         uVerticalMask: vec4(0.0,0.1,0.9,1.0),
     })
     ringDustMaterial.diffuse = SharedSystem.textures.cellularNoise
-    ringDustMaterial.gradient = GradientRamp(context.gl, [
-        0xf5f0d700, 0xbd7d7d00, 0x524747ff, 0x00000000,
-        0x7f7f7fff, 0x202020ff, 0x000000ff, 0x00000000
-    ], 2)
+    ringDustMaterial.gradient = SharedSystem.gradients.orange2D
 
 
 
     const gradientMaterial = new SpriteMaterial()
     gradientMaterial.program = context.get(ParticleEffectPass).program
-    gradientMaterial.diffuse = GradientRamp(context.gl, [
-        0x00000000, 0xffffffff
-    ], 2)
+    gradientMaterial.diffuse = SharedSystem.gradients.simple
 
     const dissolveProgram = ShaderProgram(context.gl, shaders.geometry_vert, shaders.geometry_frag, {
         SKINNING: true, NORMAL_MAPPING: true, COLOR_INDEX: true, DISSOLVE: true
@@ -230,9 +213,7 @@ export function MaterialLibrary(context: Application){
         uVerticalMask: vec4(0.0,0.5,0.8,1.0),
     })
     stripesRedMaterial.diffuse = SharedSystem.textures.boxStripes
-    stripesRedMaterial.gradient = GradientRamp(context.gl, [
-        0xffffffff, 0xebdadad0, 0xd18a9790, 0x94063ca0, 0x512e3c70, 0x29202330, 0x00000000, 0x00000000
-    ], 1)
+    stripesRedMaterial.gradient = SharedSystem.gradients.darkRed
 
 
 
@@ -249,7 +230,7 @@ export function MaterialLibrary(context: Application){
         uUV3Panning: vec2(0,0.1)
     })
     stripesBlockyMaterial.diffuse = SharedSystem.textures.boxStripes
-    stripesBlockyMaterial.gradient = GradientRamp(context.gl, [ 0xffffffff, 0x00000000 ], 1)
+    stripesBlockyMaterial.gradient = SharedSystem.gradients.white
     stripesBlockyMaterial.displacement = SharedSystem.textures.boxStripes
 
 
@@ -284,12 +265,7 @@ export function MaterialLibrary(context: Application){
         uUV2Panning: vec2(0.1,0.5+0.4),
         uColorAdjustment: vec3(1,0.8,0.2)
     })
-    trailSmokeMaterial.gradient = GradientRamp(context.gl, [
-        0xd5f5f500, 0x9c386f20, 0x42172510, 0x00000000,
-        0x50505fff, 0x20202fff, 0x0a0a0fff, 0x00000000,
-        0x30303fff, 0x10101fff, 0x0a0a0fff, 0x00000000,
-        0x000000ff, 0x000000af, 0x0000007f, 0x00000000
-    ], 4)
+    trailSmokeMaterial.gradient = SharedSystem.gradients.purpleGrey2D
     trailSmokeMaterial.diffuse = SharedSystem.textures.cloudNoise
 
     const trailEnergyMaterial = new EffectMaterial(context.gl, {
@@ -333,7 +309,7 @@ export function MaterialLibrary(context: Application){
         uUV3Panning: vec2(0,0.2)
     })
     planeDissolveMaterial.diffuse = SharedSystem.textures.sineNoise
-    planeDissolveMaterial.gradient = GradientRamp(context.gl, [ 0xffffffff, 0x00000000 ], 1)
+    planeDissolveMaterial.gradient = SharedSystem.gradients.white
     planeDissolveMaterial.displacement = SharedSystem.textures.perlinNoise
 
     const exhaustMaterial = new EffectMaterial(context.gl, {
@@ -347,9 +323,7 @@ export function MaterialLibrary(context: Application){
         uColorAdjustment: vec3(2.0,2.0,0.2)
     })
     exhaustMaterial.diffuse = SharedSystem.textures.cellularNoise
-    exhaustMaterial.gradient = GradientRamp(context.gl, [
-        0xffffff00, 0xc5e0e300, 0x88a8bd00, 0x6e84c420, 0x4e3ba130, 0x820c4920, 0x38031510, 0x00000000
-    ], 1)
+    exhaustMaterial.gradient = SharedSystem.gradients.brightPurple
 
     return {
         distortion, chromaticAberration, heatDistortion, dunesMaterial, dissolveProgram, orbMaterial,
@@ -361,6 +335,6 @@ export function MaterialLibrary(context: Application){
         exhaustMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
         coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial, planeDissolveMaterial,
 
-        shieldDisplacementMaterial, shieldMaterial, trailEnergyMaterial
+        shieldDisplacementMaterial, shieldMaterial, trailEnergyMaterial, resourceSpotMaterial
     }
 }

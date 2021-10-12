@@ -1,15 +1,13 @@
 import { Application } from '../../engine/framework'
 
-export * from './Unit'
-
-import { Scarab } from './Scarab'
-import { Tarantula, TarantulaVariant } from './Tarantula'
-import { Stingray } from './Stingray'
-import { Locust } from './Locust'
-import { Obelisk } from './Obelisk'
-import { Monolith } from './Monolith'
-import { Decapod } from './Decapod'
-import { Isopod } from './Isopod'
+import { Scarab } from './scarab/Scarab'
+import { Tarantula, TarantulaVariant } from './tarantula/Tarantula'
+import { Stingray } from './stingray/Stingray'
+import { Locust } from './locust/Locust'
+import { Obelisk } from './obelisk/Obelisk'
+import { Monolith } from './monolith/Monolith'
+import { Decapod } from './decapod/Decapod'
+import { Isopod } from './isopod/Isopod'
 
 export const UnitFactory = (context: Application) => ({
     0: Scarab,

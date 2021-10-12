@@ -1,13 +1,11 @@
 import { Application } from '../../engine/framework'
-import { ease, lerp, mat4, mod, quat, range, vec2, vec3, vec4 } from '../../engine/math'
-import { uintNorm4x8 } from '../../engine/pipeline/batch'
-import { BatchMesh, BillboardType, Line, Mesh, Sprite, FollowTrail } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, SpriteMaterial } from '../../engine/materials'
-import { GL, ShaderProgram } from '../../engine/webgl'
-import { GradientRamp, ParticleEmitter } from '../../engine/particles'
-import { shaders } from '../../engine/shaders'
+import { lerp, mat4, mod, quat, range, vec2, vec3, vec4 } from '../../engine/math'
+import { BatchMesh, BillboardType, Line, Mesh, Sprite } from '../../engine/components'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
+import { ParticleEmitter } from '../../engine/particles'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass, PostEffectPass } from '../../engine/pipeline'
-import { AnimationTimeline, PropertyAnimation, EmitterTrigger, TransformSystem, ActionSignal, AnimationSystem, Transform } from '../../engine/scene'
+import { TransformSystem, Transform } from '../../engine/scene'
+import { ActionSignal, AnimationSystem, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 import { CubeModuleModel, modelAnimations } from '../animations'
 import { Cube, Direction, DirectionAngle } from '../player'
 import { CubeSkill } from './CubeSkill'
@@ -15,6 +13,7 @@ import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
 
 const actionTimeline = {
+    'particles': EventTrigger([{ frame: 0, value: 36 }], EventTrigger.emit),
     'bulge.transform.scale': PropertyAnimation([
         { frame: 0, value: vec3.ZERO },
         { frame: 0.5, value: [3,3,3], ease: ease.quartOut }
@@ -65,7 +64,6 @@ interface ProjectileEffect {
 
 export class ProjectileSkill extends CubeSkill {
     private readonly pool: ProjectileEffect[] = []
-    private mesh: Mesh
     private readonly pivot: vec3 = vec3(0,1.8,0)
 
     private bulge: Sprite
@@ -116,7 +114,6 @@ export class ProjectileSkill extends CubeSkill {
         this.flash.material = SharedSystem.materials.flashYellowMaterial
     }
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
-        const mesh = this.mesh = this.cube.meshes[this.cube.state.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
         const rotationalIndex = mod(direction - this.cube.state.direction - this.cube.state.sides[this.cube.state.side].direction, 4)
 
@@ -127,7 +124,7 @@ export class ProjectileSkill extends CubeSkill {
         mat4.transform(origin, worldTransform, origin)
 
         rotate: {
-            const prevRotation = quat.copy(mesh.armature.nodes[1].rotation, quat())
+            const prevRotation = quat.copy(this.mesh.armature.nodes[1].rotation, quat())
             const nextRotation = DirectionAngle[(rotationalIndex + 1) % 4]
             if(quat.angle(prevRotation, nextRotation) < 1e-3) break rotate
 
@@ -138,8 +135,8 @@ export class ProjectileSkill extends CubeSkill {
     
             for(const duration = 0.2, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
-                rotate(elapsedTime, mesh.armature.nodes[1].rotation)
-                mesh.armature.frame = 0
+                rotate(elapsedTime, this.mesh.armature.nodes[1].rotation)
+                this.mesh.armature.frame = 0
                 if(elapsedTime > duration) break
                 yield ActionSignal.WaitNextFrame
             }
@@ -177,18 +174,15 @@ export class ProjectileSkill extends CubeSkill {
             uTarget: mat4.transform(vec3.ZERO, worldTransform, vec3()),
         })
 
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline,
-            'particles': EmitterTrigger({ frame: 0, value: 36 })
-        })
+        const animate = AnimationTimeline(this, actionTimeline)
 
         this.context.get(AnimationSystem).start(this.animateProjectile(worldTransform, this.findTarget(direction)), true)
 
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.activate(elapsedTime, mesh.armature)
-            armatureAnimation[`activate${rotationalIndex}`](elapsedTime, mesh.armature)
+            armatureAnimation.activate(elapsedTime, this.mesh.armature)
+            armatureAnimation[`activate${rotationalIndex}`](elapsedTime, this.mesh.armature)
 
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
@@ -282,8 +276,21 @@ export class ProjectileSkill extends CubeSkill {
 
         const duration = Math.sqrt(vec3.distanceSquared(origin, target)) * 0.05 / 2
         const animate = AnimationTimeline(effect, {
-            'particles': EmitterTrigger({ frame: duration, value: 24*3 }),
-            'trail': FollowTrail(effect.transform.position, vec2(0, 0), 0.5),
+            'particles': EventTrigger([{ frame: duration, value: 24*3 }], EventTrigger.emit),
+            'trail': FollowPath.Line(FollowPath.separate(
+                PropertyAnimation([
+                    { frame: 0, value: origin[0] },
+                    { frame: duration, value: target[0], ease: ease.linear }
+                ], lerp),
+                PropertyAnimation([
+                    { frame: 0, value: origin[1] },
+                    { frame: duration, value: target[1], ease: ease.cubicIn }
+                ], lerp),
+                PropertyAnimation([
+                    { frame: 0, value: origin[2] },
+                    { frame: duration, value: target[2], ease: ease.linear }
+                ], lerp),
+            ), { length: 0.06 }),
             'transform.position.1': PropertyAnimation([
                 { frame: 0, value: origin[1] },
                 { frame: duration, value: target[1], ease: ease.cubicIn }

@@ -1,11 +1,12 @@
 import { Application, One, Zero } from '../../engine/framework'
-import { random, randomInt, randomFloat, vec2, vec3, vec4, ease, quat } from '../../engine/math'
+import { random, randomInt, randomFloat, vec2, vec3, vec4, quat } from '../../engine/math'
+import { ease } from '../../engine/animation'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
 import { ParticleEffectPass } from '../../engine/pipeline'
 import { shaders } from '../../engine/shaders'
-import { MaterialSystem, EmitterMaterial } from '../../engine/materials'
+import { MaterialSystem, EmitterMaterial, GradientRamp } from '../../engine/materials'
 import {
-    AttributeCurveSampler, GradientRamp, ParticleGeometry, ParticleOvertimeAttributes,
+    AttributeCurveSampler, ParticleGeometry, ParticleOvertimeAttributes,
     ParticleSystem, StaticParticleSystem
 } from '../../engine/particles'
 import { SharedSystem } from './index'

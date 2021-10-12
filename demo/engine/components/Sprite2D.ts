@@ -1,11 +1,18 @@
+import { Application } from '../framework'
 import { vec2, mat3x2, aabb2, vec4, vec3 } from '../math'
-import { Application, ISystem, Factory } from '../framework'
 import { GL, ShaderProgram } from '../webgl'
 import { Batch2D, IBatched2D } from '../pipeline/batch'
 import { Transform2D } from '../scene/Transform'
 import { IMaterial } from '../pipeline'
 
 export class Sprite2DMaterial implements IMaterial {
+    public static create(texture: WebGLTexture, frame: aabb2, size: vec2): Sprite2DMaterial {
+        const material = new Sprite2DMaterial()
+        Sprite2DMaterial.calculateUVMatrix(frame, size, material.uvMatrix)
+        vec2.set(frame[2] - frame[0], frame[3] - frame[1], material.size)
+        material.diffuse = texture
+        return material
+    }
     public static calculateUVMatrix(frame: aabb2, size: vec2, out: mat3x2): mat3x2 {
         out[0] = (frame[2] - frame[0] - 1) / size[0]
         out[1] = 0
@@ -91,26 +98,5 @@ export class Sprite2D implements IBatched2D {
             out[offset + i - 1] = a * x + c * y + tx
             out[offset + i] = b * x + d * y + ty
         }
-    }
-}
-
-
-export class SpriteSystem extends Factory<Sprite2D> implements ISystem {
-    constructor(private readonly context: Application){super(Sprite2D)}
-    public delete(sprite: Sprite2D): void {
-        super.delete(sprite)
-        sprite.frame = 0
-    }
-    public update(){
-        //merge into single batch mesh?
-        for(let i = this.list.length - 1; i >= 0; i--){
-        }
-    }
-    public createMaterial(texture: WebGLTexture, frame: aabb2, size: vec2): Sprite2DMaterial {
-        const material = new Sprite2DMaterial()
-        Sprite2DMaterial.calculateUVMatrix(frame, size, material.uvMatrix)
-        vec2.set(frame[2] - frame[0], frame[3] - frame[1], material.size)
-        material.diffuse = texture
-        return material
     }
 }

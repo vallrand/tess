@@ -1,5 +1,6 @@
 import { Application } from '../../engine/framework'
-import { vec2, vec3, quat, mat4, ease } from '../../engine/math'
+import { vec2, vec3, quat, mat4 } from '../../engine/math'
+import { ease } from '../../engine/animation'
 import {
     createPlane, createBox, createCylinder, createSphere,
     doubleSided, applyTransform, extrudePolygon, modifyGeometry
