@@ -11,7 +11,7 @@ import { SpriteMaterial } from '../../../engine/materials'
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { LungeSkill } from './LungeSkill'
 import { SnakeRig } from './SnakeRig'
@@ -43,6 +43,7 @@ function LookAtTween(tween: IAnimationTween<vec3>): IAnimationTween<quat> {
 
 export class Stingray extends AIUnit {
     readonly skills = [new LungeSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly gainMovementPoints: number = 2
     readonly movementDuration: number = 0.4
@@ -52,6 +53,7 @@ export class Stingray extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        this.context.get(TerrainSystem).setTile(column, row, this)
 
         const rig = new SnakeRig(this.context)
         rig.build(this.mesh)
@@ -61,7 +63,6 @@ export class Stingray extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0, true) }
     public *damage(amount: number): Generator<ActionSignal> {
 
     }

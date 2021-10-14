@@ -11,7 +11,7 @@ import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, Bl
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { Spider4Rig } from './Spider4Rig'
 import { WaveSkill } from './WaveSkill'
@@ -19,6 +19,7 @@ import { ProjectileSkill } from './ProjectileSkill'
 
 export class Tarantula extends AIUnit {
     readonly skills = [new WaveSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 0.8
 
@@ -36,8 +37,6 @@ export class Tarantula extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
-
     public *damage(amount: number): Generator<ActionSignal> {
 
     }
@@ -63,6 +62,7 @@ export class Tarantula extends AIUnit {
 
 export class TarantulaVariant extends AIUnit {
     readonly skills = [new ProjectileSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 0.8
 
@@ -71,6 +71,7 @@ export class TarantulaVariant extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activateVariant(0, this.mesh.armature)
+        this.context.get(TerrainSystem).setTile(column, row, this)
 
         const rig = new Spider4Rig(this.context)
         rig.build(this.mesh)
@@ -80,9 +81,6 @@ export class TarantulaVariant extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
-
     public *damage(amount: number): Generator<ActionSignal> {
 
     }

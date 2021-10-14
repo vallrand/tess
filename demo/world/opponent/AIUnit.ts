@@ -4,21 +4,14 @@ import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
 import { Mesh } from '../../engine/components'
 import { TerrainSystem, IUnitTile } from '../terrain'
 import { AIUnitSkill } from './AIUnitSkill'
-
-export interface AIStrategyPlan {
-    estimate: number
-    priority: number
-    path?: vec2[]
-    target?: vec2
-    skill: number
-    reverse?: boolean
-}
+import { AIStrategy, AIStrategyPlan } from './AIStrategy'
 
 export abstract class AIUnit implements IUnitTile {
     public readonly tile: vec2 = vec2()
     public readonly size: vec2 = vec2.ONE
     public mesh: Mesh
-    public readonly skills: AIUnitSkill[]
+    public abstract readonly skills: AIUnitSkill[]
+    public abstract readonly strategy: AIStrategy
     constructor(protected readonly context: Application){}
 
     public actionIndex: number
@@ -33,7 +26,6 @@ export abstract class AIUnit implements IUnitTile {
     public readonly gainMovementPoints: number = 1
     public readonly gainActionPoints: number = 1
 
-    public abstract strategy(): AIStrategyPlan
     public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
         const map = this.context.get(TerrainSystem).pathfinder
         const actions: Generator<ActionSignal>[] = []

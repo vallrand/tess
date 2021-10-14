@@ -10,7 +10,7 @@ import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPa
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { FlamethrowerSkill } from './FlamethrowerSkill'
 import { ShieldLinkSkill } from './ShieldLinkSkill'
@@ -18,6 +18,7 @@ import { ShieldLinkSkill } from './ShieldLinkSkill'
 export class Locust extends AIUnit {
     public readonly size: vec2 = vec2(2,2)
     readonly skills = [new FlamethrowerSkill(this.context), new ShieldLinkSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 0.8
 
@@ -33,8 +34,6 @@ export class Locust extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
-
     public *damage(amount: number): Generator<ActionSignal> {
 
     }

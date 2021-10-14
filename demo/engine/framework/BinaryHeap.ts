@@ -23,6 +23,7 @@ export class BinaryHeap<T> {
 	public push(item: T){
 		this.moveUp(this.list, this.list.length, item, this.comparator)
 	}
+	public get(index: number): T { return this.list[index] }
 	public pop(): T {
 		const value = this.list[0]
 		const last = this.list.pop()

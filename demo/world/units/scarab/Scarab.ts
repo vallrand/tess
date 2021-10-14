@@ -10,12 +10,13 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, Blend
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { StrikeSkill } from './StrikeSkill'
 
 export class Scarab extends AIUnit {
     readonly skills = [new StrikeSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     readonly gainMovementPoints = 3
     readonly gainActionPoints = 1
     readonly movementDuration = 0.4
@@ -26,16 +27,12 @@ export class Scarab extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
-
-        this.context.get(TerrainSystem).setTile(column, row, this as any)
+        this.context.get(TerrainSystem).setTile(column, row, this)
         //this.actionIndex = this.context.get(AnimationSystem).start(this.appear(), true)
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
-    }
-    public strategy(): AIStrategyPlan {
-        return CloseCombatStrategy(this.context, this, 0)
     }
 
     private dust: ParticleEmitter

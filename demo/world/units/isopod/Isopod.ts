@@ -10,12 +10,13 @@ import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, Bl
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { OrbSkill } from './OrbSkill'
 import { DeathEffect } from '../common'
 
 export class Isopod extends AIUnit {
     readonly skills = [new OrbSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 0.4
 
@@ -24,6 +25,7 @@ export class Isopod extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        this.context.get(TerrainSystem).setTile(column, row, this)
 
         this.dust = SharedSystem.particles.dust.add({
             uOrigin: vec3.ZERO, uLifespan: [0.6,1.2,0,0], uSize: [2,4],
@@ -37,8 +39,6 @@ export class Isopod extends AIUnit {
         this.context.get(MeshSystem).delete(this.mesh)
         SharedSystem.particles.dust.remove(this.dust)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
-
     public *damage(amount: number): Generator<ActionSignal> {
 
     }

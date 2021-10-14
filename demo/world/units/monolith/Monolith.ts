@@ -13,7 +13,7 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTr
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { ShockwaveSkill } from './ShockwaveSkill'
 import { TurretSkill } from './TurretSkill'
@@ -22,6 +22,7 @@ import { SpawnerSkill } from './SpawnerSkill'
 export class Monolith extends AIUnit {
     public readonly size: vec2 = vec2(3,3)
     readonly skills = [new TurretSkill(this.context),new SpawnerSkill(this.context),new ShockwaveSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 1
 
@@ -35,8 +36,6 @@ export class Monolith extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
-
     public *damage(amount: number): Generator<ActionSignal> {
 
     }

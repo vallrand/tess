@@ -125,6 +125,7 @@ quats https://gabormakesgames.com/blog_quats_interpolate.html
 quat decompose https://stackoverflow.com/questions/3684269/component-of-a-quaternion-rotation-around-an-axis
 http://allenchou.net/2018/05/game-math-swing-twist-interpolation-sterp/
 drawing lines https://www.redblobgames.com/grids/line-drawing.html
+grid based simple AI example https://github.com/Gornova/Wargame/blob/master/src/it/wargame/ai/CentralAi.java
 
 action ->
 execute -> next -> endTurn -> next -> end

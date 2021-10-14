@@ -10,12 +10,13 @@ import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, Bl
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
-import { AIUnit, AIStrategyPlan, CloseCombatStrategy } from '../../opponent'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../../opponent'
 import { DeathEffect } from '../common'
 import { BeamSkill } from './BeamSkill'
 
 export class Obelisk extends AIUnit {
     readonly skills = [new BeamSkill(this.context)]
+    readonly strategy = new AIStrategy(this.context)
     private readonly deathEffect = new DeathEffect(this.context)
     readonly movementDuration: number = 0.8
 
@@ -24,12 +25,12 @@ export class Obelisk extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        this.context.get(TerrainSystem).setTile(column, row, this)
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
     }
-    public strategy(): AIStrategyPlan { return CloseCombatStrategy(this.context, this, 0) }
     public *damage(amount: number): Generator<ActionSignal> {
 
     }
