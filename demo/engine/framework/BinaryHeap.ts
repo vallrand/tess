@@ -24,7 +24,7 @@ export class BinaryHeap<T> {
 		this.moveUp(this.list, this.list.length, item, this.comparator)
 	}
 	public get(index: number): T { return this.list[index] }
-	public pop(): T {
+	public shift(): T {
 		const value = this.list[0]
 		const last = this.list.pop()
 		if(this.list.length) this.moveDown(this.list, 0, last, this.comparator)

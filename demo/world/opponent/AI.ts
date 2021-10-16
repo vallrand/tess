@@ -45,14 +45,14 @@ export class AISystem implements IActor, ISystem {
             unit.movementPoints = Math.min(unit.movementPoints + unit.gainMovementPoints, Math.max(1, unit.gainMovementPoints))
             unit.actionPoints = Math.min(unit.actionPoints + unit.gainActionPoints, Math.max(1, unit.gainActionPoints))
             unit.strategy.unit = unit
-            unit.strategy.precalculate(unit)
+            unit.strategy.precalculate()
         }
 
         const queue = this.list.slice(), actions: Generator<ActionSignal>[] = []
         tactics: while(queue.length){
             let index: number, optimal: AIStrategyPlan
             for(let i = queue.length - 1; i >= 0; i--){
-                const plan = queue[i].strategy.plan(queue[i], 0, optimal?.priority)
+                const plan = queue[i].strategy.plan(optimal?.priority)
                 if(optimal && optimal.priority >= plan.priority) continue
                 optimal = plan
                 index = i

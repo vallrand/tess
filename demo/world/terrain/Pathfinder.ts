@@ -25,15 +25,18 @@ export class Pathfinder {
 	private static readonly tile0: vec2 = vec2()
 	private static readonly tile1: vec2 = vec2()
 
-	private readonly heap = new BinaryHeap<number>(
+	public readonly heap = new BinaryHeap<number>(
 		(a,b) => (this.estimate[a] + this.distance[a]) - (this.estimate[b] + this.distance[b])
 	)
-	private readonly dirty: number[] = []
-	private readonly queue: number[] = []
-	private readonly parent = new Uint32Array(this.size * this.size)
-	private readonly flags = new Uint8Array(this.size * this.size)
-	private readonly distance = new Float32Array(this.size * this.size)
-	private readonly estimate = new Float32Array(this.size * this.size)
+	public readonly orderedQueue = new BinaryHeap<number>(
+		(a,b) => (this.distance[a] - this.distance[b]) || (this.estimate[a] - this.estimate[b])
+	)
+	public readonly dirty: number[] = []
+	public readonly queue: number[] = []
+	public readonly parent = new Uint32Array(this.size * this.size)
+	public readonly flags = new Uint8Array(this.size * this.size)
+	public readonly distance = new Float32Array(this.size * this.size)
+	public readonly estimate = new Float32Array(this.size * this.size)
 
 	public readonly weight = new Float32Array(this.size * this.size).fill(TileStatus.Dirty)
 	public readonly marked = new Float32Array(this.size * this.size)
@@ -59,31 +62,26 @@ export class Pathfinder {
 		out[1] = (index / this.size | 0) - this.offset[1]
 		return out
 	}
-	public add(origin: vec2, target: vec2, diagonal?: boolean): void {
-		const heuristic = diagonal ? Pathfinder.heuristic.diagonal : Pathfinder.heuristic.manhattan
-		const originIndex = this.tileIndex(origin[0], origin[1])
-		this.estimate[originIndex] = heuristic(origin, target)
-		this.flags[originIndex] |= TileStatus.Visited
-		this.dirty.push(originIndex)
-		this.heap.push(originIndex)
+	public add(origin: vec2): void {
+		this.dirty.push(this.tileIndex(origin[0], origin[1]))
 	}
-    public search(origin: vec2, target: vec2, diagonal?: boolean, threshold?: number): vec2[] {
+    public search(target: vec2, diagonal?: boolean, threshold?: number): number {
 		const heuristic = diagonal ? Pathfinder.heuristic.diagonal : Pathfinder.heuristic.manhattan
 		const neighbours = diagonal ? Pathfinder.neighbours.diagonal : Pathfinder.neighbours.cardinal
 		const { tile0, tile1 } = Pathfinder
 
-		if(origin){
-			const originIndex = this.tileIndex(origin[0], origin[1])
-			this.estimate[originIndex] = heuristic(origin, target)
+		for(let i = this.dirty.length - 1; i >= 0; i--){
+			const originIndex = this.dirty[i]
+			this.indexTile(originIndex, tile0)
+			this.estimate[originIndex] = heuristic(tile0, target)
 			this.flags[originIndex] |= TileStatus.Visited
-			this.dirty.push(originIndex)
 			this.heap.push(originIndex)
 		}
 		
 		const targetIndex = this.tileIndex(target[0], target[1])
 		let closest: number = this.heap.get(0)
         while(this.heap.length){
-			const node = this.heap.pop()
+			const node = this.heap.shift()
 			if(node === targetIndex) break
 			this.flags[node] |= TileStatus.Closed
 
@@ -119,46 +117,54 @@ export class Pathfinder {
 				else this.heap.update(neighbour)
 			}
         }
-        const path = []
-		for(let node = closest; node >= 0; node = this.parent[node] - 1)
-			path.unshift([
-				(node % this.size) - this.offset[0],
-				(node / this.size | 0) - this.offset[1]
-			])
-		this.clear()
-        return path
+        return closest
     }
-	propagate(origin: vec2, walk: (tile: vec2, distance: number) => boolean, diagonal?: boolean, threshold?: number): void {
+	linkPath(start: number): number[] {
+		const path = []
+		for(let node = start; node >= 0; node = this.parent[node] - 1)
+			path.unshift(node)
+		return path
+	}
+	walk<T>(
+		enter: (this: T, node: number, tile: vec2, distance: number, parent: number, first: boolean) => boolean, context: T,
+		diagonal?: boolean, threshold?: number, ordered?: boolean
+	): void {
 		const neighbours = diagonal ? Pathfinder.neighbours.diagonal : Pathfinder.neighbours.cardinal
-		const originIndex = this.tileIndex(origin[0], origin[1])
+		const queue = ordered ? this.orderedQueue : this.queue
 		const { tile0, tile1 } = Pathfinder
 
-		this.queue.push(originIndex)
-		this.dirty.push(originIndex)
-		this.flags[originIndex] = TileStatus.Visited
-		while(this.queue.length){
-			const node = this.queue.shift()
+		for(let i = this.dirty.length - 1; i >= 0; i--){
+			const originIndex = this.dirty[i]
+			if(!enter.call(context, originIndex, this.indexTile(originIndex, tile0), 0, -1, true)) continue
+			queue.push(originIndex)
+			this.flags[originIndex] = TileStatus.Visited
+		}
+
+		while(queue.length){
+			const node = queue.shift()
 			const distance = this.distance[node]
 			tile0[0] = node % this.size
 			tile0[1] = node / this.size | 0
-			if(!walk(tile0, distance)) continue
 
 			for(let i = neighbours.length - 1; i >= 0; i--){
 				vec2.add(neighbours[i], tile0, tile1)
 				if(tile1[0] < 0 || tile1[1] < 0 || tile1[0] >= this.size || tile1[1] >= this.size) continue
 				const neighbour = tile1[0] + tile1[1] * this.size
 				const weight = this.calculateWeight(tile0, tile1, node, neighbour, threshold)
-				if(weight == TileStatus.Occupied || this.flags[neighbour] === TileStatus.Visited) continue
+				if(weight == TileStatus.Occupied) continue
+				if(!enter.call(context, neighbour, vec2.subtract(tile1, this.offset, tile1), distance + 1, node, !this.flags[neighbour])) continue
+				if(this.flags[neighbour] === TileStatus.Visited) continue
 				this.flags[neighbour] = TileStatus.Visited
+				this.parent[neighbour] = node + 1
 				this.distance[neighbour] = distance + 1
 				this.dirty.push(neighbour)
-				this.queue.push(neighbour)
+				queue.push(neighbour)
 			}
 		}
-		this.clear()
 	}
 	public clear(): void {
 		this.heap.clear()
+		this.orderedQueue.clear()
 		this.queue.length = 0
 		while(this.dirty.length){
 			const index = this.dirty.pop()
