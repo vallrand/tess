@@ -16,6 +16,8 @@ interface TurretEffect {
     key: string
     index: number
     parent: AIUnit
+    context: Application
+    damage: number
 
     trailLeft?: Line
     trailRight?: Line
@@ -36,14 +38,20 @@ export class TurretSkill extends AIUnitSkill {
 
     private mesh: Mesh
     private readonly turrets: TurretEffect[] = [{
-        key: 'turret11', index: 10, parent: null
+        key: 'turret11', index: 10, parent: null, context: this.context, damage: this.damage
     }, {
-        key: 'turret01', index: 12, parent: null
+        key: 'turret01', index: 12, parent: null, context: this.context, damage: this.damage
     }, {
-        key: 'turret00', index: 14, parent: null
+        key: 'turret00', index: 14, parent: null, context: this.context, damage: this.damage
     }, {
-        key: 'turret10', index: 16, parent: null
+        key: 'turret10', index: 16, parent: null, context: this.context, damage: this.damage
     }]
+
+    public validate(origin: vec2, target: vec2): boolean {
+        const dx = target[0] - origin[0] - 1
+        const dy = target[1] - origin[1] - 1
+        return dx*dx + dy*dy <= this.radius * this.radius
+    }
 
     public use(source: AIUnit, target: vec2): Generator<ActionSignal> {
         this.mesh = source.mesh
@@ -63,9 +71,7 @@ export class TurretSkill extends AIUnitSkill {
         const originRotation = quat.axisAngle(vec3.AXIS_Y, referenceAngle, quat())
         const targetRotation = quat.fromNormal(vec3.normalize(direction, vec3()), vec3.AXIS_Y, quat())
         
-        effect.dust = new Sprite()
-        effect.dust.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5, effect.dust.origin)
+        effect.dust = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         effect.dust.material = new SpriteMaterial()
         effect.dust.material.program = this.context.get(ParticleEffectPass).program
         effect.dust.material.diffuse = SharedSystem.textures.groundDust
@@ -103,11 +109,9 @@ export class TurretSkill extends AIUnitSkill {
         flashMaterial.diffuse = SharedSystem.textures.rays
 
 
-        effect.flashLeft = new Sprite()
-        effect.flashLeft.billboard = BillboardType.Sphere
+        effect.flashLeft = Sprite.create(BillboardType.Sphere)
         effect.flashLeft.material = flashMaterial
-        effect.flashRight = new Sprite()
-        effect.flashRight.billboard = BillboardType.Sphere
+        effect.flashRight = Sprite.create(BillboardType.Sphere)
         effect.flashRight.material = effect.flashLeft.material
         effect.flashLeft.transform = this.context.get(TransformSystem)
         .create(mat4.transform([0.25,0,1.5], transformMatrix, vec3()))
@@ -123,8 +127,7 @@ export class TurretSkill extends AIUnitSkill {
             uForce: [4,12], uRadius: [0.2,0.2], uGravity: [0,-24,0],
         })
 
-        effect.ring = new Sprite()
-        effect.ring.billboard = BillboardType.None
+        effect.ring = Sprite.create(BillboardType.None)
         effect.ring.material = new SpriteMaterial()
         effect.ring.material.program = this.context.get(ParticleEffectPass).program
         effect.ring.material.diffuse = SharedSystem.textures.ring
@@ -209,7 +212,9 @@ export class TurretSkill extends AIUnitSkill {
             'wave.color': PropertyAnimation([
                 { frame: 0.7, value: [0.2,1,0.8,1] },
                 { frame: 1.2, value: vec4.ZERO, ease: ease.sineOut }
-            ], vec4.lerp)
+            ], vec4.lerp),
+
+            'damage': EventTrigger([{ frame: 0.6, value: target }], AIUnitSkill.damage)
         })
 
         for(const duration = 1.4, startTime = this.context.currentTime; true;){
@@ -233,5 +238,10 @@ export class TurretSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(effect.flashLeft)
         this.context.get(ParticleEffectPass).remove(effect.flashRight)
         this.context.get(ParticleEffectPass).remove(effect.ring)
+
+        Sprite.delete(effect.dust)
+        Sprite.delete(effect.flashLeft)
+        Sprite.delete(effect.flashRight)
+        Sprite.delete(effect.ring)
     }
 }

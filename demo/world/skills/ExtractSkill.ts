@@ -99,16 +99,13 @@ export class ExtractSkill extends CubeSkill {
         this.tube.material = SharedSystem.materials.stripesRedMaterial
 
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
-        vec2.set(0,0.5,this.beam.origin)
 
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.ring
@@ -131,15 +128,12 @@ export class ExtractSkill extends CubeSkill {
             else yield iterator.value
         }
     }
-    protected clear(): void {
-        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
-    }
     public *activate(): Generator<ActionSignal> {
-        const resource = this.context.get(EconomySystem).get(this.cube.state.tile[0], this.cube.state.tile[1])
+        const resource = this.context.get(EconomySystem).get(this.cube.tile[0], this.cube.tile[1])
         if(!resource) return
 
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const origin = mat4.transform(vec3.ZERO, this.cube.transform.matrix, vec3())
 
@@ -202,12 +196,25 @@ export class ExtractSkill extends CubeSkill {
         this.context.get(DecalPass).delete(this.cracks)
     }
     protected validate(): boolean {
-        const tile = vec2()
-        const terrain = this.context.get(TerrainSystem)
+        const terrain = this.context.get(TerrainSystem), tile = this.cube.tile
+        for(let i = DirectionTile.length - 1; i >= 0; i--)
+            if(terrain.getTile(tile[0] + DirectionTile[i][0], tile[1] + DirectionTile[i][1]) != null)
+                return false
         for(let i = DirectionTile.length - 1; i >= 0; i--){
-            vec2.add(this.cube.state.tile, DirectionTile[i], tile)
-            if(terrain.getTile(tile[0], tile[1]) != null) return false
+            const added = vec2.add(tile, DirectionTile[i], vec2())
+            terrain.setTile(added[0], added[1], this.cube)
+            this.cube.tiles.push(added)
         }
         return true
     }
+    protected clear(): void {
+        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
+        
+        const terrain = this.context.get(TerrainSystem)
+        while(this.cube.tiles.length > 1){
+            const tile = this.cube.tiles.pop()
+            terrain.setTile(tile[0], tile[1], null)
+        }
+    }
 }
+

@@ -42,17 +42,7 @@ float hash11(uint n){
     n = n * (n * n * 15731U + 789221U) + 1376312589U;
     return float(n & uvec3(0x7fffffffU))/float(0x7fffffff);
 }
-vec4 quat(in vec3 axis, in float angle){return vec4(axis*sin(.5*angle),cos(.5*angle));}
-vec3 qrotate(in vec4 q, in vec3 v){return v + 2.0*cross(q.xyz, cross(q.xyz,v) + q.w*v);}
-vec4 qmul(vec4 a, vec4 b){return vec4(cross(a.xyz,b.xyz) + a.xyz*b.w + b.xyz*a.w, a.w*b.w - dot(a.xyz,b.xyz));}
-vec4 randomQuat(float u1, float u2, float u3){
-    float is1 = sqrt(1.-u1); float s1 = sqrt(u1);
-    return vec4(is1 * sin(TAU * u2),
-        is1 * cos(TAU * u2),
-        s1 * sin(TAU * u3),
-        s1 * cos(TAU * u3));
-}
-
+#pragma import(./common/quat.glsl)
 float solveQuadratic(float a, float b, float c){
     float d = b*b - 4.*a*c;
     if(d < 0.) return -1.;
@@ -80,7 +70,7 @@ void main(){
     float angle = at0 * angularVelocity + angularDeceleration*0.5*at0*at0;
     vec4 quaternion = quat(rotationAxis, angle);
 #ifdef RANDOM_ROTATION
-    quaternion = qmul(randomQuat(hash11(seed+=1U), hash11(seed+=1U), hash11(seed+=1U)), quaternion);
+    quaternion = qmul(qrandom(hash11(seed+=1U), hash11(seed+=1U), hash11(seed+=1U)), quaternion);
 #endif
     position = qrotate(quaternion, position);
     normal = qrotate(quaternion, normal);

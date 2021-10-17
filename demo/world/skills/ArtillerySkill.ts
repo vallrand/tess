@@ -89,17 +89,13 @@ class Missile {
         this.ring.order = 6
         this.ring.material = SharedSystem.materials.ringDustMaterial
 
-        this.wave = new Sprite()
-        this.wave.billboard = BillboardType.None
+        this.wave = Sprite.create(BillboardType.None)
         this.wave.material = this.parent.waveMaterial
 
-        this.pillar = new Sprite()
-        this.pillar.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.pillar.origin)
+        this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.pillar.material = this.parent.pillarMaterial
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.None
+        this.flash = Sprite.create(BillboardType.None)
         this.flash.material = this.parent.flashMaterial
     }
     *launch(target: vec3, index: number): Generator<ActionSignal> {
@@ -272,8 +268,8 @@ export class ArtillerySkill extends CubeSkill {
         this.flashMaterial.diffuse = SharedSystem.textures.ring
     }
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const rotate = PropertyAnimation([
             { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },
@@ -310,7 +306,7 @@ export class ArtillerySkill extends CubeSkill {
         }
     }
     public *close(): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const rotate = PropertyAnimation([
             { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },
             { frame: 0.4, value: quat.IDENTITY, ease: ease.quadInOut }
@@ -326,7 +322,7 @@ export class ArtillerySkill extends CubeSkill {
     }
     private findTarget(direction: Direction): vec2[] {
         const out = []
-        const origin = this.cube.state.tile
+        const origin = this.cube.tile
         const terrain = this.context.get(TerrainSystem)
         const forward = (direction - 1) * 0.5 * Math.PI
         const tile = vec2(), limit = 4

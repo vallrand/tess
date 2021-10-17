@@ -127,12 +127,15 @@ http://allenchou.net/2018/05/game-math-swing-twist-interpolation-sterp/
 drawing lines https://www.redblobgames.com/grids/line-drawing.html
 grid based simple AI example https://github.com/Gornova/Wargame/blob/master/src/it/wargame/ai/CentralAi.java
 
-action ->
-execute -> next -> endTurn -> next -> end
-next = wait for next
 
 
+AI
+    Units
+    Skills
+Economy
 
+Player
+    Skills
 
-turn-
-    execute -> / animation
+Shared
+Terrain

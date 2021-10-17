@@ -91,7 +91,13 @@ vec2.reflect = (vec: vec2, normal: vec2, out: vec2): vec2 => {
 vec2.angle = (a: vec2, b: vec2): number => Math.acos(vec2.dot(a, b))
 vec2.rotation = (vec: vec2): number => Math.atan2(vec[1], vec[0])
 
+vec2.equals = (a: vec2, b: vec2, tolerance: number): boolean => (
+    Math.abs(a[0] - b[0]) <= tolerance &&
+    Math.abs(a[1] - b[1]) <= tolerance
+)
+
 vec2.ZERO = vec2(0, 0)
+vec2.HALF = vec2(0.5, 0.5)
 vec2.ONE = vec2(1, 1)
 vec2.AXIS_Y = vec2(0, 1)
 vec2.AXIS_X = vec2(1, 0)

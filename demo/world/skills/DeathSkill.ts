@@ -55,11 +55,11 @@ export class DeathSkill extends CubeSkill {
         super(context, cube)
     }
     *open(){
-        vec4.copy(vec4.ZERO, this.cube.meshes[this.cube.state.side].color)
+        vec4.copy(vec4.ZERO, this.cube.meshes[this.cube.side].color)
         this.wreck = this.context.get(MeshSystem).loadModel(CubeModuleModel[CubeModule.Death])
         this.wreck.transform = this.cube.transform
-        const side = this.cube.state.sides[this.cube.state.side]
-        const rotation = DirectionAngle[(this.cube.state.direction + side.direction) % 4]
+        const side = this.cube.sides[this.cube.side]
+        const rotation = DirectionAngle[(this.cube.direction + side.direction) % 4]
         quat.copy(rotation, this.wreck.armature.nodes[0].rotation)
         modelAnimations[CubeModuleModel[CubeModule.Death]].close(0, this.wreck.armature)
         this.context.get(PlayerSystem).tilemap.renderSubstitute(this.wreck.material)
@@ -75,8 +75,7 @@ export class DeathSkill extends CubeSkill {
         this.light.transform = this.context.get(TransformSystem)
         .create([0,1,0],quat.IDENTITY,vec3.ONE,this.wreck.transform)
 
-        this.wave = new Sprite()
-        this.wave.billboard = BillboardType.None
+        this.wave = Sprite.create(BillboardType.None)
         this.wave.material = new SpriteMaterial()
         this.wave.material.blendMode = null
         this.wave.material.program = SharedSystem.materials.distortion
@@ -92,7 +91,7 @@ export class DeathSkill extends CubeSkill {
         this.burn.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.wreck.transform)
 
-        this.ring = new Sprite()
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.billboard = BillboardType.None
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
@@ -189,13 +188,13 @@ export class DeathSkill extends CubeSkill {
         this.context.get(PointLightPass).delete(this.light)
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(DecalPass).delete(this.burn)
-
         this.context.get(MeshSystem).delete(this.wreck)
+        Sprite.delete(this.ring)
+        Sprite.delete(this.wave)
     }
     public *damage(): Generator<ActionSignal> {
         const debris = this.context.get(SharedSystem).debris.create(this.cube.transform.position)
-        const ring = new Sprite()
-        ring.billboard = BillboardType.None
+        const ring = Sprite.create(BillboardType.None)
         ring.material = new SpriteMaterial()
         ring.material.program = this.context.get(ParticleEffectPass).program
         ring.material.diffuse = SharedSystem.textures.raysInner
@@ -240,5 +239,6 @@ export class DeathSkill extends CubeSkill {
         this.context.get(SharedSystem).debris.delete(debris)
         this.context.get(TransformSystem).delete(ring.transform)
         this.context.get(ParticleEffectPass).remove(ring)
+        Sprite.delete(ring)
     }
 }

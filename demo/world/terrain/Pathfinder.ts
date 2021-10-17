@@ -43,13 +43,35 @@ export class Pathfinder {
 	public readonly influence = new Uint32Array(this.size * this.size)
 	public readonly offset: vec2 = vec2(0, 0)
     constructor(private readonly context: Application, public readonly size: number){}
-	private calculateWeight(start: vec2, end: vec2, startIndex: number, endIndex: number, threshold?: number): number {
-		let weight = this.weight[endIndex]
-		if(start[0] != end[0] && start[1] != end[1]){
+
+	private calculateSingleWeight(start: vec2, end: vec2, size: vec2, threshold?: number): number {
+		let weight = this.weight[end[0] + end[1] * this.size]
+		if(start[0] !== end[0] && start[1] !== end[1]){
 			const left = this.weight[start[0] + end[1] * this.size]
 			const right = this.weight[end[0] + start[1] * this.size]
 			if(!left && !right) return TileStatus.Occupied
-			weight = weight * Math.SQRT2
+			weight += (Math.SQRT2-1) * Math.max(left, right)
+		}
+		if(threshold != null && weight > threshold) return TileStatus.Occupied
+		return weight
+	}	
+	private calculateAreaWeight(start: vec2, end: vec2, size: vec2, threshold?: number): number {
+		let x0 = end[0], x1 = end[0] + size[0]
+		let y0 = end[1], y1 = end[1] + size[1]
+		const dx = end[0] - start[0], dy = end[1] - start[1]
+		if(dx === 0){
+			if(dy > 0) y0 = Math.max(y0, y1 - dy)
+			else y1 = Math.min(y1, y0 - dy)
+		}else if(dy === 0){
+			if(dx > 0) x0 = Math.max(x0, x1 - dx)
+			else x1 = Math.min(x1, x0 - dx)
+		}
+		let weight: number = 1
+		for(let x = x0; x < x1; x++)
+		for(let y = y0; y < y1; y++){
+			const sample = this.weight[x + y * this.size]
+			if(!sample) return TileStatus.Occupied
+			weight = Math.max(weight, sample)
 		}
 		if(threshold != null && weight > threshold) return TileStatus.Occupied
 		return weight
@@ -65,13 +87,15 @@ export class Pathfinder {
 	public add(origin: vec2): void {
 		this.dirty.push(this.tileIndex(origin[0], origin[1]))
 	}
-    public search(target: vec2, diagonal?: boolean, threshold?: number): number {
+    public search(target: vec2, size: vec2, diagonal?: boolean, threshold?: number): number {
 		const heuristic = diagonal ? Pathfinder.heuristic.diagonal : Pathfinder.heuristic.manhattan
 		const neighbours = diagonal ? Pathfinder.neighbours.diagonal : Pathfinder.neighbours.cardinal
+		const sampleWeight = vec2.equals(vec2.ONE, size, 0) ? this.calculateSingleWeight : this.calculateAreaWeight
 		const { tile0, tile1 } = Pathfinder
 
 		for(let i = this.dirty.length - 1; i >= 0; i--){
 			const originIndex = this.dirty[i]
+			if(this.flags[originIndex]) continue
 			this.indexTile(originIndex, tile0)
 			this.estimate[originIndex] = heuristic(tile0, target)
 			this.flags[originIndex] |= TileStatus.Visited
@@ -92,7 +116,7 @@ export class Pathfinder {
 				vec2.add(neighbours[i], tile0, tile1)
 				if(tile1[0] < 0 || tile1[1] < 0 || tile1[0] >= this.size || tile1[1] >= this.size) continue
 				const neighbour = tile1[0] + tile1[1] * this.size
-				const weight = this.calculateWeight(tile0, tile1, node, neighbour, threshold)
+				const weight = sampleWeight.call(this, tile0, tile1, size, threshold)
 				if((this.flags[neighbour] & TileStatus.Closed) != 0 || weight == TileStatus.Occupied) continue
 				const distance = this.distance[node] + weight
 				const visited = (this.flags[neighbour] & TileStatus.Visited) != 0
@@ -127,14 +151,16 @@ export class Pathfinder {
 	}
 	walk<T>(
 		enter: (this: T, node: number, tile: vec2, distance: number, parent: number, first: boolean) => boolean, context: T,
-		diagonal?: boolean, threshold?: number, ordered?: boolean
+		size: vec2, diagonal?: boolean, threshold?: number, ordered?: boolean
 	): void {
 		const neighbours = diagonal ? Pathfinder.neighbours.diagonal : Pathfinder.neighbours.cardinal
+		const sampleWeight = vec2.equals(vec2.ONE, size, 0) ? this.calculateSingleWeight : this.calculateAreaWeight
 		const queue = ordered ? this.orderedQueue : this.queue
 		const { tile0, tile1 } = Pathfinder
 
 		for(let i = this.dirty.length - 1; i >= 0; i--){
 			const originIndex = this.dirty[i]
+			if(this.flags[originIndex]) continue
 			if(!enter.call(context, originIndex, this.indexTile(originIndex, tile0), 0, -1, true)) continue
 			queue.push(originIndex)
 			this.flags[originIndex] = TileStatus.Visited
@@ -150,7 +176,7 @@ export class Pathfinder {
 				vec2.add(neighbours[i], tile0, tile1)
 				if(tile1[0] < 0 || tile1[1] < 0 || tile1[0] >= this.size || tile1[1] >= this.size) continue
 				const neighbour = tile1[0] + tile1[1] * this.size
-				const weight = this.calculateWeight(tile0, tile1, node, neighbour, threshold)
+				const weight = sampleWeight.call(this, tile0, tile1, size, threshold)
 				if(weight == TileStatus.Occupied) continue
 				if(!enter.call(context, neighbour, vec2.subtract(tile1, this.offset, tile1), distance + 1, node, !this.flags[neighbour])) continue
 				if(this.flags[neighbour] === TileStatus.Visited) continue

@@ -6,8 +6,8 @@ export default (env, argv) => ({
     output:{ filename: 'index.js', path: path.resolve('build') },
     resolve:{ extensions: ['.js','.ts','.json'] },
     module:{ rules:[
-        { test: /\.tsx?$/i, loader: 'ts-loader', exclude: /node_modules/ },
-        { test: /\.(glsl|vert|frag)$/i, loader: 'raw-loader', exclude: /node_modules/, options: { esModule: false } }
+        { test: /\.tsx?$/i, use: ['ts-loader'], exclude: /node_modules/ },
+        { test: /\.(glsl|vert|frag)$/i, use: [path.resolve('tasks/glsl-loader.cjs')], exclude: /node_modules/ }
     ] },
     optimization:{ minimize: argv.mode === 'production' },
     devServer:{

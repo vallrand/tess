@@ -120,9 +120,7 @@ export class ShieldSkill extends CubeSkill {
         this.displacement.buffer = SharedSystem.geometry.sphereMesh
         this.displacement.material = SharedSystem.materials.shieldDisplacementMaterial
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.beam.origin)
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
@@ -134,8 +132,8 @@ export class ShieldSkill extends CubeSkill {
         this.sphere.material = this.tube.material
     }
     public *open(): Generator<ActionSignal> {
-        const state = this.cube.state.sides[this.cube.state.side]
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const state = this.cube.sides[this.cube.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         const origin: vec3 = mat4.transform([0, 0, 0], this.cube.transform.matrix, vec3())
@@ -205,8 +203,8 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(DecalPass).delete(this.wave)
     }
     public *close(): Generator<ActionSignal> {
-        const state = this.cube.state.sides[this.cube.state.side]
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const state = this.cube.sides[this.cube.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
@@ -230,8 +228,8 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(PostEffectPass).remove(this.displacement)
     }
     public *idle(): Generator<ActionSignal> {
-        const state = this.cube.state.sides[this.cube.state.side]
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const state = this.cube.sides[this.cube.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         const velocityEase = (v0: number, v1: number, duration: number): ease.IEase => {

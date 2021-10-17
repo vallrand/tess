@@ -39,13 +39,12 @@ vec4 lerpLUT(sampler2D texture, float u, int v){
 #endif
 uniform sampler2D uDisplacementMap;
 
-#define TAU 6.283185307179586
 float hash11(uint n){
 	n = (n << 13U) ^ n;
     n = n * (n * n * 15731U + 789221U) + 1376312589U;
     return float(n & uvec3(0x7fffffffU))/float(0x7fffffff);
 }
-mat2 rotate(in float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
+#pragma import(./common/math.glsl)
 
 void main(){
     float time = max(0.,uTime.x - aLifetime.x);

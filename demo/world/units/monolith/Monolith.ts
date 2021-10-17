@@ -31,6 +31,7 @@ export class Monolith extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        this.markTiles(true)
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)

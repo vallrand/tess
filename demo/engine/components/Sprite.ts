@@ -13,6 +13,24 @@ export const enum BillboardType {
 }
 
 export class Sprite implements IBatched {
+    private static readonly pool: Sprite[] = []
+    public static create(
+        billboard?: BillboardType, order?: number, color?: vec4, origin?: vec2
+    ): Sprite {
+        const item = this.pool.pop() || new Sprite()
+        item.billboard = billboard || BillboardType.None
+        item.order = order || 0
+        vec4.copy(color || vec4.ONE, item.color)
+        vec2.copy(origin || vec2.HALF, item.origin)
+        return item
+    }
+    public static delete(item: Sprite): void {
+        this.pool.push(item)
+        item.frame = 0
+        item.index = -1
+        item.material = null
+        item.transform = null
+    }
     public static readonly FlatUp: quat = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
     public static readonly FlatDown: quat = quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, quat())
 

@@ -93,8 +93,7 @@ export class BeamSkill extends CubeSkill {
         this.cone = new BatchMesh(SharedSystem.geometry.cone)
         this.cone.material = SharedSystem.materials.absorbTealMaterial
 
-        this.center = new Sprite()
-        this.center.billboard = BillboardType.Sphere
+        this.center = Sprite.create(BillboardType.Sphere)
         this.center.material = new SpriteMaterial()
         this.center.material.program = SharedSystem.materials.beamRadialProgram
         vec2.set(8, 4, this.center.material.uvTransform as any)
@@ -115,12 +114,10 @@ export class BeamSkill extends CubeSkill {
         raysMaterial.diffuse = SharedSystem.textures.rays
         raysMaterial.program = this.context.get(ParticleEffectPass).program
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.Sphere
+        this.ring = Sprite.create(BillboardType.Sphere)
         this.ring.material = ringMaterial
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.Sphere
+        this.flash = Sprite.create(BillboardType.Sphere)
         this.flash.material = raysMaterial
     }
     protected clear(): void {
@@ -193,8 +190,8 @@ export class BeamSkill extends CubeSkill {
             uFieldStrength: vec2.ZERO
         })
 
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const animate = AnimationTimeline(this, {
             ...actionTimeline,

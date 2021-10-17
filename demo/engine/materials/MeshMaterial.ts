@@ -3,6 +3,12 @@ import { IMaterial } from '../pipeline'
 import { ShaderMaterial } from './ShaderMaterial'
 
 export class MeshMaterial extends ShaderMaterial implements IMaterial {
+    static copy(source: MeshMaterial, out: MeshMaterial){
+        out.diffuse = source.diffuse
+        out.normal = source.normal
+        out.array = source.array
+        out.arrayLayers = source.arrayLayers
+    }
     index: number
     diffuse: WebGLTexture
     normal?: WebGLTexture

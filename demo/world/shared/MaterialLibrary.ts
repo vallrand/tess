@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
-import { ShaderProgram, GL } from '../../engine/webgl'
+import { ShaderProgram, GL, OpaqueLayer } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
@@ -13,7 +13,7 @@ export function MaterialLibrary(context: Application){
     resourceSpotMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/spot_frag.glsl'), {
         INSTANCED: true, ALPHA_CUTOFF: 0.01
     })
-    resourceSpotMaterial.program.uniforms['uLayer'] = 1
+    resourceSpotMaterial.program.uniforms['uLayer'] = OpaqueLayer.Terrain
 
     const heatDistortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
         PANNING: true, VERTICAL_MASK: true
@@ -49,6 +49,13 @@ export function MaterialLibrary(context: Application){
     const orbMaterial = new MeshMaterial()
     orbMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
 
+    const corrosionMaterial = new DecalMaterial()
+    corrosionMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/corrode_frag.glsl'), {
+        INSTANCED: true, ALPHA_CUTOFF: 0.01
+    })
+    corrosionMaterial.program.uniforms['uLayer'] = OpaqueLayer.Skinned
+
+
     const shieldMaterial = new ShaderMaterial()
     shieldMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), {})
     shieldMaterial.cullFace = GL.NONE
@@ -56,7 +63,6 @@ export function MaterialLibrary(context: Application){
 
     const shieldDisplacementMaterial = new ShaderMaterial()
     shieldDisplacementMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
-
 
     const coneTealMaterial = new EffectMaterial(context.gl, {
         VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true
@@ -335,6 +341,6 @@ export function MaterialLibrary(context: Application){
         exhaustMaterial, auraTealMaterial, energyHalfPurpleMaterial, flashYellowMaterial,
         coreYellowMaterial, coreWhiteMaterial, ringDustMaterial, stripesRedMaterial, energyPurpleMaterial, planeDissolveMaterial,
 
-        shieldDisplacementMaterial, shieldMaterial, trailEnergyMaterial, resourceSpotMaterial
+        shieldDisplacementMaterial, shieldMaterial, trailEnergyMaterial, resourceSpotMaterial, corrosionMaterial
     }
 }

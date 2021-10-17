@@ -1,5 +1,5 @@
 import { vec4, mat4, binarySearch, insertionSort } from '../math'
-import { Application, ISystem, Factory } from '../framework'
+import { Application, ISystem } from '../framework'
 import { createBox } from '../geometry'
 import { CameraSystem } from '../scene/Camera'
 import { Transform } from '../scene/Transform'

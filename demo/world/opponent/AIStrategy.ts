@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { random, lerp, vec2 } from '../../engine/math'
+import { random, randomFloat, lerp, vec2 } from '../../engine/math'
 import { TerrainSystem, Pathfinder } from '../terrain'
 import { PlayerSystem } from '../player'
 import { AIUnit } from './AIUnit'
@@ -53,8 +53,10 @@ export class AIStrategy {
     public fuzzy: number = 0
     unit: AIUnit
     skill: number = 0
+    aware: boolean = true
 
     precalculate(){
+        if(!this.aware) return
         const map: Pathfinder = this.context.get(TerrainSystem).pathfinder, tile = AIStrategy.tile
         const target = this.context.get(PlayerSystem).cube
         const { radius, cardinal } = this.unit.skills[this.skill]
@@ -70,7 +72,7 @@ export class AIStrategy {
             const index = this.tileIndex(tile[0], tile[1])
             if(index != -1) this.influence[index] = 0
         }
-        const path = map.linkPath(map.search(this.unit.tile, this.diagonal))
+        const path = map.linkPath(map.search(this.unit.tile, this.unit.size, this.diagonal))
         map.clear()
         for(let i = 0; i < path.length; i++){
             map.indexTile(path[i], tile)
@@ -79,7 +81,7 @@ export class AIStrategy {
         }
 
         map.add(this.unit.tile)
-        map.walk(this.walkPropagate, this, this.diagonal, undefined, true)
+        map.walk(this.walkPropagate, this, this.unit.size, this.diagonal, undefined, true)
 
         for(let c = 0; c < this.size; c++)
         for(let r = 0; r < this.size; r++){
@@ -96,10 +98,11 @@ export class AIStrategy {
         map.clear()
     }
     plan(limit?: number): AIStrategyPlan {
+        if(!this.aware) return this.optimal
         this.optimal.priority = Number.MIN_SAFE_INTEGER
         vec2.copy(this.unit.tile, this.optimal.origin)
         this.map.add(this.unit.tile)
-        this.map.walk(this.walkFind, this, this.diagonal, 1, false)
+        this.map.walk(this.walkFind, this, this.unit.size, this.diagonal, 1, false)
         move: {
             this.optimal.path = null
             if(this.optimal.priority === Number.MIN_SAFE_INTEGER || this.optimal.priority < limit) break move
@@ -111,14 +114,12 @@ export class AIStrategy {
         this.map.clear()
         action: {
             this.optimal.skill = -1
-            const target = this.context.get(PlayerSystem).cube
-            const { radius, cardinal } = this.unit.skills[this.skill]
-            if(cardinal && this.optimal.origin[0] != target.tile[0] && this.optimal.origin[1] != target.tile[1]) break action
-            if(vec2.distanceSquared(this.optimal.origin, target.tile) > radius * radius) break action
             if(this.unit.skills[this.skill].cost > this.unit.actionPoints) break action
-
-            this.optimal.skill = this.skill
-            this.optimal.target = target.tile
+            const target = this.context.get(PlayerSystem).cube
+            this.optimal.reverse = this.unit.skills[this.skill].active
+            this.optimal.target = this.unit.skills[this.skill]
+            .aim(this.optimal.reverse ? this.unit.tile : this.optimal.origin, target.tiles)
+            if(this.optimal.target) this.optimal.skill = this.skill
         }
         return this.optimal
     }
@@ -141,7 +142,7 @@ export class AIStrategy {
         if(distance > this.unit.movementPoints || !first) return false
         const internal = this.influence[this.tileIndex(tile[0], tile[1])]
         const external = this.map.influence[index] - internal
-        const priority = internal / (1 + external / internal)
+        const priority = randomFloat(1-this.fuzzy,1+this.fuzzy, random) * internal / (1 + external / internal)
 
         if(priority > this.optimal.priority){
             vec2.copy(tile, this.optimal.origin)
@@ -154,15 +155,15 @@ export class AIStrategy {
         const target = this.context.get(PlayerSystem).cube
         const { radius, cardinal, damage } = this.unit.skills[this.skill]
         let total = 0xF / (1 + targetDistance)
+        offense: {
+            if(!this.unit.skills[this.skill].aim(tile, target.tiles)) break offense
+            total = 0xF
+            total *= 2
+        }
         defense: {
             if(cardinal || radius < 2) break defense
             const abs = Math.min(Math.abs(tile[0] - target.tile[0]), Math.abs(tile[1] - target.tile[1]))
             total *= Math.min(1,0.5+0.25*abs)
-        }
-        offense: {
-            if(cardinal && tile[0] != target.tile[0] && tile[1] != target.tile[1]) break offense
-            if(vec2.distanceSquared(tile, target.tile) > radius * radius) break offense
-            total *= 2
         }
         movement: {
             const turns = Math.ceil(Math.max(0, originDistance - this.unit.movementPoints) / this.unit.gainMovementPoints)

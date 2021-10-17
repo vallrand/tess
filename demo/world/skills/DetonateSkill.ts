@@ -102,16 +102,14 @@ export class DetonateSkill extends CubeSkill {
         this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
         this.tube.material = SharedSystem.materials.stripesRedMaterial
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.beam.origin)
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const origin: vec3 = mat4.transform([0, 0, 0], this.cube.transform.matrix, vec3())
 
@@ -163,7 +161,7 @@ export class DetonateSkill extends CubeSkill {
             animate(elapsedTime, this.context.deltaTime)
             armatureAnimation.activate(elapsedTime, mesh.armature)
             if(elapsedTime >= 1 && !mine.enabled)
-                mine.place(this.cube.state.tile[0], this.cube.state.tile[1])
+                mine.place(this.cube.tile[0], this.cube.tile[1])
 
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame

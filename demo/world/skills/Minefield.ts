@@ -125,15 +125,13 @@ export class Minefield {
         core.order = 4
         core.material = SharedSystem.materials.coreWhiteMaterial
 
-        const wave = new Sprite()
-        wave.billboard = BillboardType.None
+        const wave = Sprite.create(BillboardType.None)
         wave.material = this.waveMaterial
 
         const ring = new BatchMesh(SharedSystem.geometry.cylinder)
         ring.material = SharedSystem.materials.ringDustMaterial
 
-        const spark = new Sprite()
-        spark.billboard = BillboardType.Sphere
+        const spark = Sprite.create(BillboardType.Sphere)
         spark.material = this.sparkMaterial
 
         return {

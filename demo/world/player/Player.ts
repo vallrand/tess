@@ -31,7 +31,7 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.state.side, 0, CubeModule.Repair)
+            this.cube.installModule(this.cube.side, 0, CubeModule.Machinegun)
             // this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
@@ -44,17 +44,17 @@ export class PlayerSystem implements ISystem {
             // this.context.get(AISystem).create(5,5,0)
             // this.context.get(AISystem).create(4,4,0)
 
-            // ;[
-            //     [5,7],[5,6],[5,5],[6,7],[6,6],[6,4]
-            // ]//.map(tile=>[tile[0]+2,tile[1]+3])
-            // .forEach(([c,r]) => {
-            //     this.context.get(AISystem).create(c,r,0)
-            // })
+            ;[
+                [5,7],[5,6],[5,5],[6,7],[6,6],[6,4]
+            ].map(tile=>[tile[0]+2,tile[1]+3-2])
+            .forEach(([c,r]) => {
+                this.context.get(AISystem).create(c,r,0)
+            })
 
             // ;[[5,8],[3,8],[2,7]]
             // //.map(tile=>[tile[0]+2,tile[1]+3])
             // .forEach(([c,r]) => {
-            //     this.context.get(AISystem).create(c,r,2)
+            //     this.context.get(AISystem).create(c,r,6)
             // })
 
             // window['u0'] = this.context.get(AISystem).create(6,7+3,0) //scarab
@@ -62,20 +62,20 @@ export class PlayerSystem implements ISystem {
             // window['u2'] = this.context.get(AISystem).create(7,8,2) //stingray
             // window['u3'] = this.context.get(AISystem).create(2+3,6,3) //locust
             // window['u4'] = this.context.get(AISystem).create(6,11,4) //obelisk
-            // window['u5'] = this.context.get(AISystem).create(0,8,5) //monolith
+            // window['u5'] = this.context.get(AISystem).create(1,4,5) //monolith
             // window['u6'] = this.context.get(AISystem).create(5,10,6) //decapod
             // window['u7'] = this.context.get(AISystem).create(3,10,7) //isopod
-            window['u8'] = this.context.get(AISystem).create(8,7,8) //tarantula variant
+            // window['u8'] = this.context.get(AISystem).create(8,7,8) //tarantula variant
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [0,8+4,2]//[-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [2,6,2]//[0,8+4,2]//[-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
 
-        this.cube.meshes[this.cube.state.side].armature.frame = 0
-        window['a'] = this.cube.meshes[this.cube.state.side].armature
+        this.cube.meshes[this.cube.side].armature.frame = 0
+        window['a'] = this.cube.meshes[this.cube.side].armature
 
         for(let i = 0; i <= 8; i++){
             const unit = window[`u${i}`]

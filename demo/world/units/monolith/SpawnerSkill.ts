@@ -60,9 +60,7 @@ export class SpawnerSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(effect.glow)
 
     
-        effect.beam = new Sprite()
-        effect.beam.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5, effect.beam.origin)
+        effect.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         effect.beam.material = new SpriteMaterial()
         effect.beam.material.program = this.context.get(ParticleEffectPass).program
         effect.beam.material.diffuse = SharedSystem.textures.raysBeam
@@ -78,8 +76,7 @@ export class SpawnerSkill extends AIUnitSkill {
             uFieldDomain: vec4.ONE, uFieldStrength: [4,0]
         })
 
-        effect.ring = new Sprite()
-        effect.ring.billboard = BillboardType.None
+        effect.ring = Sprite.create(BillboardType.None)
         effect.ring.material = new SpriteMaterial()
         effect.ring.material.program = this.context.get(ParticleEffectPass).program
         effect.ring.material.diffuse = SharedSystem.textures.swirl
@@ -162,5 +159,8 @@ export class SpawnerSkill extends AIUnitSkill {
 
         SharedSystem.particles.smoke.remove(effect.smoke)
         this.context.get(PointLightPass).delete(effect.light)
+
+        Sprite.delete(effect.ring)
+        Sprite.delete(effect.beam)
     }
 }

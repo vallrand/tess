@@ -128,25 +128,21 @@ export class ShockwaveSkill extends CubeSkill {
             }), {}, 0
         ).target
 
-        this.wave = new Sprite()
-        this.wave.billboard = BillboardType.None
+        this.wave = Sprite.create(BillboardType.None)
         this.wave.material = new SpriteMaterial()
         this.wave.material.blendMode = null
         this.wave.material.program = SharedSystem.materials.distortion
         this.wave.material.diffuse = SharedSystem.textures.wave
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.None
+        this.flash = Sprite.create(BillboardType.None)
         this.flash.material = new SpriteMaterial()
         this.flash.material.program = this.context.get(ParticleEffectPass).program
         this.flash.material.diffuse = SharedSystem.textures.wave
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
-        vec2.set(0,0.5,this.beam.origin)
 
         this.bolts = SharedSystem.particles.bolts.add({
             uOrigin: [0,0,0],
@@ -202,8 +198,8 @@ export class ShockwaveSkill extends CubeSkill {
 
         vec3.add(origin, [0,2,0], this.bolts.uniform.uniforms['uOrigin'] as any)
 
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const animate = AnimationTimeline(this, {
             ...actionTimeline

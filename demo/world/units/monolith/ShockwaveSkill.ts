@@ -46,8 +46,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         .create([0,6,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.pulse)
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
@@ -78,8 +77,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         .create([0,2.5,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cone)
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.Sphere
+        this.flash = Sprite.create(BillboardType.Sphere)
         this.flash.material = new SpriteMaterial()
         this.flash.material.program = this.context.get(ParticleEffectPass).program
         this.flash.material.diffuse = SharedSystem.textures.raysRing
@@ -93,8 +91,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         .create([0,4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
 
-        this.sparkle = new Sprite()
-        this.sparkle.billboard = BillboardType.Sphere
+        this.sparkle = Sprite.create(BillboardType.Sphere)
         this.sparkle.material = new SpriteMaterial()
         this.sparkle.material.program = this.context.get(ParticleEffectPass).program
         this.sparkle.material.diffuse = SharedSystem.textures.sparkle
@@ -197,5 +194,9 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.cone)
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(PostEffectPass).remove(this.pulse)
+
+        Sprite.delete(this.sparkle)
+        Sprite.delete(this.flash)
+        Sprite.delete(this.ring)
     }
 }

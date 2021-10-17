@@ -10,6 +10,10 @@ import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
 import { AIUnit, AIUnitSkill } from '../../opponent'
 
+const actionTimeline = {
+    
+}
+
 export class BeamSkill extends AIUnitSkill {
     public readonly cost: number = 1
     public readonly radius: number = 8
@@ -66,8 +70,7 @@ export class BeamSkill extends AIUnitSkill {
         vec3.copy(origins[2], this.beams[2].path[0])
         vec3.copy(origins[3], this.beams[3].path[0])
 
-        this.center = new Sprite()
-        this.center.billboard = BillboardType.None
+        this.center = Sprite.create(BillboardType.None)
         this.center.material = new SpriteMaterial()
         this.center.material.program = SharedSystem.materials.beamRadialProgram
         vec2.set(8, -16, this.center.material.uvTransform as any)
@@ -78,19 +81,16 @@ export class BeamSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.center)
 
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
-        vec2.set(0,0.5,this.beam.origin)
 
         this.beam.transform = this.context.get(TransformSystem)
         .create([0,2,0], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
@@ -259,6 +259,10 @@ export class BeamSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.center)
         this.context.get(ParticleEffectPass).remove(this.cylinder)
+
+        Sprite.delete(this.ring)
+        Sprite.delete(this.center)
+        Sprite.delete(this.beam)
     }
     public *deactivate(): Generator<ActionSignal> {
         this.active = false

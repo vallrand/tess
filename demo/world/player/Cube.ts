@@ -38,27 +38,32 @@ export class Cube implements IActor, IUnitTile {
     public readonly meshes: Mesh[] = []
     public dust: ParticleEmitter
     public light: PointLight
-    public state: CubeState = {
-        tile: vec2(0, 0),
-        side: 0, direction: Direction.Up,
-        sides: range(6).map(i => ({
-            type: CubeModule.Empty, direction: Direction.Up,
-            level: 0, open: 0
-        })),
-        armor: 10
-    }
-    public get tile(): vec2 { return this.state.tile }
+
+    public readonly tile: vec2 = vec2()
+    public side: number = 0
+    public direction: Direction = Direction.Up
+    public readonly sides: {
+        type: CubeModule
+        direction: Direction
+        open: number
+        level: number
+    }[] = range(6).map(i => ({
+        type: CubeModule.Empty, direction: Direction.Up,
+        level: 0, open: 0
+    }))
+
+    public readonly tiles: vec2[] = [this.tile]
     constructor(private readonly context: Application){
         this.transform = this.context.get(TransformSystem).create()
     }
     place(column: number, row: number){
-        vec2.set(column, row, this.state.tile)
+        vec2.set(column, row, this.tile)
         this.context.get(TerrainSystem).tilePosition(column, row, this.transform.position)
         this.transform.frame = 0
-        for(let i = 0; i < this.state.sides.length; i++)
-            this.installModule(i, this.state.sides[i].direction, this.state.sides[i].type)
+        for(let i = 0; i < this.sides.length; i++)
+            this.installModule(i, this.sides[i].direction, this.sides[i].type)
 
-        this.context.get(TerrainSystem).setTile(this.state.tile[0], this.state.tile[1], this)
+        this.context.get(TerrainSystem).setTile(this.tile[0], this.tile[1], this)
 
         this.light = this.context.get(PointLightPass).create()
         this.light.transform = this.context.get(TransformSystem).create()
@@ -86,23 +91,23 @@ export class Cube implements IActor, IUnitTile {
         const mesh = this.meshes[side] = this.context.get(MeshSystem).loadModel(CubeModuleModel[type])
 
         mesh.transform = this.transform
-        mesh.color[3] = this.state.side == side ? 1 : 0
-        this.state.sides[side].direction = direction
-        this.state.sides[side].type = type
-        const rotation = DirectionAngle[(this.state.direction + this.state.sides[side].direction) % 4]
+        mesh.color[3] = this.side == side ? 1 : 0
+        this.sides[side].direction = direction
+        this.sides[side].type = type
+        const rotation = DirectionAngle[(this.direction + this.sides[side].direction) % 4]
         quat.copy(rotation, mesh.armature.nodes[0].rotation)
         modelAnimations[CubeModuleModel[type]].close(0, mesh.armature)
 
-        this.hash = this.state.sides.reduce((hash, side) => (
+        this.hash = this.sides.reduce((hash, side) => (
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
         ), 0)
     }
     delete(){}
     *execute(): Generator<ActionSignal, void> {
         const keys = this.context.get(KeyboardSystem)
-        const state = this.state.sides[this.state.side]
-        const mesh = this.meshes[this.state.side]
-        const rotation = DirectionAngle[(this.state.direction + state.direction) % 4]
+        const state = this.sides[this.side]
+        const mesh = this.meshes[this.side]
+        const rotation = DirectionAngle[(this.direction + state.direction) % 4]
         const skill = this.context.get(PlayerSystem).skills[state.type]
 
         idle: for(let frame = 0; true;){
@@ -185,13 +190,13 @@ export class Cube implements IActor, IUnitTile {
         this.context.get(AnimationSystem).start(skill.damage(), true)
     }
     private moveTransition(direction: Direction): Generator<ActionSignal> {
-        const nextOrientation = CubeOrientation.roll(CubeOrientation(this.state.side, this.state.direction), direction)
+        const nextOrientation = CubeOrientation.roll(CubeOrientation(this.side, this.direction), direction)
         const nextDirection = nextOrientation & 0x3
         const nextFace = nextOrientation >>> 2
-        const nextTile = vec2.copy(this.state.tile, vec2())
+        const nextTile = vec2.copy(this.tile, vec2())
 
         const prevRotation = quat()
-        const nextRotation = DirectionAngle[(nextDirection + this.state.sides[nextFace].direction) % 4]
+        const nextRotation = DirectionAngle[(nextDirection + this.sides[nextFace].direction) % 4]
         const pivot = vec3()
         switch(direction){
             case Direction.Right: {
@@ -221,22 +226,22 @@ export class Cube implements IActor, IUnitTile {
         }
         if(this.context.get(TerrainSystem).getTile(nextTile[0], nextTile[1]) != null) return
 
-        console.log(`%cF ${this.state.side}-${nextFace} D ${this.state.direction}-${nextDirection} > ${direction}`,'color:#80dfaf;text-decoration:underline')
+        console.log(`%cF ${this.side}-${nextFace} D ${this.direction}-${nextDirection} > ${direction}`,'color:#80dfaf;text-decoration:underline')
 
-        this.meshes[this.state.side].color[3] = 0
+        this.meshes[this.side].color[3] = 0
         this.meshes[nextFace].color[3] = 1
-        this.state.direction = nextDirection
-        this.state.side = nextFace
-        this.context.get(TerrainSystem).setTile(this.state.tile[0], this.state.tile[1], null)
+        this.direction = nextDirection
+        this.side = nextFace
+        this.context.get(TerrainSystem).setTile(this.tile[0], this.tile[1], null)
         this.context.get(TerrainSystem).setTile(nextTile[0], nextTile[1], this)
-        vec2.copy(nextTile, this.state.tile)
+        vec2.copy(nextTile, this.tile)
 
-        const mesh = this.meshes[this.state.side]
-        modelAnimations[CubeModuleModel[this.state.sides[this.state.side].type]].close(0, mesh.armature)
+        const mesh = this.meshes[this.side]
+        modelAnimations[CubeModuleModel[this.sides[this.side].type]].close(0, mesh.armature)
 
         const rootNode = mesh.armature.nodes[0]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())
-        const nextPosition = this.context.get(TerrainSystem).tilePosition(this.state.tile[0], this.state.tile[1], vec3())
+        const nextPosition = this.context.get(TerrainSystem).tilePosition(this.tile[0], this.tile[1], vec3())
 
         quat.multiply(prevRotation, nextRotation, prevRotation)
         const pivotOffset = vec3.subtract(nextPosition, pivot, vec3())

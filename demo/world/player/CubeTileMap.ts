@@ -94,7 +94,7 @@ export class CubeTileMap {
     }
     private precomputeTileFaces(cube: Cube): number[][] {
         return range(6).map(side => {
-            let top = CubeOrientation(side, (4 + Direction.Up - cube.state.sides[side].direction) % 4)
+            let top = CubeOrientation(side, (4 + Direction.Up - cube.sides[side].direction) % 4)
             let front = CubeOrientation.roll(top, Direction.Up)
             let back = CubeOrientation.roll(top, Direction.Down)
             let bottom = CubeOrientation.roll(front, Direction.Up)
@@ -115,7 +115,7 @@ export class CubeTileMap {
             const faces = this.tileFaces[side]
             for(let i = 0; i < faces.length; i++){
                 const face = faces[i] >>> 2
-                const direction = ((faces[i] & 0x3) + cube.state.sides[face].direction) % 4
+                const direction = ((faces[i] & 0x3) + cube.sides[face].direction) % 4
                 const tileIndex = cube.meshes[face].material.index
                 sprite.material = this.tiles[tileIndex]
                 sprite.transform.rotation = -direction * 0.5 * Math.PI
@@ -132,10 +132,10 @@ export class CubeTileMap {
         }
     }
     renderFaceTiles(cube: Cube){
-        if(this.side == cube.state.side && this.hash == cube.hash) return
+        if(this.side == cube.side && this.hash == cube.hash) return
         if(this.hash != cube.hash) this.prepareBatch(cube)
         this.hash = cube.hash
-        this.side = cube.state.side
+        this.side = cube.side
 
         const materialIndex = cube.meshes[this.side].material.index
         const range = this.batchRanges[this.side]

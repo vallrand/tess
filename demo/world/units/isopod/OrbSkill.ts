@@ -13,6 +13,80 @@ import { SharedSystem } from '../../shared'
 import { AIUnit, AIUnitSkill } from '../../opponent'
 import { StaticOrb } from './StaticOrb'
 
+const actionTimeline = {
+    'ring.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: [0,0,0] },
+        { frame: 1.4, value: [8,8,8], ease: ease.quadOut }
+    ], vec3.lerp),
+    'ring.transform.rotation': PropertyAnimation([
+        { frame: 0.8, value: quat.IDENTITY },
+        { frame: 1.4, value: quat.axisAngle(vec3.AXIS_Z, Math.PI, quat()), ease: ease.sineIn }
+    ], quat.slerp),
+    'ring.color': PropertyAnimation([
+        { frame: 0.8, value: [0.8,0.2,1,0.4] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'bulge.transform.scale': PropertyAnimation([
+        { frame: 1.0, value: vec3.ZERO },
+        { frame: 1.8, value: [10,10,10], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'bulge.color': PropertyAnimation([
+        { frame: 1.0, value: vec4.ONE },
+        { frame: 1.8, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'light.radius': PropertyAnimation([
+        { frame: 0.8, value: 0 },
+        { frame: 1.6, value: 5, ease: ease.cubicOut }
+    ], lerp),
+    'light.intensity': PropertyAnimation([
+        { frame: 0.8, value: 6 },
+        { frame: 1.6, value: 0, ease: ease.sineIn }
+    ], lerp),
+    'light.color': PropertyAnimation([
+        { frame: 1.0, value: [0.4,0.2,1] }
+    ], vec3.lerp),
+    'beam.transform.position': PropertyAnimation([
+        { frame: 0, value: [0,-0.5,0] },
+        { frame: 0.6, value: [0,0.7,1.8], ease: ease.quadInOut }
+    ], vec3.lerp),
+    'beam.transform.scale': PropertyAnimation([
+        { frame: 0.2, value: vec3.ZERO },
+        { frame: 0.8, value: [1.5,6,1.5], ease: ease.quartOut }
+    ], vec3.lerp),
+    'beam.color': PropertyAnimation([
+        { frame: 0.2, value: [1,0.6,1,0] },
+        { frame: 0.8, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'funnel.transform.scale': PropertyAnimation([
+        { frame: 0.4, value: [0,0,-2] },
+        { frame: 1.4, value: [0.6,0.6,-0.6], ease: ease.quadInOut }
+    ], vec3.lerp),
+    'funnel.color': PropertyAnimation([
+        { frame: 0.8, value: [0.8,0.2,1,1], ease: ease.cubicOut },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'core.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.6, value: [1.5,1.5,1.5], ease: ease.quadOut }
+    ], vec3.lerp),
+    'core.color': PropertyAnimation([
+        { frame: 0.8, value: [0.4,0.2,1,1] },
+        { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'cone.transform.scale': PropertyAnimation([
+        { frame: 0.6, value: [0,1,0] },
+        { frame: 1.2, value: [0.6,4,0.6], ease: ease.sineOut }
+    ], vec3.lerp),
+    'cone.transform.rotation': PropertyAnimation([
+        { frame: 0.6, value: Sprite.FlatDown },
+        { frame: 1.2, value: quat.multiply(Sprite.FlatDown, quat.axisAngle(vec3.AXIS_Y, Math.PI, quat()), quat()), ease: ease.quadOut }
+    ], quat.slerp),
+    'cone.color': PropertyAnimation([
+        { frame: 0.6, value: [0.4,0.6,1,1] },
+        { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp)
+}
+
 export class OrbSkill extends AIUnitSkill {
     public readonly cost: number = 1
     public readonly radius: number = 2
@@ -28,8 +102,12 @@ export class OrbSkill extends AIUnitSkill {
     private ring: Sprite
     private mesh: Mesh
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
+        for(const generator = source.rotate(target); true;){
+            const iterator = generator.next()
+            if(iterator.done) break
+            else yield iterator.value
+        }
         this.mesh = source.mesh
-        target = vec2.add([0,1], source.tile, vec2())
 
         this.funnel = new BatchMesh(SharedSystem.geometry.funnel)
         this.funnel.transform = this.context.get(TransformSystem)
@@ -51,9 +129,7 @@ export class OrbSkill extends AIUnitSkill {
         this.cone.material.diffuse = SharedSystem.textures.wind
         this.context.get(ParticleEffectPass).add(this.cone)
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.beam.origin)
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
@@ -65,8 +141,7 @@ export class OrbSkill extends AIUnitSkill {
         this.light.transform = this.context.get(TransformSystem)
         .create([0,1,2.5],quat.IDENTITY,vec3.ONE,this.mesh.transform)
 
-        this.bulge = new Sprite()
-        this.bulge.billboard = BillboardType.Sphere
+        this.bulge = Sprite.create(BillboardType.Sphere)
         this.bulge.material = new SpriteMaterial()
         this.bulge.material.blendMode = null
         this.bulge.material.program = SharedSystem.materials.chromaticAberration
@@ -75,8 +150,7 @@ export class OrbSkill extends AIUnitSkill {
         .create([0,0.7,2.5],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.bulge)
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
@@ -85,85 +159,14 @@ export class OrbSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.ring)
 
         const animate = AnimationTimeline(this, {
+            ...actionTimeline,
             'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
-
-            'ring.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: [0,0,0] },
-                { frame: 1.4, value: [8,8,8], ease: ease.quadOut }
-            ], vec3.lerp),
-            'ring.transform.rotation': PropertyAnimation([
-                { frame: 0.8, value: quat.IDENTITY },
-                { frame: 1.4, value: quat.axisAngle(vec3.AXIS_Z, Math.PI, quat()), ease: ease.sineIn }
-            ], quat.slerp),
-            'ring.color': PropertyAnimation([
-                { frame: 0.8, value: [0.8,0.2,1,0.4] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-
-            'bulge.transform.scale': PropertyAnimation([
-                { frame: 1.0, value: vec3.ZERO },
-                { frame: 1.8, value: [10,10,10], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'bulge.color': PropertyAnimation([
-                { frame: 1.0, value: vec4.ONE },
-                { frame: 1.8, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-
-            'light.radius': PropertyAnimation([
-                { frame: 0.8, value: 0 },
-                { frame: 1.6, value: 5, ease: ease.cubicOut }
-            ], lerp),
-            'light.intensity': PropertyAnimation([
-                { frame: 0.8, value: 6 },
-                { frame: 1.6, value: 0, ease: ease.sineIn }
-            ], lerp),
-            'light.color': PropertyAnimation([
-                { frame: 1.0, value: [0.4,0.2,1] }
-            ], vec3.lerp),
-            'beam.transform.position': PropertyAnimation([
-                { frame: 0, value: [0,-0.5,0] },
-                { frame: 0.6, value: [0,0.7,1.8], ease: ease.quadInOut }
-            ], vec3.lerp),
-            'beam.transform.scale': PropertyAnimation([
-                { frame: 0.2, value: vec3.ZERO },
-                { frame: 0.8, value: [1.5,6,1.5], ease: ease.quartOut }
-            ], vec3.lerp),
-            'beam.color': PropertyAnimation([
-                { frame: 0.2, value: [1,0.6,1,0] },
-                { frame: 0.8, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-
-            'funnel.transform.scale': PropertyAnimation([
-                { frame: 0.4, value: [0,0,-2] },
-                { frame: 1.4, value: [0.6,0.6,-0.6], ease: ease.quadInOut }
-            ], vec3.lerp),
-            'funnel.color': PropertyAnimation([
-                { frame: 0.8, value: [0.8,0.2,1,1], ease: ease.cubicOut },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'core.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 1.6, value: [1.5,1.5,1.5], ease: ease.quadOut }
-            ], vec3.lerp),
-            'core.color': PropertyAnimation([
-                { frame: 0.8, value: [0.4,0.2,1,1] },
-                { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'cone.transform.scale': PropertyAnimation([
-                { frame: 0.6, value: [0,1,0] },
-                { frame: 1.2, value: [0.6,4,0.6], ease: ease.sineOut }
-            ], vec3.lerp),
-            'cone.transform.rotation': PropertyAnimation([
-                { frame: 0.6, value: Sprite.FlatDown },
-                { frame: 1.2, value: quat.multiply(Sprite.FlatDown, quat.axisAngle(vec3.AXIS_Y, Math.PI, quat()), quat()), ease: ease.quadOut }
-            ], quat.slerp),
-            'cone.color': PropertyAnimation([
-                { frame: 0.6, value: [0.4,0.6,1,1] },
-                { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
             '': EventTrigger([{ frame: 1.0, value: new StaticOrb(this.context) }], (root, orb) => {
                 if(orb.enabled) return
-                orb.place(source.tile[0], source.tile[1] + 1)
+                orb.place(
+                    source.tile[0] + Math.sign(target[0] - source.tile[0]),
+                    source.tile[1] + Math.sign(target[1] - source.tile[1])
+                )
                 this.context.get(AnimationSystem).start(orb.appear(this.mesh.transform.position), true)
             })
         })
@@ -190,5 +193,8 @@ export class OrbSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.funnel)
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.ring)
+        Sprite.delete(this.bulge)
+        Sprite.delete(this.beam)
+        Sprite.delete(this.ring)
     }
 }

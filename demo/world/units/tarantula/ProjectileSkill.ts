@@ -13,6 +13,77 @@ import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
 import { AIUnit, AIUnitSkill } from '../../opponent'
 
+const actionTimeline = {
+    'light.radius': PropertyAnimation([
+        { frame: 1.1, value: 0 },
+        { frame: 1.7, value: 6, ease: ease.quadOut }
+    ], lerp),
+    'light.intensity': PropertyAnimation([
+        { frame: 1.1, value: 8 },
+        { frame: 1.7, value: 0, ease: ease.sineIn }
+    ], lerp),
+    'fire': EventTrigger([
+        { frame: 1.0, value: 48 }
+    ], EventTrigger.emit),
+    'wave.transform.scale': PropertyAnimation([
+        { frame: 1.2, value: vec3.ZERO },
+        { frame: 1.6, value: [8,8,8], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'wave.color': PropertyAnimation([
+        { frame: 1.2, value: vec4.ONE },
+        { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'core.transform.scale': PropertyAnimation([
+        { frame: 1.0, value: vec3.ZERO },
+        { frame: 1.6, value: [3,3,3], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'core.color': PropertyAnimation([
+        { frame: 1.0, value: [0.2,1,0.6,1] },
+        { frame: 1.6, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'circle.transform.scale': PropertyAnimation([
+        { frame: 1.0, value: vec3.ZERO },
+        { frame: 1.4, value: [6,6,6], ease: ease.quartOut }
+    ], vec3.lerp),
+    'circle.color': PropertyAnimation([
+        { frame: 1.0, value: [0.6,1,1,0] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'pillar.transform.scale': PropertyAnimation([
+        { frame: 0, value: [2,0,2] },
+        { frame: 0.5, value: [1,3,1], ease: ease.quadOut },
+        { frame: 0.8, value: [0,4,0], ease: ease.quadIn }
+    ], vec3.lerp),
+    'pillar.color': PropertyAnimation([
+        { frame: 0, value: vec4.ZERO },
+        { frame: 0.5, value: [0.4,1,0.8,1], ease: ease.cubicOut }
+    ], vec4.lerp),
+    'muzzle.transform.scale': PropertyAnimation([
+        { frame: 0.7, value: [0,-1,0] },
+        { frame: 1.1, value: [0.6,-2.8,0.6], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'muzzle.color': PropertyAnimation([
+        { frame: 0.7, value: [0.4,1,0.8,0] },
+        { frame: 1.1, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'flash.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.4, value: [3,3,3], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'flash.color': PropertyAnimation([
+        { frame: 0.8, value: [0.4,1,0.9,1] },
+        { frame: 1.4, value: [0,1,0.5,0.2], ease: ease.quadIn }
+    ], vec4.lerp),
+    'ring.transform.scale': PropertyAnimation([
+        { frame: 0.7, value: vec3.ZERO },
+        { frame: 1.0, value: [4,4,4], ease: ease.quadOut }
+    ], vec3.lerp),
+    'ring.color': PropertyAnimation([
+        { frame: 0.7, value: [0.6,1,1,0] },
+        { frame: 1.0, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp)
+}
+
 export class ProjectileSkill extends AIUnitSkill {
     public readonly cost: number = 1
     public readonly radius: number = 6
@@ -50,15 +121,13 @@ export class ProjectileSkill extends AIUnitSkill {
         .create([0,1.8,1.2],Sprite.FlatUp,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.muzzle)
     
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.None
+        this.flash = Sprite.create(BillboardType.None)
         this.flash.material = SharedSystem.materials.flashYellowMaterial
         this.flash.transform = this.context.get(TransformSystem)
         .create([0,1.8,1.8],quat.IDENTITY,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.flash)
     
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
@@ -91,8 +160,7 @@ export class ProjectileSkill extends AIUnitSkill {
             uRadius: vec2(0.8,1.4)
         })
     
-        this.wave = new Sprite()
-        this.wave.billboard = BillboardType.Sphere
+        this.wave = Sprite.create(BillboardType.Sphere)
         this.wave.material = new SpriteMaterial()
         this.wave.material.blendMode = null
         this.wave.material.program = SharedSystem.materials.distortion
@@ -106,8 +174,7 @@ export class ProjectileSkill extends AIUnitSkill {
         this.core.transform = this.context.get(TransformSystem).create(targetPosition)
         this.context.get(ParticleEffectPass).add(this.core)
     
-        this.circle = new Sprite()
-        this.circle.billboard = BillboardType.None
+        this.circle = Sprite.create(BillboardType.None)
         this.circle.material = new SpriteMaterial()
         this.circle.material.program = this.context.get(ParticleEffectPass).program
         this.circle.material.diffuse = SharedSystem.textures.raysInner
@@ -116,6 +183,7 @@ export class ProjectileSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.circle)
     
         const animate = AnimationTimeline(this, {
+            ...actionTimeline,
             'mesh.armature.nodes.0.rotation': PropertyAnimation([
                 { frame: 0, value: quat.copy(this.mesh.armature.nodes[0].rotation, quat()) },
                 { frame: 0.5, value: quat.multiply(quat.axisAngle(vec3.AXIS_Y, -0.5* Math.PI,quat()), orientation, quat()), ease: ease.quadInOut }
@@ -136,77 +204,6 @@ export class ProjectileSkill extends AIUnitSkill {
                     { frame: 1.0, value: targetPosition[2], ease: ease.linear }
                 ], lerp)
             ), { length: 0.06 }),
-            'light.radius': PropertyAnimation([
-                { frame: 1.1, value: 0 },
-                { frame: 1.7, value: 6, ease: ease.quadOut }
-            ], lerp),
-            'light.intensity': PropertyAnimation([
-                { frame: 1.1, value: 8 },
-                { frame: 1.7, value: 0, ease: ease.sineIn }
-            ], lerp),
-            'fire': EventTrigger([
-                { frame: 1.0, value: 48 }
-            ], EventTrigger.emit),
-            'wave.transform.scale': PropertyAnimation([
-                { frame: 1.2, value: vec3.ZERO },
-                { frame: 1.6, value: [8,8,8], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'wave.color': PropertyAnimation([
-                { frame: 1.2, value: vec4.ONE },
-                { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'core.transform.scale': PropertyAnimation([
-                { frame: 1.0, value: vec3.ZERO },
-                { frame: 1.6, value: [3,3,3], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'core.color': PropertyAnimation([
-                { frame: 1.0, value: [0.2,1,0.6,1] },
-                { frame: 1.6, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'circle.transform.scale': PropertyAnimation([
-                { frame: 1.0, value: vec3.ZERO },
-                { frame: 1.4, value: [6,6,6], ease: ease.quartOut }
-            ], vec3.lerp),
-            'circle.color': PropertyAnimation([
-                { frame: 1.0, value: [0.6,1,1,0] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-    
-    
-            'pillar.transform.scale': PropertyAnimation([
-                { frame: 0, value: [2,0,2] },
-                { frame: 0.5, value: [1,3,1], ease: ease.quadOut },
-                { frame: 0.8, value: [0,4,0], ease: ease.quadIn }
-            ], vec3.lerp),
-            'pillar.color': PropertyAnimation([
-                { frame: 0, value: vec4.ZERO },
-                { frame: 0.5, value: [0.4,1,0.8,1], ease: ease.cubicOut }
-            ], vec4.lerp),
-            'muzzle.transform.scale': PropertyAnimation([
-                { frame: 0.7, value: [0,-1,0] },
-                { frame: 1.1, value: [0.6,-2.8,0.6], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'muzzle.color': PropertyAnimation([
-                { frame: 0.7, value: [0.4,1,0.8,0] },
-                { frame: 1.1, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'flash.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 1.4, value: [3,3,3], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'flash.color': PropertyAnimation([
-                { frame: 0.8, value: [0.4,1,0.9,1] },
-                { frame: 1.4, value: [0,1,0.5,0.2], ease: ease.quadIn }
-            ], vec4.lerp),
-            'ring.transform.scale': PropertyAnimation([
-                { frame: 0.7, value: vec3.ZERO },
-                { frame: 1.0, value: [4,4,4], ease: ease.quadOut }
-            ], vec3.lerp),
-            'ring.color': PropertyAnimation([
-                { frame: 0.7, value: [0.6,1,1,0] },
-                { frame: 1.0, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-
             'damage': EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         })
     
@@ -239,5 +236,10 @@ export class ProjectileSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.pillar)
         this.context.get(ParticleEffectPass).remove(this.circle)
         this.context.get(ParticleEffectPass).remove(this.core)
+
+        Sprite.delete(this.ring)
+        Sprite.delete(this.flash)
+        Sprite.delete(this.wave)
+        Sprite.delete(this.circle)
     }
 }

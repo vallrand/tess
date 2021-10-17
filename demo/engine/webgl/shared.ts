@@ -30,6 +30,7 @@ export const enum OpaqueLayer {
     Terrain = 0x0001,
     Static = 0x0002,
     Skinned = 0x0004,
+    Effect = 0x0008,
     All = 0xFFFF
 }
 

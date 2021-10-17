@@ -91,7 +91,7 @@ export class Workshop implements IActor, IUnitTile {
                 if(fraction >= 1) break
                 yield ActionSignal.WaitNextFrame
             }
-        }else if(cube && cube.state.tile[1] === this.tile[1]){
+        }else if(cube && cube.tile[1] === this.tile[1]){
             for(const generator = this.enterWorkshop(cube); true;){
                 const iterator = generator.next()
                 if(iterator.done) break
@@ -101,7 +101,7 @@ export class Workshop implements IActor, IUnitTile {
     }
     private *enterWorkshop(cube: Cube): Generator<ActionSignal> {
         yield this.context.get(AnimationSystem).await(cube.actionIndex)
-        const mesh = this.cubeMesh = cube.meshes[cube.state.side]
+        const mesh = this.cubeMesh = cube.meshes[cube.side]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())
         const nextPosition = vec3.add(this.mesh.transform.position, [0,2,0], vec3())
         const cameraOffset = this.context.get(PlayerSystem).cameraOffset
@@ -145,7 +145,7 @@ export class Workshop implements IActor, IUnitTile {
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.cover = new Sprite()
+        this.cover = Sprite.create()
         vec4.copy(vec4.ZERO, this.cover.color)
         this.cover.billboard = BillboardType.None
         this.cover.material = SharedSystem.materials.planeDissolveMaterial
@@ -162,8 +162,8 @@ export class Workshop implements IActor, IUnitTile {
                 availableModules.unshift(availableModules.pop())
                 console.log('available', availableModules[0])
             }else if(keys.trigger('Space')){
-                const forward = (4-cube.state.direction)%4
-                cube.installModule(cube.state.side, forward, availableModules[0])
+                const forward = (4-cube.direction)%4
+                cube.installModule(cube.side, forward, availableModules[0])
                 install: {
                     const animate = AnimationTimeline(this, {
                         'cubeMesh.color': PropertyAnimation([
@@ -208,6 +208,7 @@ export class Workshop implements IActor, IUnitTile {
 
         this.context.get(ParticleEffectPass).remove(this.cover)
         this.context.get(ParticleEffectPass).remove(this.glow)
+        Sprite.delete(this.cover)
         SharedSystem.particles.smoke.remove(this.smoke)
     }
 }

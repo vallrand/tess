@@ -15,7 +15,7 @@ export abstract class AIUnit implements IUnitTile {
     constructor(protected readonly context: Application){}
 
     public actionIndex: number
-    public weight: number = 8
+    public weight: number = 2
 
     abstract movementDuration: number
     protected movementFloat: number = 0
@@ -57,11 +57,11 @@ export abstract class AIUnit implements IUnitTile {
         }
         return AnimationSystem.join(actions)
     }
-
+    
     public abstract delete(): void
     public abstract place(column: number, row: number): void
+    
     public abstract damage(amount: number): void
-
     public abstract move(path: vec2[], frames: number[], target?: vec2): Generator<ActionSignal>
 
     protected *moveAlongPath(path: vec2[], frames: number[], rotate: boolean): Generator<ActionSignal> {
@@ -110,8 +110,12 @@ export abstract class AIUnit implements IUnitTile {
             }
         }
     }
-    public *rotate(target: vec2): Generator<ActionSignal> {
-        const angle = Math.atan2(target[0] - this.tile[0], target[1] - this.tile[1])
+    public *rotate(target: vec2, snap?: boolean): Generator<ActionSignal> {
+        let angle = Math.atan2(
+            target[0] - (this.tile[0] + 0.5 * (this.size[0] - 1)),
+            target[1] - (this.tile[1] + 0.5 * (this.size[1] - 1))
+        )
+        if(snap) angle = Math.round(2 * angle / Math.PI) * 0.5 * Math.PI
         const prevRotation = this.mesh.transform.rotation
         const nextRotation = quat.axisAngle(vec3.AXIS_Y, angle, quat())
         if(quat.angle(prevRotation, nextRotation) < 1e-3) return

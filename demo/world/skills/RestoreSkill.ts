@@ -134,8 +134,7 @@ export class RestoreSkill extends CubeSkill {
         this.ringMaterial.program = this.context.get(DecalPass).program
         this.ringMaterial.diffuse = SharedSystem.textures.ring
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.None
+        this.flash = Sprite.create(BillboardType.None)
         this.flash.material = new SpriteMaterial()
         this.flash.material.program = this.context.get(ParticleEffectPass).program
         this.flash.material.diffuse = SharedSystem.textures.sparkle
@@ -144,8 +143,8 @@ export class RestoreSkill extends CubeSkill {
         this.conduit.material = SharedSystem.materials.stripesMaterial
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.state.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
+        const mesh = this.cube.meshes[this.cube.side]
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
 
         const origin = mat4.transform([0,1,0], this.cube.transform.matrix, vec3())
 
@@ -249,12 +248,22 @@ export class RestoreSkill extends CubeSkill {
         }
     }
     protected validate(): boolean {
-        const tile = vec2()
-        const terrain = this.context.get(TerrainSystem)
+        const terrain = this.context.get(TerrainSystem), tile = this.cube.tile
+        for(let i = DirectionTile.length - 1; i >= 0; i--)
+            if(terrain.getTile(tile[0] + DirectionTile[i][0], tile[1] + DirectionTile[i][1]) != null)
+                return false
         for(let i = DirectionTile.length - 1; i >= 0; i--){
-            vec2.add(this.cube.state.tile, DirectionTile[i], tile)
-            if(terrain.getTile(tile[0], tile[1]) != null) return false
+            const added = vec2.add(tile, DirectionTile[i], vec2())
+            terrain.setTile(added[0], added[1], this.cube)
+            this.cube.tiles.push(added)
         }
         return true
+    }
+    protected clear(): void {
+        const terrain = this.context.get(TerrainSystem)
+        while(this.cube.tiles.length > 1){
+            const tile = this.cube.tiles.pop()
+            terrain.setTile(tile[0], tile[1], null)
+        }
     }
 }

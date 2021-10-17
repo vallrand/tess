@@ -20,27 +20,7 @@ uniform float uLayer;
 uniform vec4 uFogColor;
 uniform vec3 uSkyColor;
 
-float hash31(vec3 uv){
-    uvec3 q = floatBitsToUint(uv);
-	q *= uvec3(1597334673U, 3812015801U, 2798796415U);
-	uint n = (q.x ^ q.y ^ q.z) * 1597334673U;
-	return float(n) * (1.0 / float(0xffffffffU));
-}
-
-float noise3D(in vec3 x){
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-	
-    return mix(mix(mix( hash31(i+vec3(0,0,0)), 
-                        hash31(i+vec3(1,0,0)),f.x),
-                   mix( hash31(i+vec3(0,1,0)), 
-                        hash31(i+vec3(1,1,0)),f.x),f.y),
-               mix(mix( hash31(i+vec3(0,0,1)), 
-                        hash31(i+vec3(1,0,1)),f.x),
-                   mix( hash31(i+vec3(0,1,1)), 
-                        hash31(i+vec3(1,1,1)),f.x),f.y),f.z);
-}
+#pragma import(./common/noise.glsl)
 float fbm(vec3 p, int octaves, float scale, float offset){
     const mat3 m = mat3( 0.00,  0.80,  0.60,
               -0.80,  0.36, -0.48,

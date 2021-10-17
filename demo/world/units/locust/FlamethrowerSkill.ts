@@ -12,11 +12,71 @@ import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
 import { AISystem, AIUnit, AIUnitSkill } from '../../opponent'
 
+const actionTimeline = {
+    'ring.transform.scale': PropertyAnimation([
+        { frame: 0.2, value: vec3.ZERO },
+        { frame: 1.2, value: [6,6,6], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'ring.color': PropertyAnimation([
+        { frame: 0.2, value: [0.5,1,0.8,1] },
+        { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'heat.transform.scale': PropertyAnimation([
+        { frame: 0.2, value: [2,0,2] },
+        { frame: 1.6, value: [3,8,3], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'heat.color': PropertyAnimation([
+        { frame: 0.2, value: [0.2,1,1,1] },
+        { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'light.radius': PropertyAnimation([
+        { frame: 0.3, value: 0 },
+        { frame: 1.4, value: 5, ease: ease.cubicOut }
+    ], lerp),
+    'light.intensity': PropertyAnimation([
+        { frame: 0.3, value: 10 },
+        { frame: 1.4, value: 0, ease: ease.quadIn }
+    ], lerp),
+    'corridor.transform.scale': PropertyAnimation([
+        { frame: 0.2, value: [1.5,0,2] },
+        { frame: 1.0, value: [1.5,6,2], ease: ease.sineOut }
+    ], vec3.lerp),
+    'corridor.color': PropertyAnimation([
+        { frame: 0.2, value: [0.2,1,1,1] },
+        { frame: 1.0, value: [0,1,1,0], ease: ease.quadIn }
+    ], vec4.lerp),
+    'fire': EventTrigger([
+        { frame: 0.2, value: 48 }
+    ], EventTrigger.emit),
+    'lineA.color': PropertyAnimation([
+        { frame: 0.4, value: [0.2,1,0.8,1] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'lineB.color': PropertyAnimation([
+        { frame: 0.4, value: [0.2,1,0.8,1] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'burn.transform.scale': PropertyAnimation([
+        { frame: 0, value: [10,4,5] }
+    ], vec3.lerp),
+    'burn.color': PropertyAnimation([
+        { frame: 0.4, value: vec4.ZERO },
+        { frame: 1.0, value: [0,0,0,1], ease: ease.sineOut },
+        { frame: 1.8, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp)
+}
+
 export class FlamethrowerSkill extends AIUnitSkill {
     public readonly cost: number = 1
     public readonly radius: number = 4
     public readonly cardinal: boolean = true
     public readonly damage: number = 5
+
+    public validate(origin: vec2, target: vec2): boolean {
+        const dx = Math.max(target[0] - origin[0] - 1, origin[0] - target[0])
+        const dy = Math.max(target[1] - origin[1] - 1, origin[1] - target[1])
+        return Math.max(dx, dy) <= this.radius && Math.min(dx, dy) == 0
+    }
 
     private corridor: BatchMesh
     private fire: ParticleEmitter
@@ -29,6 +89,11 @@ export class FlamethrowerSkill extends AIUnitSkill {
     private mesh: Mesh
 
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
+        for(const generator = source.rotate(target, true); true;){
+            const iterator = generator.next()
+            if(iterator.done) break
+            else yield iterator.value
+        }
         this.mesh = source.mesh
         this.corridor = new BatchMesh(SharedSystem.geometry.openBox)
         this.corridor.material = SharedSystem.materials.coreYellowMaterial
@@ -78,53 +143,15 @@ export class FlamethrowerSkill extends AIUnitSkill {
         .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(PostEffectPass).add(this.heat)
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.auraTealMaterial
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,1,1.5], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         const animate = AnimationTimeline(this, {
+            ...actionTimeline,
             'mesh.armature': modelAnimations[this.mesh.armature.key].activateVariant,
-
-            'ring.transform.scale': PropertyAnimation([
-                { frame: 0.2, value: vec3.ZERO },
-                { frame: 1.2, value: [6,6,6], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'ring.color': PropertyAnimation([
-                { frame: 0.2, value: [0.5,1,0.8,1] },
-                { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-
-            'heat.transform.scale': PropertyAnimation([
-                { frame: 0.2, value: [2,0,2] },
-                { frame: 1.6, value: [3,8,3], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'heat.color': PropertyAnimation([
-                { frame: 0.2, value: [0.2,1,1,1] },
-                { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-
-            'light.radius': PropertyAnimation([
-                { frame: 0.3, value: 0 },
-                { frame: 1.4, value: 5, ease: ease.cubicOut }
-            ], lerp),
-            'light.intensity': PropertyAnimation([
-                { frame: 0.3, value: 10 },
-                { frame: 1.4, value: 0, ease: ease.quadIn }
-            ], lerp),
-            'corridor.transform.scale': PropertyAnimation([
-                { frame: 0.2, value: [1.5,0,2] },
-                { frame: 1.0, value: [1.5,6,2], ease: ease.sineOut }
-            ], vec3.lerp),
-            'corridor.color': PropertyAnimation([
-                { frame: 0.2, value: [0.2,1,1,1] },
-                { frame: 1.0, value: [0,1,1,0], ease: ease.quadIn }
-            ], vec4.lerp),
-            'fire': EventTrigger([
-                { frame: 0.2, value: 48 }
-            ], EventTrigger.emit),
             'lineA.path.1': PropertyAnimation([
                 { frame: 0.4, value: this.lineA.path[0] },
                 { frame: 1.4, value: vec3.copy(this.lineA.path[1], vec3()), ease: ease.quartOut }
@@ -132,23 +159,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
             'lineB.path.1': PropertyAnimation([
                 { frame: 0.4, value: this.lineB.path[0] },
                 { frame: 1.4, value: vec3.copy(this.lineB.path[1], vec3()), ease: ease.quartOut }
-            ], vec3.lerp),
-            'lineA.color': PropertyAnimation([
-                { frame: 0.4, value: [0.2,1,0.8,1] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'lineB.color': PropertyAnimation([
-                { frame: 0.4, value: [0.2,1,0.8,1] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'burn.transform.scale': PropertyAnimation([
-                { frame: 0, value: [10,4,5] }
-            ], vec3.lerp),
-            'burn.color': PropertyAnimation([
-                { frame: 0.4, value: vec4.ZERO },
-                { frame: 1.0, value: [0,0,0,1], ease: ease.sineOut },
-                { frame: 1.8, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp)
+            ], vec3.lerp)
         })
 
         for(const duration = 1.8, startTime = this.context.currentTime; true;){
@@ -171,5 +182,6 @@ export class FlamethrowerSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(ParticleEffectPass).remove(this.lineA)
         this.context.get(ParticleEffectPass).remove(this.lineB)
+        Sprite.delete(this.ring)
     }
 }

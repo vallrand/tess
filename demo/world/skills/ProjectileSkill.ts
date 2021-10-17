@@ -11,6 +11,7 @@ import { Cube, Direction, DirectionAngle } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
+import { AIUnitSkill } from '../opponent'
 
 const actionTimeline = {
     'particles': EventTrigger([{ frame: 0, value: 36 }], EventTrigger.emit),
@@ -51,6 +52,8 @@ const actionTimeline = {
 }
 
 interface ProjectileEffect {
+    context: Application
+    damage: number
     readonly origin: vec3
     transform: Transform
     sphere: BatchMesh
@@ -96,26 +99,23 @@ export class ProjectileSkill extends CubeSkill {
         this.waveMaterial.diffuse = SharedSystem.textures.wave
 
 
-        this.bulge = new Sprite()
-        this.bulge.billboard = BillboardType.Sphere
+        this.bulge = Sprite.create(BillboardType.Sphere)
         this.bulge.material = new SpriteMaterial()
         this.bulge.material.blendMode = null
         this.bulge.material.program = SharedSystem.materials.chromaticAberration
         this.bulge.material.diffuse = SharedSystem.textures.particle
 
-        this.core = new Sprite()
-        this.core.billboard = BillboardType.Sphere
+        this.core = Sprite.create(BillboardType.Sphere)
         this.core.material = new SpriteMaterial()
         this.core.material.program = this.context.get(ParticleEffectPass).program
         this.core.material.diffuse = SharedSystem.textures.rays
 
-        this.flash = new Sprite()
-        this.flash.billboard = BillboardType.None
+        this.flash = Sprite.create(BillboardType.None)
         this.flash.material = SharedSystem.materials.flashYellowMaterial
     }
     public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.state.sides[this.cube.state.side].type]]
-        const rotationalIndex = mod(direction - this.cube.state.direction - this.cube.state.sides[this.cube.state.side].direction, 4)
+        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
+        const rotationalIndex = mod(direction - this.cube.direction - this.cube.sides[this.cube.side].direction, 4)
 
         const worldTransform = mat4.fromRotationTranslationScale(DirectionAngle[(direction + 3) % 4], this.pivot, vec3.ONE, mat4())
         mat4.multiply(this.cube.transform.matrix, worldTransform, worldTransform)
@@ -143,16 +143,12 @@ export class ProjectileSkill extends CubeSkill {
         }
 
 
-        const parentTransform = this.context.get(TransformSystem).create()
-        quat.copy(DirectionAngle[(direction + 3) % 4], parentTransform.rotation)
-        vec3.copy(origin, parentTransform.position)
+        const parentTransform = this.context.get(TransformSystem).create(origin, DirectionAngle[(direction + 3) % 4])
 
-        this.bulge.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.bulge.transform.position)
+        this.bulge.transform = this.context.get(TransformSystem).create(origin)
         this.context.get(PostEffectPass).add(this.bulge)
 
-        this.core.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.core.transform.position)
+        this.core.transform = this.context.get(TransformSystem).create(origin)
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.flash.transform = this.context.get(TransformSystem).create()
@@ -174,18 +170,21 @@ export class ProjectileSkill extends CubeSkill {
             uTarget: mat4.transform(vec3.ZERO, worldTransform, vec3()),
         })
 
-        const animate = AnimationTimeline(this, actionTimeline)
+        const animate = AnimationTimeline(this, {
+            'mesh.armature': armatureAnimation.activate,
+            ...actionTimeline
+        })
 
-        this.context.get(AnimationSystem).start(this.animateProjectile(worldTransform, this.findTarget(direction)), true)
+        const index = this.context.get(AnimationSystem)
+        .start(this.animateProjectile(worldTransform, this.findTarget(direction)), true)
 
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.activate(elapsedTime, this.mesh.armature)
             armatureAnimation[`activate${rotationalIndex}`](elapsedTime, this.mesh.armature)
 
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.embers.remove(this.particles)
@@ -215,20 +214,20 @@ export class ProjectileSkill extends CubeSkill {
         sphere.order = 8
         sphere.material = SharedSystem.materials.coreYellowMaterial
 
-        const glow = new Sprite()
-        glow.billboard = BillboardType.None
+        const glow = Sprite.create(BillboardType.None)
         glow.material = this.glowMaterial
 
-        const wave = new Sprite()
-        wave.billboard = BillboardType.None
+        const wave = Sprite.create(BillboardType.None)
         wave.material = this.waveMaterial
 
         return {
             trail, sphere, wave, glow, origin: vec3(),
-            transform: null, particles: null, light: null, burn: null
+            transform: null, particles: null, light: null, burn: null,
+            context: this.context, damage: 0
         }
     }
-    private *animateProjectile(transform: mat4, target: vec3): Generator<ActionSignal> {
+    private *animateProjectile(transform: mat4, target: vec2): Generator<ActionSignal> {
+        const targetPosition = this.context.get(TerrainSystem).tilePosition(target[0], target[1], vec3())
         const fade: ease.IEase = x => 1 - Math.pow(1 - x * (1-x) * 4, 2)
         const effect = this.createProjectile()
         const origin = mat4.transform(vec3.ZERO, transform, effect.origin)
@@ -240,64 +239,64 @@ export class ProjectileSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).add(effect.trail)
 
         effect.sphere.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, effect.sphere.transform.position)
+        vec3.copy(targetPosition, effect.sphere.transform.position)
         this.context.get(ParticleEffectPass).add(effect.sphere)
 
         effect.glow.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, effect.glow.transform.position)
+        vec3.copy(targetPosition, effect.glow.transform.position)
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, effect.glow.transform.rotation)
         this.context.get(ParticleEffectPass).add(effect.glow)
 
         effect.burn = this.context.get(DecalPass).create(0)
         effect.burn.material = this.burnMaterial
         effect.burn.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, effect.burn.transform.position)
+        vec3.copy(targetPosition, effect.burn.transform.position)
 
         effect.wave.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, effect.wave.transform.position)
+        vec3.copy(targetPosition, effect.wave.transform.position)
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, effect.wave.transform.rotation)
         this.context.get(PostEffectPass).add(effect.wave)
 
         effect.light = this.context.get(PointLightPass).create()
         effect.light.transform = this.context.get(TransformSystem).create()
-        vec3.add(target, [0, 0.5, 0], effect.light.transform.position)
+        vec3.add(targetPosition, [0, 0.5, 0], effect.light.transform.position)
         vec3.set(1, 0.9, 0.5, effect.light.color)
 
         effect.particles = SharedSystem.particles.embers.add({
             uLifespan: [0.2,0.4,-0.2,0],
-            uOrigin: target,
+            uOrigin: targetPosition,
             uRotation: vec2.ZERO, uGravity: vec3(0,-9.8*2,0),
             uSize: [0.2,0.6],
             uRadius: [0.2,0.5],
             uOrientation: quat.IDENTITY,
             uForce: [8,16],
-            uTarget: vec3.add(target, [0,-0.2,0], vec3()),
+            uTarget: vec3.add(targetPosition, [0,-0.2,0], vec3()),
         })
 
-        const duration = Math.sqrt(vec3.distanceSquared(origin, target)) * 0.05 / 2
+        const duration = Math.sqrt(vec3.distanceSquared(origin, targetPosition)) * 0.05 / 2
         const animate = AnimationTimeline(effect, {
             'particles': EventTrigger([{ frame: duration, value: 24*3 }], EventTrigger.emit),
             'trail': FollowPath.Line(FollowPath.separate(
                 PropertyAnimation([
                     { frame: 0, value: origin[0] },
-                    { frame: duration, value: target[0], ease: ease.linear }
+                    { frame: duration, value: targetPosition[0], ease: ease.linear }
                 ], lerp),
                 PropertyAnimation([
                     { frame: 0, value: origin[1] },
-                    { frame: duration, value: target[1], ease: ease.cubicIn }
+                    { frame: duration, value: targetPosition[1], ease: ease.cubicIn }
                 ], lerp),
                 PropertyAnimation([
                     { frame: 0, value: origin[2] },
-                    { frame: duration, value: target[2], ease: ease.linear }
+                    { frame: duration, value: targetPosition[2], ease: ease.linear }
                 ], lerp),
             ), { length: 0.06 }),
             'transform.position.1': PropertyAnimation([
                 { frame: 0, value: origin[1] },
-                { frame: duration, value: target[1], ease: ease.cubicIn }
+                { frame: duration, value: targetPosition[1], ease: ease.cubicIn }
             ], lerp),
             'transform.position': PropertyAnimation([
                 { frame: 0, value: origin },
-                { frame: duration, value: target, ease: ease.linear }
+                { frame: duration, value: targetPosition, ease: ease.linear }
             ], vec3.lerp),
             'sphere.color': PropertyAnimation([
                 { frame: duration + 0.1, value: vec4.ONE },
@@ -338,15 +337,15 @@ export class ProjectileSkill extends CubeSkill {
             'wave.color': PropertyAnimation([
                 { frame: duration + 0.1, value: [1,1,1,0.4] },
                 { frame: duration + 0.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp)
+            ], vec4.lerp),
+            'damage': EventTrigger([{ frame: duration, value: target }], AIUnitSkill.damage)
         })
 
         for(const totalDuration = 2 + duration, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime    
             animate(elapsedTime, this.context.deltaTime)
-
             if(elapsedTime > totalDuration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(effect.transform)
@@ -367,8 +366,8 @@ export class ProjectileSkill extends CubeSkill {
 
         this.pool.push(effect)
     }
-    private findTarget(direction: Direction): vec3 {
-        const origin = this.cube.state.tile
+    private findTarget(direction: Direction): vec2 {
+        const origin = this.cube.tile
         const terrain = this.context.get(TerrainSystem)
         const step = {
             [Direction.Up]: [0,1],
@@ -382,8 +381,8 @@ export class ProjectileSkill extends CubeSkill {
             vec2.scale(step, i, tile)
             vec2.add(origin, tile, tile)
             const entity = terrain.getTile(tile[0], tile[1])
-            if(entity != null) return terrain.tilePosition(tile[0], tile[1], vec3())
+            if(entity != null) return tile
         }
-        return terrain.tilePosition(tile[0], tile[1], vec3())
+        return tile
     }
 }

@@ -71,7 +71,7 @@ export class TarantulaVariant extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activateVariant(0, this.mesh.armature)
-        this.context.get(TerrainSystem).setTile(column, row, this)
+        this.markTiles(true)
 
         const rig = new Spider4Rig(this.context)
         rig.build(this.mesh)

@@ -38,8 +38,7 @@ export class EnergyLinkEffect {
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.target.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.shield)
         
-        this.glow = new Sprite()
-        this.glow.billboard = BillboardType.Sphere
+        this.glow = Sprite.create(BillboardType.Sphere)
         this.glow.material = new SpriteMaterial()
         this.glow.material.program = this.context.get(ParticleEffectPass).program
         this.glow.material.diffuse = SharedSystem.textures.particle

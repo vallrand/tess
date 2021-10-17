@@ -8,13 +8,13 @@ import { Cube, Direction } from '../player'
 export class CubeSkill {
     constructor(protected readonly context: Application, protected readonly cube: Cube){}
     get direction(): Direction {
-        return mod(this.cube.state.direction + this.cube.state.sides[this.cube.state.side].direction, 4)
+        return mod(this.cube.direction + this.cube.sides[this.cube.side].direction, 4)
     }
-    get mesh(): Mesh { return this.cube.meshes[this.cube.state.side] }
+    get mesh(): Mesh { return this.cube.meshes[this.cube.side] }
     public *open(): Generator<ActionSignal> {
         if(!this.validate()) return
-        const state = this.cube.state.sides[this.cube.state.side]
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const state = this.cube.sides[this.cube.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
@@ -27,8 +27,8 @@ export class CubeSkill {
         state.open = 1
     }
     public *close(): Generator<ActionSignal> {
-        const state = this.cube.state.sides[this.cube.state.side]
-        const mesh = this.cube.meshes[this.cube.state.side]
+        const state = this.cube.sides[this.cube.side]
+        const mesh = this.cube.meshes[this.cube.side]
         const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
@@ -42,7 +42,5 @@ export class CubeSkill {
         this.clear()
     }
     protected validate(): boolean { return true }
-    protected clear(): void {
-
-    }
+    protected clear(): void {}
 }

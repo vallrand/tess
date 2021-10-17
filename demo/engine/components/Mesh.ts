@@ -125,7 +125,9 @@ export class Mesh implements IMesh {
     }
 }
 
-export class MeshSystem extends Factory<Mesh> implements ISystem {
+export class MeshSystem implements ISystem {
+    private readonly pool: Mesh[] = []
+    public readonly list: Mesh[] = []
     public readonly models: Record<string, {
         buffer: MeshBuffer
         inverseBindPose?: mat4[]
@@ -134,15 +136,25 @@ export class MeshSystem extends Factory<Mesh> implements ISystem {
     }> = Object.create(null)
     public readonly plane: MeshBuffer
     constructor(private readonly context: Application){
-        super(Mesh)
         const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
         this.plane = this.uploadVertexData(plane.vertexArray, plane.indexArray, plane.format)
     }
-    public delete(mesh: Mesh): void {
-        super.delete(mesh)
-        mesh.frame = mesh.layer = mesh.order = 0
-        mesh.armature = mesh.material = mesh.buffer = mesh.transform = null
-        vec4.copy(vec4.ONE, mesh.color)
+    public create(): Mesh {
+        const item = this.pool.pop() || new Mesh()
+        item.index = this.list.push(item) - 1
+        return item
+    }
+    public delete(item: Mesh): void {
+        if(item.index == -1) return
+        this.list[item.index] = this.list[this.list.length - 1]
+        this.list[item.index].index = item.index
+        this.list.length--
+        item.index = -1
+        this.pool.push(item)
+
+        item.frame = item.layer = item.order = 0
+        item.armature = item.material = item.buffer = item.transform = null
+        vec4.copy(vec4.ONE, item.color)
     }
     public unloadVertexData(buffer: MeshBuffer): void {
         this.context.gl.deleteBuffer(buffer.vbo)

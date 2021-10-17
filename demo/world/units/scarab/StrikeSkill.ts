@@ -87,8 +87,7 @@ export class StrikeSkill extends AIUnitSkill {
         this.cone.transform.parent = this.mesh.transform
         this.context.get(ParticleEffectPass).add(this.cone)
 
-        this.ring = new Sprite()
-        this.ring.billboard = BillboardType.None
+        this.ring = Sprite.create(BillboardType.None)
         this.ring.material = new SpriteMaterial()
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
@@ -96,27 +95,21 @@ export class StrikeSkill extends AIUnitSkill {
         this.ring.transform.parent = this.mesh.transform
         this.context.get(ParticleEffectPass).add(this.ring)
 
-        this.rays = new Sprite()
-        this.rays.billboard = BillboardType.None
+        this.rays = Sprite.create(BillboardType.None)
         this.rays.material = new SpriteMaterial()
         this.rays.material.program = this.context.get(ParticleEffectPass).program
         this.rays.material.diffuse = SharedSystem.textures.rays
-        this.rays.transform = this.context.get(TransformSystem).create()
-        this.rays.transform.parent = this.mesh.transform
-        vec3.set(0,1,0.96, this.rays.transform.position)
+        this.rays.transform = this.context.get(TransformSystem)
+        .create([0,1,0.96], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         quat.axisAngle(vec3.AXIS_Z, randomFloat(0, 2 * Math.PI, random), this.rays.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.rays)
 
-        this.beam = new Sprite()
-        this.beam.billboard = BillboardType.Cylinder
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0, 0.5])
         this.beam.material = new SpriteMaterial()
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
-        this.beam.transform = this.context.get(TransformSystem).create()
-        this.beam.transform.parent = this.mesh.transform
-        quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.beam.transform.rotation)
-        vec3.set(0,1,0, this.beam.transform.position)
-        vec2.set(0,0.5,this.beam.origin)
+        this.beam.transform = this.context.get(TransformSystem)
+        .create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
         this.sparks = SharedSystem.particles.sparks.add({
@@ -154,5 +147,8 @@ export class StrikeSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.rays)
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.cone)
+        Sprite.delete(this.ring)
+        Sprite.delete(this.rays)
+        Sprite.delete(this.beam)
     }
 }

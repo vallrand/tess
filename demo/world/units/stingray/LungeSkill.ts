@@ -156,19 +156,14 @@ export class LungeSkill extends AIUnitSkill {
         beamMaterial.program = this.context.get(ParticleEffectPass).program
         beamMaterial.diffuse = SharedSystem.textures.sparkle
     
-        this.beamLeft = new Sprite()
-        this.beamRight = new Sprite()
-        this.beamLeft.billboard = BillboardType.Cylinder
-        this.beamRight.billboard = BillboardType.Cylinder
+        this.beamLeft = Sprite.create(BillboardType.Cylinder, 4)
+        this.beamRight = Sprite.create(BillboardType.Cylinder, 4)
         this.beamLeft.material = beamMaterial
         this.beamRight.material = beamMaterial
         this.beamLeft.transform = this.context.get(TransformSystem).create()
         this.beamRight.transform = this.context.get(TransformSystem).create()
         this.beamLeft.transform.parent = this.mesh.transform
         this.beamRight.transform.parent = this.mesh.transform
-    
-        this.beamRight.order = 4
-        this.beamLeft.order = 4
     
         quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.beamLeft.transform.rotation)
         vec3.set(-0.5,1.3,3, this.beamLeft.transform.position)
@@ -179,10 +174,8 @@ export class LungeSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.beamRight)
     
     
-        this.ringLeft = new Sprite()
-        this.ringRight = new Sprite()
-        this.ringLeft.billboard = BillboardType.Sphere
-        this.ringRight.billboard = BillboardType.Sphere
+        this.ringLeft = Sprite.create(BillboardType.Sphere, 4)
+        this.ringRight = Sprite.create(BillboardType.Sphere, 4)
     
         const ringMaterial = new SpriteMaterial()
         ringMaterial.program = this.context.get(ParticleEffectPass).program
@@ -198,9 +191,6 @@ export class LungeSkill extends AIUnitSkill {
     
         this.context.get(ParticleEffectPass).add(this.ringLeft)
         this.context.get(ParticleEffectPass).add(this.ringRight)
-    
-        this.ringRight.order = 4
-        this.ringLeft.order = 4
     
         this.sparksLeft = SharedSystem.particles.sparks.add({
             uLifespan: [0.4,0.6,-0.15,0],
@@ -274,5 +264,10 @@ export class LungeSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.beamLeft)
         this.context.get(ParticleEffectPass).remove(this.beamRight)
         this.context.get(ParticleEffectPass).remove(this.cone)
+
+        Sprite.delete(this.beamLeft)
+        Sprite.delete(this.beamRight)
+        Sprite.delete(this.ringLeft)
+        Sprite.delete(this.ringRight)
     }
 }

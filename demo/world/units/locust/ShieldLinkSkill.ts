@@ -39,8 +39,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         .create([0,0.5,-1.3],quat.IDENTITY,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cylinder)
         
-        this.wave = new Sprite()
-        this.wave.billboard = BillboardType.None
+        this.wave = Sprite.create(BillboardType.None)
         this.wave.material = new SpriteMaterial()
         this.wave.material.program = this.context.get(ParticleEffectPass).program
         this.wave.material.diffuse = SharedSystem.textures.ring
@@ -54,8 +53,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
 
-        this.glow = new Sprite()
-        this.glow.billboard = BillboardType.Sphere
+        this.glow = Sprite.create(BillboardType.Sphere)
         this.glow.material = new SpriteMaterial()
         this.glow.material.program = this.context.get(ParticleEffectPass).program
         this.glow.material.diffuse = SharedSystem.textures.glow
@@ -63,9 +61,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.pillar = new Sprite()
-        this.pillar.billboard = BillboardType.Cylinder
-        vec2.set(0,0.5,this.pillar.origin)
+        this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.pillar.material = new SpriteMaterial()
         this.pillar.material.program = this.context.get(ParticleEffectPass).program
         this.pillar.material.diffuse = SharedSystem.textures.raysBeam
@@ -73,15 +69,13 @@ export class ShieldLinkSkill extends AIUnitSkill {
         .create([0,2,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
 
-        this.circle = new Sprite()
-        this.circle.billboard = BillboardType.None
+        this.circle = Sprite.create(BillboardType.None)
         this.circle.material = SharedSystem.materials.flashYellowMaterial
         this.circle.transform = this.context.get(TransformSystem)
         .create([0,4.5,-1.3],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.circle)
 
-        this.bulge = new Sprite()
-        this.bulge.billboard = BillboardType.Sphere
+        this.bulge = Sprite.create(BillboardType.Sphere)
         this.bulge.material = new SpriteMaterial()
         this.bulge.material.blendMode = null
         this.bulge.material.program = SharedSystem.materials.distortion
@@ -195,6 +189,10 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.wave)
         this.context.get(ParticleEffectPass).remove(this.pillar)
         this.context.get(ParticleEffectPass).remove(this.circle)
+        Sprite.delete(this.bulge)
+        Sprite.delete(this.wave)
+        Sprite.delete(this.pillar)
+        Sprite.delete(this.circle)
 
         this.idleIndex = this.context.get(AnimationSystem).start(this.idle(), true)
         this.idleIndex = -1
@@ -239,5 +237,6 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.glow.transform)
         this.context.get(ParticleEffectPass).remove(this.core)
         this.context.get(ParticleEffectPass).remove(this.glow)
+        Sprite.delete(this.glow)
     }
 }

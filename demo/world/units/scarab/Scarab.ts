@@ -5,7 +5,7 @@ import { ParticleEmitter } from '../../../engine/particles'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEffectPass, DecalPass, Decal } from '../../../engine/pipeline'
 import { SpriteMaterial } from '../../../engine/materials'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, BlendTween, ease } from '../../../engine/animation'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, BlendTween, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
 import { modelAnimations } from '../../animations'
@@ -27,7 +27,7 @@ export class Scarab extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
-        this.context.get(TerrainSystem).setTile(column, row, this)
+        this.markTiles(true)
         //this.actionIndex = this.context.get(AnimationSystem).start(this.appear(), true)
     }
     public delete(): void {
@@ -68,11 +68,10 @@ export class Scarab extends AIUnit {
 
     //     SharedSystem.particles.dust.remove(this.dust)
     // }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        return this.deathEffect.use(this)
+    public damage(amount: number){
+        this.healthPoints -= amount
+        if(this.healthPoints <= 0) this.context.get(AnimationSystem).start(this.deathEffect.use(this), true)
+        else this.context.get(AnimationSystem).start(this.deathEffect.damage(this), true)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
