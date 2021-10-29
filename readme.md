@@ -126,7 +126,8 @@ quat decompose https://stackoverflow.com/questions/3684269/component-of-a-quater
 http://allenchou.net/2018/05/game-math-swing-twist-interpolation-sterp/
 drawing lines https://www.redblobgames.com/grids/line-drawing.html
 grid based simple AI example https://github.com/Gornova/Wargame/blob/master/src/it/wargame/ai/CentralAi.java
-
+wave function collapse https://github.com/mxgmn/WaveFunctionCollapse
+GDC talk WFC https://www.gdcvault.com/browse/gdc-19/play/1026263
 
 
 AI

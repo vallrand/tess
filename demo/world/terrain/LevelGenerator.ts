@@ -4,11 +4,38 @@ import { perlin2D } from './perlin'
 import { TerrainChunk } from './TerrainChunk'
 import { EconomySystem, Workshop } from '../economy'
 import { TerrainSystem } from './Terrain'
+import { TextureMapGenerator } from './WaveFunctionCollapse'
+
+const WALL = 0xFF000000
+const DOOR = 0xFFFFFF00
+const ____ = 0xFFFFFFFF
+const MARK = 0xFF0000FF
+const ruinsTextureMap = new ImageData(new Uint8ClampedArray(new Uint32Array([
+    ____,____,____,____,____,____,____,____,____,____,____,____,____,____,____,____,
+    ____,DOOR,DOOR,DOOR,____,____,____,____,____,____,____,____,____,____,____,____,
+    ____,DOOR,MARK,DOOR,____,____,____,WALL,WALL,WALL,WALL,DOOR,WALL,WALL,WALL,____,
+    ____,DOOR,DOOR,DOOR,____,____,____,WALL,____,____,____,____,____,____,WALL,____,
+    ____,____,____,____,____,____,____,WALL,____,____,____,____,____,____,DOOR,____,
+    ____,____,____,____,____,WALL,WALL,WALL,DOOR,WALL,WALL,WALL,____,____,WALL,DOOR,
+    ____,____,____,____,____,WALL,____,____,____,____,____,WALL,____,____,____,DOOR,
+    ____,____,WALL,____,____,DOOR,____,____,____,____,____,WALL,____,____,____,DOOR,
+    ____,____,____,____,____,WALL,____,____,DOOR,WALL,WALL,WALL,WALL,DOOR,WALL,WALL,
+    ____,WALL,WALL,DOOR,WALL,WALL,____,____,DOOR,____,____,WALL,____,____,WALL,____,
+    ____,WALL,____,____,____,WALL,WALL,WALL,WALL,____,____,WALL,____,____,WALL,____,
+    ____,WALL,____,____,____,____,____,____,WALL,____,____,DOOR,____,____,WALL,____,
+    ____,DOOR,____,____,____,____,____,____,WALL,WALL,WALL,DOOR,DOOR,WALL,WALL,____,
+    ____,WALL,____,____,____,____,____,____,WALL,____,____,____,____,____,____,____,
+    ____,WALL,WALL,WALL,DOOR,DOOR,WALL,WALL,WALL,____,____,____,____,____,____,____,
+    ____,____,____,____,____,____,____,____,____,____,WALL,____,____,____,____,____
+]).buffer), 16, 16)
 
 export class LevelGenerator {
     private static readonly tile: vec2 = vec2()
     public static readonly zoneSize = 64
-    constructor(private readonly context: Application){}
+    private readonly tilemapGenerator: TextureMapGenerator
+    constructor(private readonly context: Application){
+        this.tilemapGenerator = new TextureMapGenerator(3, LevelGenerator.zoneSize, LevelGenerator.zoneSize, false, ruinsTextureMap, true, 8)
+    }
 
     private random2D(seed0: number, seed1: number): () => number {
         const seed = 0x2611501 * noise2D(seed0, seed1, 0xD6)
