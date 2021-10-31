@@ -4,9 +4,9 @@ export abstract class VertexDataBatch<T> {
     protected readonly indexArray: Uint16Array
     protected readonly uint32View: Uint32Array
     protected readonly float32View: Float32Array
-    private readonly vao: WebGLVertexArrayObject
-    private readonly indexBuffer: WebGLBuffer
-    private readonly vertexBuffer: WebGLBuffer
+    protected readonly vao: WebGLVertexArrayObject
+    protected readonly indexBuffer: WebGLBuffer
+    protected readonly vertexBuffer: WebGLBuffer
     public indexOffset: number = 0
     protected vertexOffset: number = 0
     constructor(

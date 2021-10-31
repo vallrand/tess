@@ -8,6 +8,7 @@ import { MaterialSystem, MeshMaterial } from '../materials'
 import { TransformSystem } from '../scene'
 import { Armature, Mesh, MeshSystem } from '../components'
 import { SkeletonHelper } from './SkeletonHelper'
+import { MapHelper } from './MapHelper'
 
 import { Monitor } from './Monitor'
 
@@ -17,6 +18,7 @@ export class DebugSystem implements ISystem {
     private readonly textureProgram: ShaderProgram
     private readonly cubemapProgram: ShaderProgram
     public readonly skeleton: SkeletonHelper = new SkeletonHelper(this.context)
+    public readonly map: MapHelper = new MapHelper(this.context)
     constructor(private readonly context: Application){
         window['app'] = context
         this.textureProgram = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)

@@ -2433,6 +2433,175 @@
           "parent": 2
         }
       ]
+    },
+    {
+      "name": "wall_X_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3436978,
+        "byteLength": 1164
+      },
+      "vertices": {
+        "byteOffset": 3438144,
+        "byteLength": 5808
+      }
+    },
+    {
+      "name": "wall_I_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3443954,
+        "byteLength": 804
+      },
+      "vertices": {
+        "byteOffset": 3444760,
+        "byteLength": 4512
+      }
+    },
+    {
+      "name": "wall_I_1",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3449274,
+        "byteLength": 684
+      },
+      "vertices": {
+        "byteOffset": 3449960,
+        "byteLength": 3264
+      }
+    },
+    {
+      "name": "wall_L_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3453226,
+        "byteLength": 816
+      },
+      "vertices": {
+        "byteOffset": 3454044,
+        "byteLength": 3792
+      }
+    },
+    {
+      "name": "wall_L_1",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3457838,
+        "byteLength": 366
+      },
+      "vertices": {
+        "byteOffset": 3458208,
+        "byteLength": 2424
+      }
+    },
+    {
+      "name": "wall_I_2",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3460634,
+        "byteLength": 588
+      },
+      "vertices": {
+        "byteOffset": 3461224,
+        "byteLength": 3552
+      }
+    },
+    {
+      "name": "wall_T_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3464778,
+        "byteLength": 1116
+      },
+      "vertices": {
+        "byteOffset": 3465896,
+        "byteLength": 6384
+      }
+    },
+    {
+      "name": "wall_U_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3472282,
+        "byteLength": 372
+      },
+      "vertices": {
+        "byteOffset": 3472656,
+        "byteLength": 2496
+      }
+    },
+    {
+      "name": "wall_O_0",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3475154,
+        "byteLength": 732
+      },
+      "vertices": {
+        "byteOffset": 3475888,
+        "byteLength": 4032
+      }
+    },
+    {
+      "name": "wall_U_1",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3479922,
+        "byteLength": 456
+      },
+      "vertices": {
+        "byteOffset": 3480380,
+        "byteLength": 2976
+      }
+    },
+    {
+      "name": "wall_U_2",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3483358,
+        "byteLength": 996
+      },
+      "vertices": {
+        "byteOffset": 3484356,
+        "byteLength": 4248
+      }
+    },
+    {
+      "name": "wall_O_1",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3488606,
+        "byteLength": 804
+      },
+      "vertices": {
+        "byteOffset": 3489412,
+        "byteLength": 4608
+      }
+    },
+    {
+      "name": "wall_I_3",
+      "texture": -1,
+      "format": 0,
+      "indices": {
+        "byteOffset": 3494022,
+        "byteLength": 396
+      },
+      "vertices": {
+        "byteOffset": 3494420,
+        "byteLength": 2112
+      }
     }
   ]
 }

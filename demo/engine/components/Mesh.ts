@@ -4,7 +4,7 @@ import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings, OpaqueLayer }
 import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { IMesh, IMaterial, DeferredGeometryPass } from '../pipeline'
-import { createPlane } from '../geometry'
+import { createPlane, IGeometry } from '../geometry'
 import { IKRig } from './InverseKinematics'
 
 interface IBufferRange {
@@ -36,8 +36,8 @@ export interface MeshBuffer {
     readonly vao: WebGLVertexArrayObject
     readonly vbo: WebGLBuffer
     readonly ibo?: WebGLBuffer
-    readonly indexCount: number
     readonly indexOffset: number
+    indexCount: number
     readonly drawMode: number
 
     readonly aabb: aabb3
@@ -117,8 +117,8 @@ export class Mesh implements IMesh {
         if(this.frame && this.frame >= this.transform.frame) return
         this.frame = context.frame
         if(!this.uniform) this.uniform = new UniformBlock(context.gl, { byteSize: 4*(16+4+2) }, UniformBlockBindings.ModelUniforms)
-        this.bounds.update(this.transform, this.buffer.radius)
-        this.uniform.data.set(this.transform?.matrix || mat4.IDENTITY, 0)
+        this.bounds.update(this.transform.matrix, this.buffer.radius, this.transform.frame)
+        this.uniform.data.set(this.transform.matrix, 0)
         this.uniform.data.set(this.color, 16)
         this.uniform.data[20] = this.layer
         this.uniform.data[21] = this.startTime
@@ -133,6 +133,7 @@ export class MeshSystem implements ISystem {
         inverseBindPose?: mat4[]
         model: IModelData
         material?: MeshMaterial
+        geometry: IGeometry
     }> = Object.create(null)
     public readonly plane: MeshBuffer
     constructor(private readonly context: Application){
@@ -220,12 +221,11 @@ export class MeshSystem implements ISystem {
         const arraybuffer = data.buffers[0]
         for(let i = 0; i < manifest.model.length; i++){
             const model = manifest.model[i]
-            const vertices = new Float32Array(arraybuffer, model.vertices.byteOffset, model.vertices.byteLength / Float32Array.BYTES_PER_ELEMENT)
-            const indices = new Uint16Array(arraybuffer, model.indices.byteOffset, model.indices.byteLength / Uint16Array.BYTES_PER_ELEMENT)
+            const vertexArray = new Float32Array(arraybuffer, model.vertices.byteOffset, model.vertices.byteLength / Float32Array.BYTES_PER_ELEMENT)
+            const indexArray = new Uint16Array(arraybuffer, model.indices.byteOffset, model.indices.byteLength / Uint16Array.BYTES_PER_ELEMENT)
             const format = manifest.format[model.format]
-            const buffer = this.uploadVertexData(vertices, indices, format)
             
-            this.models[model.name] = { buffer, model }
+            this.models[model.name] = { buffer: null, model, geometry: { format, vertexArray, indexArray } }
             if(model.inverseBindPose)
                 this.models[model.name].inverseBindPose = model.armature.map((node, index) => new Float32Array(
                     arraybuffer,
@@ -241,9 +241,13 @@ export class MeshSystem implements ISystem {
             }
         }
     }
-    public loadModel(name: string): Mesh {
+    public loadModel(key: string): Mesh {
+        if(!this.models[key].buffer){
+            const geometry = this.models[key].geometry
+            this.models[key].buffer = this.uploadVertexData(geometry.vertexArray, geometry.indexArray, geometry.format)
+        }
         const mesh = this.create()
-        const { model, inverseBindPose, buffer, material } = this.models[name]
+        const { model, inverseBindPose, buffer, material } = this.models[key]
         mesh.layer = model.armature ? OpaqueLayer.Skinned : OpaqueLayer.Static
         mesh.buffer = buffer
         mesh.material = material

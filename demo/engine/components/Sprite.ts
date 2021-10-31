@@ -61,7 +61,8 @@ export class Sprite implements IBatched {
         const left = -this.origin[0] * width, right = left + width
         const top = -this.origin[1] * height, bottom = top + height
 
-        if(!this.frame || this.frame < this.transform.frame) this.bounds.update(this.transform, Math.max(width, height))
+        if(!this.frame || this.frame < this.transform.frame)
+            this.bounds.update(this.transform.matrix, Math.max(width, height), this.transform.frame)
         const transform = this.transform.matrix
         const { tangent, binormal, forward } = Sprite
         const { normal } = this

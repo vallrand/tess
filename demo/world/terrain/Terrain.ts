@@ -16,7 +16,7 @@ export class TerrainSystem implements ISystem {
     public readonly bounds: aabb2 = aabb2()
     public frame: number = 0
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
-    private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context)
+    private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context, 64)
     public readonly pathfinder: Pathfinder = new Pathfinder(this.context, this.gridSize * TerrainChunk.chunkTiles)
     constructor(private readonly context: Application){}
     public update(): void {
@@ -71,7 +71,6 @@ export class TerrainSystem implements ISystem {
             this.chunks[x + z * this.gridSize] = chunk
             this.levelGenerator.populate(chunk)
             chunk.build()
-            chunk.mesh.material = SharedSystem.materials.dunesMaterial
         }
     }
     public chunk(column: number, row: number): TerrainChunk | null {

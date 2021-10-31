@@ -25,7 +25,8 @@ export class DebrisEffect {
             uVelocityMin: vec3(-max, 4, -max)
         })
 
-        this.buffer = this.context.get(MeshSystem).models[name].buffer
+        const geometry = this.context.get(MeshSystem).models[name].geometry
+        this.buffer = this.context.get(MeshSystem).uploadVertexData(geometry.vertexArray, geometry.indexArray, geometry.format)
         this.buffer.radius += max * 4
     }
     create(origin: vec3): Mesh {

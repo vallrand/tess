@@ -1,3 +1,4 @@
+import { vec3 } from './vec3'
 export type aabb3 = [
     number,number,number,
     number,number,number
@@ -10,6 +11,11 @@ export const aabb3 = (
 aabb3.set = (minX: number, minY: number, minZ: number, maxX: number, maxY: number, maxZ: number, out: aabb3): aabb3 => {
     out[0] = minX; out[1] = minY; out[2] = minZ;
     out[3] = maxX; out[4] = maxY; out[5] = maxZ;
+    return out
+}
+aabb3.copy = (aabb: aabb3, out: aabb3): aabb3 => {
+    out[0] = aabb[0]; out[1] = aabb[1]; out[2] = aabb[2]
+    out[3] = aabb[3]; out[4] = aabb[4]; out[5] = aabb[5]
     return out
 }
 aabb3.overlap = (a: aabb3, b: aabb3): boolean => (
@@ -29,6 +35,15 @@ aabb3.add = (a: aabb3, b: aabb3, out: aabb3): aabb3 => {
     out[5] = Math.max(a[5], b[5])
     return out
 }
+aabb3.insert = (aabb: aabb3, vertex: vec3, out: aabb3): aabb3 => {
+    out[0] = Math.min(aabb[0], vertex[0])
+    out[1] = Math.min(aabb[1], vertex[1])
+    out[2] = Math.min(aabb[2], vertex[2])
+    out[3] = Math.max(aabb[3], vertex[0])
+    out[4] = Math.max(aabb[4], vertex[1])
+    out[5] = Math.max(aabb[5], vertex[2])
+    return out
+}
 
 aabb3.calculate = (vertices: Float32Array, stride: number, offset: number, out: aabb3): aabb3 => {
     aabb3.set(Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity, out)
@@ -42,3 +57,5 @@ aabb3.calculate = (vertices: Float32Array, stride: number, offset: number, out: 
     }
     return out
 }
+
+aabb3.INFINITE = aabb3()

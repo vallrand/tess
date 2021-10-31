@@ -3,7 +3,7 @@ import webpack from 'webpack'
 
 export default (env, argv) => ({
     entry: './demo/index.ts',
-    output:{ filename: 'index.js', path: path.resolve('build') },
+    output:{ filename: 'index.js', path: path.resolve('output') },
     resolve:{ extensions: ['.js','.ts','.json'] },
     module:{ rules:[
         { test: /\.tsx?$/i, use: ['ts-loader'], exclude: /node_modules/ },
@@ -11,7 +11,7 @@ export default (env, argv) => ({
     ] },
     optimization:{ minimize: argv.mode === 'production' },
     devServer:{
-        port: 9000, publicPath: '/', contentBase: 'build/', compress: false,
+        port: 9000, publicPath: '/', contentBase: 'output/', compress: false,
         hot: false, inline: false, liveReload: false,
     }
 })

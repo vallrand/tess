@@ -61,7 +61,7 @@ export default (async function(source, binaryFilepath, manifestFilepath){
         const meshData = meshes.map(mesh => {
             const { attributes, indices, material } = mesh.primitives[0]
             const out = Object.create(null)
-            if(material != null){
+            if(material != null && materials[material].normalTexture){
                 const image = materials[material].normalTexture.index
                 out.texture = images[image].name.replace(/_[^_]*$/,'.png')
             }

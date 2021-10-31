@@ -2,6 +2,7 @@ import { vec2, vec3, quat, mat3x2, mat4, mat3 } from '../math'
 import { Application, ISystem, Factory } from '../framework'
 
 export class Transform2D {
+    static readonly IDENTITY = new Transform2D()
     public index: number = -1
     public frame: number = 0
     public readonly position: vec2 = vec2(0,0)
@@ -20,6 +21,7 @@ export class Transform2D {
 }
 
 export class Transform {
+    static readonly IDENTITY = new Transform()
     static readonly matrix: mat4 = mat4()
     static readonly normalMatrix: mat3 = mat3()
     public index: number = -1

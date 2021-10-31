@@ -72,6 +72,6 @@ export class BatchMesh implements IBatched {
             this.normals[i * 3 + 2] *= invLength
         }
 
-        this.bounds.update(this.transform, this.boundingRadius)
+        this.bounds.update(this.transform.matrix, this.boundingRadius, this.transform.frame)
     }
 }

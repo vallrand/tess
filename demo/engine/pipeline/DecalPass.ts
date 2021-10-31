@@ -24,7 +24,7 @@ export class Decal implements IBatchedDecal {
     public update(frame: number, context: Application){
         if(this.frame && this.frame >= this.transform.frame) return
         this.frame = frame
-        this.bounds.update(this.transform, 1)
+        this.bounds.update(this.transform.matrix, 1, this.transform.frame)
     }
 }
 

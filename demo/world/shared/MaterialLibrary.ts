@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
-import { ShaderProgram, GL, OpaqueLayer } from '../../engine/webgl'
+import { ShaderProgram, GL, OpaqueLayer, createTexture } from '../../engine/webgl'
 import { shaders } from '../../engine/shaders'
 import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
@@ -45,6 +45,18 @@ export function MaterialLibrary(context: Application){
             uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
         }, 0
     ).target
+
+    const metalMaterial = new MeshMaterial()
+    metalMaterial.program = context.get(DeferredGeometryPass).programs[0]
+    metalMaterial.diffuse = materials.addRenderTexture(
+        materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
+        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/rust_frag.glsl'), { RUST: true }), {
+            uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
+        }, 0
+    ).target
+    metalMaterial.normal = createTexture(context.gl, {
+        width: 1, height: 1, data: new Uint8Array([0x7F,0x7F,0xFF,0xFF])
+    })
 
     const orbMaterial = new MeshMaterial()
     orbMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
@@ -332,7 +344,7 @@ export function MaterialLibrary(context: Application){
     exhaustMaterial.gradient = SharedSystem.gradients.brightPurple
 
     return {
-        distortion, chromaticAberration, heatDistortion, dunesMaterial, dissolveProgram, orbMaterial,
+        distortion, chromaticAberration, heatDistortion, dunesMaterial, metalMaterial, dissolveProgram, orbMaterial,
 
         coneTealMaterial, gradientMaterial, absorbTealMaterial, stripesMaterial,
         beamLinearProgram, beamRadialProgram, stripesBlockyMaterial,

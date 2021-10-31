@@ -1,7 +1,6 @@
 import { vec3, mat4 } from '../math'
 import { OpaqueLayer } from '../webgl'
 import { PerspectiveCamera } from './Camera'
-import { Transform } from './Transform'
 
 export function calculateBoundingRadius(vertices: Float32Array, stride: number, offset: number, center: vec3 = vec3.ZERO): number {
     let squareRadius = 0
@@ -19,13 +18,13 @@ export class BoundingVolume {
     public readonly position: vec3 = vec3(0,0,0)
     public readonly scale: vec3 = vec3(1,1,1)
     public radius: number = 0
-    public update(transform: Transform, radius: number): void {
-        this.scale[0] = Math.hypot(transform.matrix[0],transform.matrix[1],transform.matrix[2])
-        this.scale[1] = Math.hypot(transform.matrix[4],transform.matrix[5],transform.matrix[6])
-        this.scale[2] = Math.hypot(transform.matrix[8],transform.matrix[9],transform.matrix[10])
-        vec3.set(transform.matrix[12], transform.matrix[13], transform.matrix[14], this.position)
+    public update(matrix: mat4, radius: number, frame: number): void {
+        this.scale[0] = Math.hypot(matrix[0],matrix[1],matrix[2])
+        this.scale[1] = Math.hypot(matrix[4],matrix[5],matrix[6])
+        this.scale[2] = Math.hypot(matrix[8],matrix[9],matrix[10])
+        vec3.set(matrix[12], matrix[13], matrix[14], this.position)
         this.radius = radius * Math.max(this.scale[0], this.scale[1], this.scale[2])
-        this.frame = transform.frame
+        this.frame = frame
     }
     public fromVertices(vertices: Float32Array, stride: number, offset: number, frame: number){
         vec3.copy(vec3.ZERO, this.position)

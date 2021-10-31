@@ -28,11 +28,11 @@ abstract class WaveFunctionCollapse {
     private entropies: Float32Array
 
     protected constructor(
-        protected width: number,
-        protected height: number,
-        protected size: number,
+        public readonly width: number,
+        public readonly height: number,
+        public readonly size: number,
         protected periodic: boolean,
-        protected heuristic: 'entropy' | 'scanline' | 'min'
+        public heuristic: 'entropy' | 'scanline' | 'min'
     ){}
     private precalculate(): void {
         if(this.wave) return
@@ -64,13 +64,12 @@ abstract class WaveFunctionCollapse {
                 if(!this.propagate()) return false
                 continue
             }
-            for(let i = 0; i < this.visited.length; i++)
-            for(let j = 0; j < this.count; j++)
-            if(this.wave[i * this.count + j]){
-                this.visited[i] = j
-                break
-            }
-            return true
+            break
+        }
+        for(let i = 0; i < this.visited.length; i++) if(this.remainders[i] == 1)
+        for(let j = 0; j < this.count; j++) if(this.wave[i * this.count + j]){
+            this.visited[i] = j
+            break
         }
         return true
     }
@@ -179,8 +178,8 @@ export class TextureMapGenerator extends WaveFunctionCollapse {
         return true
     }
 
-    private readonly colors: number[] = []
-    private patterns: number[][]
+    public readonly colors: number[] = []
+    public readonly patterns: number[][]
     private mask: boolean[]
 
     constructor(
@@ -237,13 +236,13 @@ export class TextureMapGenerator extends WaveFunctionCollapse {
                     propagator.push(j2)
         }
     }
-    private patternHash(pattern: number[]): number {
+    public patternHash(pattern: number[] | Uint32Array): number {
         let hash = 0, power = 1, count = this.colors.length
         for(let length = pattern.length, i = 0; i < length; i++, power *= count)
             hash += pattern[length - 1 - i] * power
         return hash
     }
-    private hashPattern(hash: number, out: number[]): number[] {
+    public hashPattern(hash: number, out: number[]): number[] {
         let count = this.colors.length, power = Math.pow(count, this.size * this.size - 1)
         for(let i = 0; i < out.length; i++, power /= count){
             const value = out[i] = hash / power | 0
@@ -251,9 +250,10 @@ export class TextureMapGenerator extends WaveFunctionCollapse {
         }
         return out
     }
-    public graphics(): ImageData {
+    public graphics(out: ImageData): ImageData {
         if(this.visited[0] < 0) return
-        const bitmapData = new Uint32Array(this.width * this.height)
+        out = out || new ImageData(new Uint8ClampedArray(this.width * this.height * 4), this.width, this.height)
+        const bitmapData = new Uint32Array(out.data.buffer)
         for(let y = 0; y < this.height; y++){
             let dy = y < this.height - this.size + 1 ? 0 : this.size - 1
             for(let x = 0; x < this.width; x++){
@@ -262,7 +262,7 @@ export class TextureMapGenerator extends WaveFunctionCollapse {
                 bitmapData[x + y * this.width] = color
             }
         }
-        return new ImageData(new Uint8ClampedArray(bitmapData.buffer), this.width, this.height)
+        return out
     }
     public set(x: number, y: number, color: number): void {
         if(!this.mask) this.mask = new Array(this.width * this.height * this.count)
@@ -276,6 +276,10 @@ export class TextureMapGenerator extends WaveFunctionCollapse {
             for(let j = 0; j < this.count; j++)
             if(this.patterns[j][dx+dy*this.size] !== index) this.mask[(x0+y0*this.width) * this.count + j] = true
         }
+    }
+    public unset(): void {
+        if(!this.mask) this.mask = new Array(this.width * this.height * this.count)
+        this.mask.fill(false)
     }
     protected clear(): void {
         super.clear()
@@ -366,11 +370,12 @@ export class TileSetMapGenerator extends WaveFunctionCollapse {
             if(!sparse.length) throw `Tile ${this.tiles[j1]/8|0} has no neighbours in direction ${d}`
         }
     }
-    graphics(tileset: ImageData[]): ImageData {
-        const tileSize = tileset[0].width
-        const bitmapData = new Uint32Array(this.width * this.height * tileSize * tileSize)
-        const imageData = new Uint32Array(tileSize * tileSize)
+    graphics(tileset: ImageData[], out: ImageData): ImageData {
         if(this.visited[0] < 0) return
+        const tileSize = tileset[0].width
+        out = out || new ImageData(new Uint8ClampedArray(this.width * this.height * tileSize * tileSize * 4), this.width * tileSize, this.height * tileSize)
+        const bitmapData = new Uint32Array(out.data.buffer)
+        const imageData = new Uint32Array(tileSize * tileSize)
         for(let x = 0; x < this.width; x++) for(let y = 0; y < this.height; y++){
             const tile = this.tiles[this.visited[x + y * this.width]]
             const index = tile / 8 | 0
@@ -381,6 +386,6 @@ export class TileSetMapGenerator extends WaveFunctionCollapse {
                 bitmapData[x * tileSize + xt + (y * tileSize + yt) * this.width * tileSize] = color
             }
         }
-        return new ImageData(new Uint8ClampedArray(bitmapData.buffer), this.width * tileSize, this.height * tileSize)
+        return out
     }
 }
