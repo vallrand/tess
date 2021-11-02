@@ -74,6 +74,11 @@ export const VertexDataFormat = {
         { name: 'aUV', size: 4, type: GL.UNSIGNED_SHORT, normalized: true, stride: 76, offset: 64 },
         { name: 'aColor', size: 4, type: GL.UNSIGNED_BYTE, normalized: true, stride: 76, offset: 72 },
     ],
+    StaticParticle: <IVertexAttribute[]> [
+        { name: 'aLifetime', size: 4, type: GL.FLOAT, normalized: false, stride: 48, offset: 0 },
+        { name: 'aSize', size: 4, type: GL.FLOAT, normalized: false, stride: 48, offset: 16 },
+        { name: 'aTransform', size: 4, type: GL.FLOAT, normalized: false, stride: 48, offset: 32 }
+    ],
     Particle: <IVertexAttribute[]> [
         { name: 'aLifetime', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 0 },
         { name: 'aSize', size: 4, type: GL.FLOAT, normalized: false, stride: 80, offset: 16 },

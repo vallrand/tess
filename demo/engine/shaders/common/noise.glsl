@@ -67,15 +67,20 @@ vec2 hash22(uvec2 x){
     return vec2((rz.xy >> 1) & uvec2(0x7fffffffU))/float(0x7fffffff);
 }
 
-
-float noise1D(in float p, in float period){
-    float i = floor(p);
-    float f = fract(p); f = f*f*(3.0-2.0*f);
+float noise1D(in float v, in float period){
+    float i = floor(v);
+    float f = fract(v); f = f*f*(3.0-2.0*f);
     return mix(hash11(mod(i,period)), hash11(mod(i+1.,period)), f);
 }
-float noise2D(in vec2 p, in vec2 period){
-    vec4 i = floor(p).xyxy + vec2(0,1).xxyy;
-    vec2 f = fract(p); f = f*f*(3.0-2.0*f);
+float noise2D(in vec2 v){
+    vec4 i = floor(v).xyxy + vec2(0,1).xxyy;
+    vec2 f = fract(v); f = f*f*(3.0-2.0*f);
+    return mix(mix(hash21(i.xy), hash21(i.zy), f.x),
+            mix(hash21(i.xw), hash21(i.zw), f.x), f.y);
+}
+float noise2D(in vec2 v, in vec2 period){
+    vec4 i = floor(v).xyxy + vec2(0,1).xxyy;
+    vec2 f = fract(v); f = f*f*(3.0-2.0*f);
     i = mod(i, period.xyxy);
     return mix(mix(hash21(i.xy), hash21(i.zy), f.x),
             mix(hash21(i.xw), hash21(i.zw), f.x), f.y);

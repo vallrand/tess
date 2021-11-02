@@ -13,7 +13,7 @@ float hash21(in vec2 src) {
     h ^= h>>13u; h *= M; h ^= h>>15u;
     return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
 }
-float noise21(in vec2 uv, in vec2 period, float seed){
+float noise2D(in vec2 uv, in vec2 period, float seed){
     //uv *= period;
     vec4 i = mod(floor(uv).xyxy+vec2(0,1).xxyy,period.xyxy)+seed;
     vec2 f = fract(uv); f = f*f*(3.0-2.0*f);
@@ -27,7 +27,7 @@ float fbm(in vec2 x, in int octaves, in vec2 period, float seed) {
 	vec2 shift = vec2(100);
     const mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
 	for(int i = 0; i < octaves; ++i){
-		v += 0.5 * a * noise21(x * period, period,seed);
+		v += 0.5 * a * noise2D(x * period, period,seed);
         x += shift;
         shift = rot * shift;
 		a *= 0.5;
@@ -39,7 +39,7 @@ float fbmRidge(in vec2 p, in vec2 period, int octaves, float seed){
 	float z=.5;
 	float rz= 0.;
 	for(int i=1;i<octaves;i++){
-		rz += z * abs(noise21(p * period, period,seed)*2.-1.);
+		rz += z * abs(noise2D(p * period, period,seed)*2.-1.);
 		z*=.5;
         period*=2.;
 	}
@@ -95,7 +95,7 @@ void main(){
     float alpha = f0;
 #elif defined(CRACKS)
     vec2 polar = vec2(length(uv), 0.5 + atan(uv.y, uv.x) / TAU);
-    polar.y += 0.08*(1.-2.*noise21(polar*vec2(4,8)+12.4, vec2(4,8),seed));
+    polar.y += 0.08*(1.-2.*noise2D(polar*vec2(4,8)+12.4, vec2(4,8),seed));
     float width = pow(mix(1.2,0.0,polar.x),4.0);
     float f0 = smoothstep(1.0-width,1.0,.5+.5*cos(polar.y*TAU*12.0));
     f0 = max(1.2*f0, 1.4*fbm(vec2(64.0, polar.y), 4, vec2(1e3,48),seed));

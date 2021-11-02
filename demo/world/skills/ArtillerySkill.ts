@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { random, randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
+import { randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
@@ -81,12 +81,10 @@ class Missile {
         this.trail.addColorFade(this.trail.ease)
         this.trail.material = SharedSystem.materials.trailSmokeMaterial
 
-        this.exhaust = new BatchMesh(SharedSystem.geometry.hemisphere)
-        this.exhaust.order = 2
+        this.exhaust = BatchMesh.create(SharedSystem.geometry.hemisphere, 2)
         this.exhaust.material = SharedSystem.materials.exhaustMaterial
 
-        this.ring = new BatchMesh(SharedSystem.geometry.cylinder)
-        this.ring.order = 6
+        this.ring = BatchMesh.create(SharedSystem.geometry.cylinder, 6)
         this.ring.material = SharedSystem.materials.ringDustMaterial
 
         this.wave = Sprite.create(BillboardType.None)
@@ -138,7 +136,7 @@ class Missile {
         this.burn = this.context.get(DecalPass).create(0)
         this.burn.transform = this.context.get(TransformSystem).create()
         vec3.copy(target, this.burn.transform.position)
-        quat.axisAngle(vec3.AXIS_Y, randomFloat(0, 2 * Math.PI, random), this.burn.transform.rotation)
+        quat.axisAngle(vec3.AXIS_Y, randomFloat(0, 2 * Math.PI, SharedSystem.random()), this.burn.transform.rotation)
         this.burn.material = this.parent.burnMaterial
 
         this.wave.transform = this.context.get(TransformSystem).create()
@@ -222,8 +220,8 @@ class Missile {
             const prev = path[path.length - 1]
             const next = cubicBezier3D(control0, control1, control2, target, i / length, vec3())
             path.push(next)
-            vec3.random(random(), random(), offset)
-            vec3.scale(offset, random() * (i == 0 || i == length ? 0 : 1), offset)
+            vec3.random(SharedSystem.random(), SharedSystem.random(), offset)
+            vec3.scale(offset, SharedSystem.random() * (i == 0 || i == length ? 0 : 1), offset)
             vec3.add(next, offset, next)
             next[1] = clamp(next[1], heightRange[0], heightRange[1])
 
@@ -338,8 +336,8 @@ export class ArtillerySkill extends CubeSkill {
             //if(entity != null)
         }
         while(out.length < 4) out.push(vec2(
-            origin[0] + randomInt(-limit, limit, random),
-            origin[1] + randomInt(-limit, limit, random)
+            origin[0] + randomInt(-limit, limit, SharedSystem.random()),
+            origin[1] + randomInt(-limit, limit, SharedSystem.random())
         ))
         return out
     }

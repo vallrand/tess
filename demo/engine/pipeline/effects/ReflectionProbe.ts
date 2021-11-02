@@ -5,7 +5,7 @@ import { MeshSystem } from '../../components'
 import { FrustumCulling } from '../../scene'
 import { DeferredGeometryPass } from '../GeometryPass'
 import { MaterialSystem } from '../../materials'
-import { shaders } from '../../shaders'
+import * as shaders from '../../shaders'
 
 class CubeMapFace {
     static readonly matrices = [

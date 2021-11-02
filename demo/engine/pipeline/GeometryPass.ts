@@ -2,7 +2,7 @@ import { Application, ISystem } from '../framework'
 import { CameraSystem, FrustumCulling } from '../scene'
 import { MeshSystem, Mesh } from '../components'
 import { GL, ShaderProgram, createTexture, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 import { PipelinePass, IEffect } from './PipelinePass'
 
 export class DeferredGeometryPass extends PipelinePass implements ISystem {

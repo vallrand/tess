@@ -1,7 +1,8 @@
 import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram, GL, OpaqueLayer, createTexture } from '../../engine/webgl'
-import { shaders } from '../../engine/shaders'
+import * as shaders from '../../engine/shaders'
+import * as localShaders from '../shaders'
 import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
@@ -33,12 +34,7 @@ export function MaterialLibrary(context: Application){
 
     const dunesMaterial = new MeshMaterial()
     dunesMaterial.program = context.get(DeferredGeometryPass).programs[0]
-    dunesMaterial.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/sandstone_frag.glsl')), {
-            uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
-        }, 0
-    ).target
+    dunesMaterial.diffuse = SharedSystem.textures.sandstone
     dunesMaterial.normal = materials.addRenderTexture(
         materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/dunes_frag.glsl')), {
@@ -48,12 +44,7 @@ export function MaterialLibrary(context: Application){
 
     const metalMaterial = new MeshMaterial()
     metalMaterial.program = context.get(DeferredGeometryPass).programs[0]
-    metalMaterial.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/rust_frag.glsl'), { RUST: true }), {
-            uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
-        }, 0
-    ).target
+    metalMaterial.diffuse = SharedSystem.textures.wreck
     metalMaterial.normal = createTexture(context.gl, {
         width: 1, height: 1, data: new Uint8Array([0x7F,0x7F,0xFF,0xFF])
     })

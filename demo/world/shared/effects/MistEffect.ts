@@ -1,7 +1,8 @@
 import { Application } from '../../../engine/framework'
-import { random, randomFloat, vec3, aabb3 } from '../../../engine/math'
+import { vec3, aabb3, randomFloat, mulberry32 } from '../../../engine/math'
 import { GL, ShaderProgram } from '../../../engine/webgl'
-import { shaders } from '../../../engine/shaders'
+import * as shaders from '../../../engine/shaders'
+import * as localShaders from '../../shaders'
 import { CameraSystem } from '../../../engine/scene/Camera'
 import { ParticleSystem } from '../../../engine/particles'
 import { MaterialSystem, EmitterMaterial, ShaderMaterial } from '../../../engine/materials'
@@ -32,11 +33,12 @@ export class MistEffect extends ParticleSystem<void> {
 
         this.instances = amount
         const { gl } = this.context
+        const random = mulberry32()
         const vertexArray = new Float32Array(this.instances * 3)
         for(let i = 0; i < this.instances; i++){
-            vertexArray[i * 3 + 0] = randomFloat(bounds[0], bounds[3], random)
-            vertexArray[i * 3 + 1] = randomFloat(bounds[1], bounds[4], random)
-            vertexArray[i * 3 + 2] = randomFloat(bounds[2], bounds[5], random)
+            vertexArray[i * 3 + 0] = randomFloat(bounds[0], bounds[3], random())
+            vertexArray[i * 3 + 1] = randomFloat(bounds[1], bounds[4], random())
+            vertexArray[i * 3 + 2] = randomFloat(bounds[2], bounds[5], random())
         }
         gl.bindBuffer(GL.ARRAY_BUFFER, this.buffer[0])
         gl.bufferSubData(GL.ARRAY_BUFFER, 0, vertexArray)
@@ -44,8 +46,7 @@ export class MistEffect extends ParticleSystem<void> {
         const materials = this.context.get(MaterialSystem)
         this.material.diffuse = materials.addRenderTexture(
             materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-            ShaderProgram(context.gl, shaders.fullscreen_vert,
-                require('../../shaders/shape_frag.glsl'), { CIRCLE: true }), { uColor: [0.5,0.5,0.5,1] }, 0
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.circle), { uColor: [0.5,0.5,0.5,1] }, 0
         ).target
     }
     public apply(): void {

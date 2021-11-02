@@ -1,7 +1,7 @@
 import { Application } from '../framework'
 import { vec3, vec4, quat, mat4 } from '../math'
 import { GL, ShaderProgram, createTexture, UniformBlock, UniformBlockBindings } from '../webgl'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 import { createBox, applyTransform } from '../geometry'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { CameraSystem } from '../scene'

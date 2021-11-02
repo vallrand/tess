@@ -125,10 +125,10 @@ export class ShieldSkill extends CubeSkill {
         this.beam.material.program = this.context.get(ParticleEffectPass).program
         this.beam.material.diffuse = SharedSystem.textures.raysBeam
 
-        this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
         this.tube.material = SharedSystem.materials.stripesMaterial
 
-        this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
+        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = this.tube.material
     }
     public *open(): Generator<ActionSignal> {

@@ -9,8 +9,8 @@ import { BoundingVolume } from '../scene/FrustumCulling'
 import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
 import { DecalBatch, IBatchedDecal } from './batch'
 import { DecalMaterial, SpriteMaterial } from '../materials'
-import { IEffect } from '.'
-import { shaders } from '../shaders'
+import { IEffect } from './PipelinePass'
+import * as shaders from '../shaders'
 import { PipelinePass } from './PipelinePass'
 
 export class Decal implements IBatchedDecal {

@@ -11,7 +11,7 @@ import { SharedSystem } from '../shared'
 import { MeshSystem } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
 import { TurnBasedSystem } from '../common'
-import { AISystem } from '../opponent'
+import { AISystem } from '../military'
 import { KeyboardSystem } from '../../engine/device'
 
 export class PlayerSystem implements ISystem {
@@ -39,10 +39,10 @@ export class PlayerSystem implements ISystem {
 
             window['curUnit'] = 3
 
-            // this.context.get(AISystem).create(5,7,0)
-            // this.context.get(AISystem).create(5,6,0)
-            // this.context.get(AISystem).create(5,5,0)
-            // this.context.get(AISystem).create(4,4,0)
+            this.context.get(AISystem).create(5,7,0)
+            this.context.get(AISystem).create(5,6,0)
+            this.context.get(AISystem).create(5,5,0)
+            this.context.get(AISystem).create(4,4,0)
 
             // ;[
             //     [5,7],[5,6],[5,5],[6,7],[6,6],[6,4]
@@ -69,7 +69,7 @@ export class PlayerSystem implements ISystem {
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [2,6,2]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)

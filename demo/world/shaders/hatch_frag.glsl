@@ -37,12 +37,12 @@ float hatch(in vec2 uv, in float period, in int strength){
 }
 
 uniform vec3 uColor;
+uniform float uScale;
 
 void main(){
     vec2 uv = vUV.yx;
 
-    float scale = 4.0;
-    float h = hatch(uv*scale,scale,3);
+    float h = hatch(uv*uScale,uScale,3);
     vec3 color = vec3(0.6,0.62,0.66);
     color += vec3(0.16,0.18,0.20) * smoothstep(0.0,3.0,h);
     color += vec3(0.1) * smoothstep(1.0,3.0,h);

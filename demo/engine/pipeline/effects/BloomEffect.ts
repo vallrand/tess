@@ -1,7 +1,7 @@
 import { vec2, vec4 } from '../../math'
 import { Application } from '../../framework'
 import { GL, ShaderProgram, UniformSamplerBindings, createTexture } from '../../webgl'
-import { shaders } from '../../shaders'
+import * as shaders from '../../shaders'
 import { PostEffectPass, IPostEffect } from '../PostEffectPass'
 
 export class BloomEffect implements IPostEffect {

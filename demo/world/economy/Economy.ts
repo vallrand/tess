@@ -28,6 +28,11 @@ export class EconomySystem implements ISystem {
         this.list.push(spot)
         return spot
     }
+    public createWorkshop(column: number, row: number): Workshop {
+        const workshop = new Workshop(this.context)
+        workshop.place(column, row)
+        return workshop
+    }
     public delete(component: ResourceSpot): void {
         const index = this.list.indexOf(component)
         if(index == -1) return

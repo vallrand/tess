@@ -1,0 +1,12 @@
+export const plant: string = require('./textures/plant_frag.glsl')
+export const wreck: string = require('./textures/wreck_frag.glsl')
+export const sandstone: string = require('./textures/sandstone_frag.glsl')
+
+export const circle: string = require('./textures/circle_frag.glsl')
+export const glow: string = require('./textures/glow_frag.glsl')
+export const bulge: string = require('./textures/bulge_frag.glsl')
+export const ring: string = require('./textures/ring_frag.glsl')
+export const wave: string = require('./textures/wave_frag.glsl')
+export const sparkle: string = require('./textures/sparkle_frag.glsl')
+export const blink: string = require('./textures/blink_frag.glsl')
+export const rectangle: string = require('./textures/rectangle_frag.glsl')

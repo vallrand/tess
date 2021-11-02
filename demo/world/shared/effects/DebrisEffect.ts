@@ -4,7 +4,7 @@ import { ShaderProgram } from '../../../engine/webgl'
 import { MeshSystem, MeshBuffer, Mesh } from '../../../engine/components'
 import { MeshMaterial } from '../../../engine/materials'
 import { TransformSystem } from '../../../engine/scene'
-import { shaders } from '../../../engine/shaders'
+import * as shaders from '../../../engine/shaders'
 import { SharedSystem } from '../../shared'
 
 export class DebrisEffect {

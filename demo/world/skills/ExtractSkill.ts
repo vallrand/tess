@@ -1,4 +1,4 @@
-import { random, lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
@@ -68,7 +68,7 @@ const actionTimeline = {
     ], vec4.lerp),
     'cracks.transform.rotation': EventTrigger([
         { frame: 0, value: null }
-    ], (rotation: quat) => quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*random(), rotation)),
+    ], (rotation: quat) => quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*SharedSystem.random(), rotation)),
     'smoke.rate': PropertyAnimation([
         { frame: 0, value: 0.05 },
         { frame: 0.5, value: 0.01, ease: ease.quadIn },
@@ -87,7 +87,7 @@ export class ExtractSkill extends CubeSkill {
     constructor(context: Application, cube: Cube){
         super(context, cube)
 
-        this.glow = new BatchMesh(SharedSystem.geometry.cross)
+        this.glow = BatchMesh.create(SharedSystem.geometry.cross)
         this.glow.material = SharedSystem.materials.gradientMaterial
 
         this.cracksMaterial = new DecalMaterial()
@@ -95,7 +95,7 @@ export class ExtractSkill extends CubeSkill {
         this.cracksMaterial.diffuse = SharedSystem.textures.cracks
         this.cracksMaterial.normal = SharedSystem.textures.cracksNormal
 
-        this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
         this.tube.material = SharedSystem.materials.stripesRedMaterial
 
 

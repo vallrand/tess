@@ -198,21 +198,7 @@ export class OrbSkill extends CubeSkill {
 
     constructor(context: Application, cube: Cube){
         super(context, cube)
-        const cone = createCylinder({
-            radiusTop: 0.5, radiusBottom: 4, height: 4,
-            horizontal: 8, radial: 8,
-            cap: false, angleStart: 0, angleLength: 2 * Math.PI
-        })
-        const rotation = quat()
-        modifyGeometry(cone, function verticalSkew(position: vec3, normal: vec3){
-            const skewAngle = 1.6 * Math.PI * ease.circIn(0.5 + position[1] / 4)
-            quat.axisAngle(vec3.AXIS_Y, skewAngle, rotation)
-            quat.transform(position, rotation, position)
-            quat.transform(normal, rotation, normal)
-        })
-        applyTransform(cone, mat4.fromRotationTranslationScale(
-            Sprite.FlatUp, vec3(0,0,-2), vec3.ONE, mat4()))
-        this.cone = new BatchMesh(doubleSided(cone))
+        this.cone = BatchMesh.create(SharedSystem.geometry.funnel)
         this.cone.material = SharedSystem.materials.coneTealMaterial
         
         this.glow = Sprite.create(BillboardType.Sphere, -8)
@@ -227,7 +213,7 @@ export class OrbSkill extends CubeSkill {
         this.ring.material.program = this.context.get(ParticleEffectPass).program
         this.ring.material.diffuse = SharedSystem.textures.swirl
 
-        this.sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
+        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = SharedSystem.materials.coneTealMaterial
 
         this.distortion = Sprite.create(BillboardType.None)

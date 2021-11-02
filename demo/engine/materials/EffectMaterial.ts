@@ -1,6 +1,6 @@
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings } from '../webgl'
 import { IMaterial } from '../pipeline'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 import { ShaderMaterial } from './ShaderMaterial'
 import { vec4 } from '../math'
 

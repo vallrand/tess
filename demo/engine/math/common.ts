@@ -1,15 +1,6 @@
-export const random = (seed => function mulberry32(): number {
-    let t = seed += 0x6D2B79F5
-    t = Math.imul(t ^ t >>> 15, t | 1)
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61)
-    return ((t ^ t >>> 14) >>> 0) / 4294967296
-})(0X1F6)
-
 export const lerp = (start: number, end: number, factor: number): number => start + (end - start) * factor
 export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
 export const mod = (n: number, m: number): number => ((n % m) + m) % m
-export const randomFloat = (min: number, max: number, random: () => number): number => random() * (max - min) + min
-export const randomInt = (min: number, max: number, random: () => number): number => Math.floor(random() * (max - min + 1)) + min
 export const shortestAngle = (a: number, b: number): number => {
     const da = (b - a) % (2 * Math.PI)
     return 2 * da % (2 * Math.PI) - da
@@ -21,6 +12,10 @@ export function smoothstep(min: number, max: number, value: number): number {
     value = clamp((value - min) / (max - min), 0, 1)
     return value * value * (3 - 2 * value)
 }
+export function smootherstep(edge0: number, edge1: number, x: number): number {
+    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0)
+    return x * x * x * (x * (x * 6 - 15) + 10)
+}
 
 export const range = (min: number, max?: number, out: number[] = []): number[] => {
     if(max == null){
@@ -29,16 +24,6 @@ export const range = (min: number, max?: number, out: number[] = []): number[] =
     }
     for(let i = min, c = 0; i < max; i++, c++)
         out[c] = i
-    return out
-}
-
-export const shuffle = <T>(out: T[], random: () => number): T[] => {
-    for(let i = out.length - 1; i > 0; i--){
-        let j = (random() * (i + 1)) | 0
-        let temp: T = out[i]
-        out[i] = out[j]
-        out[j] = temp
-    }
     return out
 }
 
@@ -70,6 +55,12 @@ export function hashString(value: string): number {
         hash |= 0
     }
     return hash
+}
+
+export function hashCantor(c: number, r: number): number {
+    c = c >= 0 ? c*2 : -c*2 - 1
+    r = r >= 0 ? r*2 : -r*2 - 1
+    return (c + r) * (c + r + 1) / 2 + c
 }
 
 export function binarySearch<T>(list: T[], target: T, compare: (a: T, b: T) => number, last?: boolean): number {

@@ -1,9 +1,9 @@
 import { Application, One, Zero } from '../../engine/framework'
-import { random, randomInt, randomFloat, vec2, vec3, vec4, quat } from '../../engine/math'
+import { vec2, vec3, vec4, quat, randomInt, randomFloat, mulberry32 } from '../../engine/math'
 import { ease } from '../../engine/animation'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
-import { ParticleEffectPass } from '../../engine/pipeline'
-import { shaders } from '../../engine/shaders'
+import { ParticleEffectPass, DeferredGeometryPass } from '../../engine/pipeline'
+import * as shaders from '../../engine/shaders'
 import { MaterialSystem, EmitterMaterial, GradientRamp } from '../../engine/materials'
 import {
     AttributeCurveSampler, ParticleGeometry, ParticleOvertimeAttributes,
@@ -13,6 +13,7 @@ import { SharedSystem } from './index'
 
 export function ParticleLibrary(context: Application){
     const materials = context.get(MaterialSystem)
+    const random = mulberry32()
 
     const energy = new ParticleSystem<{
         uLifespan: vec4
@@ -34,13 +35,7 @@ export function ParticleLibrary(context: Application){
         })
     )
     energy.material = new EmitterMaterial()
-    energy.material.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/shape_frag.glsl'), { BLINK: true }), {
-                uColor: [1,1,1,1]
-            }, 0
-    ).target
+    energy.material.diffuse = SharedSystem.textures.blink
     energy.material.gradientRamp = GradientRamp(context.gl, [
         0x00000000, 0x3238317f, 0x264d3e3f, 0x8db8b600,
         0x00000000, 0x111c134f, 0x1d4a3b3f, 0x3f999600,
@@ -79,13 +74,7 @@ export function ParticleLibrary(context: Application){
         })
     )
     sparks.material = new EmitterMaterial()
-    sparks.material.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/shape_frag.glsl'), { ROUNDED_BOX: true }), {
-                uColor: [1,1,1,1], uRadius: 0.4, uSize: 0.2
-            }, 0
-    ).target
+    sparks.material.diffuse = SharedSystem.textures.rectangle
     sparks.material.gradientRamp = GradientRamp(context.gl, [
         0x00000000, 0xc7fcf0af, 0x8ee3e67f, 0x4383ba3f, 0x21369400, 0x09115400,
         0x00000000, 0x81d4cd7f, 0x4f94a13f, 0x27588a00, 0x13236300, 0x060c3300,
@@ -306,20 +295,19 @@ export function ParticleLibrary(context: Application){
             SPHERICAL: true, GRADIENT: true, VECTOR_FIELD: true, LUT: true
         }), {
             aLifetime(options, offset, buffer){
-                buffer[offset + 0] = context.currentTime - randomFloat(options.uLifespan[2], options.uLifespan[3], random)
-                buffer[offset + 1] = randomFloat(options.uLifespan[0], options.uLifespan[1], random)
+                buffer[offset + 0] = context.currentTime - randomFloat(options.uLifespan[2], options.uLifespan[3], random())
+                buffer[offset + 1] = randomFloat(options.uLifespan[0], options.uLifespan[1], random())
                 buffer[offset + 2] = random()
                 buffer[offset + 3] = -options.uLifespan[2]
             },
             aSize(options, offset, buffer){
-                buffer[offset + 0] = randomFloat(options.uSize[0], options.uSize[1], random)
-                buffer[offset + 1] = buffer[offset + 0]
+                buffer[offset + 0] = buffer[offset + 1] = randomFloat(options.uSize[0], options.uSize[1], random())
                 buffer[offset + 2] = 0
                 buffer[offset + 3] = 1
             },
             aTransform(options, offset, buffer){
-                const angle = randomFloat(0, 2 * Math.PI, random)
-                const radius = randomFloat(options.uRadius[0], options.uRadius[1], random)
+                const angle = randomFloat(0, 2 * Math.PI, random())
+                const radius = randomFloat(options.uRadius[0], options.uRadius[1], random())
                 const nx = radius * Math.cos(angle), nz = radius * Math.sin(angle)
 
                 buffer[offset + 0] = options.uOrigin[0] + nx
@@ -328,10 +316,7 @@ export function ParticleLibrary(context: Application){
                 buffer[offset + 3] = 0
             },
             aVelocity(options, offset, buffer){
-                buffer[offset + 0] = 0
-                buffer[offset + 1] = 0
-                buffer[offset + 2] = 0
-                buffer[offset + 3] = 0
+                buffer[offset + 0] = buffer[offset + 1] = buffer[offset + 2] = buffer[offset + 3] = 0
             },
             aAcceleration(options, offset, buffer){
                 buffer[offset + 0] = options.uGravity[0]
@@ -359,6 +344,46 @@ export function ParticleLibrary(context: Application){
     )
     glow.material.displacementMap = SharedSystem.textures.perlinNoise
 
+    const foliage = new StaticParticleSystem<{
+        uOrigin: vec3[]
+        uRadius: vec2
+        uSize: vec2
+    }>(
+        context, { limit: 2048, format: VertexDataFormat.StaticParticle },
+        ParticleGeometry.board(context.gl, 0.2),
+        ShaderProgram(context.gl, require('../shaders/grass_vert.glsl'), shaders.foliage_frag, {
+            FRAMES: true
+        }), {
+            aLifetime(options, offset, buffer){
+                buffer[offset + 0] = context.currentTime
+                buffer[offset + 1] = 0
+                buffer[offset + 2] = random()
+                buffer[offset + 3] = 2
+            },
+            aTransform(options, offset, buffer){
+                const origin = options.uOrigin[randomInt(0, options.uOrigin.length - 1, random())]
+                const radius = randomFloat(options.uRadius[0], options.uRadius[1], random()*random())
+                const angle = randomFloat(0, 2 * Math.PI, random())
+
+                buffer[offset + 0] = origin[0] + radius * Math.cos(angle)
+                buffer[offset + 2] = origin[2] + radius * Math.sin(angle)
+                buffer[offset + 1] = origin[1]
+                buffer[offset + 3] = 0
+            },
+            aSize(options, offset, buffer){
+                buffer[offset + 0] = buffer[offset + 1] = randomFloat(options.uSize[0], options.uSize[1], random())
+                buffer[offset + 2] = 0
+                buffer[offset + 3] = 2
+            }
+        }
+    )
+    foliage.material = new EmitterMaterial()
+    foliage.material.blendMode = null
+    foliage.material.cullFace = GL.NONE
+    foliage.material.depthWrite = true
+    foliage.material.diffuse = SharedSystem.textures.plant
+
     context.get(ParticleEffectPass).effects.push(glow, dust, spikes, smoke, energy, sparks, bolts, embers, fire)
-    return { glow, dust, spikes, smoke, energy, sparks, bolts, embers, fire }
+    context.get(DeferredGeometryPass).effects.push(foliage)
+    return { foliage, glow, dust, spikes, smoke, energy, sparks, bolts, embers, fire }
 }

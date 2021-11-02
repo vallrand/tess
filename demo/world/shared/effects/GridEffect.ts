@@ -1,7 +1,7 @@
 import { Application } from '../../../engine/framework'
 import { vec3, vec4 } from '../../../engine/math'
 import { ShaderProgram, GL } from '../../../engine/webgl'
-import { shaders } from '../../../engine/shaders'
+import * as shaders from '../../../engine/shaders'
 import { TransformSystem, Transform } from '../../../engine/scene'
 import { DecalMaterial } from '../../../engine/materials'
 import { DecalPass, Decal } from '../../../engine/pipeline'

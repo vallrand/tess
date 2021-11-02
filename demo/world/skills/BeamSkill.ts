@@ -90,7 +90,7 @@ export class BeamSkill extends CubeSkill {
     private readonly _direction: vec3 = vec3()
     constructor(context: Application, cube: Cube){
         super(context, cube)
-        this.cone = new BatchMesh(SharedSystem.geometry.cone)
+        this.cone = BatchMesh.create(SharedSystem.geometry.cone)
         this.cone.material = SharedSystem.materials.absorbTealMaterial
 
         this.center = Sprite.create(BillboardType.Sphere)

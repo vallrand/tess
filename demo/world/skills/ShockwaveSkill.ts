@@ -7,10 +7,11 @@ import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
 import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
-import { shaders } from '../../engine/shaders'
+import * as shaders from '../../engine/shaders'
 
 import { modelAnimations, CubeModuleModel } from '../animations'
 import { Cube } from '../player'
+import { IDamageSource, DamageType, AIUnitSkill } from '../military'
 import { SharedSystem } from '../shared'
 import { CubeSkill } from './CubeSkill'
 
@@ -101,6 +102,10 @@ const actionTimeline = {
 }
 
 export class ShockwaveSkill extends CubeSkill {
+    readonly damage: IDamageSource = { amount: 2, type: DamageType.Electric }
+    radius: number = 2
+
+
     private ring: Decal
     private crack: Decal
     private light: PointLight
@@ -155,7 +160,7 @@ export class ShockwaveSkill extends CubeSkill {
             uFrame: [8,4]
         })
 
-        this.cylinder = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.cylinder = BatchMesh.create(SharedSystem.geometry.cylinder)
         this.cylinder.material = new SpriteMaterial()
         this.cylinder.material.program = this.context.get(ParticleEffectPass).program
         this.cylinder.material.diffuse = SharedSystem.textures.wind
@@ -232,7 +237,8 @@ export class ShockwaveSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).remove(this.flash)
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.cylinder)
-
+    }
+    clear(){
         //SharedSystem.particles.bolts.remove(this.bolts)
     }
 }

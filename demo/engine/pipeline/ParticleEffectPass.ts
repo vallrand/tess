@@ -6,7 +6,7 @@ import { IEffect, IMesh } from '.'
 import { CameraSystem } from '../scene/Camera'
 import { DeferredGeometryPass } from './GeometryPass'
 import { PipelinePass, IMaterial } from './PipelinePass'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 
 export class ParticleEffectPass extends PipelinePass implements ISystem {
     private static readonly orderSort = (a: { order: number }, b: { order: number }) => a.order - b.order

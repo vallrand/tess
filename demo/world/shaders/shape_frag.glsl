@@ -8,10 +8,6 @@ uniform float uBlur;
 #ifdef TRIANGLE
 uniform vec2 uSize;
 #endif
-#ifdef ROUNDED_BOX
-uniform float uSize;
-uniform float uRadius;
-#endif
 
 #define TAU 6.283185307179586
 float triangle(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2){
@@ -31,27 +27,10 @@ float triangle(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2){
 
 void main(){
     vec2 uv = 2.*vUV-1.;
-#if defined(CIRCLE)
-    float distance = max(0.0, 1.0-length(uv));
-    float alpha = distance*distance;
-#elif defined(BULGE)
-    float alpha = 1.0-pow(length(uv),4.0);
-#elif defined(CRESCENT)
+#if defined(CRESCENT)
     float alpha = smoothstep(1.0,0.85,length(uv));
     alpha -= smoothstep(1.0,0.75,length(uv+vec2(0,0.2)));
     alpha *= (.5+.5*uv.y) * pow(length(uv),4.0) * 2.0;
-#elif defined(GLOW)
-    float alpha = 0.5*(1.0/length(uv)-1.0);
-#elif defined(WAVE)
-    uv = vec2(atan(uv.y,uv.x)/TAU,length(uv));
-    float alpha = .5-.5*cos(smoothstep(0.2,1.0,uv.y)*TAU);
-    alpha = alpha * alpha;
-#elif defined(RING)
-    uv = vec2(atan(uv.y,uv.x)/TAU,length(uv));
-    float distance = max(0.0, 1.0-uv.y);
-    //distance -= smoothstep(1.0,0.0,uv.y) * smoothstep(0.0,1.0,abs(fract(uv.x * 9.0)-0.5));
-    float alpha = smoothstep(0.0,0.1,distance) * smoothstep(0.5,0.0,distance);
-    alpha = pow(alpha, 1.4);
 #elif defined(RETICLE)
     const float edge = 0.02;
     vec2 polar = vec2(.5+atan(uv.y,uv.x)/TAU,length(uv));
@@ -63,25 +42,10 @@ void main(){
     float inner = smoothstep(.3,.3-edge,polar.y)*smoothstep(.2-edge,.2,polar.y);
     inner = max(0., inner - smoothstep(.1+edge,.1,min(abs(uv.x),abs(uv.y))));
     float alpha = plus + outer + inner;
-#elif defined(ROUNDED_BOX)
-    float distance = length(max(abs(uv)-uSize+uRadius,0.0))-uRadius;
-    float alpha = 1.0-smoothstep(0.0, 1.0 - uSize, distance);
 #elif defined(TRIANGLE)
     //TODO NOT USED
     float distance = triangle(uv, vec2(-uSize.x,uSize.y), vec2(-uSize.x,-uSize.y), vec2(uSize.x,0.0));
     float alpha = smoothstep(uBlur, 0.0, distance);
-#elif defined(SPARKLE)
-    uv = abs(uv);
-    uv += mix(0.0,-0.16*(1.0-max(uv.x,uv.y)),max(uv.x,uv.y));
-    float sparkle = max(0.0, 1.0 - (16.0*uv.x*uv.y + 0.8*(uv.x+uv.y)));
-    sparkle = pow(1.0/(1.0-sparkle),0.2) - 1.0;
-    float alpha = sparkle * 2.0;
-#elif defined(BLINK)
-    uv = abs(uv);
-    float x0 = 1.0-uv.x*uv.x;
-    float x1 = 1.0-uv.x;
-    float y0 = mix(pow(1.0-uv.y,8.0), pow(1.0-uv.y,2.0), x1*x1);
-    float alpha = smoothstep(0.0, 1.0, x0*y0);
 #elif defined(STRIPE)
     uv = .5+.5*uv;
     float line = .5+.5*cos(TAU*(4.0*uv.y+0.5));

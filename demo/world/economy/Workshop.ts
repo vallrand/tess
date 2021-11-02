@@ -139,7 +139,7 @@ export class Workshop implements IActor, IUnitTile {
             uFieldDomain: vec4.ONE,
             uFieldStrength: [8,0]
         })
-        this.glow = new BatchMesh(SharedSystem.geometry.openBox)
+        this.glow = BatchMesh.create(SharedSystem.geometry.openBox)
         this.glow.material = SharedSystem.materials.gradientMaterial
         this.glow.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, mesh.transform)

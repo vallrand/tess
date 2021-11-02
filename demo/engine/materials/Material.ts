@@ -1,7 +1,7 @@
 import { Application, ISystem, ILoadedData } from '../framework'
 import { GL, createTexture, TextureOptions, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { DeferredGeometryPass, IMaterial } from '../pipeline'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 import { MeshMaterial } from './MeshMaterial'
 import { MeshSystem } from '../components'
 

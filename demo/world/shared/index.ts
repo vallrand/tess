@@ -1,4 +1,5 @@
 import { Application, ISystem } from '../../engine/framework'
+import { mulberry32 } from '../../engine/math'
 import { DeferredGeometryPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 import { TextureLibrary } from './TextureLibrary'
 import { GradientLibrary } from './GradientLibrary'
@@ -12,6 +13,7 @@ import {
 } from './effects'
 
 export class SharedSystem implements ISystem {
+    public static readonly random = mulberry32()
     public static textures: ReturnType<typeof TextureLibrary>
     public static gradients: ReturnType<typeof GradientLibrary>
     public static materials: ReturnType<typeof MaterialLibrary>

@@ -2,7 +2,7 @@ import { Application, Factory } from '../../engine/framework'
 import { vec2, vec3, quat, mat4 } from '../../engine/math'
 import { ease } from '../../engine/animation'
 import {
-    createPlane, createBox, createCylinder, createSphere,
+    IGeometry, createPlane, createBox, createCylinder, createSphere,
     doubleSided, applyTransform, extrudePolygon, modifyGeometry
 } from '../../engine/geometry'
 import { MeshSystem, Sprite, BatchMesh } from '../../engine/components'
@@ -13,12 +13,9 @@ export function GeometryLibrary(context: Application){
     const sphere = createSphere({
         longitude: 32, latitude: 32, radius: 1
     })
-    const sphereMesh = context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format, false)
-
     const lowpolySphere = createSphere({
         longitude: 16, latitude: 16, radius: 1
     })
-
     const hemisphere = applyTransform(createSphere({
         longitude: 8, latitude: 4, radius: 1,
         thetaStart: 0, thetaLength: 0.5 * Math.PI,
@@ -26,13 +23,11 @@ export function GeometryLibrary(context: Application){
     }), mat4.fromRotationTranslationScale(
         Sprite.FlatUp, vec3(0,0,-1), vec3.ONE, transform
     ))
-
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
         radial: 32, horizontal: 1,
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }))
-
     const cone = doubleSided(applyTransform(createCylinder({
         radiusTop: 0, radiusBottom: 2, height: 1,
         horizontal: 4, radial: 16,
@@ -63,9 +58,7 @@ export function GeometryLibrary(context: Application){
         width: 1, height: 1, depth: 1, open: true
     }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, transform)))
 
-    //TODO factory pool for batched meshes?
 
-    //TODO duplicate from orb skill
     let funnel = createCylinder({
         radiusTop: 0.5, radiusBottom: 4, height: 4,
         horizontal: 8, radial: 8,
@@ -83,17 +76,13 @@ export function GeometryLibrary(context: Application){
     funnel = doubleSided(funnel)
 
     return {
-        sphere,
-        lowpolySphere,
-        hemisphere,
-        cylinder,
-        cone,
-        box,
-        openBox,
-        sphereMesh,
+        sphere, lowpolySphere, hemisphere,
+        cylinder, lowpolyCylinder, cone,
+        box, openBox,
         cross,
-        lowpolyCylinder,
         funnel,
-        lopolyCylinderFlip
+        lopolyCylinderFlip,
+
+        sphereMesh: context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format, false)
     }
 }

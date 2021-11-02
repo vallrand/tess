@@ -16,7 +16,7 @@ export class TerrainSystem implements ISystem {
     public readonly bounds: aabb2 = aabb2()
     public frame: number = 0
     private readonly chunks: TerrainChunk[] = Array(this.gridSize * this.gridSize)
-    private readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context, 64)
+    public readonly levelGenerator: LevelGenerator = new LevelGenerator(this.context, 64)
     public readonly pathfinder: Pathfinder = new Pathfinder(this.context, this.gridSize * TerrainChunk.chunkTiles)
     constructor(private readonly context: Application){}
     public update(): void {
@@ -89,12 +89,12 @@ export class TerrainSystem implements ISystem {
     public tilePosition(column: number, row: number, out: vec3): vec3 {
         out[0] = TerrainChunk.tileSize * column + this.positionOffset
         out[2] = TerrainChunk.tileSize * row + this.positionOffset
-        out[1] = this.chunk(column, row)?.sample(out[0], out[2]) || 0
+        out[1] = this.chunk(column, row)?.plane.sample(out[0], out[2]) || 0
         return out
     }
     public snapToGround(position: vec3){
         const column = Math.round((position[0] - this.positionOffset) / TerrainChunk.tileSize)
         const row = Math.round((position[1] - this.positionOffset) / TerrainChunk.tileSize)
-        position[1] = this.chunk(column, row)?.sample(position[0], position[2]) || 0
+        position[1] = this.chunk(column, row)?.plane.sample(position[0], position[2]) || 0
     }
 }

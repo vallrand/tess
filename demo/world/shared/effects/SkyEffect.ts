@@ -4,7 +4,7 @@ import { IEffect, PostEffectPass } from '../../../engine/pipeline'
 import { MeshBuffer } from '../../../engine/components'
 import { ShaderMaterial } from '../../../engine/materials'
 import { GL, ShaderProgram, OpaqueLayer } from '../../../engine/webgl'
-import { shaders } from '../../../engine/shaders'
+import * as shaders from '../../../engine/shaders'
 
 export class SkyEffect implements IEffect {
     public enabled: boolean = true

@@ -28,8 +28,7 @@ export class Sprite implements IBatched {
         this.pool.push(item)
         item.frame = 0
         item.index = -1
-        item.material = null
-        item.transform = null
+        item.material = item.transform = null
     }
     public static readonly FlatUp: quat = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
     public static readonly FlatDown: quat = quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, quat())

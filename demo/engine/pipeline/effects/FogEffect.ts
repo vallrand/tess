@@ -1,7 +1,7 @@
 import { GL, ShaderProgram, UniformSamplerBindings } from '../../webgl'
 import { vec2, vec4 } from '../../math'
 import { IPostEffect, PostEffectPass } from '../PostEffectPass'
-import { shaders } from '../../shaders'
+import * as shaders from '../../shaders'
 import { Application } from '../../framework'
 
 export class FogEffect implements IPostEffect {

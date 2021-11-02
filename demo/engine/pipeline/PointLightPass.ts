@@ -7,7 +7,7 @@ import { Transform } from '../scene/Transform'
 import { BoundingVolume } from '../scene/FrustumCulling'
 import { GL, ShaderProgram, UniformBlock, UniformBlockBindings } from '../webgl'
 import { PipelinePass } from './PipelinePass'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 
 export class PointLight {
     public index: number = -1

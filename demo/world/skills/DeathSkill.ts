@@ -1,4 +1,4 @@
-import { random, randomFloat, mat4, quat, vec2, vec3, vec4, mod, lerp, solveQuadratic } from '../../engine/math'
+import { randomFloat, mat4, quat, vec2, vec3, vec4, mod, lerp, solveQuadratic } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, IAnimationTween, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
@@ -107,12 +107,12 @@ export class DeathSkill extends CubeSkill {
                 const position = vec3.copy(node.position, vec3())
                 const rotation = quat.copy(node.rotation, quat())
                 const force = vec3.subtract(position, [
-                    randomFloat(-0.4,0.4,random),
-                    randomFloat(-2.0,-1.0,random),
-                    randomFloat(-0.4,0.4,random)
+                    randomFloat(-0.4,0.4,SharedSystem.random()),
+                    randomFloat(-2.0,-1.0,SharedSystem.random()),
+                    randomFloat(-0.4,0.4,SharedSystem.random())
                 ], vec3())
                 vec3.normalize(force, force)
-                vec3.scale(force, randomFloat(6,12,random), force)
+                vec3.scale(force, randomFloat(6,12,SharedSystem.random()), force)
 
                 const torque = vec3.subtract(vec3.AXIS_Y, position, vec3())
                 vec3.cross(torque, force, torque)

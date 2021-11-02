@@ -1,13 +1,20 @@
-import { vec3 } from '../../engine/math'
+import { vec2, vec3, range, randomFloat, mulberry32 } from '../../engine/math'
 import { createPlane } from '../../engine/geometry'
 import { OpaqueLayer } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
-import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components/Mesh'
-import { TransformSystem } from '../../engine/scene/Transform'
+import { StaticParticleEmitter } from '../../engine/particles'
+import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components'
+import { TransformSystem } from '../../engine/scene'
 import { SharedSystem } from '../shared'
 
 export class GroundPlane {
     public mesh: Mesh
+    public foliage: StaticParticleEmitter
+    private readonly foliageOptions = {
+        uOrigin: range(10).map(i => vec3()),
+        uRadius: vec2(0,4),
+        uSize: vec2(0.6,1.8)
+    }
 
     public readonly heightmap: Float32Array
     public readonly vertexArray: Float32Array
@@ -15,6 +22,10 @@ export class GroundPlane {
     private readonly stride: number
     constructor(
         private readonly context: Application,
+        private readonly parent: {
+            readonly column: number
+            readonly row: number
+        },
         private readonly columns: number,
         private readonly rows: number,
         private readonly size: number
@@ -27,7 +38,7 @@ export class GroundPlane {
         this.vertexBuffer = this.context.get(MeshSystem).uploadVertexData(vertexArray, indexArray, format)
         this.stride = this.vertexBuffer.format[1].stride >>> 2
     }
-    build(column: number, row: number){
+    public build(): void {
         const rows0 = this.rows + 1, rows1 = this.rows + 3
         for(let c = 0; c <= this.columns; c++)
         for(let r = 0; r <= this.rows; r++){
@@ -49,13 +60,31 @@ export class GroundPlane {
         this.mesh.buffer = this.vertexBuffer
         this.mesh.buffer.frame = 0
         this.mesh.transform = this.context.get(TransformSystem).create()
-        vec3.set(column * this.size, 0, row * this.size, this.mesh.transform.position)
+        vec3.set(this.parent.column * this.size, 0, this.parent.row * this.size, this.mesh.transform.position)
         this.mesh.material = SharedSystem.materials.dunesMaterial
+
+        const random = mulberry32(0x7C)
+        for(let i = this.foliageOptions.uOrigin.length - 1; i >= 0; i--){
+            const x = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[0]
+            const z = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[2]
+            const y = this.sample(x, z)
+            vec3.set(x, y, z, this.foliageOptions.uOrigin[i])
+        }
+        this.foliage = SharedSystem.particles.foliage.start(128, this.foliageOptions)
     }
-    clear(){
+    public sample(x: number, z: number): number {
+        const rows0 = this.rows + 1, rows1 = this.rows + 3
+        const column = (x / this.size - this.parent.column + 0.5) * rows0
+        const row = (z / this.size - this.parent.row + 0.5) * rows0
+        const ic = column | 0, ir = row | 0
+        return this.heightmap[(ic + 1) * rows1 + (ir + 1)]
+    }
+    public clear(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
         this.mesh = null
+
+        SharedSystem.particles.foliage.stop(this.foliage)
     }
     delete(){
         this.context.get(MeshSystem).unloadVertexData(this.vertexBuffer)

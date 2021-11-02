@@ -1,28 +1,31 @@
-import { vec2, range, vec3, quat, aabb2, smoothstep, randomInt, noise1D, noise2D, lerp } from '../../engine/math'
 import { Application } from '../../engine/framework'
-import { perlin2D } from './perlin'
-import { TerrainChunk } from './TerrainChunk'
-import { EconomySystem, Workshop } from '../economy'
+import { aabb2, smoothstep, noise1D, noise2D, perlin2D, shuffle } from '../../engine/math'
+import { EconomySystem } from '../economy'
+import { AISystem } from '../military'
 import { TerrainSystem } from './Terrain'
+import { TerrainChunk } from './TerrainChunk'
 import { TextureMapGenerator } from './WaveFunctionCollapse'
+import { PoissonDisk } from './PoissonDisk'
+import { Pathfinder } from './Pathfinder'
 
-const WALL = 0xFF000000
-const DOOR = 0xFFFFFF00
-const ____ = 0xFFFFFFFF
-const MARK = 0xFF0000FF
-const SHOP = 0xFFFF0000
+const ____ = 0xFF000000
+const DOOR = 0xFF008000
+const MARK = 0xFF00F000
+const WALL = 0xFFFF0000
+const SHOP = 0xFFFF8000
+const UNIT = 0xFFFFF000
 const ruinsTextureMap = new ImageData(new Uint8ClampedArray(new Uint32Array([
     ____,____,____,____,____,____,____,____,____,____,____,____,____,____,____,____,
     ____,DOOR,DOOR,DOOR,____,____,____,____,____,____,____,____,____,____,____,____,
     ____,DOOR,MARK,DOOR,____,____,____,WALL,WALL,WALL,WALL,DOOR,WALL,WALL,WALL,____,
     ____,DOOR,DOOR,DOOR,____,____,____,WALL,____,____,____,____,____,____,WALL,____,
     ____,____,____,____,____,____,____,WALL,____,____,____,____,____,____,DOOR,____,
-    ____,____,____,____,____,WALL,WALL,WALL,DOOR,WALL,WALL,WALL,____,____,WALL,DOOR,
-    ____,____,____,____,____,WALL,____,____,____,____,____,WALL,____,____,____,DOOR,
-    ____,____,WALL,____,____,DOOR,____,____,____,____,____,WALL,____,____,____,DOOR,
-    ____,____,____,____,____,WALL,____,____,DOOR,WALL,WALL,WALL,WALL,DOOR,WALL,WALL,
+    ____,____,____,____,____,WALL,WALL,WALL,DOOR,WALL,WALL,WALL,____,____,DOOR,____,
+    ____,____,____,____,____,WALL,____,____,____,____,____,WALL,____,____,DOOR,____,
+    ____,____,WALL,____,____,DOOR,____,____,____,____,____,WALL,____,____,WALL,____,
+    ____,____,____,____,____,WALL,____,____,DOOR,WALL,WALL,WALL,WALL,DOOR,WALL,____,
     ____,WALL,WALL,DOOR,WALL,WALL,____,____,DOOR,____,____,WALL,____,____,WALL,____,
-    ____,WALL,____,____,____,WALL,WALL,WALL,WALL,____,____,WALL,____,____,WALL,____,
+    ____,WALL,____,____,____,WALL,WALL,WALL,WALL,____,____,WALL,____,____,DOOR,____,
     ____,WALL,____,____,____,____,____,____,WALL,____,____,DOOR,____,____,WALL,____,
     ____,DOOR,____,____,____,____,____,____,WALL,WALL,WALL,DOOR,DOOR,WALL,WALL,____,
     ____,WALL,____,____,____,____,____,____,WALL,____,____,____,____,____,____,____,
@@ -40,27 +43,33 @@ interface IZoneRegion {
 }
 
 export class LevelGenerator {
-    private static readonly tile: vec2 = vec2()
+    private static readonly region: aabb2 = aabb2()
     private readonly tilemap: TextureMapGenerator
+    private readonly groupSampler: PoissonDisk
+    private readonly flags: Uint8Array
+    private readonly stack: number[] = []
     private readonly zones: IZoneRegion[] = []
     private readonly limit: number = 4
-    constructor(private readonly context: Application, private readonly zoneSize: number){
+    private readonly groupRadius: number = 16
+    constructor(private readonly context: Application, public readonly zoneSize: number){
         this.tilemap = new TextureMapGenerator(3, this.zoneSize + 1, this.zoneSize + 1, false, ruinsTextureMap, true, 8)
+        this.groupSampler = new PoissonDisk(this.zoneSize - this.groupRadius, this.zoneSize - this.groupRadius, this.groupRadius)
+        this.flags = new Uint8Array(this.tilemap.width * this.tilemap.height)
     }
-    private random2D(seed0: number, seed1: number, seed2: number = 0xD6): () => number {
+    private static random2D(seed0: number, seed1: number, seed2: number = 0xD6): () => number {
         const seed = 0x2611501 * noise2D(seed0, seed1, seed2)
         let hash = 0x1
         return () => hash = noise1D(hash * 0x7fffffff, seed)
     }
-    private generateZone(zoneX: number, zoneY: number): IZoneRegion {
+    public generateZone(zoneX: number, zoneY: number): IZoneRegion {
         for(let i = 0; i < this.zones.length; i++)
             if(this.zones[i].x === zoneX && this.zones[i].y === zoneY){
                 if(i > 0) this.zones.unshift(this.zones.splice(i, 1)[0])
-                return this.zones[i]
+                return this.zones[0]
             }
         console.log(`%czone(${zoneX},${zoneY})`,'color:#5f8cb0;text-decoration:underline')
-        const random = this.random2D(zoneX, zoneY, 0x4E43)
-        
+        const random = LevelGenerator.random2D(zoneX, zoneY, 0xD7AA02)
+
         this.tilemap.unset()
         for(let i = 0; i <= this.zoneSize; i++){
             this.tilemap.set(i, 0, ____)
@@ -68,13 +77,12 @@ export class LevelGenerator {
             this.tilemap.set(0, i, ____)
             this.tilemap.set(this.zoneSize, i, ____)
         }
-        const restore = []
-        workshop: {
-            const c = randomInt(2, this.zoneSize - 4, random)
-            const r = randomInt(2, this.zoneSize - 4, random)
+        this.groupSampler.clear()
+        const encounters = this.groupSampler.fill(random, 10)
+        for(let i = 0; i < encounters.length; i+=2){
+            const c = encounters[i] | 0, r = encounters[i + 1] | 0
             for(let dx = -1; dx <= 1; dx++) for(let dy = -1; dy <= 1; dy++)
                 this.tilemap.set(c + dx, r + dy, ____)
-            restore.push(SHOP, c + r * this.tilemap.width)
         }
 
         for(let limit = 6; true; limit--)
@@ -90,35 +98,69 @@ export class LevelGenerator {
         zone.map = this.tilemap.graphics(zone.map)
         zone.data = new Uint32Array(zone.map.data.buffer)
         this.zones.unshift(zone)
-        while(restore.length) zone.data[restore.pop()] = restore.pop()
+
+        for(let i = 0; i < encounters.length; i+=2){
+            const c = encounters[i] | 0, r = encounters[i + 1] | 0
+            const index = c + r * this.tilemap.width
+            if(i == 0){
+                zone.data[index] = SHOP
+                continue
+            }
+            const group = AISystem.groups[random() * AISystem.groups.length | 0]
+            shuffle(group, random)
+            this.stack.push(index)
+            this.randomFill(zone.data, group, random)
+        }
         return zone
+    }
+    private randomFill(grid: Uint32Array, values: number[], random: () => number){
+        const neighbours = Pathfinder.neighbours.cardinal
+        let limit = values.length - 1
+        while(this.stack.length){
+            const randomIndex = random() * this.stack.length | 0
+
+            const c = this.stack[randomIndex] % this.tilemap.width
+            const r = this.stack[randomIndex] / this.tilemap.width | 0
+
+            if(randomIndex === this.stack.length - 1) this.stack.length--
+            else this.stack[randomIndex] = this.stack.pop()
+
+            grid[c + r * this.tilemap.width] = UNIT + values[limit]
+            if(--limit < 0) break
+
+            for(let i = neighbours.length - 1; i >= 0; i--){
+                const c1 = c + neighbours[i][0]
+                const r1 = r + neighbours[i][1]
+                if(c1 < 0 || r1 < 0 || c1 >= this.tilemap.width || r1 >= this.tilemap.height) continue
+                const neighbour = c1 + r1 * this.tilemap.width
+                if(this.flags[neighbour]) continue
+                this.flags[neighbour] = 1
+                this.stack.push(neighbour)
+            }
+        }
+        this.flags.fill(0)
+        this.stack.length = 0
     }
     public sample(column: number, row: number): number {
         const zoneX = Math.floor(column / this.zoneSize)
         const zoneY = Math.floor(row / this.zoneSize)
         const zone = this.generateZone(zoneX, zoneY)
         const x = column - zone.offsetX, y = row - zone.offsetY
-        const data = zone.map.data, index = 4 * (x + y * zone.map.width)
-        return (
-            (data[index + 3] << 24) |
-            (data[index + 2] << 16) |
-            (data[index + 1] << 8) |
-            data[index + 0]
-        ) >>> 0
+        return zone.data[x + y * zone.map.width]
     }
-    public populate(chunk: TerrainChunk){
+    public populate(chunk: TerrainChunk): void {
         const chunkSize = TerrainChunk.chunkTiles
-        const random = this.random2D(chunk.column, chunk.row)
+        const random = LevelGenerator.random2D(chunk.column, chunk.row)
 
         chunk.terraform(
-            aabb2.pad(TerrainChunk.bounds, 1, aabb2()),
+            aabb2.pad(TerrainChunk.bounds, 1, LevelGenerator.region),
             (x: number, z: number) => 8 * this.sampleDunes(x * 0.2, z * 0.2, 173)
         )
 
         for(let dx = 0; dx < chunkSize; dx++) for(let dy = 0; dy < chunkSize; dy++){
             const x = dx - chunk.offsetX, y = dy - chunk.offsetZ
             const C = this.sample(x, y)
-            switch(C){
+            switch((C & ~0xFF) >>> 0){
                 case WALL: {
                     const L = this.sample(x - 1, y) === WALL ? 0x8 : 0
                     const R = this.sample(x + 1, y) === WALL ? 0x2 : 0
@@ -128,13 +170,16 @@ export class LevelGenerator {
                     this.context.get(TerrainSystem).setTile(x, y, chunk.wall)
                     break
                 }
-                case MARK: {
+                case MARK: 
                     this.context.get(EconomySystem).createDeposit(x, y, 4)
                     break
-                }
-                case SHOP: {
-                    const workshop = new Workshop(this.context)
-                    workshop.place(x, y)
+                case SHOP: 
+                    this.context.get(EconomySystem).createWorkshop(x, y)
+                    break
+                case UNIT: {
+                    const variation = C & 0xFF
+                    //this.context.get(AISystem).create(x, y, variation as any)
+                    break
                 }
             }
         }
@@ -144,15 +189,5 @@ export class LevelGenerator {
         const layer1 = Math.pow(1 - 2 * Math.abs(perlin2D(x * 0.25, z * 0.25, seed) - 0.5), 2)
         const layer2 = smoothstep(0, 1, perlin2D(x * 0.2, z * 0.2, seed))
         return (layer0 * 1 + layer1 * 2 + layer2 * 4) / 7
-    }
-    private *randomTile(x: number, y: number, width: number, height: number, random: () => number): Generator<vec2, void, void> {
-        const tiles = range(width * height)
-        for(const tile = LevelGenerator.tile; tiles.length; tiles.length--){
-            const index = randomInt(0, tiles.length - 1, random)
-            tile[0] = x + tiles[index % width]
-            tile[1] = y + tiles[index / width | 0]
-            tiles[index] = tiles[tiles.length - 1]
-            yield tile
-        }
     }
 }

@@ -2,6 +2,7 @@ import { lerp, mat3, mat4, vec2, vec3, vec4, quat } from '../math'
 import { IVertexAttribute, VertexDataFormat } from '../webgl'
 
 export interface IGeometry {
+    index?: number
     format: IVertexAttribute[]
     vertexArray: Float32Array
     indexArray: Uint16Array

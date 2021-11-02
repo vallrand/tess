@@ -121,14 +121,13 @@ export class Minefield {
     private createExplosion(): ExplosionEffect {
         if(this.pool.length) return this.pool.pop()
 
-        const core = new BatchMesh(SharedSystem.geometry.lowpolySphere)
-        core.order = 4
+        const core = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 4)
         core.material = SharedSystem.materials.coreWhiteMaterial
 
         const wave = Sprite.create(BillboardType.None)
         wave.material = this.waveMaterial
 
-        const ring = new BatchMesh(SharedSystem.geometry.cylinder)
+        const ring = BatchMesh.create(SharedSystem.geometry.cylinder)
         ring.material = SharedSystem.materials.ringDustMaterial
 
         const spark = Sprite.create(BillboardType.Sphere)

@@ -11,7 +11,7 @@ import { Cube, Direction, DirectionAngle } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
-import { AIUnitSkill } from '../opponent'
+import { IDamageSource, DamageType, AIUnitSkill } from '../military'
 
 const actionTimeline = {
     'particles': EventTrigger([{ frame: 0, value: 36 }], EventTrigger.emit),
@@ -53,7 +53,7 @@ const actionTimeline = {
 
 interface ProjectileEffect {
     context: Application
-    damage: number
+    parent: ProjectileSkill
     readonly origin: vec3
     transform: Transform
     sphere: BatchMesh
@@ -66,6 +66,7 @@ interface ProjectileEffect {
 }
 
 export class ProjectileSkill extends CubeSkill {
+    readonly damage: IDamageSource = { amount: 1, type: DamageType.Kinetic }
     private readonly pool: ProjectileEffect[] = []
     private readonly pivot: vec3 = vec3(0,1.8,0)
 
@@ -210,8 +211,7 @@ export class ProjectileSkill extends CubeSkill {
         trail.addColorFade(trail.ease)
         trail.material = this.trailMaterial
 
-        const sphere = new BatchMesh(SharedSystem.geometry.lowpolySphere)
-        sphere.order = 8
+        const sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 8)
         sphere.material = SharedSystem.materials.coreYellowMaterial
 
         const glow = Sprite.create(BillboardType.None)
@@ -223,7 +223,7 @@ export class ProjectileSkill extends CubeSkill {
         return {
             trail, sphere, wave, glow, origin: vec3(),
             transform: null, particles: null, light: null, burn: null,
-            context: this.context, damage: 0
+            context: this.context, parent: this
         }
     }
     private *animateProjectile(transform: mat4, target: vec2): Generator<ActionSignal> {
@@ -338,7 +338,7 @@ export class ProjectileSkill extends CubeSkill {
                 { frame: duration + 0.1, value: [1,1,1,0.4] },
                 { frame: duration + 0.4, value: vec4.ZERO, ease: ease.sineIn }
             ], vec4.lerp),
-            'damage': EventTrigger([{ frame: duration, value: target }], AIUnitSkill.damage)
+            'parent.damage': EventTrigger([{ frame: duration, value: target }], AIUnitSkill.damage)
         })
 
         for(const totalDuration = 2 + duration, startTime = this.context.currentTime; true;){

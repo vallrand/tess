@@ -125,8 +125,8 @@ export class RestoreSkill extends CubeSkill {
     constructor(context: Application, cube: Cube){
         super(context, cube)
 
-        this.tubeX = new BatchMesh(SharedSystem.geometry.cylinder)
-        this.tubeZ = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.tubeX = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.tubeZ = BatchMesh.create(SharedSystem.geometry.cylinder)
 
         this.tubeX.material = this.tubeZ.material = SharedSystem.materials.energyHalfPurpleMaterial
 
@@ -139,7 +139,7 @@ export class RestoreSkill extends CubeSkill {
         this.flash.material.program = this.context.get(ParticleEffectPass).program
         this.flash.material.diffuse = SharedSystem.textures.sparkle
 
-        this.conduit = new BatchMesh(SharedSystem.geometry.openBox)
+        this.conduit = BatchMesh.create(SharedSystem.geometry.openBox)
         this.conduit.material = SharedSystem.materials.stripesMaterial
     }
     public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {

@@ -129,6 +129,10 @@ grid based simple AI example https://github.com/Gornova/Wargame/blob/master/src/
 wave function collapse https://github.com/mxgmn/WaveFunctionCollapse
 GDC talk WFC https://www.gdcvault.com/browse/gdc-19/play/1026263
 
+poisson disk https://github.com/kchapelier/fast-2d-poisson-disk-sampling
+poisson disk bridston https://medium.com/@hemalatha.psna/implementation-of-poisson-disc-sampling-in-javascript-17665e406ce1
+random floodfill https://www.redblobgames.com/x/1521-randomized-fill/
+cantor pairing function https://stackoverflow.com/questions/919612/mapping-two-integers-to-one-in-a-unique-and-deterministic-way
 
 AI
     Units
@@ -140,3 +144,7 @@ Player
 
 Shared
 Terrain
+
+
+
+

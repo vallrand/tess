@@ -18,19 +18,12 @@ export class TerrainChunk {
     public column: number
     public row: number
     public wall: MazeWall = new MazeWall(this.context)
-    public plane: GroundPlane = new GroundPlane(this.context, TerrainChunk.chunkLOD, TerrainChunk.chunkLOD, TerrainChunk.chunkSize)
+    public plane: GroundPlane = new GroundPlane(this.context, this, TerrainChunk.chunkLOD, TerrainChunk.chunkLOD, TerrainChunk.chunkSize)
     public readonly grid: IUnitTile[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
     public offsetX: number
     public offsetZ: number
 
     constructor(private readonly context: Application){}
-    public sample(x: number, z: number): number {
-        const segments = TerrainChunk.chunkLOD + 1, resolution = segments + 2
-        const column = (x / TerrainChunk.chunkSize -this.column + 0.5) * segments
-        const row = (z / TerrainChunk.chunkSize -this.row + 0.5) * segments
-        const ic = column | 0, ir = row | 0
-        return this.plane.heightmap[(ic + 1) * resolution + (ir + 1)]
-    }
     public mapRegion(bounds: aabb2, out: aabb2): aabb2 {
         const segments = TerrainChunk.chunkLOD + 1
         out[0] = Math.floor((bounds[0]/TerrainChunk.chunkSize -this.column + 0.5) * segments)
@@ -64,7 +57,7 @@ export class TerrainChunk {
         this.grid[tileIndex] = value
     }
     build(){
-        this.plane.build(this.column, this.row)
+        this.plane.build()
         this.wall.build()
     }
     clear(){

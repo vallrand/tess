@@ -1,7 +1,7 @@
 import { Application } from '../../engine/framework'
 import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { GL, ShaderProgram } from '../../engine/webgl'
-import { shaders } from '../../engine/shaders'
+import * as shaders from '../../engine/shaders'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass } from '../../engine/pipeline'
 import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { BatchMesh, Sprite, BillboardType } from '../../engine/components'
@@ -99,7 +99,7 @@ export class DetonateSkill extends CubeSkill {
             }), {}, 0
         ).target
 
-        this.tube = new BatchMesh(SharedSystem.geometry.cylinder)
+        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
         this.tube.material = SharedSystem.materials.stripesRedMaterial
 
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])

@@ -1,7 +1,7 @@
 import { Application, ISystem } from '../framework'
 import { vec3, vec4, quat, mat4 } from '../math'
 import { GL, UniformSamplerBindings, ShaderProgram } from '../webgl'
-import { shaders } from '../shaders'
+import * as shaders from '../shaders'
 import { createBox, applyTransform } from '../geometry'
 import { DeferredGeometryPass, PostEffectPass } from '../pipeline'
 import { MaterialSystem, MeshMaterial } from '../materials'
