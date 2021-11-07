@@ -6,15 +6,16 @@ import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, Ev
 import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
 import { EnergyLinkEffect } from '../effects/EnergyLinkEffect'
 
 export class ShieldLinkSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 4
-    public readonly cardinal: boolean = false
+    readonly cost: number = 1
+    readonly range: number = 4
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damage: number = 0
 
     private readonly links: EnergyLinkEffect[] = []
     private idleIndex: number = -1
@@ -31,9 +32,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
         this.mesh = source.mesh
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.cylinder.material = new SpriteMaterial()
-        this.cylinder.material.program = this.context.get(ParticleEffectPass).program
-        this.cylinder.material.diffuse = SharedSystem.textures.wind
+        this.cylinder.material = SharedSystem.materials.sprite.spiral
         this.cylinder.transform = this.context.get(TransformSystem)
         .create([0,0.5,-1.3],quat.IDENTITY,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cylinder)
@@ -75,10 +74,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.circle)
 
         this.bulge = Sprite.create(BillboardType.Sphere)
-        this.bulge.material = new SpriteMaterial()
-        this.bulge.material.blendMode = null
-        this.bulge.material.program = SharedSystem.materials.distortion
-        this.bulge.material.diffuse = SharedSystem.textures.bulge
+        this.bulge.material = SharedSystem.materials.displacement.bulge
         this.bulge.transform = this.context.get(TransformSystem)
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.bulge)
@@ -92,8 +88,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         }
 
         const animate = AnimationTimeline(this, {
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
-
+            'mesh.armature': ModelAnimation('activate'),
             'cylinder.transform.scale': PropertyAnimation([
                 { frame: 0.0, value: [3,1,3] },
                 { frame: 0.8, value: [1,5,1], ease: ease.quadOut }
@@ -213,7 +208,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
                 { frame: 0, value: quat.axisAngle(vec3.AXIS_Y, angle, quat()) },
                 { frame: 0.5, value: quat.IDENTITY, ease: ease.quadOut }
             ], quat.slerp),
-            'mesh.armature': modelAnimations[this.mesh.armature.key].deactivate,
+            'mesh.armature': ModelAnimation('deactivate'),
             'core.color': PropertyAnimation([
                 { frame: 0, value: [0.4,0.4,1,0.8] },
                 { frame: 0.6, value: vec4.ZERO, ease: ease.quadOut }

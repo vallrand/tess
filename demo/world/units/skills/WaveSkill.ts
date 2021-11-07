@@ -8,11 +8,11 @@ import { ParticleEmitter } from '../../../engine/particles'
 import { PointLightPass, PointLight, DecalPass, Decal, ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'core.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
         { frame: 1.5, value: [4,-4,4], ease: ease.quadOut }
@@ -89,10 +89,12 @@ const actionTimeline = {
 }
 
 export class WaveSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 3
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = { amount: 4, type: DamageType.Electric }
+    readonly cost: number = 1
+    readonly range: number = 3
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Electric
+    readonly damage: number = 4
 
     private beam: Sprite
     private cracks: Decal
@@ -123,10 +125,7 @@ export class WaveSkill extends AIUnitSkill {
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
     
         this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.blendMode = null
-        this.wave.material.program = SharedSystem.materials.distortion
-        this.wave.material.diffuse = SharedSystem.textures.ring
+        this.wave.material = SharedSystem.materials.displacement.ring
         this.wave.transform = this.context.get(TransformSystem)
         .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(PostEffectPass).add(this.wave)
@@ -174,11 +173,9 @@ export class WaveSkill extends AIUnitSkill {
         .create([0,1,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
     
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate
-        })
-    
+        const animate = AnimationTimeline(this, actionTimeline)
+        //const damage = EventTrigger([{ frame: 0, value: this.query() }])
+
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

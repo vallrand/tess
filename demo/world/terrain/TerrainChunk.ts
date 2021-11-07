@@ -1,12 +1,7 @@
-import { vec3, aabb2 } from '../../engine/math'
+import { aabb2 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GroundPlane } from './GroundPlane'
 import { MazeWall } from './MazeWall'
-
-export interface IUnitTile {
-    weight: number
-    delete(): void
-}
 
 export class TerrainChunk {
     public static readonly chunkLOD = 16
@@ -17,9 +12,11 @@ export class TerrainChunk {
 
     public column: number
     public row: number
+    public readonly columns: number = TerrainChunk.chunkTiles
+    public readonly rows: number = TerrainChunk.chunkTiles
     public wall: MazeWall = new MazeWall(this.context)
     public plane: GroundPlane = new GroundPlane(this.context, this, TerrainChunk.chunkLOD, TerrainChunk.chunkLOD, TerrainChunk.chunkSize)
-    public readonly grid: IUnitTile[] = Array(TerrainChunk.chunkTiles * TerrainChunk.chunkTiles).fill(null)
+    public readonly grid: { weight: number }[] = Array(this.columns * this.rows).fill(null)
     public offsetX: number
     public offsetZ: number
 
@@ -46,14 +43,14 @@ export class TerrainChunk {
         }
     }
     public tileIndex(column: number, row: number): number {
-        return (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
+        return (column + this.offsetX) + (row + this.offsetZ) * this.columns
     }
-    public get<T extends IUnitTile>(column: number, row: number): T | void {
-        const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
+    public get<T extends { weight: number }>(column: number, row: number): T | void {
+        const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * this.columns
         return this.grid[tileIndex] as T
     }
-    public set<T extends IUnitTile>(column: number, row: number, value: T): void {
-        const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * TerrainChunk.chunkTiles
+    public set<T extends { weight: number }>(column: number, row: number, value: T): void {
+        const tileIndex = (column + this.offsetX) + (row + this.offsetZ) * this.columns
         this.grid[tileIndex] = value
     }
     build(){
@@ -61,10 +58,7 @@ export class TerrainChunk {
         this.wall.build()
     }
     clear(){
-        for(let i = this.grid.length - 1; i >= 0; i--)
-            if(this.grid[i]) this.grid[i].delete()
         this.grid.fill(null)
-
         this.plane.clear()
         this.wall.clear()
     }

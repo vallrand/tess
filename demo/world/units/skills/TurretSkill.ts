@@ -8,9 +8,8 @@ import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 interface TurretEffect {
     key: string
@@ -30,10 +29,12 @@ interface TurretEffect {
 }
 
 export class TurretSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 4
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = { amount: 2, type: DamageType.Kinetic }
+    readonly cost: number = 1
+    readonly range: number = 4
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Kinetic
+    readonly damage: number = 2
 
     private mesh: Mesh
     private readonly turrets: TurretEffect[] = [{
@@ -49,7 +50,7 @@ export class TurretSkill extends AIUnitSkill {
     public validate(origin: vec2, target: vec2): boolean {
         const dx = target[0] - origin[0] - 1
         const dy = target[1] - origin[1] - 1
-        return dx*dx + dy*dy <= this.radius * this.radius
+        return dx*dx + dy*dy <= this.range * this.range
     }
 
     public use(source: AIUnit, target: vec2): Generator<ActionSignal> {
@@ -80,17 +81,11 @@ export class TurretSkill extends AIUnitSkill {
         trailMaterial.program = this.context.get(ParticleEffectPass).program
         trailMaterial.diffuse = SharedSystem.gradients.tealLine
 
-        effect.trailLeft = new Line(2)
-        effect.trailLeft.width = 0.3
-        effect.trailLeft.ease = ease.reverse(ease.quadIn)
-        effect.trailLeft.addColorFade(effect.trailLeft.ease)
+        effect.trailLeft = Line.create(2, 0, 0.3, ease.reverse(ease.quadIn), true)
         effect.trailLeft.material = trailMaterial
         this.context.get(ParticleEffectPass).add(effect.trailLeft)
 
-        effect.trailRight = new Line(2)
-        effect.trailRight.width = 0.3
-        effect.trailRight.ease = ease.reverse(ease.quadIn)
-        effect.trailRight.addColorFade(effect.trailRight.ease)
+        effect.trailRight = Line.create(2, 0, 0.3, ease.reverse(ease.quadIn), true)
         effect.trailRight.material = trailMaterial
         this.context.get(ParticleEffectPass).add(effect.trailRight)
 
@@ -120,7 +115,7 @@ export class TurretSkill extends AIUnitSkill {
 
         effect.sparks = SharedSystem.particles.sparks.add({
             uLifespan: [0.4,0.8,0,0],
-            uOrigin: targetPosition, uTarget: vec3.add([0,-0.2,0], targetPosition, vec3()),
+            uOrigin: targetPosition, uTarget: [0,-0.2,0],
             uLength: [0.1,0.2], uSize: [0.2,0.4],
             uForce: [4,12], uRadius: [0.2,0.2], uGravity: [0,-24,0],
         })
@@ -144,7 +139,7 @@ export class TurretSkill extends AIUnitSkill {
         .create(vec3.add([0,1,0], targetPosition, vec3()))
 
         const animate = AnimationTimeline(effect, {
-            'parent.mesh.armature': modelAnimations[effect.parent.mesh.armature.key][effect.key],
+            'parent.mesh.armature': ModelAnimation(effect.key),
             [`parent.mesh.armature.nodes.${effect.index}.rotation`]: PropertyAnimation([
                 { frame: 0.0, value: originRotation },
                 { frame: 0.4, value: targetRotation, ease: ease.cubicOut },

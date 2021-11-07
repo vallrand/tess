@@ -1,50 +1,42 @@
-import { Application, ISystem } from '../../engine/framework'
+import { Application, ISystem, Signal } from '../../engine/framework'
 import { AnimationSystem, ActionSignal } from '../../engine/animation'
 
-export interface IActor {
+export interface IAgent {
     readonly order: number
-    actionIndex: number
-    execute(): Generator<ActionSignal, void>
+    execute(): Generator<ActionSignal, void, void>
 }
 
 export class TurnBasedSystem implements ISystem {
-    private readonly actors: IActor[] = []
-    public turn: number = 0
+    readonly signalEnterTile = new Signal<(column: number, row: number, unit: any) => void>()
+
+    private readonly agents: IAgent[] = []
+    private readonly queue: ActionSignal[] = []
     private index: number = 0
-    private lastAction: ActionSignal = ActionSignal.WaitNextFrame
     constructor(protected readonly context: Application){}
-    public add(actor: IActor): void {
-        let index = this.actors.length - 1
-        while(index >= 0 && this.actors[index].order - actor.order > 0) index--
-        this.actors.splice(index + 1, 0, actor)
+    public add(agent: IAgent): void {
+        let index = this.agents.length - 1
+        while(index >= 0 && this.agents[index].order - agent.order > 0) index--
+        this.agents.splice(index + 1, 0, agent)
         if(index + 1 <= this.index) this.index++
     }
-    public remove(actor: IActor): void {
-        const index = this.actors.indexOf(actor)
-        this.actors.splice(index, 1)
+    public remove(agent: IAgent): void {
+        const index = this.agents.indexOf(agent)
+        this.agents.splice(index, 1)
         if(index <= this.index) this.index--
     }
     public update(): void {
-        if(!this.lastAction.continue) return
+        while(this.index < this.agents.length){
+            while(this.queue.length)
+                if(!this.queue[0].continue) return
+                else this.queue.shift()
+
+            const action = this.agents[this.index++].execute()
+            if(action) this.enqueue(action, true)
+        }
+        this.index = 0
+    }
+    public enqueue(generator: Generator<ActionSignal, void, void>, blocking: boolean): void {
         const animations = this.context.get(AnimationSystem)
-        if(this.index >= this.actors.length && this.actors.length){
-            this.index = 0
-            this.turn++
-        }
-        while(this.index < this.actors.length){
-            const actor = this.actors[this.index]
-
-            this.lastAction = animations.await(actor.actionIndex)
-            if(!this.lastAction.continue) break
-
-            this.index++
-            
-            const generator = actor.execute()
-            if(!generator) continue
-            actor.actionIndex = animations.start(generator, true)
-
-            this.lastAction = animations.await(actor.actionIndex)
-            if(!this.lastAction.continue) break
-        }
+        this.queue.push(animations.await(animations.start(generator, true)))
     }
 }

@@ -1,11 +1,11 @@
-import { Application, Factory } from '../../engine/framework'
+import { Application } from '../../engine/framework'
 import { vec2, vec3, quat, mat4 } from '../../engine/math'
 import { ease } from '../../engine/animation'
 import {
     IGeometry, createPlane, createBox, createCylinder, createSphere,
     doubleSided, applyTransform, extrudePolygon, modifyGeometry
 } from '../../engine/geometry'
-import { MeshSystem, Sprite, BatchMesh } from '../../engine/components'
+import { MeshSystem, Sprite } from '../../engine/components'
 
 export function GeometryLibrary(context: Application){
     const transform = mat4(), rotation = quat()

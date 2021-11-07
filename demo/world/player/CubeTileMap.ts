@@ -4,8 +4,7 @@ import { Application } from '../../engine/framework'
 import { Batch2D } from '../../engine/pipeline/batch'
 import { OverlayPass } from '../../engine/pipeline/OverlayPass'
 import { IMaterial } from '../../engine/pipeline'
-import { Sprite2D, Sprite2DMaterial } from '../../engine/components/Sprite2D'
-import { Transform2D } from '../../engine/scene/Transform'
+import { Transform2D, Sprite2D, Sprite2DMaterial } from '../../engine/components/Sprite2D'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
 import { Direction, CubeOrientation } from './CubeOrientation'
 import { Cube } from './Cube'
@@ -48,8 +47,8 @@ export class CubeTileMap {
             filter: GL.NEAREST, wrap: GL.CLAMP_TO_EDGE
         })
         const sourceSize = vec2(tileSize * gridSize, tileSize * gridSize)
-        const sprite = new Sprite2D()
-        sprite.transform = new Transform2D()
+        const sprite = Sprite2D.create()
+        sprite.transform = Transform2D.create()
         sprite.material = new Sprite2DMaterial()
     
         vec2.set(tileSize, tileSize, sprite.material.size)
@@ -68,7 +67,7 @@ export class CubeTileMap {
     
             sprite.transform.recalculate(0)
             sprite.frame = 0
-            sprite.update(this.context)
+            sprite.update(this.context.frame)
     
             this.batch.render(sprite)
 
@@ -108,9 +107,8 @@ export class CubeTileMap {
     }
     private prepareBatch(cube: Cube){
         this.tileFaces = this.precomputeTileFaces(cube)
-        const sprite = new Sprite2D()
-        vec2.set(0.5,0.5,sprite.origin)
-        sprite.transform = new Transform2D()
+        const sprite = Sprite2D.create(0, [0.5, 0.5])
+        sprite.transform = Transform2D.create()
         for(let offset = 0, side = 0; side < 6; side++){
             const faces = this.tileFaces[side]
             for(let i = 0; i < faces.length; i++){
@@ -123,7 +121,7 @@ export class CubeTileMap {
 
                 sprite.transform.recalculate(0)
                 sprite.frame = 0
-                sprite.update(this.context)
+                sprite.update(this.context.frame)
 
                 this.batch.render(sprite)
             }

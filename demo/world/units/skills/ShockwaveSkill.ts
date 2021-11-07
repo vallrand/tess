@@ -11,18 +11,87 @@ import * as shaders from '../../../engine/shaders'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, FollowPath, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
+
+const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
+    'mesh.color': PropertyAnimation([
+        { frame: 1.0, value: vec4.ONE },
+        { frame: 1.4, value: [0.8,0,0.6,1], ease: ease.cubicOut },
+        { frame: 2.0, value: vec4.ONE, ease: ease.sineIn }
+    ], vec4.lerp),
+
+    'pulse.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 2.0, value: [16,16,16], ease: ease.quadOut }
+    ], vec3.lerp),
+    'pulse.color': PropertyAnimation([
+        { frame: 1.4, value: vec4.ONE },
+        { frame: 2.0, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+
+    'core.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.3, value: [2.6,2.6,2.6], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'core.color': PropertyAnimation([
+        { frame: 0.8, value: [0.4,1,0.8,1] },
+        { frame: 1.3, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'sparkle.transform.scale': PropertyAnimation([
+        { frame: 0.7, value: vec3.ZERO },
+        { frame: 0.9, value: [6,2,2], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'sparkle.color': PropertyAnimation([
+        { frame: 0.7, value: [0.6,1,1,0] },
+        { frame: 0.9, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+
+    'ring.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.4, value: [8,8,8], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'ring.color': PropertyAnimation([
+        { frame: 0.8, value: [0.5,1,1,0.4] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp),
+    'cylinder.transform.scale': PropertyAnimation([
+        { frame: 0.4, value: [0,8,0] },
+        { frame: 1.2, value: [2.4,5,2.4], ease: ease.quadOut }
+    ], vec3.lerp),
+    'cylinder.color': PropertyAnimation([
+        { frame: 0.4, value: [0.4,0.8,1,1] },
+        { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'speedlines': EventTrigger([
+        { frame: 0, value: 32 }
+    ], EventTrigger.emit),
+    'cone.transform.scale': PropertyAnimation([
+        { frame: 0.4, value: [0,0,10] },
+        { frame: 1.6, value: [3,3,4], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'cone.color': PropertyAnimation([
+        { frame: 0.4, value: [0.2,0.8,1,0] },
+        { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
+    ], vec4.lerp),
+    'flash.transform.scale': PropertyAnimation([
+        { frame: 0.8, value: vec3.ZERO },
+        { frame: 1.4, value: [5,5,5], ease: ease.quartOut }
+    ], vec3.lerp),
+    'flash.color': PropertyAnimation([
+        { frame: 0.8, value: [1,0.8,1,0.6] },
+        { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp)
+}
 
 export class ShockwaveSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 5
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = {
-        amount: 10,
-        type: DamageType.Electric | DamageType.Temperature | DamageType.Corrosion | DamageType.Kinetic
-    }
+    readonly cost: number = 1
+    readonly range: number = 5
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Electric | DamageType.Temperature | DamageType.Corrosion | DamageType.Kinetic
+    readonly damage: number = 10
 
     private pulse: Mesh
     private ring: Sprite
@@ -65,13 +134,13 @@ export class ShockwaveSkill extends AIUnitSkill {
 
         this.speedlines = SharedSystem.particles.energy.add({
             uLifespan: [0.6,1,-0.2,0],
-            uOrigin: mat4.transform([0,0,0], this.mesh.transform.matrix, vec3()),
+            uOrigin: mat4.transform(vec3.ZERO, this.mesh.transform.matrix, vec3()),
             uRotation: vec2.ZERO,
             uGravity: [0,8,0],
             uSize: [0.2,0.6],
             uRadius: [3,5],
             uForce: vec2.ZERO,
-            uTarget: mat4.transform([0,5,0], this.mesh.transform.matrix, vec3())
+            uTarget: [0,5,0]
         })
 
         this.cone = new BatchMesh(doubleSided(SharedSystem.geometry.hemisphere))
@@ -81,9 +150,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.flash = Sprite.create(BillboardType.Sphere)
-        this.flash.material = new SpriteMaterial()
-        this.flash.material.program = this.context.get(ParticleEffectPass).program
-        this.flash.material.diffuse = SharedSystem.textures.raysRing
+        this.flash.material = SharedSystem.materials.sprite.halo
         this.flash.transform = this.context.get(TransformSystem)
         .create([0,5,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
@@ -102,78 +169,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         .create([0,5.4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.sparkle)
 
-        const animate = AnimationTimeline(this, {
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
-            'mesh.color': PropertyAnimation([
-                { frame: 1.0, value: vec4.ONE },
-                { frame: 1.4, value: [0.8,0,0.6,1], ease: ease.cubicOut },
-                { frame: 2.0, value: vec4.ONE, ease: ease.sineIn }
-            ], vec4.lerp),
-
-            'pulse.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 2.0, value: [16,16,16], ease: ease.quadOut }
-            ], vec3.lerp),
-            'pulse.color': PropertyAnimation([
-                { frame: 1.4, value: vec4.ONE },
-                { frame: 2.0, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-
-            'core.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 1.3, value: [2.6,2.6,2.6], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'core.color': PropertyAnimation([
-                { frame: 0.8, value: [0.4,1,0.8,1] },
-                { frame: 1.3, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'sparkle.transform.scale': PropertyAnimation([
-                { frame: 0.7, value: vec3.ZERO },
-                { frame: 0.9, value: [6,2,2], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'sparkle.color': PropertyAnimation([
-                { frame: 0.7, value: [0.6,1,1,0] },
-                { frame: 0.9, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-
-            'ring.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 1.4, value: [8,8,8], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'ring.color': PropertyAnimation([
-                { frame: 0.8, value: [0.5,1,1,0.4] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'cylinder.transform.scale': PropertyAnimation([
-                { frame: 0.4, value: [0,8,0] },
-                { frame: 1.2, value: [2.4,5,2.4], ease: ease.quadOut }
-            ], vec3.lerp),
-            'cylinder.color': PropertyAnimation([
-                { frame: 0.4, value: [0.4,0.8,1,1] },
-                { frame: 1.2, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'speedlines': EventTrigger([
-                { frame: 0, value: 32 }
-            ], EventTrigger.emit),
-            'cone.transform.scale': PropertyAnimation([
-                { frame: 0.4, value: [0,0,10] },
-                { frame: 1.6, value: [3,3,4], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'cone.color': PropertyAnimation([
-                { frame: 0.4, value: [0.2,0.8,1,0] },
-                { frame: 1.6, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp),
-            'flash.transform.scale': PropertyAnimation([
-                { frame: 0.8, value: vec3.ZERO },
-                { frame: 1.4, value: [5,5,5], ease: ease.quartOut }
-            ], vec3.lerp),
-            'flash.color': PropertyAnimation([
-                { frame: 0.8, value: [1,0.8,1,0.6] },
-                { frame: 1.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp)
-        })
-
-        while(true)
+        const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 2.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

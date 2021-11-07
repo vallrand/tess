@@ -1,3 +1,5 @@
+export * from './Unit'
+export * from './UnitSkill'
 export * from './AIUnit'
 export * from './AIUnitSkill'
 export * from './AIStrategy'

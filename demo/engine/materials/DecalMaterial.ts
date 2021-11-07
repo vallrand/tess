@@ -1,9 +1,15 @@
 import { vec4 } from '../math'
 import { IMaterial } from '../pipeline'
-import { GL, UniformSamplerBindings } from '../webgl'
+import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { ShaderMaterial } from './ShaderMaterial'
 
 export class DecalMaterial extends ShaderMaterial {
+    public static create(program: ShaderProgram, diffuse: WebGLTexture): DecalMaterial {
+        const material = new DecalMaterial()
+        material.program = program
+        material.diffuse = diffuse
+        return material
+    }
     readonly uvTransform: vec4 = vec4(0,0,1,1)
     diffuse: WebGLTexture
     normal?: WebGLTexture

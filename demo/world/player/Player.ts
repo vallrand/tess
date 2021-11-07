@@ -2,7 +2,7 @@ import { clamp, lerp, vec2, vec3, vec4, mat4, quat, aabb2, mat3x2 } from '../../
 import { Application, ISystem } from '../../engine/framework'
 import { CameraSystem } from '../../engine/scene/Camera'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
-import { AnimationSystem, ease } from '../../engine/animation'
+import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
 import { Cube } from './Cube'
 import { CubeTileMap } from './CubeTileMap'
 import { CubeModule } from './CubeModules'
@@ -13,11 +13,13 @@ import { TerrainSystem } from '../terrain'
 import { TurnBasedSystem } from '../common'
 import { AISystem } from '../military'
 import { KeyboardSystem } from '../../engine/device'
+import { Indicator } from './Indicator'
 
 export class PlayerSystem implements ISystem {
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
+    public readonly indicator: Indicator = new Indicator(this.context)
     public readonly skills = CubeSkills(this.context, this.cube)
 
     constructor(private readonly context: Application){
@@ -31,7 +33,7 @@ export class PlayerSystem implements ISystem {
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.side, 0, CubeModule.Machinegun)
+            this.cube.installModule(this.cube.side, 0, CubeModule.Voidgun)
             // this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
@@ -39,14 +41,14 @@ export class PlayerSystem implements ISystem {
 
             window['curUnit'] = 3
 
-            this.context.get(AISystem).create(5,7,0)
-            this.context.get(AISystem).create(5,6,0)
-            this.context.get(AISystem).create(5,5,0)
-            this.context.get(AISystem).create(4,4,0)
+            // this.context.get(AISystem).create(5,7,0)
+            // this.context.get(AISystem).create(5,6,0)
+            // this.context.get(AISystem).create(5,5,0)
+            // this.context.get(AISystem).create(4,4,0)
 
             // ;[
             //     [5,7],[5,6],[5,5],[6,7],[6,6],[6,4]
-            // ].map(tile=>[tile[0]+2,tile[1]+3-2])
+            // ].map(tile=>[tile[0]+2,tile[1]+3-3])
             // .forEach(([c,r]) => {
             //     this.context.get(AISystem).create(c,r,0)
             // })
@@ -69,10 +71,11 @@ export class PlayerSystem implements ISystem {
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [2,6,2]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,8,4]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [2,8,4]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
+        this.indicator.update(this.cube)
 
         this.cube.meshes[this.cube.side].armature.frame = 0
         window['a'] = this.cube.meshes[this.cube.side].armature
@@ -96,7 +99,10 @@ export class PlayerSystem implements ISystem {
         this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
         // this.context.get(CameraSystem).controller.adjustCamera(mainUnit.mesh.transform.position || this.cube.transform.position)
     }
-    load(){
+    public *execute(): Generator<ActionSignal> {
+        
+    }
+    public load(): void {
         this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform
         const models = this.context.get(MeshSystem).models
         const cubeMaterials: MeshMaterial[] = []

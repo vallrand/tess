@@ -1,10 +1,11 @@
 #pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
+#pragma import(../../../engine/shaders/common/hash.glsl)
 #pragma import(../../../engine/shaders/common/noise.glsl)
 
 float fbm(in vec2 uv, in int octaves, in vec2 period){
     float value=0.0,amplitude=0.5;
     for(int i=0;i<octaves;i++){
-        value += amplitude * noise2D(uv * period, period);
+        value += amplitude * noise2D(uv * period, period, 0.0);
         amplitude*=0.5;
         period*=2.0;
     }

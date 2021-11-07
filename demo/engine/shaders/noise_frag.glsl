@@ -1,27 +1,7 @@
-#version 300 es
-precision highp float;
-in vec2 vUV;
-out vec4 fragColor;
+#pragma import(./headers/fullscreen_frag.glsl)
+#pragma import(./common/hash.glsl)
+#pragma import(./common/noise.glsl)
 
-#define TAU 6.283185307179586
-float hash11(in float u){
-    uint n = floatBitsToUint(u);
-    n = (n << 13U) ^ n;
-    n = n * (n * n * 15731U + 789221U) + 1376312589U;
-    return float( n & 0x7fffffffU)/float(0x7fffffff);
-}
-float hash21(in vec2 uv){
-    uvec2 q = floatBitsToUint(uv);
-    q = 1103515245u * ((q >> 1u) ^ q.yx);
-    uint n = 1103515245u * (q.x ^ (q.y >> 3u));
-    return float(n) * (1.0 / float(0xffffffffu));
-}
-vec2 hash22(in vec2 uv){
-    uvec4 q = floatBitsToUint(uv).xyyx;
-    q = 1103515245u * ((q >> 1u) ^ q.yxwz);
-    uvec2 n = 1103515245u * (q.xz ^ (q.yw >> 3u));
-    return vec2(n) * (1.0 / float(0xffffffffu));
-}
 float noise11(in float u, in float period, float seed){
     u *= period;
     vec2 i = mod(floor(vec2(u,u+1.0)),vec2(period))+seed;
@@ -107,40 +87,7 @@ vec3 fbmd(vec2 uv, vec2 frequency, int octaves, vec2 shift, float gain, vec2 lac
     value.x = value.x * 0.5 + 0.5;
     return value;
 }
-vec4 voronoi(in vec2 uv, in vec2 period, in float jitter, in float width, in float seed){
-    uv *= period;
-    vec2 i = floor(uv); vec2 f = uv - i;
-    vec2 minPos, tilePos;
-    float md = 1e+5;
-    for(int y=-1;y<=1;y++)
-    for(int x=-1;x<=1;x++){
-        vec2 n = vec2(x,y);
-        vec2 cPos = jitter * hash22(mod(i + n, period) + seed);
-        vec2 rPos = n + cPos - f;
-        float d = dot(rPos, rPos);
-        if(d >= md) continue;
-        md = d;
-        minPos = rPos;
-        tilePos = cPos;
-    }
-    float md0 = 1e+5, md1 = 1e+5;
-    for(int y=-2;y<=2;y++)
-    for(int x=-2;x<=2;x++){
-        vec2 n = vec2(x,y);
-        vec2 cPos = jitter * hash22(mod(i + n, period) + seed);
-        vec2 rPos = n + cPos - f;
-        vec2 v = minPos - rPos;
-        if(dot(v, v) <= 1e-5) continue;
-        float d = dot(0.5 * (minPos + rPos), normalize(rPos - minPos));
-        if(d < md0){
-            md1 = md0; md0 = d;
-        }else if(d < md1){
-            md1 = d;
-        }
-    }
-    md0 += (md1 - md0) * width;
-    return vec4(md0, md, tilePos);
-}
+#pragma import(./common/voronoi.glsl)
 
 vec4 rectangularNoise(in vec2 uv, in vec2 period){
     uv *= period;

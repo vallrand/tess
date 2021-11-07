@@ -1,7 +1,4 @@
-#version 300 es
-precision highp float;
-in vec2 vUV;
-out vec4 fragColor;
+#pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
 
 vec3 fractal(in vec2 z, in float c, in float width, float radius, int layers){
     float minit=0.;

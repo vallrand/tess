@@ -1,14 +1,16 @@
-import { vec2, vec3, range, randomFloat, mulberry32 } from '../../engine/math'
+import { vec2, vec3, quat, range, randomFloat, mulberry32 } from '../../engine/math'
 import { createPlane } from '../../engine/geometry'
 import { OpaqueLayer } from '../../engine/webgl'
 import { Application } from '../../engine/framework'
 import { StaticParticleEmitter } from '../../engine/particles'
 import { MeshSystem, Mesh, MeshBuffer } from '../../engine/components'
+import { Decal, DecalPass } from '../../engine/pipeline'
 import { TransformSystem } from '../../engine/scene'
 import { SharedSystem } from '../shared'
 
 export class GroundPlane {
     public mesh: Mesh
+    readonly decals: Decal[] = []
     public foliage: StaticParticleEmitter
     private readonly foliageOptions = {
         uOrigin: range(10).map(i => vec3()),
@@ -65,10 +67,17 @@ export class GroundPlane {
 
         const random = mulberry32(0x7C)
         for(let i = this.foliageOptions.uOrigin.length - 1; i >= 0; i--){
-            const x = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[0]
-            const z = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[2]
-            const y = this.sample(x, z)
-            vec3.set(x, y, z, this.foliageOptions.uOrigin[i])
+            const origin = this.foliageOptions.uOrigin[i]
+            origin[0] = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[0]
+            origin[2] = randomFloat(0, this.size, random()) - 0.5 * this.size + this.mesh.transform.position[2]
+            origin[1] = this.sample(origin[0], origin[2])
+
+            const decal = this.context.get(DecalPass).create(1)
+            decal.material = SharedSystem.materials.mossMaterial
+            const size = randomFloat(4, 12, random())
+            decal.transform = this.context.get(TransformSystem).create(origin, quat.IDENTITY, [size,10,size])
+            quat.axisAngle(vec3.AXIS_Y, random() * 2 * Math.PI, decal.transform.rotation)
+            this.decals.push(decal)
         }
         this.foliage = SharedSystem.particles.foliage.start(128, this.foliageOptions)
     }
@@ -85,6 +94,11 @@ export class GroundPlane {
         this.mesh = null
 
         SharedSystem.particles.foliage.stop(this.foliage)
+        while(this.decals.length){
+            const decal = this.decals.pop()
+            this.context.get(TransformSystem).delete(decal.transform)
+            this.context.get(DecalPass).delete(decal)
+        }
     }
     delete(){
         this.context.get(MeshSystem).unloadVertexData(this.vertexBuffer)

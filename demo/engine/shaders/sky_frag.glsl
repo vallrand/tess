@@ -20,6 +20,7 @@ uniform float uLayer;
 uniform vec4 uFogColor;
 uniform vec3 uSkyColor;
 
+#pragma import(./common/hash.glsl)
 #pragma import(./common/noise.glsl)
 float fbm(vec3 p, int octaves, float scale, float offset){
     const mat3 m = mat3( 0.00,  0.80,  0.60,

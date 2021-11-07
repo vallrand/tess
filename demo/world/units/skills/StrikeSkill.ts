@@ -7,12 +7,12 @@ import { ParticleEffectPass } from '../../../engine/pipeline'
 import { SpriteMaterial } from '../../../engine/materials'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 import { TerrainSystem } from '../../terrain'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'beam.transform.scale': PropertyAnimation([
         { frame: 0.4, value: vec3.ZERO },
         { frame: 1.0, value: [2,6,2], ease: ease.quartOut }
@@ -61,10 +61,12 @@ const actionTimeline = {
 }
 
 export class StrikeSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = Math.SQRT2
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = { amount: 1, type: DamageType.Kinetic }
+    readonly cost: number = 1
+    readonly range: number = Math.SQRT2
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Kinetic
+    readonly damage: number = 1
     
     private ring: Sprite
     private rays: Sprite
@@ -115,23 +117,20 @@ export class StrikeSkill extends AIUnitSkill {
         this.sparks = SharedSystem.particles.sparks.add({
             uLifespan: [0.3,0.6,-0.2,0],
             uOrigin: mat4.transform(vec3(0,1,1), this.mesh.transform.matrix, vec3()),
-            uGravity: vec3.ZERO,
+            uTarget: vec3.ZERO, uGravity: vec3.ZERO,
             uLength: [0.1,0.2],
             uSize: [0.1,0.2],
             uForce: [4,8],
             uRadius: [0,0.5],
-            uTarget: mat4.transform(vec3(0,1,1), this.mesh.transform.matrix, vec3()),
         })
 
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
-            'damage': EventTrigger([{ frame: 0.2, value: target }], AIUnitSkill.damage)
-        })
+        const damage = EventTrigger([{ frame: 0.2, value: target }], AIUnitSkill.damage)
+        const animate = AnimationTimeline(this, actionTimeline)
 
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }

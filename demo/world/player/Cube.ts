@@ -7,13 +7,14 @@ import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/device'
 import { PointLightPass, PointLight } from '../../engine/pipeline'
 
-import { modelAnimations, CubeModuleModel } from '../animations'
-import { TurnBasedSystem, IActor } from '../common'
+import { TurnBasedSystem, IAgent } from '../common'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { PlayerSystem } from './Player'
-import { TerrainSystem, TerrainChunk, IUnitTile } from '../terrain'
+import { TerrainSystem, TerrainChunk } from '../terrain'
 import { CubeModule } from './CubeModules'
-import { SharedSystem } from '../shared'
+import { SharedSystem, CubeModuleModel, ModelAnimation } from '../shared'
+import { DamageEffect, DeathEffect } from '../skills/effects'
+import { DamageType, Unit } from '../military'
 
 
 export interface CubeState {
@@ -29,17 +30,21 @@ export interface CubeState {
     }[]
 }
 
-export class Cube implements IActor, IUnitTile {
+export class Cube extends Unit implements IAgent {
     readonly weight: number = 0
-    order: number = 0
-    actionIndex: number
+    readonly matter = { capacity: 10, amount: 0, gain: 0 }
+    readonly health = { capacity: 6, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly order: number = 0
+    readonly group: number = 1
+
     hash: number = 0
-    public transform: Transform
+    public transform: Transform = this.context.get(TransformSystem).create()
     public readonly meshes: Mesh[] = []
     public dust: ParticleEmitter
     public light: PointLight
 
-    public readonly tile: vec2 = vec2()
     public side: number = 0
     public direction: Direction = Direction.Up
     public readonly sides: {
@@ -53,9 +58,6 @@ export class Cube implements IActor, IUnitTile {
     }))
 
     public readonly tiles: vec2[] = [this.tile]
-    constructor(private readonly context: Application){
-        this.transform = this.context.get(TransformSystem).create()
-    }
     place(column: number, row: number){
         vec2.set(column, row, this.tile)
         this.context.get(TerrainSystem).tilePosition(column, row, this.transform.position)
@@ -65,26 +67,26 @@ export class Cube implements IActor, IUnitTile {
 
         this.context.get(TerrainSystem).setTile(this.tile[0], this.tile[1], this)
 
-        this.light = this.context.get(PointLightPass).create()
+        this.light = this.context.get(PointLightPass).create([1,1,0.8])
         this.light.transform = this.context.get(TransformSystem).create()
         this.light.transform.parent = this.transform
         this.light.transform.position[1] = 4
         this.light.radius = 12
         this.light.intensity = 1.0
-        vec3.set(1,1,0.8,this.light.color)
 
         this.dust = SharedSystem.particles.dust.add({
-            uOrigin: [0,0,0],
+            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
             uLifespan: [0.8,1.2,-0.16,0],
             uSize: [2,4],
             uRadius: [0.2,0.4],
             uOrientation: quat.IDENTITY,
             uForce: [4,8],
-            uTarget: [0,0,0],
             uGravity: [0.0, 9.8, 0.0],
             uRotation: [0, 2 * Math.PI],
             uAngular: [-Math.PI,Math.PI,0,0],
         })
+
+        this.health.amount = this.health.capacity
     }
     installModule(side: number, direction: Direction, type: CubeModule){
         if(this.meshes[side]) this.context.get(MeshSystem).delete(this.meshes[side])
@@ -96,22 +98,37 @@ export class Cube implements IActor, IUnitTile {
         this.sides[side].type = type
         const rotation = DirectionAngle[(this.direction + this.sides[side].direction) % 4]
         quat.copy(rotation, mesh.armature.nodes[0].rotation)
-        modelAnimations[CubeModuleModel[type]].close(0, mesh.armature)
+        ModelAnimation.map[mesh.armature.key].close(0, mesh.armature)
 
         this.hash = this.sides.reduce((hash, side) => (
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
         ), 0)
+        this.skill.enter()
     }
     delete(){}
+    get skill(){ return this.context.get(PlayerSystem).skills[this.sides[this.side].type] }
     *execute(): Generator<ActionSignal, void> {
-        const keys = this.context.get(KeyboardSystem)
-        const state = this.sides[this.side]
-        const mesh = this.meshes[this.side]
-        const rotation = DirectionAngle[(this.direction + state.direction) % 4]
-        const skill = this.context.get(PlayerSystem).skills[state.type]
+        if(this.health.amount === 0){
+            if(this.sides[this.side].open == 1)
+            for(const generator = this.skill.close(); true;){
+                const iterator = generator.next()
+                if(iterator.done) break
+                else yield iterator.value
+            }
+            DeathEffect.create(this.context, this)
+            //TODO orbit + restart?
+        }
 
+        this.regenerate()
+        this.skill.update()
+        const keys = this.context.get(KeyboardSystem)
         idle: for(let frame = 0; true;){
+            if(this.action.amount <= 0 && this.movement.amount <= 0) break
             if(frame === this.context.frame) yield ActionSignal.WaitNextFrame
+
+            const state = this.sides[this.side]
+            //const rotation = DirectionAngle[(this.direction + state.direction) % 4]
+            const skill = this.context.get(PlayerSystem).skills[state.type]
             
             let direction = Direction.None
             if(keys.down('KeyA')) direction = Direction.Right
@@ -134,60 +151,36 @@ export class Cube implements IActor, IUnitTile {
                     else yield iterator.value
                 }
 
-            switch(state.type){
-                case CubeModule.Railgun:
-                case CubeModule.Minelayer:
-                case CubeModule.Voidgun:
-                case CubeModule.EMP: {
-                    if(state.open != 1) break
-                    if(!trigger) break
-
-                    for(const generator = skill.activate(this.transform.matrix, rotation); true;){
-                        const iterator = generator.next()
-                        if(iterator.done) return iterator.value
-                        else yield iterator.value
-                    }
-                }
-                case CubeModule.Missile:
-                case CubeModule.Machinegun: {
-                    if(state.open != 1) break
-                    if(!trigger || direction === Direction.None) break
-
-                    for(const generator = skill.activate(this.transform.matrix, rotation, direction); true;){
-                        const iterator = generator.next()
-                        if(iterator.done) return iterator.value
-                        else yield iterator.value
-                    }
-                }
-                case CubeModule.Repair:
-                case CubeModule.Auger: {
-                    if(state.open != 1) break
-                    if(!trigger) break
-                    if(skill.active) break
-
-                    for(const generator = skill.activate(this.transform.matrix, rotation); true;){
-                        const iterator = generator.next()
-                        if(iterator.done) return iterator.value
-                        else yield iterator.value
-                    }
-                }
-                case CubeModule.Shield: {
-                    if(state.open != 1) break
-                    break
+            action: {
+                if(state.open != 1 || !trigger) break action
+                if(this.action.amount <= 0) return void (this.movement.amount = 0)
+                const target = skill.query(direction)
+                if(!target) break action
+                for(const generator = skill.activate(target, direction); true;){
+                    const iterator = generator.next()
+                    if(iterator.done) continue idle
+                    else yield iterator.value
                 }
             }
             movement: {
                 if(state.open != 0 || direction == Direction.None) break movement
+                if(this.movement.amount <= 0) return void (this.action.amount = 0)
                 const move = this.moveTransition(direction)
                 if(!move) break movement
-                this.actionIndex = this.context.get(AnimationSystem).start(move, true)
-                break idle
+                this.movement.amount--
+                while(true){
+                    const iterator = move.next()
+                    if(iterator.done) continue idle
+                    else yield iterator.value
+                }
             }
         }
     }
-    public damage(amount: number){
-        const skill = this.context.get(PlayerSystem).skills[CubeModule.Death]
-        this.context.get(AnimationSystem).start(skill.damage(), true)
+    public damage(amount: number, type: DamageType){
+        if(this.sides[this.side].type === CubeModule.Shield && this.skill.active) return
+        if(this.health.amount == 0) return
+        this.health.amount = Math.max(0, this.health.amount - amount)
+        DamageEffect.create(this.context, this, type)
     }
     private moveTransition(direction: Direction): Generator<ActionSignal> {
         const nextOrientation = CubeOrientation.roll(CubeOrientation(this.side, this.direction), direction)
@@ -235,9 +228,11 @@ export class Cube implements IActor, IUnitTile {
         this.context.get(TerrainSystem).setTile(this.tile[0], this.tile[1], null)
         this.context.get(TerrainSystem).setTile(nextTile[0], nextTile[1], this)
         vec2.copy(nextTile, this.tile)
+        this.context.get(TurnBasedSystem).signalEnterTile.broadcast(nextTile[0], nextTile[1], this)
+        this.skill.enter()
 
         const mesh = this.meshes[this.side]
-        modelAnimations[CubeModuleModel[this.sides[this.side].type]].close(0, mesh.armature)
+        ModelAnimation.map[mesh.armature.key].close(0, mesh.armature)
 
         const rootNode = mesh.armature.nodes[0]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())
@@ -251,7 +246,7 @@ export class Cube implements IActor, IUnitTile {
         
         return function*(this: Cube){
             const dustTrigger = EventTrigger([{
-                frame: 0.36, value: { amount: 16, uOrigin: nextPosition, uTarget: nextPosition }
+                frame: 0.36, value: { amount: 16, uOrigin: nextPosition, uTarget: vec3.ZERO }
             }], EventTrigger.emitReset)
             const movementEase = ease.bounceIn(0.064, 0.8)
             for(const duration = 0.64, startTime = this.context.currentTime; true;){

@@ -1,10 +1,20 @@
-import { vec2, vec3, vec4, mat4, mat3x2, aabb2 } from '../math'
+import { vec4 } from '../math'
 import { GL, ShaderProgram } from '../webgl'
 import { IMaterial } from '../pipeline'
 import { ShaderMaterial } from './ShaderMaterial'
 
 export class SpriteMaterial extends ShaderMaterial implements IMaterial {
-    readonly uvTransform: vec4 = vec4(0,0,1,1)
+    public static create(program: ShaderProgram, diffuse: WebGLTexture, post?: boolean): SpriteMaterial {
+        const material = new SpriteMaterial()
+        material.program = program
+        material.diffuse = diffuse
+        if(post){
+            material.blendMode = null
+            material.cullFace = GL.NONE
+        }
+        return material
+    }
+    constructor(readonly uvTransform: vec4 = vec4(0,0,1,1)){super()}
     diffuse: WebGLTexture
     normal?: WebGLTexture
     depthTest: number = GL.LEQUAL

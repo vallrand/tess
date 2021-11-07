@@ -1,46 +1,61 @@
-import { range, mat3x2, vec4, mat3 } from '../math'
+import { range, mat3x2, vec4, mat3, insertionSort } from '../math'
 import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
-import { Batch2D } from './batch'
-import { PipelinePass } from './PipelinePass'
+import { Batch2D, IBatched2D } from './batch'
+import { PipelinePass, IMaterial } from './PipelinePass'
 
 export class OverlayPass extends PipelinePass implements ISystem {
+    private static readonly orderSort = (a: { order: number }, b: { order: number }) => a.order - b.order
+    private static readonly batchSize: number = 1024
+    private readonly list: IBatched2D[] = []
     public readonly program: ShaderProgram
     public readonly batch: Batch2D
+    private readonly projectionMatrix: mat3 = mat3()
     constructor(context: Application){
         super(context)
-        const gl: WebGL2RenderingContext = context.gl
-        const maxTextures = gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
+        const maxTextures = context.gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
         let fragmentSource: string = require('../shaders/batch2d_frag.glsl')
         fragmentSource = fragmentSource.replace(/^#FOR(.*)$/gm, (match, line) => range(maxTextures)
         .map(i => line.replace(/#i/g,i)).join('\n'))
-        this.program = ShaderProgram(gl, require('../shaders/batch2d_vert.glsl'), fragmentSource, {
+        this.program = ShaderProgram(context.gl, require('../shaders/batch2d_vert.glsl'), fragmentSource, {
             MAX_TEXTURE_UNITS: maxTextures
         })
         this.program.uniforms['uSamplers'] = range(maxTextures)
-        this.batch = new Batch2D(this.context.gl, 4*1024, 6*1024, null)
+        this.batch = new Batch2D(this.context.gl, 4*OverlayPass.batchSize, 6*OverlayPass.batchSize, null)
+
+        const projection = mat3x2.orthogonal(0, context.gl.drawingBufferWidth, 0, context.gl.drawingBufferHeight, mat3x2())
+        mat3.fromMat3x2(projection, this.projectionMatrix)
+    }
+    public add(item: IBatched2D): void { this.list.push(item) }
+    public remove(item: IBatched2D): void {
+        const index = this.list.indexOf(item)
+        if(index === - 1) return
+        else if(index === this.list.length - 1) this.list.length--
+        else this.list[index] = this.list.pop()
     }
     public update(): void {
-        // const gl: WebGL2RenderingContext = this.context.gl
-        // gl.disable(GL.BLEND)
-        // gl.bindVertexArray(this.plane.vao)
+        const { gl } = this.context
+        insertionSort(this.list, OverlayPass.orderSort)
+        let material: IMaterial = null
+        for(let i = this.list.length - 1; i >= 0; i--){
+            const item = this.list[i]
+            item.update(this.context.frame)
 
-        // this.bloom.apply(this)
+            if(!material) material = item.material
+            if(!material.merge(item.material)) i++
+            else if(!this.batch.render(item)) i++
+            else if(i) continue
 
-        // gl.bindFramebuffer(GL.FRAMEBUFFER, null)
-        // gl.useProgram(this.program.target)
-
-        // gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
-        // gl.bindTexture(GL.TEXTURE_2D, this.renderTarget[this.index])
-
-        // gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uNormalMap)
-        // gl.bindTexture(GL.TEXTURE_2D, this.bloom.texture)
-
-        // this.program.uniforms['uFogColor'] = this.fog.color
-        // this.program.uniforms['uFogRange'] = this.fog.range
-        // this.program.uniforms['uBloomMask'] = this.bloom.mask
-
-        // gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-        // gl.drawElements(GL.TRIANGLES, this.plane.indexCount, GL.UNSIGNED_SHORT, this.plane.indexOffset)
+            const indexCount = this.batch.indexOffset
+            if(indexCount){
+                gl.useProgram(material.program.target)
+                material.program.uniforms['uProjectionMatrix'] = this.projectionMatrix
+                material.bind(gl)
+                this.batch.bind()
+                gl.drawElements(GL.TRIANGLES, indexCount, GL.UNSIGNED_SHORT, 0)
+            }
+            material = null
+        }
+        gl.disable(GL.BLEND)
     }
 }

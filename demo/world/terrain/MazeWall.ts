@@ -7,9 +7,8 @@ import { TransformSystem, Transform } from '../../engine/scene'
 import { SharedSystem } from '../shared'
 import { ModelBatch, IModelInstance } from '../../engine/pipeline/batch'
 import { DirectionAngle, Direction } from '../player'
-import { IUnitTile } from './TerrainChunk'
 
-export class MazeWall implements IUnitTile {
+export class MazeWall {
     private static readonly transform: mat4 = mat4()
     private static readonly position: vec3 = vec3()
     private static readonly orientations = [

@@ -1,11 +1,22 @@
 import { Application, One } from '../framework'
-import { range, vec3, vec4, quat, mat4, vec2, clamp } from '../math'
+import { range, vec3, vec4 } from '../math'
 import { IEase } from '../animation/ease'
-import { ICamera, BoundingVolume, Transform } from '../scene'
+import { ICamera, BoundingVolume } from '../scene'
 import { IBatched, uintNorm4x8 } from '../pipeline/batch'
 import { SpriteMaterial } from '../materials'
 
 export class Line implements IBatched {
+    public static create(length: number, order?: number, width?: number, ease?: IEase, fade?: boolean): Line {
+        const item = new Line(length)
+        item.order = order || 0
+        item.width = width || 1
+        item.ease = ease || One
+        if(fade) item.addColorFade(item.ease)
+        return item
+    }
+    public static delete(item: Line): void {
+        item.frame = 0
+    }
     private static readonly forward: vec3 = vec3()
     private static readonly normal: vec3 = vec3()
     private static readonly tangent: vec3 = vec3()

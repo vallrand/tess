@@ -173,13 +173,7 @@ export function ParticleLibrary(context: Application){
         })
     )
     bolts.material = new EmitterMaterial()
-    bolts.material.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/lightning_frag.glsl'), {
-        }), {
-            uTiles: 4
-        }, 0
-    ).target
+    bolts.material.diffuse = SharedSystem.textures.lightning
 
     const embers = new ParticleSystem<{
         uLifespan: vec4
@@ -258,15 +252,7 @@ export function ParticleLibrary(context: Application){
         })
     )
     spikes.material = new EmitterMaterial()
-    spikes.material.diffuse = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/rays_frag.glsl'), {
-            SPIKE: true, TILED: true
-        }), {
-            uTiles: [2,2]
-        }, 0
-    ).target
-
+    spikes.material.diffuse = SharedSystem.textures.spike
     spikes.material.gradientRamp = GradientRamp(context.gl, [
         0xedecd100, 0x6b2d47ff,
         0xc7264b70, 0x422e36d0,

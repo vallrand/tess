@@ -1,17 +1,17 @@
 import { Application } from '../../engine/framework'
-import { randomInt, randomFloat, shortestAngle, range, clamp, lerp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
-import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
-import { TransformSystem, Transform } from '../../engine/scene'
+import { randomFloat, shortestAngle, clamp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
+import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
+import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Line } from '../../engine/components'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
-import { CubeModuleModel, modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { Cube, DirectionAngle, Direction } from '../player'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { DirectionAngle, Direction } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
+import { DamageType, Unit, IUnitAttribute } from '../military'
+import { TurnBasedSystem } from '../common'
 
 const steeringTimeline = {
     'burn.transform.scale': PropertyAnimation([
@@ -61,54 +61,40 @@ const steeringTimeline = {
 
 class Missile {
     readonly origin: vec3 = vec3()
+    readonly target: vec3 = vec3()
     readonly normal: vec3 = vec3()
-    head: Mesh
-    trail: Line
-    exhaust: BatchMesh
-    smoke: ParticleEmitter
-    embers: ParticleEmitter
-    burn: Decal
-    ring: BatchMesh
-    wave: Sprite
-    pillar: Sprite
-    flash: Sprite
-    constructor(private readonly context: Application, private readonly parent: ArtillerySkill){
-        this.trail = new Line()
-        this.trail.order = 4
-        this.trail.width = 0.4
-        this.trail.ease = ease.cubicFadeInOut
-        this.trail.path = range(16).map(i => vec3())
-        this.trail.addColorFade(this.trail.ease)
-        this.trail.material = SharedSystem.materials.trailSmokeMaterial
+    private head: Mesh
+    private trail: Line
+    private exhaust: BatchMesh
+    private smoke: ParticleEmitter
+    private embers: ParticleEmitter
+    private burn: Decal
+    private ring: BatchMesh
+    private wave: Sprite
+    private pillar: Sprite
+    private flash: Sprite
+    constructor(private readonly context: Application, private readonly parent: ArtillerySkill){}
+    *launch(target: vec2, index: number): Generator<ActionSignal> {
+        for(const endTime = this.context.currentTime + 0.6; this.context.currentTime < endTime;)
+            yield ActionSignal.WaitNextFrame
 
-        this.exhaust = BatchMesh.create(SharedSystem.geometry.hemisphere, 2)
-        this.exhaust.material = SharedSystem.materials.exhaustMaterial
+        this.context.get(TerrainSystem).tilePosition(target[0], target[1], this.target)
 
-        this.ring = BatchMesh.create(SharedSystem.geometry.cylinder, 6)
-        this.ring.material = SharedSystem.materials.ringDustMaterial
-
-        this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = this.parent.waveMaterial
-
-        this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.pillar.material = this.parent.pillarMaterial
-
-        this.flash = Sprite.create(BillboardType.None)
-        this.flash.material = this.parent.flashMaterial
-    }
-    *launch(target: vec3, index: number): Generator<ActionSignal> {
         this.head = this.context.get(MeshSystem).loadModel('missile')
         this.head.transform = this.context.get(TransformSystem).create()
         vec3.copy(this.origin, this.head.transform.position)
         quat.fromNormal(this.normal, vec3.AXIS_Y, this.head.transform.rotation)
         quat.normalize(this.head.transform.rotation, this.head.transform.rotation)
 
+        this.trail = Line.create(16, 4, 0.4, ease.cubicFadeInOut, true)
+        this.trail.material = SharedSystem.materials.trailSmokeMaterial
         this.context.get(ParticleEffectPass).add(this.trail)
 
+        this.exhaust = BatchMesh.create(SharedSystem.geometry.hemisphere, 2)
+        this.exhaust.material = SharedSystem.materials.exhaustMaterial
         this.exhaust.transform = this.context.get(TransformSystem).create()
         this.exhaust.transform.parent = this.head.transform
         vec3.set(0.24,0.24,1.2, this.exhaust.transform.scale)
-
         this.context.get(ParticleEffectPass).add(this.exhaust)
 
         this.smoke = SharedSystem.particles.smoke.add({
@@ -130,40 +116,49 @@ class Missile {
             uRotation: vec2.ZERO,
             uSize: [0.2,0.7],
             uForce: [8,14],
-            uTarget: vec3.add(this.origin, vec3.scale(this.normal, -1.2, vec3()), vec3()),
+            uTarget: vec3.scale(this.normal, -0.2, vec3()),
         })
 
         this.burn = this.context.get(DecalPass).create(0)
         this.burn.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, this.burn.transform.position)
+        vec3.copy(this.target, this.burn.transform.position)
         quat.axisAngle(vec3.AXIS_Y, randomFloat(0, 2 * Math.PI, SharedSystem.random()), this.burn.transform.rotation)
-        this.burn.material = this.parent.burnMaterial
+        this.burn.material = SharedSystem.materials.decal.rays
 
+        this.wave = Sprite.create(BillboardType.None)
+        this.wave.material = SharedSystem.materials.distortion.wave
         this.wave.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,1,0], target, this.wave.transform.position)
+        vec3.add([0,1,0], this.target, this.wave.transform.position)
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.wave.transform.rotation)
         this.context.get(PostEffectPass).add(this.wave)
 
+        this.ring = BatchMesh.create(SharedSystem.geometry.cylinder, 6)
+        this.ring.material = SharedSystem.materials.ringDustMaterial
         this.ring.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, this.ring.transform.position)
+        vec3.copy(this.target, this.ring.transform.position)
         this.context.get(ParticleEffectPass).add(this.ring)
 
+        this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.pillar.material = SharedSystem.materials.sprite.dust
         this.pillar.transform = this.context.get(TransformSystem).create()
-        vec3.copy(target, this.pillar.transform.position)
+        vec3.copy(this.target, this.pillar.transform.position)
         this.context.get(ParticleEffectPass).add(this.pillar)
 
+        this.flash = Sprite.create(BillboardType.None)
+        this.flash.material = SharedSystem.materials.sprite.ring
         this.flash.transform = this.context.get(TransformSystem).create()
-        vec3.add(vec3.AXIS_Y, target, this.flash.transform.position)
+        vec3.add(vec3.AXIS_Y, this.target, this.flash.transform.position)
         quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.flash.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.flash)
 
-        const { path, intervals } = this.buildPath(target, 5)
+        const { path, intervals } = this.buildPath(this.target, 5)
         const travelDuration = 1.0 + 0.25 * index
         const curve = FollowPath.spline(path, intervals.map(i => travelDuration * i - travelDuration), {
             ease: ease.CubicBezier(0.5,0.5,1,0.5),
             tension: 0.5
         })
 
+        const damage = EventTrigger([{ frame: 0, value: target }], CubeSkill.damage)
         const animate = AnimationTimeline(this, {
             ...steeringTimeline,
             'embers': EventTrigger([{ frame: -travelDuration, value: 16 }], EventTrigger.emit),
@@ -172,17 +167,16 @@ class Missile {
             'head.transform': FollowPath(curve)
         })
 
-        for(const duration = travelDuration + 1, startTime = this.context.currentTime; true;){
+        for(const duration = 1, startTime = this.context.currentTime + travelDuration; true;){
             const elapsedTime = this.context.currentTime - startTime
-            animate(elapsedTime - travelDuration, this.context.deltaTime)
-            
+            animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this.parent)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.embers.remove(this.embers)
         SharedSystem.particles.smoke.remove(this.smoke)
-
         this.context.get(TransformSystem).delete(this.head.transform)
         this.context.get(TransformSystem).delete(this.exhaust.transform)
         this.context.get(TransformSystem).delete(this.burn.transform)
@@ -190,7 +184,6 @@ class Missile {
         this.context.get(TransformSystem).delete(this.wave.transform)
         this.context.get(TransformSystem).delete(this.pillar.transform)
         this.context.get(TransformSystem).delete(this.flash.transform)
-
         this.context.get(MeshSystem).delete(this.head)
         this.context.get(DecalPass).delete(this.burn)
         this.context.get(PostEffectPass).remove(this.wave)
@@ -199,7 +192,12 @@ class Missile {
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(ParticleEffectPass).remove(this.pillar)
         this.context.get(ParticleEffectPass).remove(this.flash)
-
+        Sprite.delete(this.pillar)
+        Sprite.delete(this.flash)
+        Sprite.delete(this.wave)
+        BatchMesh.delete(this.ring)
+        BatchMesh.delete(this.exhaust)
+        Line.delete(this.trail)
         this.parent.pool.push(this)
     }
     private buildPath(target: vec3, length: number): { path: vec3[], intervals: number[] } {
@@ -235,76 +233,80 @@ class Missile {
 }
 
 export class ArtillerySkill extends CubeSkill {
-    pool: Missile[] = []
+    indicator: IUnitAttribute = { capacity: 2, amount: 0 }
+    readonly pool: Missile[] = []
     readonly pivots = [
         vec3(-1.0, 4.4, -2.1),
         vec3(-1.6, 3.8, -2.1),
         vec3(-1.0, 4.4, 2.1),
         vec3(-1.6, 3.8, 2.1)
     ]
-    burnMaterial: DecalMaterial
-    waveMaterial: SpriteMaterial
-    pillarMaterial: SpriteMaterial
-    flashMaterial: SpriteMaterial
-    constructor(context: Application, cube: Cube){
-        super(context, cube)
-        this.burnMaterial = new DecalMaterial()
-        this.burnMaterial.program = this.context.get(DecalPass).program
-        this.burnMaterial.diffuse = SharedSystem.textures.rays
-
-        this.waveMaterial = new SpriteMaterial()
-        this.waveMaterial.blendMode = null
-        this.waveMaterial.program = SharedSystem.materials.chromaticAberration
-        this.waveMaterial.diffuse = SharedSystem.textures.wave
-
-        this.pillarMaterial = new SpriteMaterial()
-        this.pillarMaterial.program = this.context.get(ParticleEffectPass).program
-        this.pillarMaterial.diffuse = SharedSystem.textures.groundDust
-
-        this.flashMaterial = new SpriteMaterial()
-        this.flashMaterial.program = this.context.get(ParticleEffectPass).program
-        this.flashMaterial.diffuse = SharedSystem.textures.ring
+    readonly damageType: DamageType = DamageType.Kinetic
+    damage: number = 1
+    range: number = 4
+    public update(): void { this.indicator.amount = this.indicator.capacity }
+    public query(direction: Direction): vec2[] | null {
+        if(direction === Direction.None || !this.indicator.amount) return
+        const origin = this.cube.tile
+        const forward = (direction - 1) * 0.5 * Math.PI
+        const candidates = CubeSkill.queryArea(this.context, origin, 0, this.range, 2)
+        const out: vec2[] = []
+        for(let i = 4; i > 0; i--){
+            let index = -1, min = Infinity
+            for(let j = candidates.length - 1; j >= 0; j--){
+                const target = candidates[j]
+                const angle = shortestAngle(forward, Math.atan2(target[1]-origin[1], target[0]-origin[0]))
+                const distance = vec2.distance(origin, target) / this.range
+                const heuristic = angle + distance
+                if(heuristic >= min) continue
+                min = heuristic
+                index = j
+            }
+            if(index != -1) out.push(candidates.splice(index, 1)[0])
+            else{
+                const distance = randomFloat(Math.SQRT2, this.range, SharedSystem.random())
+                const angle = forward + Math.PI * randomFloat(-0.5, 0.5, SharedSystem.random())
+                const tile = vec2(
+                    Math.cos(angle) * distance | 0,
+                    Math.sin(angle) * distance | 0
+                )
+                vec2.add(origin, tile, tile)
+                out.push(tile)
+            }
+        }
+        return out
     }
-    public *activate(transform: mat4, orientation: quat, direction: Direction): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
+    public *activate(targets: vec2[], direction: Direction): Generator<ActionSignal> {
+        this.indicator.amount--
+        if(!this.indicator.amount) this.cube.action.amount = 0
 
-        const rotate = PropertyAnimation([
-            { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },
-            { frame: 0.6, value: DirectionAngle[mod(direction - this.direction - 3, 4)], ease: ease.quadInOut }
-        ], quat.slerp)
+        const animate = AnimationTimeline(this, {
+            'mesh.armature': ModelAnimation('activate'),
+            'mesh.armature.nodes.1.rotation': PropertyAnimation([
+                { frame: 0, value: quat.copy(this.mesh.armature.nodes[1].rotation, quat()) },
+                { frame: 0.6, value: DirectionAngle[mod(direction - this.direction - 3, 4)], ease: ease.quadInOut }
+            ], quat.slerp)
+        })
 
-        const targets = this.findTarget(direction)
-        const missiles = this.pivots.map(pivot => {
+        for(let i = 0; i < this.pivots.length; i++){
             const missile = this.pool.pop() || new Missile(this.context, this)
-            vec3.copy(pivot, missile.origin)
+            vec3.copy(this.pivots[i], missile.origin)
             vec3.normalize([-1,1,0], missile.normal)
             quat.transform(missile.origin, DirectionAngle[direction], missile.origin)
             mat4.transform(missile.origin, this.cube.transform.matrix, missile.origin)
             quat.transform(missile.normal, DirectionAngle[direction], missile.normal)
-            return missile
-        })
+            this.context.get(TurnBasedSystem).enqueue(missile.launch(targets[i], i), true)
+        }
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            rotate(elapsedTime, mesh.armature.nodes[1].rotation)
-            armatureAnimation.activate(elapsedTime, mesh.armature)
-
-            if(elapsedTime > 0.6 && missiles.length)
-            for(let i = 0; missiles.length; i++){
-                const missile = missiles.pop()
-                const tile = targets[i]
-                const target = this.context.get(TerrainSystem).tilePosition(tile[0], tile[1], vec3())
-                this.context.get(AnimationSystem).start(missile.launch(target, i), true)
-            }
-            
-
+            animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     }
     public *close(): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.side]
+        const mesh = this.mesh
         const rotate = PropertyAnimation([
             { frame: 0, value: quat.copy(mesh.armature.nodes[1].rotation, quat()) },
             { frame: 0.4, value: quat.IDENTITY, ease: ease.quadInOut }
@@ -317,28 +319,5 @@ export class ArtillerySkill extends CubeSkill {
             if(iterator.done) return iterator.value
             else yield iterator.value
         }
-    }
-    private findTarget(direction: Direction): vec2[] {
-        const out = []
-        const origin = this.cube.tile
-        const terrain = this.context.get(TerrainSystem)
-        const forward = (direction - 1) * 0.5 * Math.PI
-        const tile = vec2(), limit = 4
-        for(let x = -limit; x <= limit; x++)
-        for(let y = -limit; y <= limit; y++){
-            vec2.set(x, y, tile)
-            const angle = shortestAngle(forward, vec2.rotation(tile))
-            const distance = vec2.magnitudeSquared(tile)
-            const heuristic = distance + angle * angle
-            vec2.add(origin, tile, tile)
-
-            const entity = terrain.getTile(tile[0], tile[1])
-            //if(entity != null)
-        }
-        while(out.length < 4) out.push(vec2(
-            origin[0] + randomInt(-limit, limit, SharedSystem.random()),
-            origin[1] + randomInt(-limit, limit, SharedSystem.random())
-        ))
-        return out
     }
 }

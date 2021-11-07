@@ -8,12 +8,12 @@ import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 import { StaticOrb } from '../effects/StaticOrb'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [0,0,0] },
         { frame: 1.4, value: [8,8,8], ease: ease.quadOut }
@@ -88,9 +88,12 @@ const actionTimeline = {
 }
 
 export class OrbSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 2
-    public readonly cardinal: boolean = true
+    readonly cost: number = 1
+    readonly range: number = 2
+    readonly cardinal: boolean = true
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Corrosion
+    readonly damage: number = 1
 
     private funnel: BatchMesh
     private core: BatchMesh
@@ -123,9 +126,7 @@ export class OrbSkill extends AIUnitSkill {
         this.cone = BatchMesh.create(SharedSystem.geometry.cone)
         this.cone.transform = this.context.get(TransformSystem)
         .create([0,0.7,0.8],Sprite.FlatDown,vec3.ONE,this.mesh.transform)
-        this.cone.material = new SpriteMaterial()
-        this.cone.material.program = this.context.get(ParticleEffectPass).program
-        this.cone.material.diffuse = SharedSystem.textures.wind
+        this.cone.material = SharedSystem.materials.sprite.spiral
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
@@ -141,10 +142,7 @@ export class OrbSkill extends AIUnitSkill {
         .create([0,1,2.5],quat.IDENTITY,vec3.ONE,this.mesh.transform)
 
         this.bulge = Sprite.create(BillboardType.Sphere)
-        this.bulge.material = new SpriteMaterial()
-        this.bulge.material.blendMode = null
-        this.bulge.material.program = SharedSystem.materials.chromaticAberration
-        this.bulge.material.diffuse = SharedSystem.textures.bulge
+        this.bulge.material = SharedSystem.materials.distortion.bulge
         this.bulge.transform = this.context.get(TransformSystem)
         .create([0,0.7,2.5],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.bulge)
@@ -159,7 +157,6 @@ export class OrbSkill extends AIUnitSkill {
 
         const animate = AnimationTimeline(this, {
             ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
             '': EventTrigger([{ frame: 1.0, value: new StaticOrb(this.context) }], (root, orb) => {
                 if(orb.enabled) return
                 orb.place(

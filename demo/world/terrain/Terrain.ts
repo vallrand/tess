@@ -1,15 +1,18 @@
-import { Application, ISystem } from '../../engine/framework'
+import { Application, Signal, ISystem } from '../../engine/framework'
 import { vec2, vec3, aabb2, vec4 } from '../../engine/math'
 import { CameraSystem } from '../../engine/scene'
 
 import { LevelGenerator } from './LevelGenerator'
 import { Pathfinder } from './Pathfinder'
 
-import { TerrainChunk, IUnitTile } from './TerrainChunk'
+import { TerrainChunk } from './TerrainChunk'
 import { SharedSystem } from '../shared'
 
 export class TerrainSystem implements ISystem {
     private static readonly pool: TerrainChunk[] = []
+    readonly signalEnterTile = new Signal<(column: number, row: number, value: any) => void>()
+    readonly signalClearChunk = new Signal<(chunk: TerrainChunk) => void>()
+
     private readonly positionOffset = -0.5 * TerrainChunk.chunkSize + 0.5 * TerrainChunk.tileSize
     private readonly gridSize = 3
     private readonly gridBounds: aabb2 = aabb2()
@@ -36,6 +39,7 @@ export class TerrainSystem implements ISystem {
                 chunk.column >= offsetX + this.gridSize ||
                 chunk.row >= offsetZ + this.gridSize
             ){
+                this.signalClearChunk.broadcast(chunk)
                 chunk.clear()
                 TerrainSystem.pool.push(chunk)
                 this.chunks[i] = null
@@ -79,10 +83,10 @@ export class TerrainSystem implements ISystem {
         if(x < 0 || z < 0 || x >= this.gridSize || z >= this.gridSize) return null
         return this.chunks[x + z * this.gridSize]
     }
-    public getTile<T extends IUnitTile>(column: number, row: number): T | void {
+    public getTile<T extends { weight: number }>(column: number, row: number): T | void {
         return this.chunk(column, row)?.get<T>(column, row)
     }
-    public setTile<T extends IUnitTile>(column: number, row: number, value: T): void {
+    public setTile<T extends { weight: number }>(column: number, row: number, value: T): void {
         this.chunk(column, row)?.set<T>(column, row, value)
         this.pathfinder.weight[this.pathfinder.tileIndex(column, row)] = value ? value.weight : 1
     }

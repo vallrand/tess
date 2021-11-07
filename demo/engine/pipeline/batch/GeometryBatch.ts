@@ -1,7 +1,7 @@
 import { vec3, vec4 } from '../../math'
 import { GL, VertexDataFormat } from '../../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
-import { IMesh, IMaterial } from '..'
+import { IMesh, IMaterial } from '../PipelinePass'
 import { uint8x4, uint16x2, uintNorm4x8, intNorm4x8, uintNorm2x16 } from './common'
 
 export interface IBatched extends IMesh {

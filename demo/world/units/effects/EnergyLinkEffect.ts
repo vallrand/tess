@@ -8,7 +8,6 @@ import { SpriteMaterial, DecalMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../../engine/pipeline'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
 import { SharedSystem } from '../../shared'
 import { AISystem, AIUnit } from '../../military'
 
@@ -46,9 +45,8 @@ export class EnergyLinkEffect {
         .create([0,1.5,0], quat.IDENTITY, vec3.ONE, this.target.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.line = new Line(16)
+        this.line = Line.create(16, 0, 1, x => 0.2 + 0.8 * ease.sineIn(Math.max(0, 1-2*x)))
         const fadeEase: ease.IEase = x => 1 - ease.quadOut(Math.max(0, 1-2*x)) - ease.quadIn(Math.max(0, 4*(x-1)+1))
-        this.line.ease = x => 0.2 + 0.8 * ease.sineIn(Math.max(0, 1-2*x))
         this.line.addColorFade(fadeEase, [1,0.8,1])
         this.line.material = SharedSystem.materials.trailEnergyMaterial
         this.context.get(ParticleEffectPass).add(this.line)

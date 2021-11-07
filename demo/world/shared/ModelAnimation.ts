@@ -1,3 +1,4 @@
+import { Application } from '../../engine/framework'
 import { clamp, vec3, quat } from '../../engine/math'
 import { Armature } from '../../engine/components/Mesh'
 import { ease, parseEase, PropertyAnimation } from '../../engine/animation'
@@ -35,7 +36,7 @@ export const ArmatureAnimation = (tracks: {
     return armature
 }
 
-export const modelAnimations: {
+const modelAnimations: {
     [model:string]: {
         [animation:string]: (time: number, armature: Armature) => Armature
     }
@@ -69,3 +70,7 @@ for(let key in animationData[model]){
     modelAnimations[model] = modelAnimations[model] || Object.create(null)
     modelAnimations[model][key] = animation
 }
+
+export const ModelAnimation = (animation: string) =>
+function(time: number, armature: Armature): Armature { return modelAnimations[armature.key][animation].apply(this, arguments) }
+ModelAnimation.map = modelAnimations

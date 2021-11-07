@@ -12,6 +12,8 @@ import {
     DebrisEffect, GridEffect, SkyEffect, MistEffect
 } from './effects'
 
+export * from './ModelAnimation'
+
 export class SharedSystem implements ISystem {
     public static readonly random = mulberry32()
     public static textures: ReturnType<typeof TextureLibrary>

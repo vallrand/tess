@@ -1,19 +1,17 @@
-import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
-import { Application } from '../../engine/framework'
+import { lerp, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
-import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
-import { Decal, DecalPass, ParticleEffectPass, PostEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
+import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
+import { Decal, DecalPass, ParticleEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
 
-import { CubeModuleModel, modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { Cube, DirectionTile } from '../player'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
 
 const activateTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'tubeX.transform.scale': PropertyAnimation([
         { frame: 0.3, value: [0,6,0] },
         { frame: 1, value: [1.4,6,1.4], ease: ease.cubicOut }
@@ -112,72 +110,53 @@ const deactivateTimeline = {
 }
 
 export class RestoreSkill extends CubeSkill {
-    public active: boolean = false
-    tubeX: BatchMesh
-    tubeZ: BatchMesh
-    light: PointLight
-    bolts: ParticleEmitter
-    sparks: ParticleEmitter
-    ring: Decal
-    ringMaterial: DecalMaterial
-    flash: Sprite
-    conduit: BatchMesh
-    constructor(context: Application, cube: Cube){
-        super(context, cube)
+    private tubeX: BatchMesh
+    private tubeZ: BatchMesh
+    private light: PointLight
+    private bolts: ParticleEmitter
+    private sparks: ParticleEmitter
+    private ring: Decal
+    private flash: Sprite
+    private conduit: BatchMesh
+    public query(): vec2 { return this.cube.tile }
+    private restore(): void {
+        if(this.cube.matter.amount <= 0 || this.cube.health.amount >= this.cube.health.capacity) return
+        this.cube.matter.amount--
+        this.cube.health.amount++
+    }
+    public *activate(): Generator<ActionSignal> {
+        this.cube.action.amount = this.cube.movement.amount = 0
+        if(this.active) return this.restore()
 
         this.tubeX = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.tubeX.material = SharedSystem.materials.energyHalfPurpleMaterial
+        this.tubeX.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.HALF_X, vec3.ONE, this.cube.transform)
+        this.context.get(ParticleEffectPass).add(this.tubeX)
+
         this.tubeZ = BatchMesh.create(SharedSystem.geometry.cylinder)
-
-        this.tubeX.material = this.tubeZ.material = SharedSystem.materials.energyHalfPurpleMaterial
-
-        this.ringMaterial = new DecalMaterial()
-        this.ringMaterial.program = this.context.get(DecalPass).program
-        this.ringMaterial.diffuse = SharedSystem.textures.ring
+        this.tubeZ.material = SharedSystem.materials.energyHalfPurpleMaterial
+        this.tubeZ.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.HALF_Z, vec3.ONE, this.cube.transform)
+        this.context.get(ParticleEffectPass).add(this.tubeZ)
 
         this.flash = Sprite.create(BillboardType.None)
-        this.flash.material = new SpriteMaterial()
-        this.flash.material.program = this.context.get(ParticleEffectPass).program
-        this.flash.material.diffuse = SharedSystem.textures.sparkle
+        this.flash.material = SharedSystem.materials.sprite.sparkle
+        this.flash.transform = this.context.get(TransformSystem).create([0,2.2,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
+        this.context.get(ParticleEffectPass).add(this.flash)
+
+        this.light = this.context.get(PointLightPass).create([0.6,0.6,1.0])
+        this.light.transform = this.context.get(TransformSystem).create([0,3,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
+
+        this.ring = this.context.get(DecalPass).create(0)
+        this.ring.material = SharedSystem.materials.decal.ring
+        this.ring.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.IDENTITY, vec3.ONE, this.cube.transform)
 
         this.conduit = BatchMesh.create(SharedSystem.geometry.openBox)
         this.conduit.material = SharedSystem.materials.stripesMaterial
-    }
-    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
-
-        const origin = mat4.transform([0,1,0], this.cube.transform.matrix, vec3())
-
-        this.tubeX.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.tubeX.transform.position)
-        quat.axisAngle(vec3.AXIS_X, 0.5*Math.PI, this.tubeX.transform.rotation)
-        this.context.get(ParticleEffectPass).add(this.tubeX)
-        this.tubeZ.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.tubeZ.transform.position)
-        quat.axisAngle(vec3.AXIS_Z, 0.5*Math.PI, this.tubeZ.transform.rotation)
-        this.context.get(ParticleEffectPass).add(this.tubeZ)
-
-        this.flash.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,1.2,0], origin, this.flash.transform.position)
-        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.flash.transform.rotation)
-        this.context.get(ParticleEffectPass).add(this.flash)
-
-        this.light = this.context.get(PointLightPass).create()
-        this.light.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,2,0], origin, this.light.transform.position)
-        vec3.set(0.6,0.6,1.0,this.light.color)
-
-        this.ring = this.context.get(DecalPass).create(0)
-        this.ring.material = this.ringMaterial
-        this.ring.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.ring.transform.position)
-
-        this.conduit.transform = this.context.get(TransformSystem).create()
-        this.conduit.transform.parent = this.cube.transform
+        this.conduit.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.conduit)
 
         this.bolts = SharedSystem.particles.bolts.add({
-            uOrigin: vec3.add([0,0.5,0], origin, vec3()),
+            uOrigin: vec3.add([0,1.5,0], this.cube.transform.position, vec3()),
             uRadius: [1.5,2.5],
             uLifespan: [0.2,0.6,0,0],
             uGravity: [0,0,0],
@@ -189,32 +168,31 @@ export class RestoreSkill extends CubeSkill {
 
         this.sparks = SharedSystem.particles.sparks.add({
             uLifespan: [0.4,0.8,-0.1,0],
-            uOrigin: vec3.add([0,0.5,0], origin, vec3()),
+            uOrigin: vec3.add([0,1.5,0], this.cube.transform.position, vec3()),
             uLength: [0.05,0.1],
             uGravity: [0,-9.8*2,0],
             uSize: [0.1,0.4],
             uRadius: [0.2,0.8],
             uForce: [7,10],
-            uTarget: vec3.add([0,-0.5,0], origin, vec3()),
+            uTarget: [0,-1,0],
         })
 
         const animate = AnimationTimeline(this, activateTimeline)
-
         for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.activate(elapsedTime, mesh.armature)
-
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
         this.active = true
+        this.restore()
 
         SharedSystem.particles.sparks.remove(this.sparks)
         this.context.get(TransformSystem).delete(this.ring.transform)
         this.context.get(TransformSystem).delete(this.flash.transform)
         this.context.get(DecalPass).delete(this.ring)
         this.context.get(ParticleEffectPass).remove(this.flash)
+        Sprite.delete(this.flash)
     }
     public *close(): Generator<ActionSignal> {
         deactivate: {
@@ -236,10 +214,12 @@ export class RestoreSkill extends CubeSkill {
             this.context.get(TransformSystem).delete(this.tubeX.transform)
             this.context.get(TransformSystem).delete(this.tubeZ.transform)
             this.context.get(PointLightPass).delete(this.light)
-
             this.context.get(ParticleEffectPass).remove(this.conduit)
             this.context.get(ParticleEffectPass).remove(this.tubeX)
             this.context.get(ParticleEffectPass).remove(this.tubeZ)
+            BatchMesh.delete(this.tubeX)
+            BatchMesh.delete(this.tubeZ)
+            BatchMesh.delete(this.conduit)
         }
         for(const generator = super.close(); true;){
             const iterator = generator.next()

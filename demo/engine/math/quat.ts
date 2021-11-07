@@ -224,3 +224,6 @@ quat.decompose = (quaternion: quat, twistAxis: vec3, swing: quat, twist: quat): 
 }
 
 quat.IDENTITY = quat()
+quat.HALF_X = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
+quat.HALF_Y = quat.axisAngle(vec3.AXIS_Y, 0.5 * Math.PI, quat())
+quat.HALF_Z = quat.axisAngle(vec3.AXIS_Z, 0.5 * Math.PI, quat())

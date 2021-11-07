@@ -1,13 +1,15 @@
 import { Application } from '../../engine/framework'
-import { vec2, vec3, vec4, lerp, mat4, quat } from '../../engine/math'
+import { vec2, vec3, vec4, lerp, quat } from '../../engine/math'
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { TransformSystem } from '../../engine/scene'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEffectPass, PointLightPass, DecalPass, PostEffectPass, PointLight, Decal } from '../../engine/pipeline'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
+import { SpriteMaterial } from '../../engine/materials'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
+import { TurnBasedSystem, IAgent } from '../common'
+import { DamageType, AIUnit, UnitSkill } from '../military'
 
 const actionTimeline = {
     'spark.transform.scale': PropertyAnimation([
@@ -69,97 +71,125 @@ const actionTimeline = {
     ], vec4.lerp),
     'smoke': EventTrigger([{ frame: 0, value: 36 }], EventTrigger.emit),
     'particles': EventTrigger([{ frame: 0, value: 64 }], EventTrigger.emit),
+    'pillar.color': PropertyAnimation([
+        { frame: 0, value: [1,0.5,0.6,0.8] },
+        { frame: 0.2, value: vec4.ZERO, ease: ease.quadOut }
+    ], vec4.lerp)
 }
 
-interface ExplosionEffect {
-    ring: BatchMesh
-    light: PointLight
-    burn: Decal
-    smoke: ParticleEmitter
-    wave: Sprite
-    core: BatchMesh
-    spark: Sprite
-    particles: ParticleEmitter
-    perimeter: Decal
+const activateTimeline = {
+    'pillar.transform.scale': PropertyAnimation([
+        { frame: 0, value: vec3.ZERO },
+        { frame: 0.5, value: [2,5,2], ease: ease.quadOut }
+    ], vec3.lerp),
+    'pillar.color': PropertyAnimation([
+        { frame: 0, value: [1,0.5,0.6,0.8] }
+    ], vec4.lerp),
+    'circle.transform.scale': PropertyAnimation([
+        { frame: 0, value: vec3.ZERO },
+        { frame: 0.5, value: [4,4,4], ease: ease.cubicOut }
+    ], vec3.lerp),
+    'circle.color': PropertyAnimation([
+        { frame: 0, value: [1,0.5,0.7,1] },
+        { frame: 0.5, value: vec4.ZERO, ease: ease.sineIn }
+    ], vec4.lerp)
 }
 
-export class Minefield {
-    pool: ExplosionEffect[] = []
-    list: LandMine[] = []
-    burnMaterial: DecalMaterial
-    perimeterMaterial: DecalMaterial
-    waveMaterial: SpriteMaterial
-    sparkMaterial: SpriteMaterial
+export class LandMine extends UnitSkill {
+    static readonly pool: LandMine[] = []
+    readonly tile: vec2 = vec2()
+    readonly damageType = DamageType.Kinetic | DamageType.Temperature
+    range: number = 4
+    damage: number = 2
 
-    constructor(private readonly context: Application){ 
-        this.burnMaterial = new DecalMaterial()
-        this.burnMaterial.diffuse = SharedSystem.textures.glow
-
-        this.perimeterMaterial = new DecalMaterial()
-        this.perimeterMaterial.diffuse = SharedSystem.textures.raysRing
-
-        this.waveMaterial = new SpriteMaterial()
-        this.waveMaterial.blendMode = null
-        this.waveMaterial.program = SharedSystem.materials.chromaticAberration
-        this.waveMaterial.diffuse = SharedSystem.textures.ring
-
-        this.sparkMaterial = new SpriteMaterial()
-        this.sparkMaterial.program = this.context.get(ParticleEffectPass).program
-        this.sparkMaterial.diffuse = SharedSystem.textures.rays
+    public mesh: Mesh
+    public triggered: boolean = false
+    public place(column: number, row: number): void {
+        vec2.set(column, row, this.tile)
+        this.mesh = this.context.get(MeshSystem).loadModel('mine')
+        this.mesh.transform = this.context.get(TransformSystem).create()
+        this.context.get(TerrainSystem).tilePosition(column, row, this.mesh.transform.position)
     }
-    create(): LandMine {
-        const item = new LandMine(this.context, this)
-        this.list.push(item)
-        if(this.list.length > 2) this.list[0].activate()
-        return item
+    public delete(){
+        this.triggered = false
+        this.context.get(TransformSystem).delete(this.mesh.transform)
+        this.context.get(MeshSystem).delete(this.mesh)
+        LandMine.pool.push(this)
     }
-    activate(mine: LandMine){
-        const index = this.list.indexOf(mine)
-        this.list.splice(index, 1)
-        this.context.get(AnimationSystem).start(this.detonate(mine), true)
-    }
-    private createExplosion(): ExplosionEffect {
-        if(this.pool.length) return this.pool.pop()
+    private pillar: Sprite
+    private circle: Sprite
+    public *trigger(): Generator<ActionSignal> {
+        this.triggered = true
+        this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.pillar.material = new SpriteMaterial()
+        this.pillar.material.program = this.context.get(ParticleEffectPass).program
+        this.pillar.material.diffuse = SharedSystem.textures.raysBeam
+        this.pillar.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
+        this.context.get(ParticleEffectPass).add(this.pillar)
 
-        const core = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 4)
-        core.material = SharedSystem.materials.coreWhiteMaterial
+        this.circle = Sprite.create(BillboardType.None)
+        this.circle.material = new SpriteMaterial()
+        this.circle.material.program = this.context.get(ParticleEffectPass).program
+        this.circle.material.diffuse = SharedSystem.textures.ring
+        this.circle.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        this.context.get(ParticleEffectPass).add(this.circle)
 
-        const wave = Sprite.create(BillboardType.None)
-        wave.material = this.waveMaterial
+        const animate = AnimationTimeline(this, activateTimeline)
 
-        const ring = BatchMesh.create(SharedSystem.geometry.cylinder)
-        ring.material = SharedSystem.materials.ringDustMaterial
-
-        const spark = Sprite.create(BillboardType.Sphere)
-        spark.material = this.sparkMaterial
-
-        return {
-            core, wave, ring, spark,
-            light: null, burn: null, perimeter: null, particles: null, smoke: null
+        for(const duration = 0.5, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            animate(elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
+            else yield ActionSignal.WaitNextFrame
         }
+        this.context.get(TransformSystem).delete(this.circle.transform)
+        this.context.get(ParticleEffectPass).remove(this.circle)
+        Sprite.delete(this.circle)
     }
-    private *detonate(mine: LandMine): Generator<ActionSignal> {
-        const origin = mat4.transform(vec3.ZERO, mine.mesh.transform.matrix, vec3())
-        mine.kill()
-        const effect = this.createExplosion()
-
-        effect.core.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, effect.core.transform.position)
-        this.context.get(ParticleEffectPass).add(effect.core)
+    private ring: BatchMesh
+    private light: PointLight
+    private burn: Decal
+    private smoke: ParticleEmitter
+    private wave: Sprite
+    private core: BatchMesh
+    private spark: Sprite
+    private particles: ParticleEmitter
+    private perimeter: Decal
+    public *detonate(): Generator<ActionSignal> {
+        vec4.copy(vec4.ZERO, this.mesh.color)
+        const origin = this.mesh.transform.position, temp = vec3()
         
-        effect.burn = this.context.get(DecalPass).create(0)
-        effect.burn.material = this.burnMaterial
-        effect.burn.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, effect.burn.transform.position)
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 4)
+        this.core.material = SharedSystem.materials.coreWhiteMaterial
+        this.core.transform = this.context.get(TransformSystem).create(origin)
+        this.context.get(ParticleEffectPass).add(this.core)
 
-        effect.perimeter = this.context.get(DecalPass).create(0)
-        effect.perimeter.material = this.perimeterMaterial
-        effect.perimeter.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, effect.perimeter.transform.position)
+        this.wave = Sprite.create(BillboardType.None)
+        this.wave.material = SharedSystem.materials.distortion.ring
+        this.wave.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp), Sprite.FlatDown, vec3.ONE)
+        this.context.get(PostEffectPass).add(this.wave)
 
-        effect.smoke = SharedSystem.particles.smoke.add({
+        this.ring = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.ring.material = SharedSystem.materials.ringDustMaterial
+        this.ring.transform = this.context.get(TransformSystem).create(origin)
+        this.context.get(ParticleEffectPass).add(this.ring)
+
+        this.spark = Sprite.create(BillboardType.Sphere)
+        this.spark.material = SharedSystem.materials.sprite.rays
+        this.spark.transform = this.context.get(TransformSystem).create(vec3.add(vec3.AXIS_Y, origin, temp))
+        this.context.get(ParticleEffectPass).add(this.spark)
+    
+        this.burn = this.context.get(DecalPass).create(0)
+        this.burn.material = SharedSystem.materials.decal.glow
+        this.burn.transform = this.context.get(TransformSystem).create(origin)
+
+        this.perimeter = this.context.get(DecalPass).create(0)
+        this.perimeter.material = SharedSystem.materials.decal.halo
+        this.perimeter.transform = this.context.get(TransformSystem).create(origin)     
+
+        this.smoke = SharedSystem.particles.smoke.add({
             uLifespan: [1.5,2,-0.5,0],
-            uOrigin: vec3.add(origin,[0,-0.8,0],vec3()),
+            uOrigin: vec3.add([0,-0.8,0], origin, temp),
             uRotation: [0,2*Math.PI],
             uGravity: [0,4.8,0],
             uSize: [2,6],
@@ -167,7 +197,7 @@ export class Minefield {
             uFieldStrength: [8,0]
         })
 
-        effect.particles = SharedSystem.particles.embers.add({
+        this.particles = SharedSystem.particles.embers.add({
             uLifespan: [0.6,0.9,-0.3,0],
             uOrigin: origin,
             uRotation: vec2.ZERO, uGravity: vec3(0,-9.8*3,0),
@@ -175,76 +205,86 @@ export class Minefield {
             uRadius: [0.5,1],
             uOrientation: quat.IDENTITY,
             uForce: [14,28],
-            uTarget: vec3.add(origin, [0,-0.5,0], vec3()),
+            uTarget: [0,-0.5,0]
         })
 
-        effect.light = this.context.get(PointLightPass).create()
-        effect.light.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,2,0], effect.light.transform.position)
-        vec3.set(1,0.5,0.5, effect.light.color)
+        this.light = this.context.get(PointLightPass).create([1,0.5,0.5])
+        this.light.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp))
 
-        effect.wave.transform = this.context.get(TransformSystem).create()
-        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, effect.wave.transform.rotation)
-        vec3.add(origin, [0,2,0], effect.wave.transform.position)
-        this.context.get(PostEffectPass).add(effect.wave)
-
-        effect.ring.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, effect.ring.transform.position)
-        this.context.get(ParticleEffectPass).add(effect.ring)
-
-        effect.spark.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,1,0], effect.spark.transform.position)
-        this.context.get(ParticleEffectPass).add(effect.spark)
-
-        const animate = AnimationTimeline(effect, actionTimeline)
-
+        const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, -1, this.range, 2)
+        .map(value => ({ frame: 0.4, value })), UnitSkill.damage)
+        const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
-        this.context.get(TransformSystem).delete(effect.wave.transform)
-        this.context.get(TransformSystem).delete(effect.spark.transform)
-        this.context.get(TransformSystem).delete(effect.ring.transform)
-        this.context.get(TransformSystem).delete(effect.perimeter.transform)
-        this.context.get(TransformSystem).delete(effect.light.transform)
-        this.context.get(TransformSystem).delete(effect.core.transform)
-        this.context.get(TransformSystem).delete(effect.burn.transform)
-
-        SharedSystem.particles.smoke.remove(effect.smoke)
-        SharedSystem.particles.embers.remove(effect.particles)
-
-        this.context.get(PostEffectPass).remove(effect.wave)
-        this.context.get(ParticleEffectPass).remove(effect.spark)
-        this.context.get(ParticleEffectPass).remove(effect.core)
-        this.context.get(ParticleEffectPass).remove(effect.ring)
-        this.context.get(PointLightPass).delete(effect.light)
-        this.context.get(DecalPass).delete(effect.burn)
-        this.context.get(DecalPass).delete(effect.perimeter)
-        this.pool.push(effect)
+        this.context.get(TransformSystem).delete(this.wave.transform)
+        this.context.get(TransformSystem).delete(this.spark.transform)
+        this.context.get(TransformSystem).delete(this.ring.transform)
+        this.context.get(TransformSystem).delete(this.perimeter.transform)
+        this.context.get(TransformSystem).delete(this.light.transform)
+        this.context.get(TransformSystem).delete(this.core.transform)
+        this.context.get(TransformSystem).delete(this.burn.transform)
+        SharedSystem.particles.smoke.remove(this.smoke)
+        SharedSystem.particles.embers.remove(this.particles)
+        this.context.get(PostEffectPass).remove(this.wave)
+        this.context.get(ParticleEffectPass).remove(this.spark)
+        this.context.get(ParticleEffectPass).remove(this.core)
+        this.context.get(ParticleEffectPass).remove(this.ring)
+        this.context.get(PointLightPass).delete(this.light)
+        this.context.get(DecalPass).delete(this.burn)
+        this.context.get(DecalPass).delete(this.perimeter)
+        BatchMesh.delete(this.core)
+        BatchMesh.delete(this.ring)
+        Sprite.delete(this.spark)
+        Sprite.delete(this.wave)
+        this.context.get(TransformSystem).delete(this.pillar.transform)
+        this.context.get(ParticleEffectPass).remove(this.pillar)
+        Sprite.delete(this.pillar)
+        this.delete()
     }
 }
 
-export class LandMine {
-    public mesh: Mesh
-    public tile: vec2 = vec2()
-    public get enabled(): boolean { return !!this.mesh }
-    constructor(private readonly context: Application, private readonly parent: Minefield){}
-    public place(column: number, row: number): void {
-        vec2.set(column, row, this.tile)
-        this.mesh = this.context.get(MeshSystem).loadModel('mine')
-        this.mesh.transform = this.context.get(TransformSystem).create()
-
-        this.context.get(TerrainSystem).tilePosition(column, row, this.mesh.transform.position)
+export class Minefield implements IAgent {
+    readonly order: number = 3
+    list: LandMine[] = []
+    constructor(private readonly context: Application){
+        this.context.get(TurnBasedSystem).add(this)
+        this.context.get(TurnBasedSystem).signalEnterTile.add((column: number, row: number, unit: AIUnit) => {
+            if(!(unit instanceof AIUnit)) return
+            const mine = this.get(column, row)
+            if(!mine || mine.triggered) return
+            mine.triggered = true
+            this.context.get(TurnBasedSystem).enqueue(mine.trigger(), true)
+        })
     }
-    public kill(): void {
-        this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
-        this.mesh = null
+    public execute(): Generator<ActionSignal> {
+        const bounds = this.context.get(TerrainSystem).bounds
+        const actions = []
+        for(let i = this.list.length - 1; i >= 0; i--){
+            const mine = this.list[i]
+            if(mine.tile[0] < bounds[0] || mine.tile[1] < bounds[1] || mine.tile[0] >= bounds[2] || mine.tile[1] >= bounds[3])
+                mine.delete()
+            else if(mine.triggered)
+                actions.push(mine.detonate())
+            else continue
+            this.list.splice(i, 1)
+        }
+        return actions.length ? AnimationSystem.zip(actions) : null
     }
-    activate(): void {
-        this.parent.activate(this)
+    public get(column: number, row: number): LandMine | null {
+        for(let i = this.list.length - 1; i >= 0; i--)
+            if(this.list[i].tile[0] === column && this.list[i].tile[1] === row) return this.list[i]
+    }
+    create(column: number, row: number): LandMine {
+        if(this.get(column, row)) return null
+        const item = LandMine.pool.pop() || new LandMine(this.context)
+        item.place(column, row)
+        this.list.push(item)
+        return item
     }
 }

@@ -9,11 +9,11 @@ import { PointLightPass, PointLight, ParticleEffectPass, PostEffectPass } from '
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activateVariant'),
     'light.radius': PropertyAnimation([
         { frame: 1.1, value: 0 },
         { frame: 1.7, value: 6, ease: ease.quadOut }
@@ -85,10 +85,12 @@ const actionTimeline = {
 }
 
 export class ProjectileSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 6
-    public readonly cardinal: boolean = true
-    public readonly damage: IDamageSource = { amount: 2, type: DamageType.Kinetic | DamageType.Corrosion }
+    readonly cost: number = 1
+    readonly range: number = 6
+    readonly cardinal: boolean = true
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Kinetic | DamageType.Corrosion
+    readonly damage: number = 2
 
     private ring: Sprite
     private flash: Sprite
@@ -135,10 +137,7 @@ export class ProjectileSkill extends AIUnitSkill {
         .create([0,1.8,2],quat.IDENTITY,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.ring)
     
-        this.trail = new Line(8)
-        this.trail.width = 0.8
-        this.trail.ease = ease.reverse(ease.quadIn)
-        this.trail.addColorFade(this.trail.ease)
+        this.trail = Line.create(8, 0, 0.8, ease.reverse(ease.quadIn), true)
         this.trail.material = new SpriteMaterial()
         this.trail.material.program = this.context.get(ParticleEffectPass).program
         this.trail.material.diffuse = SharedSystem.gradients.tealLine
@@ -161,10 +160,7 @@ export class ProjectileSkill extends AIUnitSkill {
         })
     
         this.wave = Sprite.create(BillboardType.Sphere)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.blendMode = null
-        this.wave.material.program = SharedSystem.materials.distortion
-        this.wave.material.diffuse = SharedSystem.textures.bulge
+        this.wave.material = SharedSystem.materials.displacement.bulge
         this.wave.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,0,0], targetPosition, vec3()), Sprite.FlatUp)
         this.context.get(PostEffectPass).add(this.wave)
@@ -175,9 +171,7 @@ export class ProjectileSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.core)
     
         this.circle = Sprite.create(BillboardType.None)
-        this.circle.material = new SpriteMaterial()
-        this.circle.material.program = this.context.get(ParticleEffectPass).program
-        this.circle.material.diffuse = SharedSystem.textures.raysInner
+        this.circle.material = SharedSystem.materials.sprite.burst
         this.circle.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,0.5,0], targetPosition, vec3()), Sprite.FlatUp)
         this.context.get(ParticleEffectPass).add(this.circle)
@@ -188,7 +182,6 @@ export class ProjectileSkill extends AIUnitSkill {
                 { frame: 0, value: quat.copy(this.mesh.armature.nodes[0].rotation, quat()) },
                 { frame: 0.5, value: quat.multiply(quat.axisAngle(vec3.AXIS_Y, -0.5* Math.PI,quat()), orientation, quat()), ease: ease.quadInOut }
             ], quat.slerp),
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activateVariant,
     
             'trail': FollowPath.Line(FollowPath.separate(
                 PropertyAnimation([
@@ -243,5 +236,6 @@ export class ProjectileSkill extends AIUnitSkill {
         Sprite.delete(this.circle)
         BatchMesh.delete(this.pillar)
         BatchMesh.delete(this.muzzle)
+        Line.delete(this.trail)
     }
 }

@@ -1,5 +1,6 @@
 #pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
 #pragma import(../../../engine/shaders/common/math.glsl)
+#pragma import(../../../engine/shaders/common/hash.glsl)
 #pragma import(../../../engine/shaders/common/noise.glsl)
 
 float fbm(in vec2 uv, int octaves){	
@@ -16,13 +17,8 @@ uniform vec2 uTiles;
 uniform vec4 uColor;
 
 void main(){
-#ifdef TILED
     float seed = floor(vUV.x * uTiles.x) + floor(vUV.y * uTiles.y) * uTiles.x;
     vec2 uv = fract(vUV * uTiles)*2.-1.;
-#else
-    float seed = 0.0;
-    vec2 uv = 2.*vUV-1.;
-#endif
     
     uv = uv*.5+.5;
     float f0 = .5-fbm(uv*vec2(4,8)+seed*184.32, 4);

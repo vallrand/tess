@@ -1,6 +1,16 @@
 export const plant: string = require('./textures/plant_frag.glsl')
+export const moss: string = require('./textures/moss_frag.glsl')
+export const spike: string = require('./textures/spike_frag.glsl')
+export const lightning: string = require('./textures/lightning_frag.glsl')
+
+export const stamp: string = require('./textures/stamp_frag.glsl')
+export const shatter: string = require('./textures/shatter_frag.glsl')
+
+export const solid: string = require('./textures/solid_frag.glsl')
 export const wreck: string = require('./textures/wreck_frag.glsl')
 export const sandstone: string = require('./textures/sandstone_frag.glsl')
+export const spiral: string = require('./textures/spiral_frag.glsl')
+export const blocklines: string = require('./textures/blocklines_frag.glsl')
 
 export const circle: string = require('./textures/circle_frag.glsl')
 export const glow: string = require('./textures/glow_frag.glsl')
@@ -10,3 +20,6 @@ export const wave: string = require('./textures/wave_frag.glsl')
 export const sparkle: string = require('./textures/sparkle_frag.glsl')
 export const blink: string = require('./textures/blink_frag.glsl')
 export const rectangle: string = require('./textures/rectangle_frag.glsl')
+export const radial: string = require('./textures/radial_frag.glsl')
+export const rays: string = require('./textures/rays_frag.glsl')
+export const swirl: string = require('./textures/swirl_frag.glsl')

@@ -7,8 +7,7 @@ import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
+import { SharedSystem, ModelAnimation } from '../../shared'
 import { AISystem, AIUnit, AIUnitSkill } from '../../military'
 
 interface SpawnerEffect {
@@ -26,9 +25,11 @@ interface SpawnerEffect {
 }
 
 export class SpawnerSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 0
-    public readonly cardinal: boolean = true
+    readonly cost: number = 1
+    readonly range: number = 0
+    readonly cardinal: boolean = true
+    readonly pierce: boolean = false
+    readonly damage: number = 0
 
     private mesh: Mesh
     private readonly spawners: SpawnerEffect[] = [{
@@ -109,7 +110,7 @@ export class SpawnerSkill extends AIUnitSkill {
                 { frame: 1.2, value: 0, ease: ease.sineIn }
             ], lerp),
 
-            'parent.mesh.armature': modelAnimations[effect.parent.mesh.armature.key][effect.key],
+            'parent.mesh.armature': ModelAnimation(effect.key),
             'glow.transform.scale': PropertyAnimation([
                 { frame: 0.2, value: [1,0,1] },
                 { frame: 1.1, value: [1,4,1], ease: ease.cubicOut }

@@ -8,9 +8,9 @@ import * as localShaders from '../shaders'
 function TextureArray(context: Application){
     const materials = context.get(MaterialSystem)
     const layers = [
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0,0,0,0.5] }},
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.91, 0.23, 0.52, 1] }}, 
-        { shader: require('../shaders/solid_frag.glsl'), rate: 0, uniforms: { uColor: [0.2, 0.2, 0.2, 0.12] }}, 
+        { shader: localShaders.solid, rate: 0, uniforms: { uColor: [0,0,0,0.5] }},
+        { shader: localShaders.solid, rate: 0, uniforms: { uColor: [0.91, 0.23, 0.52, 1] }}, 
+        { shader: localShaders.solid, rate: 0, uniforms: { uColor: [0.2, 0.2, 0.2, 0.12] }}, 
         { shader: require('../shaders/circuit_frag.glsl'), rate: 2, uniforms: {  }}, 
         { shader: require('../shaders/hatch_frag.glsl'), rate: 0, uniforms: { uColor: [0.8,0.9,1.0], uScale: 4 }},
         { shader: require('../shaders/rust_frag.glsl'), define: { RUST: false }, rate: 0, uniforms: {  }}, 
@@ -43,30 +43,6 @@ export function TextureLibrary(context: Application){
         materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { RETICLE: true }), { uColor: [1,1,1,1] }, 0
-    ).target
-
-    const swirl = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/rays_frag.glsl'), { SWIRL: true }), {  }, 0
-    ).target
-
-    const rays = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/rays_frag.glsl'), {  }), {  }, 0
-    ).target
-
-    const raysRing = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/rays_frag.glsl'), { RING: true }), {  }, 0
-    ).target
-
-    const raysInner = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/rays_frag.glsl'), { INNER: true }), {  }, 0
     ).target
 
     const raysWrap = materials.addRenderTexture(
@@ -139,22 +115,10 @@ export function TextureLibrary(context: Application){
         }, 0
     ).target
 
-    const wind = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/wind_frag.glsl'), {  }), { uColor: [1,1,1,1] }, 0
-    ).target
-
     const stripes = materials.addRenderTexture(
         materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
         ShaderProgram(context.gl, shaders.fullscreen_vert,
             require('../shaders/shape_frag.glsl'), { STRIPE: true }), { uColor: [0.6,1,1,0.6] }, 0
-    ).target
-
-    const boxStripes = materials.addRenderTexture(
-        materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert,
-            require('../shaders/wind_frag.glsl'), { BOX_STRIPE: true }), { uColor: [1,1,1,1] }, 0
     ).target
 
     const white = createTexture(context.gl, {
@@ -172,8 +136,6 @@ export function TextureLibrary(context: Application){
             uColor: [3,2.5,1.5,1]
         }, 0
     ).target
-
-    const indexedTexture = TextureArray(context)
 
     const cracks = materials.addRenderTexture(
         materials.createRenderTexture(256, 256, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
@@ -193,12 +155,11 @@ export function TextureLibrary(context: Application){
     }, 0).target
 
     return {
-        crescent, reticle, swirl, rays, raysRing, raysInner, raysWrap, raysBeam, wind, stripes, boxStripes, trail,
+        crescent, reticle, raysWrap, raysBeam, stripes, trail,
         noise, directionalNoise, cloudNoise, cellularNoise, voronoiNoise, perlinNoise, sineNoise,
         white, black, grey: materials.white.diffuse, cracksNormal, cracks, groundDust,
 
-        indexedTexture,
-
+        indexedTexture: TextureArray(context),
 
         particle: materials.addRenderTexture(
             materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
@@ -235,6 +196,25 @@ export function TextureLibrary(context: Application){
                 }, 0
         ).target,
 
+        rays: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.rays), { uColor: vec4.ONE }, 0
+        ).target,
+        halo: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.rays, { OUTER: true }), { uColor: vec4.ONE }, 0
+        ).target,
+        burst: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.rays, { INNER: true }), { uColor: vec4.ONE }, 0
+        ).target,
+        swirl: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.swirl), { uColor: vec4.ONE }, 0
+        ).target,
+
+
+
         sandstone: materials.addRenderTexture(
             materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.sandstone), { uScale: vec2.ONE, uColor: vec4.ONE }, 0
@@ -243,11 +223,48 @@ export function TextureLibrary(context: Application){
             materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.wreck), { uScale: vec2.ONE, uColor: vec4.ONE }, 0
         ).target,
+        spiral: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.spiral), { uColor: vec4.ONE }, 0
+        ).target,
+        blocklines: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.REPEAT, mipmaps: GL.NONE }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.blocklines), { uColor: vec4.ONE }, 0
+        ).target,
+
+        spike: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.spike), { uColor: vec4.ONE, uTiles: [2,2] }, 0
+        ).target,
+        lightning: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.lightning), { uColor: vec4.ONE, uTiles: [4,4] }, 0
+        ).target,
         plant: materials.addRenderTexture(
             materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
-            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.plant, { TILED: true }), {
-                uTiles: [2,2], uColor: vec4.ONE
-            }, 0
-        ).target
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.plant), { uColor: vec4.ONE, uTiles: [2,2] }, 0
+        ).target,
+        moss: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.moss), { uColor: vec4.ONE, uTiles: vec2.ONE }, 0
+        ).target,
+
+
+        stamp: materials.addRenderTexture(
+            materials.createRenderTexture(512, 512, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.stamp), {}, 0
+        ).target,
+        stampNormal: materials.addRenderTexture(
+            materials.createRenderTexture(256, 256, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.stamp, { NORMAL_MAP: true }), {}, 0
+        ).target,
+        shatter: materials.addRenderTexture(
+            materials.createRenderTexture(512, 512, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.shatter), {}, 0
+        ).target,
+        shatterNormal: materials.addRenderTexture(
+            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.shatter, { NORMAL_MAP: true }), {}, 0
+        ).target,
     }
 }

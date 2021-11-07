@@ -9,10 +9,9 @@ import { ParticleEffectPass } from '../../engine/pipeline'
 import { SpriteMaterial } from '../../engine/materials'
 
 import { TerrainSystem } from '../terrain'
-import { modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { AIUnit, AIStrategy } from '../military'
-import { DeathEffect } from './effects/DeathEffect'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { AISystem, AIUnit, AIStrategy } from '../military'
+import { DeathEffect, DamageEffect } from './effects'
 import { LungeSkill } from './skills/LungeSkill'
 import { SnakeRig } from './effects/SnakeRig'
 
@@ -45,17 +44,17 @@ export class Stingray extends AIUnit {
     static readonly pool: Stingray[] = []
     readonly skills = [new LungeSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    private readonly deathEffect = new DeathEffect(this.context)
-    readonly maxHealthPoints: number = 8
-    readonly gainMovementPoints: number = 2
-    readonly gainActionPoints: number = 1
+    readonly health = { capacity: 8, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 2, amount: 0, gain: 2 }
+    readonly group: number = 2
     readonly movementDuration: number = 0.4
 
     public place(column: number, row: number): void {
         this.mesh = this.context.get(MeshSystem).loadModel("stingray")
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
-        modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        ModelAnimation('activate')(0, this.mesh.armature)
         this.markTiles(true)
 
         const rig = new SnakeRig(this.context)
@@ -65,13 +64,11 @@ export class Stingray extends AIUnit {
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
+        Stingray.pool.push(this)
     }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        this.mesh.armature.ik.enabled = false
-        return this.deathEffect.use(this)
+    public damage(amount: number, type: number): void {
+        super.damage(amount, type)
+        if(this.health.amount <= 0) this.mesh.armature.ik.enabled = false
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {

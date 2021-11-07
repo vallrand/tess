@@ -1,6 +1,7 @@
 import { vec4 } from '../../math'
 import { GL, VertexDataFormat } from '../../webgl'
 import { VertexDataBatch } from './VertexDataBatch'
+import { IMaterial } from '../PipelinePass'
 import { uintNorm4x8, uintNorm2x16 } from './common'
 
 export interface IBatched2D {
@@ -9,7 +10,9 @@ export interface IBatched2D {
     indices: Uint16Array
     color: vec4
     colors?: Uint32Array
-    material: { diffuse: WebGLTexture }
+    material: IMaterial & { diffuse: WebGLTexture }
+    order: number
+    update(frame: number): void
 }
 export class Batch2D extends VertexDataBatch<IBatched2D> {
     public static quadIndices = [0,1,2,0,2,3]
@@ -33,6 +36,7 @@ export class Batch2D extends VertexDataBatch<IBatched2D> {
 
         if(textureIndex == -1) textureIndex = this.textures.push(material.diffuse) - 1
         const color = uintNorm4x8(geometry.color[0], geometry.color[1], geometry.color[2], geometry.color[3])
+        if(!color) return true
         const material4 = textureIndex << 24
         
         if(!this.fixedIndices) for(let i = 0; i < indexCount; i++)

@@ -8,11 +8,11 @@ import { SpriteMaterial, DecalMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../../engine/pipeline'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activateVariant'),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.2, value: vec3.ZERO },
         { frame: 1.2, value: [6,6,6], ease: ease.cubicOut }
@@ -67,15 +67,17 @@ const actionTimeline = {
 }
 
 export class FlamethrowerSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 4
-    public readonly cardinal: boolean = true
-    public readonly damage: IDamageSource = { amount: 5, type: DamageType.Temperature | DamageType.Corrosion }
+    readonly cost: number = 1
+    readonly range: number = 4
+    readonly cardinal: boolean = true
+    readonly pierce: boolean = true
+    readonly damageType: DamageType = DamageType.Temperature | DamageType.Corrosion
+    readonly damage: number = 5
 
     public validate(origin: vec2, target: vec2): boolean {
         const dx = Math.max(target[0] - origin[0] - 1, origin[0] - target[0])
         const dy = Math.max(target[1] - origin[1] - 1, origin[1] - target[1])
-        return Math.max(dx, dy) <= this.radius && Math.min(dx, dy) == 0
+        return Math.max(dx, dy) <= this.range && Math.min(dx, dy) == 0
     }
 
     private corridor: BatchMesh
@@ -108,10 +110,8 @@ export class FlamethrowerSkill extends AIUnitSkill {
             uSize: vec2(0.5,1.5), uRadius: vec2(0,1.5)
         })
 
-        this.lineA = new Line(2)
-        this.lineB = new Line(2)
-        this.lineA.width = 1.6
-        this.lineB.width = 1.6
+        this.lineA = Line.create(2, 0, 1.6)
+        this.lineB = Line.create(2, 0, 1.6)
 
         mat4.transform([0,1.3,0], this.mesh.transform.matrix, this.lineA.path[0])
         mat4.transform([0,1.7,0], this.mesh.transform.matrix, this.lineB.path[0])
@@ -151,7 +151,6 @@ export class FlamethrowerSkill extends AIUnitSkill {
 
         const animate = AnimationTimeline(this, {
             ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activateVariant,
             'lineA.path.1': PropertyAnimation([
                 { frame: 0.4, value: this.lineA.path[0] },
                 { frame: 1.4, value: vec3.copy(this.lineA.path[1], vec3()), ease: ease.quartOut }

@@ -7,9 +7,12 @@ import { ActionSignal, AnimationTimeline, PropertyAnimation, ease } from '../../
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
 import { EconomySystem } from './Economy'
+import { IUnitAttribute } from '../military'
 
-export class ResourceSpot {
-    public readonly tile: vec2 = vec2()
+export class ResourceSpot implements IUnitAttribute {
+    static readonly pool: ResourceSpot[] = []
+    readonly tile: vec2 = vec2()
+
     private decal: Decal
     private emitter: StaticParticleEmitter
 
@@ -37,6 +40,7 @@ export class ResourceSpot {
         this.context.get(TransformSystem).delete(this.decal.transform)
         this.context.get(DecalPass).delete(this.decal)
         SharedSystem.particles.glow.stop(this.emitter)
+        ResourceSpot.pool.push(this)
     }
     public *drain(duration: number): Generator<ActionSignal> {
         this.amount--
@@ -55,8 +59,6 @@ export class ResourceSpot {
         }
 
         if(this.amount > 0) return
-        
-        this.delete()
         this.context.get(EconomySystem).delete(this)
     }
 }

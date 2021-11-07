@@ -9,10 +9,9 @@ import { DeferredGeometryPass, PointLightPass, PointLight, DecalPass, Decal, Par
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, FollowPath, ease } from '../../engine/animation'
 
 import { TerrainSystem } from '../terrain'
-import { modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { AIUnit, AIStrategy } from '../military'
-import { DeathEffect } from './effects/DeathEffect'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { AISystem, AIUnit, AIStrategy } from '../military'
+import { DeathEffect, DamageEffect } from './effects'
 import { Spider4Rig } from './effects/Spider4Rig'
 import { WaveSkill } from './skills/WaveSkill'
 import { ProjectileSkill } from './skills/ProjectileSkill'
@@ -21,17 +20,17 @@ export class Tarantula extends AIUnit {
     static readonly pool: Tarantula[] = []
     readonly skills = [new WaveSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    private readonly deathEffect = new DeathEffect(this.context)
-    readonly maxHealthPoints: number = 4
-    readonly gainMovementPoints: number = 1
-    readonly gainActionPoints: number = 1
+    readonly health = { capacity: 4, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly group: number = 2
     readonly movementDuration: number = 0.8
 
     public place(column: number, row: number): void {
         this.mesh = this.context.get(MeshSystem).loadModel('tarantula')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
-        modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        ModelAnimation('activate')(0, this.mesh.armature)
 
         const rig = new Spider4Rig(this.context)
         rig.build(this.mesh)
@@ -40,12 +39,7 @@ export class Tarantula extends AIUnit {
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
-    }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        return this.deathEffect.use(this)
+        Tarantula.pool.push(this)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
@@ -68,17 +62,17 @@ export class TarantulaVariant extends AIUnit {
     static readonly pool: TarantulaVariant[] = []
     readonly skills = [new ProjectileSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    private readonly deathEffect = new DeathEffect(this.context)
-    readonly maxHealthPoints: number = 4
-    readonly gainMovementPoints: number = 1
-    readonly gainActionPoints: number = 1
+    readonly health = { capacity: 4, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly group: number = 2
     readonly movementDuration: number = 0.8
 
     public place(column: number, row: number): void {
         this.mesh = this.context.get(MeshSystem).loadModel('tarantula')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
-        modelAnimations[this.mesh.armature.key].activateVariant(0, this.mesh.armature)
+        ModelAnimation('activateVariant')(0, this.mesh.armature)
         this.markTiles(true)
 
         const rig = new Spider4Rig(this.context)
@@ -88,12 +82,7 @@ export class TarantulaVariant extends AIUnit {
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
-    }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        return this.deathEffect.use(this)
+        TarantulaVariant.pool.push(this)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {

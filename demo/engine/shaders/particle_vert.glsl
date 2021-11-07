@@ -161,7 +161,7 @@ void main(){
 #endif
 
 #if defined(TARGETED)
-        vec3 direction = normalize(vTransform.xyz - uTarget);
+        vec3 direction = normalize(vTransform.xyz - (uOrigin + uTarget));
         vVelocity.xyz = direction * mix(uForce.x, uForce.y, hash11(seed+=1U));
 #elif defined(RELATIVE)
         vVelocity.xyz = normal;
@@ -220,7 +220,7 @@ void main(){
 		vVelocity.xyz += fieldForce * deltaTime * uFieldStrength.x;
 #endif
 #ifdef RADIAL
-        vec3 radial = uTarget - aTransform.xyz;
+        vec3 radial = uOrigin + uTarget - aTransform.xyz;
         vec3 attractor = mRadial * normalize(radial);
         vVelocity.xyz += attractor;
 #endif

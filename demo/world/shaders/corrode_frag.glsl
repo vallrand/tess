@@ -25,6 +25,7 @@ uniform sampler2D uDiffuseMap;
 uniform sampler2D uNormalMap;
 uniform sampler2D uPositionBuffer;
 
+#pragma import(../../engine/shaders/common/hash.glsl)
 #pragma import(../../engine/shaders/common/noise.glsl)
 
 void main(){

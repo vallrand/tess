@@ -8,33 +8,33 @@ import { ParticleEmitter } from '../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../engine/animation'
 
 import { TerrainSystem } from '../terrain'
-import { modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { DeathEffect, DamageEffect } from './effects'
 import { OrbSkill } from './skills/OrbSkill'
-import { DeathEffect } from './effects/DeathEffect'
 
 export class Isopod extends AIUnit {
     static readonly pool: Isopod[] = []
     readonly skills = [new OrbSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    private readonly deathEffect = new DeathEffect(this.context)
-    readonly maxHealthPoints: number = 12
-    readonly gainMovementPoints: number = 1
-    readonly gainActionPoints: number = 1
+    readonly health = { capacity: 12, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly group: number = 2
     readonly movementDuration: number = 0.4
 
     public place(column: number, row: number): void {
         this.mesh = this.context.get(MeshSystem).loadModel("isopod")
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
-        modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        ModelAnimation('activate')(0, this.mesh.armature)
         this.markTiles(true)
 
         this.dust = SharedSystem.particles.dust.add({
-            uOrigin: vec3.ZERO, uLifespan: [0.6,1.2,0,0], uSize: [2,4],
+            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
+            uLifespan: [0.6,1.2,0,0], uSize: [2,4],
             uRadius: [0,0.2], uOrientation: quat.IDENTITY,
-            uForce: [2,5], uTarget: vec3.ZERO, uGravity: vec3.ZERO,
+            uForce: [2,5], uGravity: vec3.ZERO,
             uRotation: [0, 2 * Math.PI], uAngular: [-Math.PI,Math.PI,0,0]
         })
     }
@@ -42,12 +42,7 @@ export class Isopod extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
         SharedSystem.particles.dust.remove(this.dust)
-    }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        return this.deathEffect.use(this)
+        Isopod.pool.push(this)
     }
 
     private dust: ParticleEmitter
@@ -61,7 +56,6 @@ export class Isopod extends AIUnit {
         this.shadow.material.diffuse = SharedSystem.textures.glow
 
         this.context.get(TerrainSystem).tilePosition(path[path.length - 1][0], path[path.length - 1][1], this.dust.uniform.uniforms['uOrigin'] as any)
-        vec3.copy(this.dust.uniform.uniforms['uOrigin'] as any, this.dust.uniform.uniforms['uTarget'] as any)
 
         const animate = AnimationTimeline(this, {
             'shadow.transform.scale': PropertyAnimation([

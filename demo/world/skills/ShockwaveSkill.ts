@@ -1,21 +1,16 @@
-import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
-import { Application } from '../../engine/framework'
-import { GL, ShaderProgram } from '../../engine/webgl'
+import { lerp, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { TransformSystem } from '../../engine/scene'
-import { AnimationTimeline, PropertyAnimation, ActionSignal, ease } from '../../engine/animation'
+import { AnimationTimeline, PropertyAnimation, EventTrigger, ActionSignal, ease } from '../../engine/animation'
 import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
-import { DecalMaterial, MaterialSystem, SpriteMaterial } from '../../engine/materials'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
-import * as shaders from '../../engine/shaders'
 
-import { modelAnimations, CubeModuleModel } from '../animations'
-import { Cube } from '../player'
-import { IDamageSource, DamageType, AIUnitSkill } from '../military'
-import { SharedSystem } from '../shared'
+import { DamageType } from '../military'
+import { SharedSystem, ModelAnimation } from '../shared'
 import { CubeSkill } from './CubeSkill'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0, value: [16,2,16] },
         { frame: 0.6, value: [0,2,0], ease: ease.quadIn }
@@ -102,9 +97,9 @@ const actionTimeline = {
 }
 
 export class ShockwaveSkill extends CubeSkill {
-    readonly damage: IDamageSource = { amount: 2, type: DamageType.Electric }
-    radius: number = 2
-
+    readonly damageType: DamageType = DamageType.Electric
+    damage: number = 2
+    range: number = 2
 
     private ring: Decal
     private crack: Decal
@@ -113,110 +108,58 @@ export class ShockwaveSkill extends CubeSkill {
     private flash: Sprite
     private beam: Sprite
     private cylinder: BatchMesh
-
     private bolts: ParticleEmitter
-    private shatterMaterial: DecalMaterial
-    constructor(context: Application, cube: Cube){
-        super(context, cube)
-        const materials = context.get(MaterialSystem)
 
-        this.shatterMaterial = new DecalMaterial()
-        this.shatterMaterial.diffuse = materials.addRenderTexture(
-            materials.createRenderTexture(512, 512, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
-            ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/shatter_frag.glsl'), {
-            }), {}, 0
-        ).target
-        this.shatterMaterial.normal = materials.addRenderTexture(
-            materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE, format: GL.RGBA8 }), 0,
-            ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/shatter_frag.glsl'), {
-                MASK: true
-            }), {}, 0
-        ).target
-
-        this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.blendMode = null
-        this.wave.material.program = SharedSystem.materials.distortion
-        this.wave.material.diffuse = SharedSystem.textures.wave
-
-        this.flash = Sprite.create(BillboardType.None)
-        this.flash.material = new SpriteMaterial()
-        this.flash.material.program = this.context.get(ParticleEffectPass).program
-        this.flash.material.diffuse = SharedSystem.textures.wave
-
-        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
-
-        this.bolts = SharedSystem.particles.bolts.add({
-            uOrigin: [0,0,0],
-            uRadius: vec2.ZERO,
-            uLifespan: [0.1,0.8,0,0],
-            uGravity: vec3.ZERO,
-            uRotation: [0,2*Math.PI],
-            uOrientation: quat.IDENTITY,
-            uSize: [0.1,1.2],
-            uFrame: [8,4]
-        })
-
-        this.cylinder = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.cylinder.material = new SpriteMaterial()
-        this.cylinder.material.program = this.context.get(ParticleEffectPass).program
-        this.cylinder.material.diffuse = SharedSystem.textures.wind
-    }
-    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
-        const origin: vec3 = mat4.transform([0, 0, 0], transform, vec3() as any) as any
-
+    public query(): vec2[] { return CubeSkill.queryArea(this.context, this.cube.tile, 0, this.range, 2) }
+    public *activate(targets: vec2[]): Generator<ActionSignal> {
+        this.cube.action.amount = 0
+        
         this.ring = this.context.get(DecalPass).create(0)
-        this.ring.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.ring.transform.position)
-        this.ring.material = new DecalMaterial()
-        this.ring.material.diffuse = SharedSystem.textures.raysRing
+        this.ring.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
+        this.ring.material = SharedSystem.materials.decal.halo
 
         this.crack = this.context.get(DecalPass).create(1)
-        this.crack.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.crack.transform.position)
-        this.crack.material = this.shatterMaterial
+        this.crack.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
+        this.crack.material = SharedSystem.materials.shatterMaterial
 
-        this.wave.transform = this.context.get(TransformSystem).create()
-        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.wave.transform.rotation)
-        vec3.add(origin, [0,1.5,0], this.wave.transform.position)
+        this.wave = Sprite.create(BillboardType.None)
+        this.wave.material = SharedSystem.materials.displacement.wave
+        this.wave.transform = this.context.get(TransformSystem).create([0,1.5,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
         this.context.get(PostEffectPass).add(this.wave)
 
-        this.flash.transform = this.context.get(TransformSystem).create()
-        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.flash.transform.rotation)
-        vec3.add(origin, [0,1.6,0], this.flash.transform.position)
+        this.flash = Sprite.create(BillboardType.None)
+        this.flash.material = SharedSystem.materials.sprite.wave
+        this.flash.transform = this.context.get(TransformSystem).create([0,1.6,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
 
-        this.beam.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,3,0], this.beam.transform.position)
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.beam.material = SharedSystem.materials.sprite.beam
+        this.beam.transform = this.context.get(TransformSystem).create([0,3,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
-        this.cylinder.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,1,0], this.cylinder.transform.position)
+        this.cylinder = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.cylinder.material = SharedSystem.materials.sprite.spiral
+        this.cylinder.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.cylinder)
 
         this.light = this.context.get(PointLightPass).create()
-        this.light.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,4,0], this.light.transform.position)
+        this.light.transform = this.context.get(TransformSystem).create([0,4,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
 
-        vec3.add(origin, [0,2,0], this.bolts.uniform.uniforms['uOrigin'] as any)
-
-        const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
-
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline
+        this.bolts = this.bolts || SharedSystem.particles.bolts.add({
+            uOrigin: vec3.add([0,2,0], this.cube.transform.position, vec3()),
+            uRadius: vec2.ZERO, uGravity: vec3.ZERO, uOrientation: quat.IDENTITY,
+            uLifespan: [0.1,0.8,0,0], uRotation: [0,2*Math.PI], uSize: [0.1,1.2], uFrame: [8,4]
         })
+
+        const damage = EventTrigger(targets.map(value => ({ frame: 0.6, value })), CubeSkill.damage)
+        const animate = AnimationTimeline(this, actionTimeline)
 
         for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.activate(elapsedTime, mesh.armature)
-
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
 
@@ -237,8 +180,12 @@ export class ShockwaveSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).remove(this.flash)
         this.context.get(ParticleEffectPass).remove(this.beam)
         this.context.get(ParticleEffectPass).remove(this.cylinder)
+        Sprite.delete(this.wave)
+        Sprite.delete(this.flash)
+        Sprite.delete(this.beam)
+        BatchMesh.delete(this.cylinder)
     }
     clear(){
-        //SharedSystem.particles.bolts.remove(this.bolts)
+        if(this.bolts) this.bolts = void SharedSystem.particles.bolts.remove(this.bolts)
     }
 }

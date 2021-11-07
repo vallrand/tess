@@ -1,11 +1,45 @@
-import { Application } from '../framework'
 import { vec2, mat3x2, aabb2, vec4, vec3 } from '../math'
 import { GL, ShaderProgram } from '../webgl'
 import { Batch2D, IBatched2D } from '../pipeline/batch'
-import { Transform2D } from '../scene/Transform'
+import { ShaderMaterial } from '../materials'
 import { IMaterial } from '../pipeline'
 
-export class Sprite2DMaterial implements IMaterial {
+export class Transform2D {
+    private static readonly pool: Transform2D[] = []
+    public static create(position?: vec2, scale?: vec2, rotation?: number, parent?: Transform2D): Transform2D {
+        const item = this.pool.pop() || new Transform2D()
+        vec2.copy(position || vec2.ZERO, item.position)
+        vec2.copy(scale || vec2.ONE, item.scale)
+        item.rotation = rotation || 0
+        item.parent = parent
+        return item
+    }
+    public static delete(item: Transform2D): void {
+        this.pool.push(item)
+        item.frame = 0
+        item.parent = null
+    }
+    public frame: number = 0
+    public readonly position: vec2 = vec2(0,0)
+    public readonly scale: vec2 = vec2(1,1)
+    public rotation: number = 0
+    public readonly matrix: mat3x2 = mat3x2()
+    public parent?: Transform2D
+    public recalculate(frame: number): void {
+        if(frame && this.frame === frame) return
+        mat3x2.fromTransform(
+            this.position[0], this.position[1], 0, 0,
+            this.scale[0], this.scale[1], this.rotation, 0, 0, this.matrix
+        )
+        if(this.parent){
+            this.parent.recalculate(frame)
+            mat3x2.multiply(this.parent.matrix, this.matrix, this.matrix)
+        }
+        this.frame = frame
+    }
+}
+
+export class Sprite2DMaterial extends ShaderMaterial implements IMaterial {
     public static create(texture: WebGLTexture, frame: aabb2, size: vec2): Sprite2DMaterial {
         const material = new Sprite2DMaterial()
         Sprite2DMaterial.calculateUVMatrix(frame, size, material.uvMatrix)
@@ -26,25 +60,32 @@ export class Sprite2DMaterial implements IMaterial {
     readonly uvMatrix: mat3x2 = mat3x2()
     diffuse: WebGLTexture
     normal?: WebGLTexture
-    program: ShaderProgram
-    domain: vec3 = vec3(0,0,0)
-    bind(gl: WebGL2RenderingContext): void {
-        gl.cullFace(GL.BACK)
-        gl.enable(GL.CULL_FACE)
-        gl.depthFunc(GL.LEQUAL)
-        gl.enable(GL.DEPTH_TEST)
-        gl.enable(GL.BLEND)
-        gl.blendFuncSeparate(GL.ONE, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE)
-    }
+    depthWrite: boolean = false
+    cullFace: number = GL.BACK
+    depthTest: number = GL.LEQUAL
+    blendMode = ShaderMaterial.Premultiply
     merge(material: IMaterial): boolean {
-        if(this === material) return true
-        if(this.program !== material.program) return false
-        if('uSamplers' in this.program.uniforms) return true
-        else return this.diffuse === (material as Sprite2DMaterial).diffuse
+        return super.merge(material) && (
+            'uSamplers' in this.program.uniforms ||
+            this.diffuse === (material as Sprite2DMaterial).diffuse
+        )
     }
 }
 
 export class Sprite2D implements IBatched2D {
+    private static readonly pool: Sprite2D[] = []
+    public static create(order?: number, origin?: vec2): Sprite2D {
+        const item = this.pool.pop() || new Sprite2D()
+        item.order = order || 0
+        vec2.copy(origin || vec2.ZERO, item.origin)
+        return item
+    }
+    public static delete(item: Sprite2D): void {
+        this.pool.push(item)
+        item.frame = 0
+        item.material = item.transform = null
+    }
+
     private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
     private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1]) 
 
@@ -60,10 +101,11 @@ export class Sprite2D implements IBatched2D {
     public transform: Transform2D
     public readonly origin: vec2 = vec2(0,0)
 
-    public update(context: Application){
+    public update(frame: number){
         if(!this.material) return
         if(this.frame == 0)
             this.applyTransform(Sprite2D.quadUVs, this.material.uvMatrix, this.uvs, 0)
+        this.transform.recalculate(frame)
         if(this.frame > 0 && this.frame >= this.transform.frame) return
         const transform = this.transform.matrix
 
@@ -87,7 +129,7 @@ export class Sprite2D implements IBatched2D {
         this.vertices[6] = a * left + c * bottom + tx
         this.vertices[7] = d * bottom + b * left + ty
 
-        this.frame = context.frame
+        this.frame = frame
     }
     private applyTransform(vertices: Float32Array, transform: mat3x2, out: Float32Array, offset: number = 0){
         const a = transform[0], b = transform[1],

@@ -79,7 +79,7 @@ export class DebugSystem implements ISystem {
     
         const DC = new Monitor({
             refreshRate: 100,
-            color: '#e8632a', label: 'DC', range: [0, 40],
+            color: '#e8632a', label: 'DC', range: [0, 60],
             update(deltaTime){
                 this.values.push(glCalls.drawArrays + glCalls.drawElements + glCalls.drawArraysInstanced + glCalls.drawElementsInstanced + glCalls.blitFramebuffer)
                 glCalls.drawArrays = glCalls.drawElements = glCalls.drawArraysInstanced = glCalls.drawElementsInstanced = glCalls.blitFramebuffer = 0

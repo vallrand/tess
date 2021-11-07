@@ -107,6 +107,15 @@ export const slowInOut = CubicBezier(0,0.5,1,0.5)
 // export const circOut = CubicBezier(0, 0.56, 0.46, 1)
 // export const circInOut = CubicBezier(0.88, 0.14, 0.12, 0.86)
 
+export const velocity = (v0: number, v1: number, duration: number): IEase => {
+    const acceleration = (v1 - v0) / duration
+    const distance = duration * (v0 + 0.5 * (v1 - v0))
+    return x => x <= duration
+    ? v0 * x + x*x*0.5 * acceleration
+    : v1 * x + distance
+}
+velocity.duration = (v0: number, v1: number, distance: number): number => distance / (v0 + 0.5 * (v1 - v0))
+
 export function Spline(values: number[], positions: number[], type: number, tension: number = 0.5): IEase {
     const sort = (a: number, b: number) => a - b
     const lastIndex = values.length - 1

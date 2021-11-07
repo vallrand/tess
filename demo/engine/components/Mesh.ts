@@ -1,5 +1,5 @@
-import { vec3, quat, mat4, aabb3, vec4, mat3 } from '../math'
-import { Application, ISystem, ILoadedData, Factory } from '../framework'
+import { vec3, quat, mat4, aabb3, vec4 } from '../math'
+import { Application, ISystem, ILoadedData } from '../framework'
 import { GL, IVertexAttribute, UniformBlock, UniformBlockBindings, OpaqueLayer } from '../webgl'
 import { Transform, BoundingVolume, calculateBoundingRadius } from '../scene'
 import { MaterialSystem, MeshMaterial } from '../materials'
@@ -101,6 +101,13 @@ export class Armature {
 }
 
 export class Mesh implements IMesh {
+    public static create(buffer: MeshBuffer, order?: number, layer?: number): Mesh {
+        const item = new Mesh()
+        item.buffer = buffer
+        item.order = order || 0
+        item.layer = layer || 0
+        return item
+    }
     public index: number = -1
     public frame: number = 0
     public order: number = 0

@@ -7,11 +7,11 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease 
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { SpriteMaterial } from '../../../engine/materials'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'cone.transform.position': PropertyAnimation([
         { frame: 0.7, value: [0,1.5,0.5] },
         { frame: 1.1, value: [0,1.3,3.5], ease: ease.quintOut }
@@ -91,10 +91,12 @@ const actionTimeline = {
 }
 
 export class LungeSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 2
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = { amount: 4, type: DamageType.Kinetic }
+    readonly cost: number = 1
+    readonly range: number = 2
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Kinetic
+    readonly damage: number = 4
 
     private spikesLeft: ParticleEmitter
     private spikesRight: ParticleEmitter
@@ -122,14 +124,14 @@ export class LungeSkill extends AIUnitSkill {
             uOrigin: mat4.transform(vec3(0.5,1.5,-0.5), this.mesh.transform.matrix, vec3()),
             uRotation: vec2.ZERO, uGravity: vec3.ZERO,
             uSize: [0.4,1.2], uRadius: [0.5,1.5], uForce: [6,8],
-            uTarget: mat4.transform(vec3(0.5,1,3), this.mesh.transform.matrix, vec3()),
+            uTarget: mat4.transformNormal(vec3(0,-0.5,3.5), this.mesh.transform.matrix, vec3())
         })
         this.spikesRight = SharedSystem.particles.energy.add({
             uLifespan: [0.8,1.2,0,0],
             uOrigin: mat4.transform(vec3(-0.5,1.5,-0.5), this.mesh.transform.matrix, vec3()),
             uRotation: vec2.ZERO, uGravity: vec3.ZERO,
             uSize: [0.4,1.2], uRadius: [0.5,1.5], uForce: [6,8],
-            uTarget: mat4.transform(vec3(-0.5,1,3), this.mesh.transform.matrix, vec3()),
+            uTarget: mat4.transformNormal(vec3(0,-0.5,3.5), this.mesh.transform.matrix, vec3())
         })
     
         this.tubeLeft = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
@@ -176,13 +178,8 @@ export class LungeSkill extends AIUnitSkill {
     
         this.ringLeft = Sprite.create(BillboardType.Sphere, 4)
         this.ringRight = Sprite.create(BillboardType.Sphere, 4)
-    
-        const ringMaterial = new SpriteMaterial()
-        ringMaterial.program = this.context.get(ParticleEffectPass).program
-        ringMaterial.diffuse = SharedSystem.textures.raysInner
-    
-        this.ringLeft.material = ringMaterial
-        this.ringRight.material = ringMaterial
+        this.ringLeft.material = SharedSystem.materials.sprite.burst
+        this.ringRight.material = SharedSystem.materials.sprite.burst
     
         this.ringLeft.transform = this.context.get(TransformSystem)
         .create(vec3(-0.5,1.3,3), quat.IDENTITY, vec3.ONE, this.mesh.transform)
@@ -200,7 +197,7 @@ export class LungeSkill extends AIUnitSkill {
             uSize: [0.2,0.4],
             uForce: [2,5],
             uRadius: [0,0.1],
-            uTarget: mat4.transform(vec3(-0.5,1.3,3), this.mesh.transform.matrix, vec3()),
+            uTarget: vec3.ZERO,
         })
         this.sparksRight = SharedSystem.particles.sparks.add({
             uLifespan: [0.4,0.6,-0.15,0],
@@ -210,7 +207,7 @@ export class LungeSkill extends AIUnitSkill {
             uSize: [0.2,0.4],
             uForce: [2,5],
             uRadius: [0,0.1],
-            uTarget: mat4.transform(vec3(0.5,1.3,3), this.mesh.transform.matrix, vec3()),
+            uTarget: vec3.ZERO,
         })
     
         this.wave = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
@@ -229,11 +226,8 @@ export class LungeSkill extends AIUnitSkill {
         this.cone.material.program = this.context.get(ParticleEffectPass).program
         this.context.get(ParticleEffectPass).add(this.cone)
     
-        const animate = AnimationTimeline(this, {
-            ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
-            'damage': EventTrigger([{ frame: 0.5, value: target }], AIUnitSkill.damage)
-        })
+        actionTimeline['damage'] = EventTrigger([{ frame: 0.5, value: target }], AIUnitSkill.damage)
+        const animate = AnimationTimeline(this, actionTimeline)
     
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

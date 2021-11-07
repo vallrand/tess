@@ -1,20 +1,18 @@
-import { lerp, mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
-import { Application } from '../../engine/framework'
-import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
+import { lerp, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
-import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
-import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
+import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
+import { Decal, DecalPass, ParticleEffectPass } from '../../engine/pipeline'
 
-import { CubeModuleModel, modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { Cube, DirectionTile } from '../player'
-import { CubeSkill } from './CubeSkill'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { DirectionTile } from '../player'
 import { TerrainSystem } from '../terrain'
-import { EconomySystem } from '../economy'
+import { EconomySystem, ResourceSpot } from '../economy'
+import { CubeSkill } from './CubeSkill'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('loop'),
     'cube.light.intensity': PropertyAnimation([
         { frame: 0.8, value: 1 },
         { frame: 1.2, value: 3, ease: ease.quadIn },
@@ -77,42 +75,19 @@ const actionTimeline = {
 }
 
 export class ExtractSkill extends CubeSkill {
-    smoke: ParticleEmitter
-    cracks: Decal
-    cracksMaterial: DecalMaterial
-    tube: BatchMesh
-    beam: Sprite
-    ring: Sprite
-    glow: BatchMesh
-    constructor(context: Application, cube: Cube){
-        super(context, cube)
+    indicator?: ResourceSpot
 
-        this.glow = BatchMesh.create(SharedSystem.geometry.cross)
-        this.glow.material = SharedSystem.materials.gradientMaterial
-
-        this.cracksMaterial = new DecalMaterial()
-        this.cracksMaterial.program = this.context.get(DecalPass).program
-        this.cracksMaterial.diffuse = SharedSystem.textures.cracks
-        this.cracksMaterial.normal = SharedSystem.textures.cracksNormal
-
-        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tube.material = SharedSystem.materials.stripesRedMaterial
-
-
-        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
-
-
-        this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.ring
-    }
+    private smoke: ParticleEmitter
+    private cracks: Decal
+    private tube: BatchMesh
+    private beam: Sprite
+    private ring: Sprite
+    private glow: BatchMesh
+    
+    public query(): vec2 { return this.cube.tile }
+    public enter(): void { this.indicator = this.context.get(EconomySystem).get(this.cube.tile[0], this.cube.tile[1]) }
     public *open(): Generator<ActionSignal> {
-        const origin = mat4.transform(vec3.ZERO, this.cube.transform.matrix, vec3())
-        const trigger = EventTrigger([{ frame: 0.6, value: { amount: 36, uOrigin: origin, uTarget: origin } }], EventTrigger.emitReset)
+        const trigger = EventTrigger([{ frame: 0.6, value: { amount: 36, uOrigin: this.cube.transform.position } }], EventTrigger.emitReset)
         for(const generator = super.open(), startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             trigger(elapsedTime, this.context.deltaTime, this.cube.dust)
@@ -121,47 +96,36 @@ export class ExtractSkill extends CubeSkill {
             else yield iterator.value
         }
     }
-    public *close(): Generator<ActionSignal> {
-        for(const generator = super.close(); true;){
-            const iterator = generator.next()
-            if(iterator.done) return iterator.value
-            else yield iterator.value
-        }
-    }
-    public *activate(): Generator<ActionSignal> {
-        const resource = this.context.get(EconomySystem).get(this.cube.tile[0], this.cube.tile[1])
-        if(!resource) return
-
-        const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
-
-        const origin = mat4.transform(vec3.ZERO, this.cube.transform.matrix, vec3())
-
+    public *activate(target: vec2): Generator<ActionSignal> {
+        this.cube.action.amount = 0
+        
         this.cracks = this.context.get(DecalPass).create(0)
-        this.cracks.material = this.cracksMaterial
-        this.cracks.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.cracks.transform.position)
+        this.cracks.material = SharedSystem.materials.cracksMaterial
+        this.cracks.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
 
-        this.tube.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,4,0], origin, this.tube.transform.position)
+        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.tube.material = SharedSystem.materials.stripesRedMaterial
+        this.tube.transform = this.context.get(TransformSystem).create([0,4,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.tube)
 
-        this.beam.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,4,0], origin, this.beam.transform.position)
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.beam.material = SharedSystem.materials.sprite.beam
+        this.beam.transform = this.context.get(TransformSystem).create([0,4,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
-        this.glow.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.glow.transform.position)
+        this.glow = BatchMesh.create(SharedSystem.geometry.cross)
+        this.glow.material = SharedSystem.materials.gradientMaterial
+        this.glow.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.ring.transform = this.context.get(TransformSystem).create()
-        vec3.add([0,4,0], origin, this.ring.transform.position)
-        quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, this.ring.transform.rotation)
+        this.ring = Sprite.create(BillboardType.None)
+        this.ring.material = SharedSystem.materials.sprite.ring
+        this.ring.transform = this.context.get(TransformSystem).create([0,4,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.smoke = this.smoke || SharedSystem.particles.smoke.add({
             uLifespan: [1.0,2.0,0,0],
-            uOrigin: vec3.add([0,4,0], origin, vec3()),
+            uOrigin: vec3.add([0,4,0], this.cube.transform.position, vec3()),
             uRotation: [0,2*Math.PI],
             uGravity: [0,5.6,0],
             uSize: [1,4],
@@ -170,17 +134,17 @@ export class ExtractSkill extends CubeSkill {
         })
 
         const animate = AnimationTimeline(this, actionTimeline)
-        const drain = resource.drain(2)
+        if(this.indicator && this.indicator.amount)
+            this.context.get(AnimationSystem).start(this.indicator.drain(1), true)
 
         excavation: for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.loop(elapsedTime, mesh.armature)
-            drain.next()
-
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
+        if(this.indicator && this.indicator.amount)
+            this.cube.matter.amount = Math.min(this.cube.matter.capacity, this.cube.matter.amount + 1)
 
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)
@@ -194,6 +158,10 @@ export class ExtractSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).remove(this.ring)
 
         this.context.get(DecalPass).delete(this.cracks)
+        BatchMesh.delete(this.glow)
+        BatchMesh.delete(this.tube)
+        Sprite.delete(this.beam)
+        Sprite.delete(this.ring)
     }
     protected validate(): boolean {
         const terrain = this.context.get(TerrainSystem), tile = this.cube.tile
@@ -208,7 +176,7 @@ export class ExtractSkill extends CubeSkill {
         return true
     }
     protected clear(): void {
-        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
+        if(this.smoke) this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
         
         const terrain = this.context.get(TerrainSystem)
         while(this.cube.tiles.length > 1){

@@ -1,4 +1,5 @@
 #pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
+#pragma import(../../../engine/shaders/common/hash.glsl)
 #pragma import(../../../engine/shaders/common/noise.glsl)
 
 uniform vec2 uScale;
@@ -7,11 +8,11 @@ uniform vec4 uColor;
 void main(){
     vec2 uv = vUV * uScale;
 
-    float l3 = noise2D(512.0 * uv, 512. * uScale);
-    float l2 = noise2D(128.0 * uv, 128. * uScale);
-    float l1 = noise2D(32.0 * uv, 32. * uScale);
-    uv += 0.4*noise2D(16.0*uv.yx - l1 + 128.0, 16. * uScale);
-    float l0 = noise2D(8.0*uv,8. * uScale);
+    float l3 = noise2D(512.0 * uv, 512. * uScale, 0.0);
+    float l2 = noise2D(128.0 * uv, 128. * uScale, 0.0);
+    float l1 = noise2D(32.0 * uv, 32. * uScale, 0.0);
+    uv += 0.4*noise2D(16.0*uv.yx - l1 + 128.0, 16. * uScale, 0.0);
+    float l0 = noise2D(8.0*uv,8. * uScale, 0.0);
     
     vec3 color = vec3(0.04,0.04,0.12)
     + vec3(0.63,0.55,0.42) * l0

@@ -4,11 +4,10 @@ import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, Ev
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, EffectMaterial, ShaderMaterial, SpriteMaterial } from '../../engine/materials'
+import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
-import { CubeModuleModel, modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
+import { SharedSystem, ModelAnimation } from '../shared'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
@@ -92,9 +91,7 @@ const outroTimeline = {
 }
 
 export class ShieldSkill extends CubeSkill {
-    public active: boolean = false
     private idleIndex: number = -1
-
     private shield: Mesh
     private displacement: Mesh
     private tube: BatchMesh
@@ -102,55 +99,39 @@ export class ShieldSkill extends CubeSkill {
     private dust: ParticleEmitter
     private beam: Sprite
     private sphere: BatchMesh
-    private waveMaterial: DecalMaterial
     constructor(context: Application, cube: Cube){
         super(context, cube)
-
-        this.waveMaterial = new DecalMaterial()
-        this.waveMaterial.program = this.context.get(DecalPass).program
-        this.waveMaterial.diffuse = SharedSystem.textures.ring
-
-        this.shield = new Mesh()
-        this.shield.order = 1
-        this.shield.buffer = SharedSystem.geometry.sphereMesh
+        this.shield = Mesh.create(SharedSystem.geometry.sphereMesh, 1)
         this.shield.material = SharedSystem.materials.shieldMaterial
-
-        this.displacement = new Mesh()
-        this.displacement.order = 0
-        this.displacement.buffer = SharedSystem.geometry.sphereMesh
+        this.displacement = Mesh.create(SharedSystem.geometry.sphereMesh, 0)
         this.displacement.material = SharedSystem.materials.shieldDisplacementMaterial
-
-        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
-
-        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tube.material = SharedSystem.materials.stripesMaterial
-
-        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
-        this.sphere.material = this.tube.material
+    }
+    public query(): vec2 { return this.cube.tile }
+    public *activate(): Generator<ActionSignal> {
+        this.cube.movement.amount = this.cube.action.amount = 0
+        this.active = true
     }
     public *open(): Generator<ActionSignal> {
         const state = this.cube.sides[this.cube.side]
         const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
-
-        const origin: vec3 = mat4.transform([0, 0, 0], this.cube.transform.matrix, vec3())
 
         this.wave = this.context.get(DecalPass).create(0)
-        this.wave.transform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, this.wave.transform.position)
-        this.wave.material = this.waveMaterial
-
-        this.beam.transform = this.context.get(TransformSystem).create()
-        vec3.add(origin, [0,4,0], this.beam.transform.position)
+        this.wave.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
+        this.wave.material = SharedSystem.materials.decal.ring
+        
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.beam.material = SharedSystem.materials.sprite.beam
+        this.beam.transform = this.context.get(TransformSystem).create([0,4,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
-
+        
+        this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
+        this.tube.material = SharedSystem.materials.stripesMaterial
         this.tube.transform = this.context.get(TransformSystem).create()
         this.tube.transform.parent = this.cube.transform
         this.context.get(ParticleEffectPass).add(this.tube)
 
+        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
+        this.sphere.material = SharedSystem.materials.stripesMaterial
         this.sphere.transform = this.context.get(TransformSystem).create()
         this.sphere.transform.parent = this.cube.transform
         this.context.get(ParticleEffectPass).add(this.sphere)
@@ -164,23 +145,20 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(PostEffectPass).add(this.shield)
 
         this.dust = SharedSystem.particles.dust.add({
-            uOrigin: origin,
-            uLifespan: [0.6,1.0,-0.1,0],
-            uSize: [2,5],
-            uRadius: [0.5,0.8],
+            uOrigin: this.cube.transform.position, uTarget: vec3.ZERO,
             uOrientation: quat.IDENTITY,
-            uForce: [6,12],
-            uTarget: origin,
-            uGravity: [0.0, 9.8, 0.0],
-            uRotation: [0, 2*Math.PI],
-            uAngular: [-Math.PI,Math.PI,0,0],
+            uLifespan: [0.6,1.0,-0.1,0],
+            uSize: [2,5], uRadius: [0.5,0.8],
+            uForce: [6,12], uGravity: [0.0, 9.8, 0.0],
+            uRotation: [0, 2*Math.PI], uAngular: [-Math.PI,Math.PI,0,0],
         })
 
         const animate = AnimationTimeline(this, introTimeline)
+        const open = ModelAnimation('open')
 
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            if(elapsedTime <= 1) armatureAnimation.open(elapsedTime, mesh.armature)
+            if(elapsedTime <= 1) open(elapsedTime, mesh.armature)
             else if(this.idleIndex == -1) this.idleIndex = this.context.get(AnimationSystem).start(this.idle(), true)
 
             animate(elapsedTime, this.context.deltaTime)
@@ -193,31 +171,33 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(TransformSystem).delete(this.beam.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)
         this.context.get(TransformSystem).delete(this.sphere.transform)
-
         SharedSystem.particles.dust.remove(this.dust)
-
         this.context.get(ParticleEffectPass).remove(this.sphere)
         this.context.get(ParticleEffectPass).remove(this.tube)
         this.context.get(ParticleEffectPass).remove(this.beam)
-
+        Sprite.delete(this.beam)
+        BatchMesh.delete(this.tube)
+        BatchMesh.delete(this.sphere)
         this.context.get(DecalPass).delete(this.wave)
     }
     public *close(): Generator<ActionSignal> {
         const state = this.cube.sides[this.cube.side]
         const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
 
-        const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
+        this.active = false
+        const idleEnd = this.context.get(AnimationSystem).await(this.idleIndex)
         this.idleIndex = -1
-        while(!waiter.continue) yield ActionSignal.WaitNextFrame
+        yield idleEnd
 
         const animate = AnimationTimeline(this, outroTimeline)
+        const open = ModelAnimation('open')
+
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            armatureAnimation.open(1.0 - elapsedTime, mesh.armature)
+            open(1.0 - elapsedTime, mesh.armature)
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
         state.open = 0
 
@@ -228,37 +208,26 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(PostEffectPass).remove(this.displacement)
     }
     public *idle(): Generator<ActionSignal> {
-        const state = this.cube.sides[this.cube.side]
         const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[state.type]]
-
-        const velocityEase = (v0: number, v1: number, duration: number): ease.IEase => {
-            const acceleration = (v1 - v0) / duration
-            const distance = duration * (v0 + 0.5 * (v1 - v0))
-            return x => x <= duration
-            ? v0 * x + x*x*0.5 * acceleration
-            : v1 * x + distance
-        }
-        velocityEase.duration = (v0: number, v1: number, distance: number): number => 
-        distance / (v0 + 0.5 * (v1 - v0))
-        const accelerationEase = velocityEase(0, 1, 0.5)
+        const accelerationEase = ease.velocity(0, 1, 0.5)
+        const loop = ModelAnimation('loop')
 
         let head: number = 0
         for(const startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             head = accelerationEase(elapsedTime) % 1.0
-            armatureAnimation.loop(head, mesh.armature)
+            loop(head, mesh.armature)
             if(this.idleIndex == -1) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
         const decelerationDistance = .25 - head % .25
-        const decelerationDuration = velocityEase.duration(1, 0, decelerationDistance)
-        const decelerationEase = velocityEase(1, 0, decelerationDuration)
+        const decelerationDuration = ease.velocity.duration(1, 0, decelerationDistance)
+        const decelerationEase = ease.velocity(1, 0, decelerationDuration)
         for(const startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
-            armatureAnimation.loop((head + decelerationEase(elapsedTime)) % 1, mesh.armature)
+            loop((head + decelerationEase(elapsedTime)) % 1, mesh.armature)
             if(elapsedTime > decelerationDuration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     }
 }

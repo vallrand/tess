@@ -1,7 +1,6 @@
 import { mat4, quat, vec2, vec3, vec4, mod, lerp } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { GL, ShaderProgram } from '../../engine/webgl'
-import { createCylinder, applyTransform, doubleSided, modifyGeometry } from '../../engine/geometry'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
@@ -9,13 +8,15 @@ import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh } from '../../engine
 import { DecalMaterial, SpriteMaterial, MeshMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
-import { CubeModuleModel, modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
-import { Cube, Direction, DirectionAngle } from '../player'
+import { SharedSystem, ModelAnimation } from '../shared'
+import { Cube, Direction, DirectionAngle, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
+import { UnitSkill, DamageType } from '../military'
+import { IAgent, TurnBasedSystem } from '../common'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'particles': EventTrigger([{ frame: 0.2, value: 48 }], EventTrigger.emit),
     'cone.transform.scale': PropertyAnimation([
         { frame: 0, value: [0.2,0.2,1] },
@@ -27,9 +28,6 @@ const actionTimeline = {
         { frame: 0.6, value: vec4.ONE, ease: ease.quadOut },
         { frame: 0.8, value: [1,0,1,0], ease: ease.cubicIn }
     ], vec4.lerp),
-    'glow.transform.position': PropertyAnimation([
-        { frame: 0, value: [0,0,-3] }
-    ], vec3.lerp),
     'glow.transform.scale': PropertyAnimation([
         { frame: 0.5, value: vec3.ZERO },
         { frame: 0.8, value: [8,8,8], ease: ease.quartOut }
@@ -75,15 +73,18 @@ const actionTimeline = {
     ], vec4.lerp)
 }
 
-class CorrosiveOrb {
-    orb: Mesh
-    aura: Sprite
-    decal: Decal
-    transform: Transform
-    fire: ParticleEmitter
+class CorrosiveOrb extends UnitSkill {
+    static readonly pool: CorrosiveOrb[] = []
     readonly tile: vec2 = vec2()
-    constructor(private readonly context: Application, private readonly parent: OrbSkill){}
-    public get enabled(): boolean { return !!this.orb }
+    readonly damageType: DamageType = DamageType.Corrosion
+    damage: number = 1
+    range: number = 2
+
+    private orb: Mesh
+    private aura: Sprite
+    private decal: Decal
+    private transform: Transform
+    private fire: ParticleEmitter
     public place(column: number, row: number): void {
         vec2.set(column, row, this.tile)
         this.transform = this.context.get(TransformSystem).create()
@@ -95,10 +96,7 @@ class CorrosiveOrb {
         this.decal.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ZERO, this.transform)
 
-        this.orb = new Mesh()
-        this.orb.buffer = SharedSystem.geometry.sphereMesh
-        this.orb.order = 4
-        this.orb.layer = 8
+        this.orb = Mesh.create(SharedSystem.geometry.sphereMesh, 4, 8)
         this.context.get(MeshSystem).list.push(this.orb)
         this.orb.material = SharedSystem.materials.orbMaterial
         this.orb.transform = this.context.get(TransformSystem).create()
@@ -119,7 +117,7 @@ class CorrosiveOrb {
             uRadius: vec2(0.8,1.2)
         })
     }
-    public kill(): void {
+    public delete(): void {
         this.context.get(TransformSystem).delete(this.transform)
         this.context.get(TransformSystem).delete(this.aura.transform)
         this.context.get(TransformSystem).delete(this.orb.transform)
@@ -127,6 +125,7 @@ class CorrosiveOrb {
         this.context.get(DecalPass).delete(this.decal)
         this.orb = this.aura = null
         SharedSystem.particles.fire.remove(this.fire)
+        CorrosiveOrb.pool.push(this)
     }
     public *appear(origin: vec3): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
@@ -145,15 +144,18 @@ class CorrosiveOrb {
             'orb.transform.scale': PropertyAnimation([
                 { frame: 0, value: vec3.ZERO },
                 { frame: 1, value: [1,1,1], ease: ease.elasticOut(1,0.8) }
-            ], vec3.lerp)
+            ], vec3.lerp),
+            'fire.rate': PropertyAnimation([
+                { frame: 0, value: 0 },
+                { frame: 0.2, value: 0.36, ease: ease.stepped }
+            ], lerp)
         })
 
-        this.fire.rate = 0.36
-        for(const duration = 1.0, startTime = this.context.currentTime; true;){
+        for(const duration = 1.0, startTime = this.context.currentTime + 0.8; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     }
     public *dissolve(): Generator<ActionSignal> {
@@ -177,18 +179,16 @@ class CorrosiveOrb {
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
-        this.kill()
-        const index = this.parent.list.indexOf(this)
-        this.parent.list.splice(index, 1)
-        this.parent.pool.push(this)
+        this.delete()
     }
 }
 
-export class OrbSkill extends CubeSkill {
-    pool: CorrosiveOrb[] = []
-    list: CorrosiveOrb[] = []
+export class OrbSkill extends CubeSkill implements IAgent {
+    readonly order: number = 4
+    readonly list: CorrosiveOrb[] = []
+
     private cone: BatchMesh
     private glow: Sprite
     private ring: Sprite
@@ -198,103 +198,77 @@ export class OrbSkill extends CubeSkill {
 
     constructor(context: Application, cube: Cube){
         super(context, cube)
+        this.context.get(TurnBasedSystem).add(this)
+    }
+    public execute(): Generator<ActionSignal> {
+        return null
+    }
+    public query(): vec2 {
+        const step = DirectionTile[mod(this.direction+2,4)]
+        const target = vec2.scale(step, 2, vec2())
+        return vec2.add(this.cube.tile, target, target)
+    }
+    public *activate(target: vec2): Generator<ActionSignal> {
+        const orientation = DirectionAngle[mod(this.direction + 3, 4)]
+        const transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, orientation, vec3.ONE, this.cube.transform)
+
         this.cone = BatchMesh.create(SharedSystem.geometry.funnel)
         this.cone.material = SharedSystem.materials.coneTealMaterial
-        
-        this.glow = Sprite.create(BillboardType.Sphere, -8)
-        this.glow.material = new SpriteMaterial()
-        this.glow.material.cullFace = GL.NONE
-        this.glow.material.program = this.context.get(ParticleEffectPass).program
-        this.glow.material.diffuse = SharedSystem.textures.sparkle
-
-        this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.cullFace = GL.NONE
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.cone.transform = this.context.get(TransformSystem)
+        .create(vec3.AXIS_Y, orientation, vec3.ONE, this.cube.transform)
+        this.context.get(ParticleEffectPass).add(this.cone)
 
         this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
         this.sphere.material = SharedSystem.materials.coneTealMaterial
-
-        this.distortion = Sprite.create(BillboardType.None)
-        this.distortion.material = new SpriteMaterial()
-        this.distortion.material.cullFace = GL.NONE
-        this.distortion.material.blendMode = null
-        this.distortion.material.program = SharedSystem.materials.chromaticAberration
-        this.distortion.material.diffuse = SharedSystem.textures.wave
-    }
-    public *activate(transform: mat4, orientation: quat): Generator<ActionSignal> {
-        const mesh = this.cube.meshes[this.cube.side]
-        const armatureAnimation = modelAnimations[CubeModuleModel[this.cube.sides[this.cube.side].type]]
-
-        const origin = mat4.transform([0,1,0], this.cube.transform.matrix, vec3())
-        const parentTransform = this.context.get(TransformSystem).create()
-        vec3.copy(origin, parentTransform.position)
-        quat.copy(DirectionAngle[mod(this.direction + 3, 4)], parentTransform.rotation)
-        const target = quat.transform([0,1,-3], parentTransform.rotation, vec3())
-        mat4.transform(target, this.cube.transform.matrix, target)
-
-        this.cone.transform = this.context.get(TransformSystem).create()
-        this.cone.transform.parent = parentTransform
-        this.context.get(ParticleEffectPass).add(this.cone)
-
-        this.sphere.transform = this.context.get(TransformSystem).create()
-        this.sphere.transform.parent = parentTransform
+        this.sphere.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.HALF_X, vec3.ONE, transform)
+        this.sphere.transform.parent = transform
         quat.axisAngle(vec3.AXIS_X, 0.5*Math.PI, this.sphere.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.sphere)
 
-        this.glow.transform = this.context.get(TransformSystem).create()
-        this.glow.transform.parent = parentTransform
+        this.glow = Sprite.create(BillboardType.Sphere, -8)
+        this.glow.material = SharedSystem.materials.sprite.sparkle
+        this.glow.transform = this.context.get(TransformSystem).create([0,0,-3], quat.IDENTITY, vec3.ONE, transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.ring.transform = this.context.get(TransformSystem).create()
-        this.ring.transform.parent = parentTransform
+        this.ring = Sprite.create(BillboardType.None)
+        this.ring.material = SharedSystem.materials.sprite.swirl
+        this.ring.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
-        this.distortion.transform = this.context.get(TransformSystem).create()
-        this.distortion.transform.parent = parentTransform
-        vec3.set(0,0,-2, this.distortion.transform.position)
+        this.distortion = Sprite.create(BillboardType.None)
+        this.distortion.material = SharedSystem.materials.distortion.wave
+        this.distortion.transform = this.context.get(TransformSystem).create([0,0,-2], quat.IDENTITY, vec3.ONE, transform)
         this.context.get(PostEffectPass).add(this.distortion)
-
-        const particleTarget = quat.transform([0,-0.2,0.5], parentTransform.rotation, vec3())
-        vec3.add(origin, particleTarget, particleTarget)
 
         this.particles = SharedSystem.particles.sparks.add({
             uLifespan: [0.5,0.8,-0.5,0],
-            uOrigin: origin,
+            uOrigin: vec3.add(vec3.AXIS_Y, this.cube.transform.position, vec3()),
             uLength: [0.2,0.5],
-            uGravity: quat.transform([0,0,10], parentTransform.rotation, vec3()),
+            uGravity: quat.transform([0,0,10], orientation, vec3()),
             uSize: [0.2,0.8],
             uRadius: [0,0.5],
             uForce: [6,10],
-            uTarget: particleTarget
+            uTarget: quat.transform([0,-0.2,0.5], orientation, vec3())
         })
 
-        const animate = AnimationTimeline(this, actionTimeline)
-
-        const orb = this.pool.pop() || new CorrosiveOrb(this.context, this)
-        const tile: vec2 = [vec2(0,-2),vec2(-2,0),vec2(0,2),vec2(2,0)][this.direction]
-        vec2.add(this.cube.tile, tile, tile)
-
-        //TODO remove
         if(this.list.length > 0) this.context.get(AnimationSystem).start(this.list[0].dissolve(), true)
+
+        const orb = CorrosiveOrb.pool.pop() || new CorrosiveOrb(this.context)
+        this.list.push(orb)
+        orb.place(target[0], target[1])
+        const origin = quat.transform([0,1,-3], transform.rotation, vec3())
+        vec3.add(this.cube.transform.position, origin, origin)
+        this.context.get(TurnBasedSystem).enqueue(orb.appear(origin), true)
+        const animate = AnimationTimeline(this, actionTimeline)
 
         for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            armatureAnimation.activate(elapsedTime, mesh.armature)
-
-            if(elapsedTime > 0.8 && !orb.enabled){
-                this.list.push(orb)
-                orb.place(tile[0], tile[1])
-                this.context.get(AnimationSystem).start(orb.appear(target), true)
-            }
-
             if(elapsedTime > duration) break
             yield ActionSignal.WaitNextFrame
         }
 
-        this.context.get(TransformSystem).delete(parentTransform)
+        this.context.get(TransformSystem).delete(transform)
         this.context.get(TransformSystem).delete(this.cone.transform)
         this.context.get(TransformSystem).delete(this.glow.transform)
         this.context.get(TransformSystem).delete(this.ring.transform)
@@ -308,5 +282,10 @@ export class OrbSkill extends CubeSkill {
         this.context.get(PostEffectPass).remove(this.distortion)
 
         SharedSystem.particles.bolts.remove(this.particles)
+        BatchMesh.delete(this.cone)
+        BatchMesh.delete(this.sphere)
+        Sprite.delete(this.glow)
+        Sprite.delete(this.ring)
+        Sprite.delete(this.distortion)
     }
 }

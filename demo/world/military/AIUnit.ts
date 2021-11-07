@@ -2,36 +2,31 @@ import { Application } from '../../engine/framework'
 import { clamp, vec2, vec3, quat, quadraticBezier3D, quadraticBezierNormal3D } from '../../engine/math'
 import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
 import { Mesh } from '../../engine/components'
-import { TerrainSystem, IUnitTile } from '../terrain'
-import { AIUnitSkill, DamageType } from './AIUnitSkill'
+import { TerrainSystem } from '../terrain'
+import { Unit } from './Unit'
+import { DamageType } from './UnitSkill'
+import { AIUnitSkill } from './AIUnitSkill'
 import { AIStrategy, AIStrategyPlan } from './AIStrategy'
+import { DeathEffect, DamageEffect } from '../units/effects'
+import { TurnBasedSystem } from '../common'
 
-export abstract class AIUnit implements IUnitTile {
-    public readonly tile: vec2 = vec2()
-    public readonly size: vec2 = vec2.ONE
-    public mesh: Mesh
+export abstract class AIUnit extends Unit {
     public abstract readonly skills: AIUnitSkill[]
     public abstract readonly strategy: AIStrategy
-    constructor(protected readonly context: Application){}
+    public mesh: Mesh
 
     public actionIndex: number
     public hash: number
-    public weight: number = 2
+    readonly weight: number = 2
 
     abstract readonly movementDuration: number
-    abstract readonly maxHealthPoints: number
-    abstract readonly gainMovementPoints: number
-    abstract readonly gainActionPoints: number
     protected movementFloat: number = 0
-    public movementPoints: number = 0
-    public actionPoints: number = 0
-    public healthPoints: number = 0
 
     public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
         const map = this.context.get(TerrainSystem).pathfinder
         const actions: Generator<ActionSignal>[] = []
         if(plan.path){
-            this.movementPoints -= plan.path.length - 1
+            this.movement.amount -= plan.path.length - 1
             const frames = []
             let time = this.context.currentTime
             for(let i = 0; i < plan.path.length - 1; i++){
@@ -51,7 +46,7 @@ export abstract class AIUnit implements IUnitTile {
             this.markTiles(true)
         }
         if(plan.skill != -1){
-            this.actionPoints -= this.skills[plan.skill].cost
+            this.action.amount -= this.skills[plan.skill].cost
             const action = this.skills[plan.skill].use(this, plan.target)
             if(plan.reverse) actions.unshift(action)
             else actions.push(action)
@@ -61,7 +56,12 @@ export abstract class AIUnit implements IUnitTile {
 
     public abstract delete(): void
     public abstract place(column: number, row: number): void
-    public abstract damage(amount: number, type: DamageType): void
+    public damage(amount: number, type: number): void {
+        this.strategy.aware = true
+        this.health.amount -= amount
+        if(this.health.amount > 0) DamageEffect.create(this.context, this, type)
+        else DeathEffect.create(this.context, this)
+    }
     public abstract move(path: vec2[], frames: number[], target?: vec2): Generator<ActionSignal>
 
     protected *moveAlongPath(path: vec2[], frames: number[], rotate: boolean): Generator<ActionSignal> {
@@ -72,6 +72,8 @@ export abstract class AIUnit implements IUnitTile {
         for(let last = path.length - 1, i = 0; i <= last; i++){
             const tile = path[i]
             this.snapPosition(tile, center)
+            //TODO still use terrain?
+            this.context.get(TurnBasedSystem).signalEnterTile.broadcast(tile[0], tile[1], this)
 
             if(i == 0) vec3.copy(center, entry)
             else this.snapPosition(path[i - 1], entry)
@@ -128,15 +130,14 @@ export abstract class AIUnit implements IUnitTile {
             else yield ActionSignal.WaitNextFrame
         }
     }
+    public markTiles(toggle: boolean){
+        const terrain = this.context.get(TerrainSystem)
+        for(let c = this.size[0] - 1; c >= 0; c--) for(let r = this.size[1] - 1; r >= 0; r--)
+            terrain.setTile(this.tile[0] + c, this.tile[1] + r, toggle ? this : null)
+    }
     protected snapPosition(tile: vec2, out: vec3){
         const column = tile[0] + 0.5 * (this.size[0] - 1)
         const row = tile[1] + 0.5 * (this.size[1] - 1)
         this.context.get(TerrainSystem).tilePosition(column, row, out)
-    }
-    protected markTiles(toggle: boolean){
-        const terrain = this.context.get(TerrainSystem)
-        for(let c = 0; c < this.size[0]; c++)
-        for(let r = 0; r < this.size[1]; r++)
-            terrain.setTile(this.tile[0] + c, this.tile[1] + r, toggle ? this : null)
     }
 }

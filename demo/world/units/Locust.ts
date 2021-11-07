@@ -8,10 +8,9 @@ import { SpriteMaterial, DecalMaterial } from '../../engine/materials'
 import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../engine/pipeline'
 
 import { TerrainSystem } from '../terrain'
-import { modelAnimations } from '../animations'
-import { SharedSystem } from '../shared'
+import { SharedSystem, ModelAnimation } from '../shared'
 import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect } from './effects/DeathEffect'
+import { DeathEffect, DamageEffect } from './effects'
 import { FlamethrowerSkill } from './skills/FlamethrowerSkill'
 import { ShieldLinkSkill } from './skills/ShieldLinkSkill'
 
@@ -20,28 +19,23 @@ export class Locust extends AIUnit {
     public readonly size: vec2 = vec2(2,2)
     readonly skills = [new FlamethrowerSkill(this.context), new ShieldLinkSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    private readonly deathEffect = new DeathEffect(this.context)
-    readonly maxHealthPoints: number = 40
-    readonly gainMovementPoints: number = 1
-    readonly gainActionPoints: number = 1
+    readonly health = { capacity: 40, amount: 0, gain: 0 }
+    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly group: number = 2
     readonly movementDuration: number = 0.8
 
     public place(column: number, row: number): void {
         this.mesh = this.context.get(MeshSystem).loadModel("locust")
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
-        modelAnimations[this.mesh.armature.key].activate(0, this.mesh.armature)
+        ModelAnimation('activate')(0, this.mesh.armature)
         this.markTiles(true)
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.context.get(MeshSystem).delete(this.mesh)
-    }
-    public *damage(amount: number): Generator<ActionSignal> {
-
-    }
-    public death(): Generator<ActionSignal> {
-        return this.deathEffect.use(this)
+        Locust.pool.push(this)
     }
     
     private motorLeft: BatchMesh

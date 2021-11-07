@@ -6,19 +6,20 @@ import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PointLight, PointLightPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../../engine/animation'
 
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
     
 }
 
 export class BeamSkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 8
-    public readonly cardinal: boolean = true
-    public readonly damage: IDamageSource = { amount: 2, type: DamageType.Temperature }
+    readonly cost: number = 1
+    readonly range: number = 8
+    readonly cardinal: boolean = true
+    readonly pierce: boolean = true
+    readonly damageType: DamageType = DamageType.Temperature
+    readonly damage: number = 2
 
     private beams: Line[] = []
     private beam: Sprite
@@ -38,10 +39,10 @@ export class BeamSkill extends AIUnitSkill {
     }
     private *activate(): Generator<ActionSignal> {
         this.active = true
-        this.beams[0] = new Line(2)
-        this.beams[1] = new Line(2)
-        this.beams[2] = new Line(2)
-        this.beams[3] = new Line(2)
+        this.beams[0] = Line.create(2)
+        this.beams[1] = Line.create(2)
+        this.beams[2] = Line.create(2)
+        this.beams[3] = Line.create(2)
 
         const beamMaterial = new SpriteMaterial()
         beamMaterial.program = SharedSystem.materials.beamLinearProgram
@@ -113,12 +114,8 @@ export class BeamSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.tubeZ)
 
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.cylinder.transform = this.context.get(TransformSystem)
-        .create([0,0,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
-
-        this.cylinder.material = new SpriteMaterial()
-        this.cylinder.material.program = this.context.get(ParticleEffectPass).program
-        this.cylinder.material.diffuse = SharedSystem.textures.wind
+        this.cylinder.transform = this.context.get(TransformSystem).create(vec3.ZERO,quat.IDENTITY,vec3.ONE,this.mesh.transform)
+        this.cylinder.material = SharedSystem.materials.sprite.spiral
 
         this.context.get(ParticleEffectPass).add(this.cylinder)
 
@@ -127,7 +124,7 @@ export class BeamSkill extends AIUnitSkill {
         .create([0,2,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
 
         const animate = AnimationTimeline(this, {
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
+            'mesh.armature': ModelAnimation('activate'),
             'mesh.color': PropertyAnimation([
                 { frame: 0.8, value: vec4.ONE },
                 { frame: 1.2, value: [10,0.5,0.8,1], ease: ease.quadOut },
@@ -267,7 +264,7 @@ export class BeamSkill extends AIUnitSkill {
         this.active = false
 
         const animate = AnimationTimeline(this, {
-            'mesh.armature': modelAnimations[this.mesh.armature.key].deactivate,
+            'mesh.armature': ModelAnimation('deactivate'),
             'tubeX.color': PropertyAnimation([
                 { frame: 0, value: [0.6,1,1,1] },
                 { frame: 0.6, value: [1,0,1,0], ease: ease.quadIn }

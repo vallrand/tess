@@ -9,11 +9,11 @@ import { doubleSided } from '../../../engine/geometry'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
-import { modelAnimations } from '../../animations'
-import { SharedSystem } from '../../shared'
-import { AIUnit, AIUnitSkill, IDamageSource, DamageType } from '../../military'
+import { SharedSystem, ModelAnimation } from '../../shared'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
+    'mesh.armature': ModelAnimation('deactivate'),
     'projectile.color': PropertyAnimation([
         { frame: 0, value: [1,1,0.5,1] }
     ], vec4.lerp),
@@ -96,6 +96,7 @@ const actionTimeline = {
 }
 
 const activateTimeline = {
+    'mesh.armature': ModelAnimation('activate'),
     'flash.transform.scale': PropertyAnimation([
         { frame: 0.9, value: vec3.ZERO },
         { frame: 1.2, value: [2,2,2], ease: ease.quartOut }
@@ -153,10 +154,12 @@ const activateTimeline = {
 }
 
 export class ArtillerySkill extends AIUnitSkill {
-    public readonly cost: number = 1
-    public readonly radius: number = 8
-    public readonly cardinal: boolean = false
-    public readonly damage: IDamageSource = { amount: 10, type: DamageType.Kinetic | DamageType.Temperature }
+    readonly cost: number = 1
+    readonly range: number = 8
+    readonly cardinal: boolean = false
+    readonly pierce: boolean = false
+    readonly damageType: DamageType = DamageType.Kinetic | DamageType.Temperature
+    readonly damage: number = 10
     
     private aura: Decal
     private light: PointLight
@@ -214,26 +217,21 @@ export class ArtillerySkill extends AIUnitSkill {
         .create([0,3.4,1],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.muzzle)
 
-        this.trail = new Line(8)
-        this.trail.width = 0.6
-        this.trail.ease = ease.cubicFadeInOut
+        this.trail = Line.create(8, 0, 0.6, ease.cubicFadeInOut)
         this.trail.addColorFade(this.trail.ease, vec3(1,0.6,0.4))
 
         this.trail.material = SharedSystem.materials.trailSmokeMaterial
         this.context.get(ParticleEffectPass).add(this.trail)
 
         this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.blendMode = null
-        this.wave.material.program = SharedSystem.materials.distortion
-        this.wave.material.diffuse = SharedSystem.textures.wave
+        this.wave.material = SharedSystem.materials.displacement.wave
         this.wave.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,0.5,0], targetPosition, vec3()), Sprite.FlatUp, vec3.ONE)
         this.context.get(PostEffectPass).add(this.wave)
         
         this.embers = SharedSystem.particles.embers.add({
             uLifespan: [0.4,0.8,0,0],
-            uOrigin: targetPosition, uTarget: vec3.add(targetPosition, [0,-0.2,0], vec3()),
+            uOrigin: targetPosition, uTarget: [0,-0.2,0],
             uRotation: vec2.ZERO, uOrientation: quat.IDENTITY,
             uGravity: vec3(0,-14,0),
             uSize: [0.2,0.8],
@@ -249,9 +247,7 @@ export class ArtillerySkill extends AIUnitSkill {
         this.splash = Sprite.create(BillboardType.None)
         this.splash.transform = this.context.get(TransformSystem)
         .create(vec3.add(targetPosition, [0,0.5,0], vec3()), Sprite.FlatUp, vec3.ONE)
-        this.splash.material = new SpriteMaterial()
-        this.splash.material.program = this.context.get(ParticleEffectPass).program
-        this.splash.material.diffuse = SharedSystem.textures.raysInner
+        this.splash.material = SharedSystem.materials.sprite.burst
         this.context.get(ParticleEffectPass).add(this.splash)
 
         this.burn = this.context.get(DecalPass).create(4)
@@ -283,7 +279,6 @@ export class ArtillerySkill extends AIUnitSkill {
 
         const animate = AnimationTimeline(this, {
             ...actionTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].deactivate,
             'trail': FollowPath.Line(curve, { length: 0.1 }),
             'projectile.transform': FollowPath(curve),
             'damage': EventTrigger([{ frame: 1.4, value: target }], AIUnitSkill.damage)
@@ -369,7 +364,6 @@ export class ArtillerySkill extends AIUnitSkill {
 
         const animate = AnimationTimeline(this, {
             ...activateTimeline,
-            'mesh.armature': modelAnimations[this.mesh.armature.key].activate,
             'mesh.transform.rotation': PropertyAnimation([
                 { frame: 0.2, value: quat.copy(this.mesh.transform.rotation, quat()) },
                 { frame: 0.8, value: quat.axisAngle(vec3.AXIS_Y, angle, quat()), ease: ease.quadInOut }

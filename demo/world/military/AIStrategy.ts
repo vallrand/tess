@@ -56,16 +56,15 @@ export class AIStrategy {
     skill: number = 0
     aware: boolean = false
 
-    precalculate(){
-        //TODO check awareness?
+    public precalculate(): void {
         if(!this.aware) return
         const map: Pathfinder = this.context.get(TerrainSystem).pathfinder, tile = AIStrategy.tile
         const target = this.context.get(PlayerSystem).cube
-        const { radius, cardinal } = this.unit.skills[this.skill]
-        const size = Math.ceil(radius), radius2 = radius * radius
+        const { range, cardinal } = this.unit.skills[this.skill]
+        const size = Math.ceil(range), range2 = range * range
         for(let x = -size; x <= size; x++)
         for(let y = -size; y <= size; y++){
-            if(x*x + y*y > radius2) continue
+            if(x*x + y*y > range2) continue
             else if(cardinal && x != 0 && y != 0) continue
             vec2.set(target.tile[0] + x, target.tile[1] + y, tile)
             const weight = map.weight[map.tileIndex(tile[0], tile[1])]
@@ -109,14 +108,14 @@ export class AIStrategy {
             this.optimal.path = null
             if(this.optimal.priority === Number.MIN_SAFE_INTEGER || this.optimal.priority < limit) break move
             const path = this.map.linkPath(this.map.tileIndex(this.optimal.origin[0], this.optimal.origin[1]))
-            .slice(0, 1 + Math.floor(this.unit.movementPoints))
+            .slice(0, 1 + Math.floor(this.unit.movement.amount))
             if(path.length < 2) break move
             this.optimal.path = path.map(index => this.map.indexTile(index, vec2()))
         }
         this.map.clear()
         action: {
             this.optimal.skill = -1
-            if(this.unit.skills[this.skill].cost > this.unit.actionPoints) break action
+            if(this.unit.skills[this.skill].cost > this.unit.action.amount) break action
             const target = this.context.get(PlayerSystem).cube
             this.optimal.reverse = this.unit.skills[this.skill].active
             this.optimal.target = this.unit.skills[this.skill]
@@ -141,7 +140,7 @@ export class AIStrategy {
         return true
     }
     private walkFind(index: number, tile: vec2, distance: number, parent: number, first: boolean): boolean {
-        if(distance > this.unit.movementPoints || !first) return false
+        if(distance > this.unit.movement.amount || !first) return false
         const internal = this.influence[this.tileIndex(tile[0], tile[1])]
         const external = this.map.influence[index] - internal
         const priority = randomFloat(1-this.fuzzy,1+this.fuzzy, AIStrategy.random()) * internal / (1 + external / internal)
@@ -155,7 +154,7 @@ export class AIStrategy {
     }
     protected evaluate(tile: vec2, originDistance: number, targetDistance: number): number {
         const target = this.context.get(PlayerSystem).cube
-        const { radius, cardinal, damage } = this.unit.skills[this.skill]
+        const { range, cardinal, damage } = this.unit.skills[this.skill]
         let total = 0xF / (1 + targetDistance)
         offense: {
             if(!this.unit.skills[this.skill].aim(tile, target.tiles)) break offense
@@ -163,12 +162,12 @@ export class AIStrategy {
             total *= 2
         }
         defense: {
-            if(cardinal || radius < 2) break defense
+            if(cardinal || range < 2) break defense
             const abs = Math.min(Math.abs(tile[0] - target.tile[0]), Math.abs(tile[1] - target.tile[1]))
             total *= Math.min(1,0.5+0.25*abs)
         }
         movement: {
-            const turns = Math.ceil(Math.max(0, originDistance - this.unit.movementPoints) / this.unit.gainMovementPoints)
+            const turns = Math.ceil(Math.max(0, originDistance - this.unit.movement.amount) / this.unit.movement.gain)
             total *= Math.pow(0.5, turns)
         }
         return total

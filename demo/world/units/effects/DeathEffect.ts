@@ -7,9 +7,16 @@ import { TransformSystem } from '../../../engine/scene'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEmitter } from '../../../engine/particles'
 import { SharedSystem } from '../../shared'
-import { AISystem, AIUnit, DamageType } from '../../military'
+import { AISystem, AIUnit } from '../../military'
 
 export class DeathEffect {
+    private static readonly pool: DeathEffect[] = []
+    public static create(context: Application, source: AIUnit): DeathEffect {
+        const effect = this.pool.pop() || new DeathEffect(context)
+        context.get(AISystem).remove(source)
+        context.get(AnimationSystem).start(effect.use(source), true)
+        return effect
+    }
     private readonly material: MeshMaterial = new MeshMaterial()
     constructor(private readonly context: Application){}
 
@@ -34,18 +41,13 @@ export class DeathEffect {
         this.burn.material.diffuse = SharedSystem.textures.glow
 
         this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.blendMode = null
-        this.wave.material.program = SharedSystem.materials.chromaticAberration
-        this.wave.material.diffuse = SharedSystem.textures.wave
+        this.wave.material = SharedSystem.materials.distortion.wave
         this.wave.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), Sprite.FlatUp, vec3.ONE)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.raysInner
+        this.ring.material = SharedSystem.materials.sprite.burst
         this.ring.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), Sprite.FlatUp, vec3.ONE)
         this.context.get(ParticleEffectPass).add(this.ring)
@@ -69,7 +71,7 @@ export class DeathEffect {
             uSize: [source.size[0]*1,source.size[0]*4],
             uRotation: vec2.ZERO,
             uForce: [2,6],
-            uTarget: vec3.subtract(this.mesh.transform.position, [0,0.2,0], vec3()),
+            uTarget: [0,-0.2,0],
             uRadius: [0.2,0.2],
             uFrame: [0,2]
         })
@@ -164,76 +166,7 @@ export class DeathEffect {
         Sprite.delete(this.pillar)
         Sprite.delete(this.ring)
 
-        this.context.get(AISystem).delete(source)
-    }
-    public *damage(source: AIUnit, type: DamageType): Generator<ActionSignal> {
-        const origin = vec3.add(vec3.AXIS_Y, source.mesh.transform.position, vec3())
-
-        const embers = SharedSystem.particles.embers.add({
-            uLifespan: [0.4,0.6,0,0], uOrigin: origin,
-            uRotation: vec2.ZERO, uOrientation: quat.IDENTITY,
-            uGravity: [0,-10,0],
-            uSize: [0.2,0.8],
-            uRadius: [0,1],
-            uForce: [8,16],
-            uTarget: vec3.add(origin, [0,-0.2,0], vec3())
-        })
-
-        const sparks = SharedSystem.particles.sparks.add({
-            uLifespan: [0.4,0.6,0,0], uOrigin: origin,
-            uForce: [6,12], uGravity: [0,-10,0], uRadius: [0,0.4], uTarget: origin,
-            uSize: [0.2,0.8], uLength: [0.2,0.4]
-        })
-
-        const fire = SharedSystem.particles.fire.add({
-            uLifespan: [0.4,0.6,0,0], uOrigin: origin,
-            uRadius: [0,1], uSize: [0.5,2], uGravity: [0,6,0], uRotation: vec2.ZERO
-        })
-
-        const ring = Sprite.create(BillboardType.None)
-        ring.material = new SpriteMaterial()
-        ring.material.program = this.context.get(ParticleEffectPass).program
-        ring.material.diffuse = SharedSystem.textures.raysInner
-        ring.transform = this.context.get(TransformSystem).create(origin, Sprite.FlatUp, vec3.ONE)
-        this.context.get(ParticleEffectPass).add(ring)
-
-        const sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 0)
-        sphere.material = SharedSystem.materials.energyPurpleMaterial
-        sphere.transform = this.context.get(TransformSystem).create(origin, quat.IDENTITY, vec3.ONE)
-        this.context.get(ParticleEffectPass).add(sphere)
-
-        const animate = AnimationTimeline({
-            embers, sparks, fire, ring, sphere
-        }, {
-            'embers': EventTrigger([{ frame: 0, value: 24 }], EventTrigger.emit),
-            'sparks': EventTrigger([{ frame: 0, value: 24 }], EventTrigger.emit),
-            'fire': EventTrigger([{ frame: 0, value: 24 }], EventTrigger.emit),
-            'ring.transform.scale': PropertyAnimation([
-                { frame: 0, value: vec3.ZERO },
-                { frame: 0.3, value: [8,8,8], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'ring.color': PropertyAnimation([
-                { frame: 0, value: [1,0.8,0.5,0.4] },
-                { frame: 0.3, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'sphere.transform.scale': PropertyAnimation([
-                { frame: 0, value: vec3.ZERO },
-                { frame: 0.4, value: [3,3,3], ease: ease.cubicOut }
-            ], vec3.lerp),
-            'sphere.color': PropertyAnimation([
-                { frame: 0, value: [0.5,1,1,0.8] },
-                { frame: 0.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp)
-        })
-
-        while(true)
-        for(const duration = 1, startTime = this.context.currentTime; true;){
-            const elapsedTime = this.context.currentTime - startTime
-            animate(elapsedTime, this.context.deltaTime)
-            if(elapsedTime > duration) break
-            else yield ActionSignal.WaitNextFrame
-        }
-
-
+        source.delete()
+        DeathEffect.pool.push(this)
     }
 }

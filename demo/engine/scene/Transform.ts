@@ -1,24 +1,5 @@
-import { vec2, vec3, quat, mat3x2, mat4, mat3 } from '../math'
-import { Application, ISystem, Factory } from '../framework'
-
-export class Transform2D {
-    static readonly IDENTITY = new Transform2D()
-    public index: number = -1
-    public frame: number = 0
-    public readonly position: vec2 = vec2(0,0)
-    public readonly scale: vec2 = vec2(1,1)
-    public rotation: number = 0
-    public readonly matrix: mat3x2 = mat3x2()
-    public parent?: Transform2D
-    public recalculate(frame: number): void {
-        mat3x2.fromTransform(
-            this.position[0], this.position[1], 0, 0,
-            this.scale[0], this.scale[1], this.rotation, 0, 0, this.matrix
-        )
-        if(this.parent) mat3x2.multiply(this.parent.matrix, this.matrix, this.matrix)
-        this.frame = frame
-    }
-}
+import { vec3, quat, mat4, mat3 } from '../math'
+import { Application, ISystem } from '../framework'
 
 export class Transform {
     static readonly IDENTITY = new Transform()
