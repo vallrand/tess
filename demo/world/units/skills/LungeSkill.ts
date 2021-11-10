@@ -1,11 +1,9 @@
-import { Application } from '../../../engine/framework'
 import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEmitter } from '../../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEffectPass } from '../../../engine/pipeline'
-import { SpriteMaterial } from '../../../engine/materials'
 
 import { SharedSystem, ModelAnimation } from '../../shared'
 import { AIUnit, AIUnitSkill, DamageType } from '../../military'
@@ -136,42 +134,24 @@ export class LungeSkill extends AIUnitSkill {
     
         this.tubeLeft = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
         this.tubeRight = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-    
-        this.tubeLeft.material = SharedSystem.materials.absorbTealMaterial
-        this.tubeRight.material = SharedSystem.materials.absorbTealMaterial
-    
-        this.tubeLeft.transform = this.context.get(TransformSystem).create()
-        this.tubeLeft.transform.parent = this.mesh.transform
-        vec3.set(0.5,1.3,1.2, this.tubeLeft.transform.position)
-        quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.tubeLeft.transform.rotation)
-    
-        this.tubeRight.transform = this.context.get(TransformSystem).create()
-        this.tubeRight.transform.parent = this.mesh.transform
-        vec3.set(-0.5,1.3,1.2, this.tubeRight.transform.position)
-        quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.tubeRight.transform.rotation)
-    
+        this.tubeLeft.material = SharedSystem.materials.effect.absorbTeal
+        this.tubeRight.material = SharedSystem.materials.effect.absorbTeal
+        this.tubeLeft.transform = this.context.get(TransformSystem)
+        .create([0.5,1.3,1.2], quat.HALF_X, vec3.ONE, this.mesh.transform)
+        this.tubeRight.transform = this.context.get(TransformSystem)
+        .create([-0.5,1.3,1.2], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.tubeLeft)
         this.context.get(ParticleEffectPass).add(this.tubeRight)
     
     
-        const beamMaterial = new SpriteMaterial()
-        beamMaterial.program = this.context.get(ParticleEffectPass).program
-        beamMaterial.diffuse = SharedSystem.textures.sparkle
-    
         this.beamLeft = Sprite.create(BillboardType.Cylinder, 4)
         this.beamRight = Sprite.create(BillboardType.Cylinder, 4)
-        this.beamLeft.material = beamMaterial
-        this.beamRight.material = beamMaterial
-        this.beamLeft.transform = this.context.get(TransformSystem).create()
-        this.beamRight.transform = this.context.get(TransformSystem).create()
-        this.beamLeft.transform.parent = this.mesh.transform
-        this.beamRight.transform.parent = this.mesh.transform
-    
-        quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.beamLeft.transform.rotation)
-        vec3.set(-0.5,1.3,3, this.beamLeft.transform.position)
-        quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, this.beamRight.transform.rotation)
-        vec3.set(0.5,1.3,3, this.beamRight.transform.position)
-    
+        this.beamLeft.material = SharedSystem.materials.sprite.sparkle
+        this.beamRight.material = SharedSystem.materials.sprite.sparkle
+        this.beamLeft.transform = this.context.get(TransformSystem)
+        .create([-0.5,1.3,3], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        this.beamRight.transform = this.context.get(TransformSystem)
+        .create([0.5,1.3,3], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beamLeft)
         this.context.get(ParticleEffectPass).add(this.beamRight)
     
@@ -182,9 +162,9 @@ export class LungeSkill extends AIUnitSkill {
         this.ringRight.material = SharedSystem.materials.sprite.burst
     
         this.ringLeft.transform = this.context.get(TransformSystem)
-        .create(vec3(-0.5,1.3,3), quat.IDENTITY, vec3.ONE, this.mesh.transform)
+        .create([-0.5,1.3,3], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.ringRight.transform = this.context.get(TransformSystem)
-        .create(vec3(0.5,1.3,3), quat.IDENTITY, vec3.ONE, this.mesh.transform)
+        .create([0.5,1.3,3], quat.IDENTITY, vec3.ONE, this.mesh.transform)
     
         this.context.get(ParticleEffectPass).add(this.ringLeft)
         this.context.get(ParticleEffectPass).add(this.ringRight)
@@ -211,7 +191,7 @@ export class LungeSkill extends AIUnitSkill {
         })
     
         this.wave = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.wave.material = SharedSystem.materials.stripesMaterial
+        this.wave.material = SharedSystem.materials.effect.stripes
         this.wave.transform = this.context.get(TransformSystem)
         .create(vec3(0,1.3,3), quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, quat()), vec3.ONE, this.mesh.transform)
     
@@ -221,26 +201,24 @@ export class LungeSkill extends AIUnitSkill {
         this.cone.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
     
-        this.cone.material = new SpriteMaterial()
-        this.cone.material.diffuse = SharedSystem.textures.raysWrap
-        this.cone.material.program = this.context.get(ParticleEffectPass).program
+        this.cone.material = SharedSystem.materials.sprite.streak
         this.context.get(ParticleEffectPass).add(this.cone)
     
-        actionTimeline['damage'] = EventTrigger([{ frame: 0.5, value: target }], AIUnitSkill.damage)
+        const damage = EventTrigger([{ frame: 0.5, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
     
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     
         SharedSystem.particles.energy.remove(this.spikesLeft)
         SharedSystem.particles.energy.remove(this.spikesRight)
         SharedSystem.particles.sparks.remove(this.sparksLeft)
         SharedSystem.particles.sparks.remove(this.sparksRight)
-    
         this.context.get(TransformSystem).delete(this.ringLeft.transform)
         this.context.get(TransformSystem).delete(this.ringRight.transform)
         this.context.get(TransformSystem).delete(this.tubeLeft.transform)
@@ -249,7 +227,6 @@ export class LungeSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.beamLeft.transform)
         this.context.get(TransformSystem).delete(this.beamRight.transform)
         this.context.get(TransformSystem).delete(this.cone.transform)
-    
         this.context.get(ParticleEffectPass).remove(this.ringLeft)
         this.context.get(ParticleEffectPass).remove(this.ringRight)
         this.context.get(ParticleEffectPass).remove(this.tubeLeft)
@@ -258,7 +235,6 @@ export class LungeSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.beamLeft)
         this.context.get(ParticleEffectPass).remove(this.beamRight)
         this.context.get(ParticleEffectPass).remove(this.cone)
-
         Sprite.delete(this.beamLeft)
         Sprite.delete(this.beamRight)
         Sprite.delete(this.ringLeft)

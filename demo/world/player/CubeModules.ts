@@ -1,6 +1,3 @@
-import { Application } from '../../engine/framework'
-import { Cube } from './Cube'
-
 export const enum CubeModule {
     Empty = 0,
     Death = 1,

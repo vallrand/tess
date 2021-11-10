@@ -1,13 +1,9 @@
-import { Application } from '../../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat } from '../../../engine/math'
-import { MeshSystem, Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
-import { TransformSystem, Transform } from '../../../engine/scene'
-import { DecalPass, Decal, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
-import { DecalMaterial, SpriteMaterial } from '../../../engine/materials'
-import { ParticleEmitter } from '../../../engine/particles'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../../engine/animation'
+import { lerp, vec2, vec3, vec4, quat } from '../../../engine/math'
+import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
+import { TransformSystem } from '../../../engine/scene'
+import { ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
-import { TerrainSystem } from '../../terrain'
 import { SharedSystem, ModelAnimation } from '../../shared'
 import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 import { StaticOrb } from '../effects/StaticOrb'
@@ -15,7 +11,7 @@ import { StaticOrb } from '../effects/StaticOrb'
 const actionTimeline = {
     'mesh.armature': ModelAnimation('activate'),
     'ring.transform.scale': PropertyAnimation([
-        { frame: 0.8, value: [0,0,0] },
+        { frame: 0.8, value: vec3.ZERO },
         { frame: 1.4, value: [8,8,8], ease: ease.quadOut }
     ], vec3.lerp),
     'ring.transform.rotation': PropertyAnimation([
@@ -114,13 +110,13 @@ export class OrbSkill extends AIUnitSkill {
         this.funnel = BatchMesh.create(SharedSystem.geometry.funnel)
         this.funnel.transform = this.context.get(TransformSystem)
         .create([0,0.7,0.8],quat.IDENTITY,vec3.ONE,this.mesh.transform)
-        this.funnel.material = SharedSystem.materials.coneTealMaterial
+        this.funnel.material = SharedSystem.materials.effect.coneTeal
         this.context.get(ParticleEffectPass).add(this.funnel)
 
         this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
         this.core.transform = this.context.get(TransformSystem)
         .create([0,0.7,2.5],Sprite.FlatDown,vec3.ONE,this.mesh.transform)
-        this.core.material = SharedSystem.materials.coreYellowMaterial
+        this.core.material = SharedSystem.materials.effect.coreYellow
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.cone = BatchMesh.create(SharedSystem.geometry.cone)
@@ -130,9 +126,7 @@ export class OrbSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
+        this.beam.material = SharedSystem.materials.sprite.beam
         this.beam.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO,Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
@@ -148,9 +142,7 @@ export class OrbSkill extends AIUnitSkill {
         this.context.get(PostEffectPass).add(this.bulge)
 
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,0.7,1.5],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)

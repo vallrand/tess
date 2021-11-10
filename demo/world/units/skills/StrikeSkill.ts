@@ -1,15 +1,12 @@
-import { Application } from '../../../engine/framework'
-import { randomFloat, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
+import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { ParticleEmitter } from '../../../engine/particles'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEffectPass } from '../../../engine/pipeline'
-import { SpriteMaterial } from '../../../engine/materials'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
 import { SharedSystem, ModelAnimation } from '../../shared'
 import { AIUnit, AIUnitSkill, DamageType } from '../../military'
-import { TerrainSystem } from '../../terrain'
 
 const actionTimeline = {
     'mesh.armature': ModelAnimation('activate'),
@@ -26,7 +23,7 @@ const actionTimeline = {
         { frame: 0.8, value: [0,1,2], ease: ease.quartOut }
     ], vec3.lerp),
     'cone.transform.scale': PropertyAnimation([
-        { frame: 0.2, value: [0,0,0] },
+        { frame: 0.2, value: vec3.ZERO },
         { frame: 0.8, value: [2,2,6], ease: ease.cubicOut }
     ], vec3.lerp),
     'cone.color': PropertyAnimation([
@@ -83,33 +80,26 @@ export class StrikeSkill extends AIUnitSkill {
         this.mesh = source.mesh
         
         this.cone = BatchMesh.create(SharedSystem.geometry.hemisphere)
-        this.cone.material = SharedSystem.materials.coneTealMaterial
-
+        this.cone.material = SharedSystem.materials.effect.coneTeal
         this.cone.transform = this.context.get(TransformSystem).create()
         this.cone.transform.parent = this.mesh.transform
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem).create()
         this.ring.transform.parent = this.mesh.transform
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.rays = Sprite.create(BillboardType.None)
-        this.rays.material = new SpriteMaterial()
-        this.rays.material.program = this.context.get(ParticleEffectPass).program
-        this.rays.material.diffuse = SharedSystem.textures.rays
+        this.rays.material = SharedSystem.materials.sprite.rays
         this.rays.transform = this.context.get(TransformSystem)
         .create([0,1,0.96], quat.IDENTITY, vec3.ONE, this.mesh.transform)
-        quat.axisAngle(vec3.AXIS_Z, randomFloat(0, 2 * Math.PI, SharedSystem.random()), this.rays.transform.rotation)
+        quat.axisAngle(vec3.AXIS_Z, SharedSystem.random() * 2*Math.PI, this.rays.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.rays)
 
-        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0, 0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
+        this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
+        this.beam.material = SharedSystem.materials.sprite.beam
         this.beam.transform = this.context.get(TransformSystem)
         .create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
@@ -118,10 +108,8 @@ export class StrikeSkill extends AIUnitSkill {
             uLifespan: [0.3,0.6,-0.2,0],
             uOrigin: mat4.transform(vec3(0,1,1), this.mesh.transform.matrix, vec3()),
             uTarget: vec3.ZERO, uGravity: vec3.ZERO,
-            uLength: [0.1,0.2],
-            uSize: [0.1,0.2],
-            uForce: [4,8],
-            uRadius: [0,0.5],
+            uLength: [0.1,0.2], uSize: [0.1,0.2],
+            uForce: [4,8], uRadius: [0,0.5],
         })
 
         const damage = EventTrigger([{ frame: 0.2, value: target }], AIUnitSkill.damage)
@@ -132,16 +120,14 @@ export class StrikeSkill extends AIUnitSkill {
             animate(elapsedTime, this.context.deltaTime)
             damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.sparks.remove(this.sparks)
-
         this.context.get(TransformSystem).delete(this.ring.transform)
         this.context.get(TransformSystem).delete(this.rays.transform)
         this.context.get(TransformSystem).delete(this.beam.transform)
         this.context.get(TransformSystem).delete(this.cone.transform)
-
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(ParticleEffectPass).remove(this.rays)
         this.context.get(ParticleEffectPass).remove(this.beam)

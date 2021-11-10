@@ -63,7 +63,7 @@ export class GroundPlane {
         this.mesh.buffer.frame = 0
         this.mesh.transform = this.context.get(TransformSystem).create()
         vec3.set(this.parent.column * this.size, 0, this.parent.row * this.size, this.mesh.transform.position)
-        this.mesh.material = SharedSystem.materials.dunesMaterial
+        this.mesh.material = SharedSystem.materials.mesh.dunes
 
         const random = mulberry32(0x7C)
         for(let i = this.foliageOptions.uOrigin.length - 1; i >= 0; i--){
@@ -73,7 +73,7 @@ export class GroundPlane {
             origin[1] = this.sample(origin[0], origin[2])
 
             const decal = this.context.get(DecalPass).create(1)
-            decal.material = SharedSystem.materials.mossMaterial
+            decal.material = SharedSystem.materials.decal.moss
             const size = randomFloat(4, 12, random())
             decal.transform = this.context.get(TransformSystem).create(origin, quat.IDENTITY, [size,10,size])
             quat.axisAngle(vec3.AXIS_Y, random() * 2 * Math.PI, decal.transform.rotation)

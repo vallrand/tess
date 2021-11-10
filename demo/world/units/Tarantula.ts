@@ -1,17 +1,10 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4 } from '../../engine/math'
-import { MeshSystem, Mesh, ArmatureNode, Sprite, BillboardType, BatchMesh, Line } from '../../engine/components'
-import { MeshMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
+import { vec2, vec3 } from '../../engine/math'
+import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { applyTransform, doubleSided } from '../../engine/geometry'
-import { ParticleEmitter } from '../../engine/particles'
-import { DeferredGeometryPass, PointLightPass, PointLight, DecalPass, Decal, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, FollowPath, ease } from '../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
-import { TerrainSystem } from '../terrain'
-import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
+import { ModelAnimation } from '../shared'
+import { AIUnit, AIStrategy } from '../military'
 import { Spider4Rig } from './effects/Spider4Rig'
 import { WaveSkill } from './skills/WaveSkill'
 import { ProjectileSkill } from './skills/ProjectileSkill'
@@ -31,6 +24,7 @@ export class Tarantula extends AIUnit {
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
+        this.markTiles(true)
 
         const rig = new Spider4Rig(this.context)
         rig.build(this.mesh)
@@ -38,7 +32,7 @@ export class Tarantula extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Tarantula.pool.push(this)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
@@ -81,7 +75,7 @@ export class TarantulaVariant extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         TarantulaVariant.pool.push(this)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {

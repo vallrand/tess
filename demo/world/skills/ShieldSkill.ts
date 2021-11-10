@@ -54,7 +54,7 @@ const introTimeline = {
         { frame: 1.4, value: [5,2,5], ease: ease.sineIn }
     ], vec3.lerp),
     'tube.transform.position': PropertyAnimation([
-        { frame: 0.2, value: [0,0,0] },
+        { frame: 0.2, value: vec3.ZERO },
         { frame: 1.2, value: [0,4,0], ease: ease.sineOut }
     ], vec3.lerp),
     'tube.color': PropertyAnimation([
@@ -125,13 +125,13 @@ export class ShieldSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).add(this.beam)
         
         this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tube.material = SharedSystem.materials.stripesMaterial
+        this.tube.material = SharedSystem.materials.effect.stripes
         this.tube.transform = this.context.get(TransformSystem).create()
         this.tube.transform.parent = this.cube.transform
         this.context.get(ParticleEffectPass).add(this.tube)
 
         this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
-        this.sphere.material = SharedSystem.materials.stripesMaterial
+        this.sphere.material = SharedSystem.materials.effect.stripes
         this.sphere.transform = this.context.get(TransformSystem).create()
         this.sphere.transform.parent = this.cube.transform
         this.context.get(ParticleEffectPass).add(this.sphere)

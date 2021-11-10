@@ -1,7 +1,4 @@
-#version 300 es
-precision highp float;
-in vec2 vUV;
-out vec4 fragColor;
+#pragma import(./template/fullscreen_frag.glsl)
 
 #define LOG2 1.4426950408889634
 

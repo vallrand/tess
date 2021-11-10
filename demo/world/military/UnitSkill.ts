@@ -9,13 +9,14 @@ export const enum DamageType {
     Kinetic = 0x0001,
     Electric = 0x0002,
     Temperature = 0x0004,
-    Corrosion = 0x0008
+    Corrosion = 0x0008,
+    Immobilize = 0x0010
 }
 
 export abstract class UnitSkill {
     constructor(protected readonly context: Application){}
     readonly cost: number = 0
-    readonly minRange: number = -1
+    readonly minRange: number = 1
     readonly range: number
     readonly cardinal?: boolean
     readonly pierce?: boolean
@@ -24,9 +25,6 @@ export abstract class UnitSkill {
 
     public active: boolean = false
 
-    // protected query(origin: vec2, direction: Direction): vec2[] {
-    //     return null
-    // }
     public static damage(source: UnitSkill, target: vec2): void {
         const targetUnit = source.context.get(TerrainSystem).getTile<Unit>(target[0], target[1])
         if(targetUnit && targetUnit.damage) targetUnit.damage(source.damage, source.damageType)

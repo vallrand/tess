@@ -9,10 +9,10 @@ import {
     AttributeCurveSampler, ParticleGeometry, ParticleOvertimeAttributes,
     ParticleSystem, StaticParticleSystem
 } from '../../engine/particles'
+import * as localShaders from '../shaders'
 import { SharedSystem } from './index'
 
 export function ParticleLibrary(context: Application){
-    const materials = context.get(MaterialSystem)
     const random = mulberry32()
 
     const energy = new ParticleSystem<{
@@ -131,7 +131,7 @@ export function ParticleLibrary(context: Application){
     }>(
         context, { limit: 1024, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
-        ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/smoke_frag.glsl'), {
+        ShaderProgram(context.gl, shaders.billboard_vert, localShaders.smoke_frag, {
             SPHERICAL: true, MASK: true, GRADIENT: true
         }),
         ShaderProgram(context.gl, shaders.particle_vert, null, {
@@ -221,7 +221,7 @@ export function ParticleLibrary(context: Application){
     }>(
         context, { limit: 512, format: VertexDataFormat.Particle },
         ParticleGeometry.quad(context.gl),
-        ShaderProgram(context.gl, shaders.billboard_vert, require('../shaders/fire_frag.glsl'), {
+        ShaderProgram(context.gl, shaders.billboard_vert, localShaders.fire_frag, {
             ALIGNED: true
         }),
         ShaderProgram(context.gl, shaders.particle_vert, null, {
@@ -337,7 +337,7 @@ export function ParticleLibrary(context: Application){
     }>(
         context, { limit: 2048, format: VertexDataFormat.StaticParticle },
         ParticleGeometry.board(context.gl, 0.2),
-        ShaderProgram(context.gl, require('../shaders/grass_vert.glsl'), shaders.foliage_frag, {
+        ShaderProgram(context.gl, localShaders.grass_vert, shaders.foliage_frag, {
             FRAMES: true
         }), {
             aLifetime(options, offset, buffer){

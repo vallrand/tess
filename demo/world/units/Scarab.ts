@@ -1,16 +1,10 @@
-import { Application } from '../../engine/framework'
-import { randomFloat, clamp, lerp, vec2, vec3, vec4, quat, mat4 } from '../../engine/math'
-import { MeshSystem, Mesh, Sprite, BillboardType, BatchMesh } from '../../engine/components'
-import { ParticleEmitter } from '../../engine/particles'
+import { vec2, vec3, quat } from '../../engine/math'
+import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { ParticleEffectPass, DecalPass, Decal } from '../../engine/pipeline'
-import { SpriteMaterial } from '../../engine/materials'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, BlendTween, ease } from '../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
-import { TerrainSystem } from '../terrain'
-import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
+import { ModelAnimation } from '../shared'
+import { AIUnit, AIStrategy } from '../military'
 import { StrikeSkill } from './skills/StrikeSkill'
 
 export class Scarab extends AIUnit {
@@ -32,7 +26,7 @@ export class Scarab extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Scarab.pool.push(this)
     }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {

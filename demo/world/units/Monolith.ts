@@ -1,19 +1,12 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4, shortestAngle } from '../../engine/math'
-import { ShaderProgram } from '../../engine/webgl'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../engine/components'
+import { lerp, vec2, vec3, vec4, quat } from '../../engine/math'
+import { MeshSystem, Mesh, BatchMesh } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { Decal, DecalPass, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../engine/pipeline'
-import { DecalMaterial, SpriteMaterial, ShaderMaterial } from '../../engine/materials'
-import { ParticleEmitter } from '../../engine/particles'
-import { doubleSided } from '../../engine/geometry'
-import * as shaders from '../../engine/shaders'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, FollowPath, ease } from '../../engine/animation'
+import { ParticleEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
 import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
 import { ShockwaveSkill } from './skills/ShockwaveSkill'
 import { TurretSkill } from './skills/TurretSkill'
 import { SpawnerSkill } from './skills/SpawnerSkill'
@@ -30,7 +23,7 @@ export class Monolith extends AIUnit {
     readonly movementDuration: number = 1
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("monolith")
+        this.mesh = this.context.get(MeshSystem).loadModel('monolith')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
@@ -38,7 +31,7 @@ export class Monolith extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Monolith.pool.push(this)
     }
 
@@ -89,8 +82,8 @@ export class Monolith extends AIUnit {
 
         this.context.get(TransformSystem).delete(this.light.transform)
         this.context.get(TransformSystem).delete(this.glow.transform)
-        this.context.get(PointLightPass).delete(this.light)
+        this.light = void this.context.get(PointLightPass).delete(this.light)
         this.context.get(ParticleEffectPass).remove(this.glow)
-        BatchMesh.delete(this.glow)
+        this.glow = void BatchMesh.delete(this.glow)
     }
 }

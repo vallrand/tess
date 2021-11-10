@@ -24,7 +24,7 @@ export class MistEffect extends ParticleSystem<void> {
             context, { limit: amount, format: [
                 { name: 'aTransform', size: 3, type: GL.FLOAT, normalized: false, stride: 12, offset: 0 }
             ] }, null,
-            ShaderProgram(context.gl, require('../../shaders/mist_vert.glsl'), shaders.billboard_frag, { POINT: true }), null
+            ShaderProgram(context.gl, localShaders.mist_vert, shaders.billboard_frag, { POINT: true }), null
         )
         this.material = new EmitterMaterial()
         this.material.blendMode = ShaderMaterial.Blend

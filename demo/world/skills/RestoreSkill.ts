@@ -129,12 +129,12 @@ export class RestoreSkill extends CubeSkill {
         if(this.active) return this.restore()
 
         this.tubeX = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tubeX.material = SharedSystem.materials.energyHalfPurpleMaterial
+        this.tubeX.material = SharedSystem.materials.effect.energyHalfPurple
         this.tubeX.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.HALF_X, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.tubeX)
 
         this.tubeZ = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tubeZ.material = SharedSystem.materials.energyHalfPurpleMaterial
+        this.tubeZ.material = SharedSystem.materials.effect.energyHalfPurple
         this.tubeZ.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.HALF_Z, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.tubeZ)
 
@@ -151,7 +151,7 @@ export class RestoreSkill extends CubeSkill {
         this.ring.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.IDENTITY, vec3.ONE, this.cube.transform)
 
         this.conduit = BatchMesh.create(SharedSystem.geometry.openBox)
-        this.conduit.material = SharedSystem.materials.stripesMaterial
+        this.conduit.material = SharedSystem.materials.effect.stripes
         this.conduit.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.conduit)
 
@@ -159,7 +159,7 @@ export class RestoreSkill extends CubeSkill {
             uOrigin: vec3.add([0,1.5,0], this.cube.transform.position, vec3()),
             uRadius: [1.5,2.5],
             uLifespan: [0.2,0.6,0,0],
-            uGravity: [0,0,0],
+            uGravity: vec3.ZERO,
             uRotation: [0,2*Math.PI],
             uOrientation: quat.IDENTITY,
             uSize: [0.6,1.8],

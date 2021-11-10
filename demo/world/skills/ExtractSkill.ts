@@ -104,7 +104,7 @@ export class ExtractSkill extends CubeSkill {
         this.cracks.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.cube.transform)
 
         this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tube.material = SharedSystem.materials.stripesRedMaterial
+        this.tube.material = SharedSystem.materials.effect.stripesRed
         this.tube.transform = this.context.get(TransformSystem).create([0,4,0], quat.IDENTITY, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.tube)
 

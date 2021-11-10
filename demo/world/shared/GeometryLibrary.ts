@@ -13,16 +13,16 @@ export function GeometryLibrary(context: Application){
     const sphere = createSphere({
         longitude: 32, latitude: 32, radius: 1
     })
-    const lowpolySphere = createSphere({
+    const lowpolySphere = doubleSided(createSphere({
         longitude: 16, latitude: 16, radius: 1
-    })
-    const hemisphere = applyTransform(createSphere({
+    }))
+    const hemisphere = doubleSided(applyTransform(createSphere({
         longitude: 8, latitude: 4, radius: 1,
         thetaStart: 0, thetaLength: 0.5 * Math.PI,
         phiStart: 0, phiLength: 2 * Math.PI
     }), mat4.fromRotationTranslationScale(
         Sprite.FlatUp, vec3(0,0,-1), vec3.ONE, transform
-    ))
+    )))
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
         radial: 32, horizontal: 1,
@@ -40,7 +40,7 @@ export function GeometryLibrary(context: Application){
         cap: false, angleStart: 0, angleLength: 2*Math.PI
     }), mat4.translate(mat4.IDENTITY, vec3(0,0.5,0), transform)))
 
-    const lopolyCylinderFlip = doubleSided(applyTransform(createCylinder({
+    const lowpolyCylinderFlip = doubleSided(applyTransform(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
         radial: 16, horizontal: 1,
         cap: false, angleStart: 0, angleLength: 2*Math.PI
@@ -59,29 +59,36 @@ export function GeometryLibrary(context: Application){
     }), mat4.fromRotationTranslationScale(quat.IDENTITY, vec3(0,0.5,0), vec3.ONE, transform)))
 
 
-    let funnel = createCylinder({
+    const funnel = doubleSided(applyTransform(modifyGeometry(createCylinder({
         radiusTop: 0.5, radiusBottom: 4, height: 4,
         horizontal: 8, radial: 8,
         cap: false, angleStart: 0, angleLength: 2 * Math.PI
-    })
-    modifyGeometry(funnel, function verticalSkew(position: vec3, normal: vec3){
+    }), function verticalSkew(position: vec3, normal: vec3){
         const skewAngle = 1.6 * Math.PI * ease.circIn(0.5 + position[1] / 4)
         quat.axisAngle(vec3.AXIS_Y, skewAngle, rotation)
         quat.transform(position, rotation, position)
         quat.transform(normal, rotation, normal)
-    })
-    applyTransform(funnel, mat4.fromRotationTranslationScale(
+    }), mat4.fromRotationTranslationScale(
         Sprite.FlatUp, vec3(0,0,-2), vec3.ONE, transform
-    ))
-    funnel = doubleSided(funnel)
+    )))
 
     return {
-        sphere, lowpolySphere, hemisphere,
-        cylinder, lowpolyCylinder, cone,
-        box, openBox,
-        cross,
-        funnel,
-        lopolyCylinderFlip,
+        lowpoly: {
+            sphere: createSphere({
+                longitude: 16, latitude: 16, radius: 1
+            }),
+            hemisphere: applyTransform(createSphere({
+                longitude: 8, latitude: 4, radius: 1,
+                thetaStart: 0, thetaLength: 0.5 * Math.PI,
+                phiStart: 0, phiLength: 2 * Math.PI
+            }), mat4.fromRotationTranslationScale(
+                Sprite.FlatUp, vec3(0,0,-1), vec3.ONE, transform
+            ))
+        },
+
+        box, openBox, cross,
+        sphere, hemisphere, lowpolySphere,
+        cylinder, lowpolyCylinder, cone, funnel, lowpolyCylinderFlip,
 
         sphereMesh: context.get(MeshSystem).uploadVertexData(sphere.vertexArray, sphere.indexArray, sphere.format, false)
     }

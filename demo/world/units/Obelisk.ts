@@ -1,29 +1,27 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4 } from '../../engine/math'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../engine/components'
+import { vec2, vec3 } from '../../engine/math'
+import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { ParticleEmitter } from '../../engine/particles'
-import { ParticleEffectPass, PointLight, PointLightPass } from '../../engine/pipeline'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
+import { ModelAnimation } from '../shared'
+import { AIUnit, AIStrategy, AIStrategyPlan } from '../military'
 import { TerrainSystem } from '../terrain'
-import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
-import { BeamSkill } from './skills/BeamSkill'
+import { DirectionTile } from '../player'
+import { LaserSkill } from './skills/LaserSkill'
 
 export class Obelisk extends AIUnit {
     static readonly pool: Obelisk[] = []
-    readonly skills = [new BeamSkill(this.context)]
+    readonly skills = [new LaserSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 10, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
-    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 0.2 }
     readonly group: number = 2
     readonly movementDuration: number = 0.8
+    private expanded: boolean = false
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("obelisk")
+        this.mesh = this.context.get(MeshSystem).loadModel('obelisk')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
@@ -31,11 +29,31 @@ export class Obelisk extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Obelisk.pool.push(this)
     }
+    public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
+        if(this.expanded && plan.path){
+            this.markTiles(false)
+            this.expanded = false
+            const map = this.context.get(TerrainSystem).pathfinder
+            const time = this.context.currentTime + 2 * this.movementDuration
+            for(let i = 0; i < DirectionTile.length; i++)
+                map.marked[map.tileIndex(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1])] = time
+        }
+        const action = super.execute(plan)
+        if(plan.skill != -1) this.markTiles(this.expanded = true)
+        return action
+    }
+    public markTiles(toggle: boolean){
+        const terrain = this.context.get(TerrainSystem)
+        terrain.setTile(this.tile[0], this.tile[1], toggle ? this : null)
+        if(!this.expanded) return
+        for(let i = 0; i < DirectionTile.length; i++)
+            terrain.setTile(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1], toggle ? this : null)
+    }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
-        if(this.skills[0].active) for(const generator = this.skills[0].deactivate(); true;){
+        for(const generator = this.skills[0].deactivate(); true;){
             const iterator = generator.next()
             if(iterator.done) break
             else yield iterator.value

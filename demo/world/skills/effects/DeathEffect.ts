@@ -4,7 +4,6 @@ import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, Ev
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEmitter } from '../../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, Armature } from '../../../engine/components'
-import { DecalMaterial, SpriteMaterial } from '../../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
 
 import { SharedSystem, ModelAnimation, CubeModuleModel } from '../../shared'
@@ -135,9 +134,7 @@ export class DeathEffect {
         this.context.get(PostEffectPass).add(this.wave)
 
         this.burn = this.context.get(DecalPass).create(4)
-        this.burn.material = new DecalMaterial()
-        this.burn.material.program = this.context.get(DecalPass).program
-        this.burn.material.diffuse = SharedSystem.textures.rays
+        this.burn.material = SharedSystem.materials.decal.rays
         this.burn.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.wreck.transform)
 

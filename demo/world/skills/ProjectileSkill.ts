@@ -115,11 +115,11 @@ class Projectile {
         this.transform = this.context.get(TransformSystem).create(this.origin)
 
         this.trail = Line.create(8, -2, 0.4, ease.reverse(ease.quadIn), true)
-        this.trail.material = SharedSystem.materials.sprite.yellowLine
+        this.trail.material = SharedSystem.materials.sprite.lineYellow
         this.context.get(ParticleEffectPass).add(this.trail)
 
-        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 8)
-        this.sphere.material = SharedSystem.materials.coreYellowMaterial
+        this.sphere = BatchMesh.create(SharedSystem.geometry.lowpoly.sphere, 8)
+        this.sphere.material = SharedSystem.materials.effect.coreYellow
         this.sphere.transform = this.context.get(TransformSystem).create(this.target)
         this.context.get(ParticleEffectPass).add(this.sphere)
 
@@ -281,7 +281,7 @@ export class ProjectileSkill extends CubeSkill {
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.flash = Sprite.create(BillboardType.None)
-        this.flash.material = SharedSystem.materials.flashYellowMaterial
+        this.flash.material = SharedSystem.materials.effect.flashYellow
         this.flash.transform = this.context.get(TransformSystem).create()
         this.flash.transform.parent = this.light.transform
         this.context.get(ParticleEffectPass).add(this.flash)

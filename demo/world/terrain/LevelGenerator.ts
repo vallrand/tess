@@ -104,6 +104,7 @@ export class LevelGenerator {
             const index = c + r * this.tilemap.width
             if(i == 0){
                 zone.data[index] = SHOP
+                zone.data[c + (r + 2) * this.tilemap.width] = ____
                 continue
             }
             const group = AISystem.groups[random() * AISystem.groups.length | 0]

@@ -1,33 +1,7 @@
-#version 300 es
-precision highp float;
-precision highp int;
-precision highp sampler2DArray;
+#pragma import(./template/model_frag.glsl)
 
 #define MAP_SCALE 10.0
 
-in vec3 vPosition;
-in vec3 vNormal; 
-in vec2 vUV;
-#ifdef VERTEX_COLOR
-in vec4 vColor;
-#endif
-
-layout(location=0) out vec4 fragAlbedo;
-layout(location=1) out vec4 fragNormal;
-layout(location=2) out vec4 fragPosition;
-
-uniform CameraUniforms {
-    mat4 uViewProjectionMatrix;
-    mat4 uProjectionMatrix;
-    mat4 uViewMatrix;
-    vec3 uEyePosition;
-};
-uniform ModelUniforms {
-    mat4 uModelMatrix;
-    vec4 uColor;
-    float uLayer;
-    float uStartTime;
-};
 uniform sampler2D uDiffuseMap;
 uniform sampler2D uNormalMap;
 

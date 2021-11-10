@@ -6,6 +6,8 @@ import { OverlayPass } from '../../engine/pipeline/OverlayPass'
 import { IMaterial } from '../../engine/pipeline'
 import { Transform2D, Sprite2D, Sprite2DMaterial } from '../../engine/components/Sprite2D'
 import { MaterialSystem, MeshMaterial } from '../../engine/materials'
+import * as shaders from '../../engine/shaders'
+import * as localShaders from '../shaders'
 import { Direction, CubeOrientation } from './CubeOrientation'
 import { Cube } from './Cube'
 
@@ -24,9 +26,7 @@ export class CubeTileMap {
     public hash: number = -1
     constructor(private readonly context: Application){
         this.batch = new Batch2D(this.context.gl, 6 * 6 * 4, 6 * 6 * 6, Batch2D.quadIndices)
-        this.program = ShaderProgram(this.context.gl,
-            require('../../engine/shaders/batch2d_vert.glsl'),
-            require('../shaders/batch2d_rg_frag.glsl'))
+        this.program = ShaderProgram(this.context.gl, shaders.batch2d_vert, localShaders.batch2d_rg_frag)
     }
     private renderTexture(texture: { fbo: WebGLFramebuffer, size: vec2 }, indexCount: number, offset: number, program: ShaderProgram){
         const gl = this.context.gl

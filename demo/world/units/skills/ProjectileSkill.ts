@@ -1,4 +1,3 @@
-import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh, Line } from '../../../engine/components'
 import { SpriteMaterial } from '../../../engine/materials'
@@ -110,37 +109,31 @@ export class ProjectileSkill extends AIUnitSkill {
         .create(vec3.ZERO, orientation, vec3.ONE, this.mesh.transform)
     
         this.pillar = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.pillar.material = SharedSystem.materials.stripesRedMaterial
+        this.pillar.material = SharedSystem.materials.effect.stripesRed
         this.pillar.transform = this.context.get(TransformSystem)
         .create([0,1.8,0], Sprite.FlatUp, vec3.ONE, transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
     
         this.muzzle = BatchMesh.create(SharedSystem.geometry.cone)
-        this.muzzle.material = new SpriteMaterial()
-        this.muzzle.material.program = this.context.get(ParticleEffectPass).program
-        this.muzzle.material.diffuse = SharedSystem.textures.raysWrap
+        this.muzzle.material = SharedSystem.materials.sprite.streak
         this.muzzle.transform = this.context.get(TransformSystem)
         .create([0,1.8,1.2],Sprite.FlatUp,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.muzzle)
     
         this.flash = Sprite.create(BillboardType.None)
-        this.flash.material = SharedSystem.materials.flashYellowMaterial
+        this.flash.material = SharedSystem.materials.effect.flashYellow
         this.flash.transform = this.context.get(TransformSystem)
         .create([0,1.8,1.8],quat.IDENTITY,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.flash)
     
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,1.8,2],quat.IDENTITY,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.ring)
     
         this.trail = Line.create(8, 0, 0.8, ease.reverse(ease.quadIn), true)
-        this.trail.material = new SpriteMaterial()
-        this.trail.material.program = this.context.get(ParticleEffectPass).program
-        this.trail.material.diffuse = SharedSystem.gradients.tealLine
+        this.trail.material = SharedSystem.materials.sprite.lineTeal
         this.context.get(ParticleEffectPass).add(this.trail)
     
         const originPosition = mat4.transform([0,1.8,0], this.mesh.transform.matrix, vec3())
@@ -161,12 +154,11 @@ export class ProjectileSkill extends AIUnitSkill {
     
         this.wave = Sprite.create(BillboardType.Sphere)
         this.wave.material = SharedSystem.materials.displacement.bulge
-        this.wave.transform = this.context.get(TransformSystem)
-        .create(vec3.add([0,0,0], targetPosition, vec3()), Sprite.FlatUp)
+        this.wave.transform = this.context.get(TransformSystem).create(targetPosition)
         this.context.get(PostEffectPass).add(this.wave)
     
-        this.core = new BatchMesh(doubleSided(SharedSystem.geometry.lowpolySphere))
-        this.core.material = SharedSystem.materials.energyPurpleMaterial
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
+        this.core.material = SharedSystem.materials.effect.energyPurple
         this.core.transform = this.context.get(TransformSystem).create(targetPosition)
         this.context.get(ParticleEffectPass).add(this.core)
     
@@ -176,13 +168,12 @@ export class ProjectileSkill extends AIUnitSkill {
         .create(vec3.add([0,0.5,0], targetPosition, vec3()), Sprite.FlatUp)
         this.context.get(ParticleEffectPass).add(this.circle)
     
+        const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, {
-            ...actionTimeline,
             'mesh.armature.nodes.0.rotation': PropertyAnimation([
                 { frame: 0, value: quat.copy(this.mesh.armature.nodes[0].rotation, quat()) },
                 { frame: 0.5, value: quat.multiply(quat.axisAngle(vec3.AXIS_Y, -0.5* Math.PI,quat()), orientation, quat()), ease: ease.quadInOut }
             ], quat.slerp),
-    
             'trail': FollowPath.Line(FollowPath.separate(
                 PropertyAnimation([
                     { frame: 0.6, value: originPosition[0] },
@@ -197,14 +188,15 @@ export class ProjectileSkill extends AIUnitSkill {
                     { frame: 1.0, value: targetPosition[2], ease: ease.linear }
                 ], lerp)
             ), { length: 0.06 }),
-            'damage': EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
+            ...actionTimeline
         })
     
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     
         this.context.get(TransformSystem).delete(transform)
@@ -217,11 +209,9 @@ export class ProjectileSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.wave.transform)
         this.context.get(TransformSystem).delete(this.light.transform)
         this.context.get(TransformSystem).delete(this.wave.transform)
-    
         SharedSystem.particles.fire.remove(this.fire)
         this.context.get(PointLightPass).delete(this.light)
         this.context.get(PostEffectPass).remove(this.wave)
-    
         this.context.get(ParticleEffectPass).remove(this.trail)
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(ParticleEffectPass).remove(this.flash)
@@ -229,13 +219,13 @@ export class ProjectileSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.pillar)
         this.context.get(ParticleEffectPass).remove(this.circle)
         this.context.get(ParticleEffectPass).remove(this.core)
-
         Sprite.delete(this.ring)
         Sprite.delete(this.flash)
         Sprite.delete(this.wave)
         Sprite.delete(this.circle)
         BatchMesh.delete(this.pillar)
         BatchMesh.delete(this.muzzle)
+        BatchMesh.delete(this.core)
         Line.delete(this.trail)
     }
 }

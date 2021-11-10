@@ -18,9 +18,7 @@ export class SkyEffect implements IEffect {
         this.material.cullFace = GL.BACK
         this.material.depthTest = GL.LEQUAL
         this.material.depthWrite = true
-        this.material.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.sky_frag, {
-            RAYCAST: true
-        })
+        this.material.program = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.sky_frag, { RAYCAST: true })
         this.material.program.uniforms['uLayer'] = OpaqueLayer.Skybox
         this.material.program.uniforms['uFogColor'] = this.context.get(PostEffectPass).fog.color
         this.material.program.uniforms['uSkyColor'] = this.color

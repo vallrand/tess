@@ -1,48 +1,7 @@
-#version 300 es
-precision highp float;
-
-in vec3 vPosition;
-#ifdef INSTANCED
-in mat4 vInvModel;
-in vec4 vUV;
-in vec4 vColor;
-in float vThreshold;
-#else
-uniform ModelUniforms {
-    //mat4 uModelMatrix;
-    //vec4 uColor;
-    //float uLayer;
-    //uniform mat4 uInvModelMatrix;
-};
-#endif
-
-layout(location=0) out vec4 fragAlbedo;
-layout(location=1) out vec4 fragNormal;
-
-uniform float uLayer;
-uniform float uDissolveEdge;
-
-uniform GlobalUniforms {
-    vec4 uTime;
-};
-uniform CameraUniforms {
-    mat4 uViewProjectionMatrix;
-    mat4 uProjectionMatrix;
-    mat4 uViewMatrix;
-    vec3 uEyePosition;
-};
-uniform sampler2D uDiffuseMap;
-uniform sampler2D uNormalMap;
-uniform sampler2D uPositionBuffer;
+#pragma import(./template/decal_frag.glsl)
 
 void main(){
-    ivec2 fragCoord = ivec2(gl_FragCoord.xy);
-    vec3 viewRay = vPosition.xyz - uEyePosition;
-    vec4 worldPosition = texelFetch(uPositionBuffer, fragCoord, 0);
-    if(worldPosition.a > uLayer) discard;
-    vec4 objectPosition = vInvModel * vec4(worldPosition.xyz, 1.0);
-    if(0.5 < abs(objectPosition.x) || 0.5 < abs(objectPosition.y) || 0.5 < abs(objectPosition.z)) discard;
-    vec2 uv = mix(vUV.xy, vUV.zw, objectPosition.xz + 0.5);
+#pragma import(./template/decal_uv_frag.glsl)
     vec4 color = vColor * texture(uDiffuseMap, uv);
 #ifdef ALPHA_CUTOFF
     if(color.a < ALPHA_CUTOFF) discard;

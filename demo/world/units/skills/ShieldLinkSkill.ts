@@ -1,13 +1,11 @@
-import { Application } from '../../../engine/framework'
 import { vec2, vec3, vec4, quat } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
-import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 
 import { SharedSystem, ModelAnimation } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
+import { AISystem, AIUnit, AIUnitSkill } from '../../military'
 import { EnergyLinkEffect } from '../effects/EnergyLinkEffect'
 
 export class ShieldLinkSkill extends AIUnitSkill {
@@ -38,37 +36,31 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).add(this.cylinder)
         
         this.wave = Sprite.create(BillboardType.None)
-        this.wave.material = new SpriteMaterial()
-        this.wave.material.program = this.context.get(ParticleEffectPass).program
-        this.wave.material.diffuse = SharedSystem.textures.ring
+        this.wave.material = SharedSystem.materials.sprite.ring
         this.wave.transform = this.context.get(TransformSystem)
         .create([0,4,-1.3],Sprite.FlatUp,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.wave)
 
-        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
-        this.core.material = SharedSystem.materials.energyPurpleMaterial
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpoly.sphere)
+        this.core.material = SharedSystem.materials.effect.energyPurple
         this.core.transform = this.context.get(TransformSystem)
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.glow = Sprite.create(BillboardType.Sphere)
-        this.glow.material = new SpriteMaterial()
-        this.glow.material.program = this.context.get(ParticleEffectPass).program
-        this.glow.material.diffuse = SharedSystem.textures.glow
+        this.glow.material = SharedSystem.materials.sprite.glow
         this.glow.transform = this.context.get(TransformSystem)
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
         this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.pillar.material = new SpriteMaterial()
-        this.pillar.material.program = this.context.get(ParticleEffectPass).program
-        this.pillar.material.diffuse = SharedSystem.textures.raysBeam
+        this.pillar.material = SharedSystem.materials.sprite.beam
         this.pillar.transform = this.context.get(TransformSystem)
         .create([0,2,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
 
         this.circle = Sprite.create(BillboardType.None)
-        this.circle.material = SharedSystem.materials.flashYellowMaterial
+        this.circle.material = SharedSystem.materials.effect.flashYellow
         this.circle.transform = this.context.get(TransformSystem)
         .create([0,4.5,-1.3],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.circle)
@@ -79,7 +71,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         .create([0,4.5,-1.3],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.bulge)
 
-        const affected = this.context.get(AISystem).query(source.tile, 0)
+        const affected = []//this.context.get(AISystem).query(source.tile, 0)
         for(let i = 0; i < affected.length; i++){
             const link = new EnergyLinkEffect(this.context)
             link.parent = source

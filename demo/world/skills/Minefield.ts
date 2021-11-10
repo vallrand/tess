@@ -5,7 +5,6 @@ import { ParticleEmitter } from '../../engine/particles'
 import { TransformSystem } from '../../engine/scene'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEffectPass, PointLightPass, DecalPass, PostEffectPass, PointLight, Decal } from '../../engine/pipeline'
-import { SpriteMaterial } from '../../engine/materials'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
 import { TurnBasedSystem, IAgent } from '../common'
@@ -99,6 +98,7 @@ export class LandMine extends UnitSkill {
     static readonly pool: LandMine[] = []
     readonly tile: vec2 = vec2()
     readonly damageType = DamageType.Kinetic | DamageType.Temperature
+    readonly minRange: number = 0
     range: number = 4
     damage: number = 2
 
@@ -121,16 +121,12 @@ export class LandMine extends UnitSkill {
     public *trigger(): Generator<ActionSignal> {
         this.triggered = true
         this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.pillar.material = new SpriteMaterial()
-        this.pillar.material.program = this.context.get(ParticleEffectPass).program
-        this.pillar.material.diffuse = SharedSystem.textures.raysBeam
+        this.pillar.material = SharedSystem.materials.sprite.beam
         this.pillar.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
 
         this.circle = Sprite.create(BillboardType.None)
-        this.circle.material = new SpriteMaterial()
-        this.circle.material.program = this.context.get(ParticleEffectPass).program
-        this.circle.material.diffuse = SharedSystem.textures.ring
+        this.circle.material = SharedSystem.materials.sprite.ring
         this.circle.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.circle)
 
@@ -159,8 +155,8 @@ export class LandMine extends UnitSkill {
         vec4.copy(vec4.ZERO, this.mesh.color)
         const origin = this.mesh.transform.position, temp = vec3()
         
-        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 4)
-        this.core.material = SharedSystem.materials.coreWhiteMaterial
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpoly.sphere, 4)
+        this.core.material = SharedSystem.materials.effect.coreWhite
         this.core.transform = this.context.get(TransformSystem).create(origin)
         this.context.get(ParticleEffectPass).add(this.core)
 
@@ -170,7 +166,7 @@ export class LandMine extends UnitSkill {
         this.context.get(PostEffectPass).add(this.wave)
 
         this.ring = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.ring.material = SharedSystem.materials.ringDustMaterial
+        this.ring.material = SharedSystem.materials.effect.ringDust
         this.ring.transform = this.context.get(TransformSystem).create(origin)
         this.context.get(ParticleEffectPass).add(this.ring)
 
@@ -211,7 +207,7 @@ export class LandMine extends UnitSkill {
         this.light = this.context.get(PointLightPass).create([1,0.5,0.5])
         this.light.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp))
 
-        const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, -1, this.range, 2)
+        const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, this.minRange, this.range, 2)
         .map(value => ({ frame: 0.4, value })), UnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 3, startTime = this.context.currentTime; true;){

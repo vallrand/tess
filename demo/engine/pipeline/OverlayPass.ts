@@ -1,6 +1,7 @@
 import { range, mat3x2, vec4, mat3, insertionSort } from '../math'
 import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
+import * as shaders from '../shaders'
 import { Batch2D, IBatched2D } from './batch'
 import { PipelinePass, IMaterial } from './PipelinePass'
 
@@ -14,12 +15,9 @@ export class OverlayPass extends PipelinePass implements ISystem {
     constructor(context: Application){
         super(context)
         const maxTextures = context.gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
-        let fragmentSource: string = require('../shaders/batch2d_frag.glsl')
-        fragmentSource = fragmentSource.replace(/^#FOR(.*)$/gm, (match, line) => range(maxTextures)
-        .map(i => line.replace(/#i/g,i)).join('\n'))
-        this.program = ShaderProgram(context.gl, require('../shaders/batch2d_vert.glsl'), fragmentSource, {
-            MAX_TEXTURE_UNITS: maxTextures
-        })
+        this.program = ShaderProgram(context.gl, shaders.batch2d_vert, shaders.batch2d_frag
+            .replace(/^#FOR(.*)$/gm, (match, line) => range(maxTextures).map(i => line.replace(/#i/g,i)).join('\n')),
+            { MAX_TEXTURE_UNITS: maxTextures })
         this.program.uniforms['uSamplers'] = range(maxTextures)
         this.batch = new Batch2D(this.context.gl, 4*OverlayPass.batchSize, 6*OverlayPass.batchSize, null)
 

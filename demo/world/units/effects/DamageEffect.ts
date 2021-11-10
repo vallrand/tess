@@ -1,6 +1,5 @@
 import { Application } from '../../../engine/framework'
 import { vec2, vec3, vec4, quat } from '../../../engine/math'
-import { SpriteMaterial } from '../../../engine/materials'
 import { Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { TransformSystem } from '../../../engine/scene'
@@ -99,8 +98,8 @@ export class DamageEffect {
                 uForce: [6,12], uGravity: [0,-10,0], uRadius: [0,0.4],
                 uSize: [0.2,0.8], uLength: [0.2,0.4]
             })
-            this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere, 0)
-            this.sphere.material = SharedSystem.materials.energyPurpleMaterial
+            this.sphere = BatchMesh.create(SharedSystem.geometry.lowpoly.sphere, 0)
+            this.sphere.material = SharedSystem.materials.effect.energyPurple
             this.sphere.transform = this.context.get(TransformSystem).create(origin, quat.IDENTITY, vec3.ONE)
             this.context.get(ParticleEffectPass).add(this.sphere)
 
@@ -116,17 +115,12 @@ export class DamageEffect {
         }
         if(type & DamageType.Temperature){
             this.flash = Sprite.create(BillboardType.Sphere)
-            this.flash.material = new SpriteMaterial()
-            this.flash.material.program = SharedSystem.materials.beamRadialProgram
-            vec2.set(8, 10, this.flash.material.uvTransform as any)
-            this.flash.material.diffuse = SharedSystem.gradients.yellowViolet
+            this.flash.material = SharedSystem.materials.beamRadialYellowMaterial
             this.flash.transform = this.context.get(TransformSystem).create(origin, quat.IDENTITY, vec3.ONE)
             this.context.get(ParticleEffectPass).add(this.flash)
     
             this.wave = Sprite.create(BillboardType.Sphere)
-            this.wave.material = new SpriteMaterial()
-            this.wave.material.program = this.context.get(ParticleEffectPass).program
-            this.wave.material.diffuse = SharedSystem.textures.ring
+            this.wave.material = SharedSystem.materials.sprite.ring
             this.wave.transform = this.context.get(TransformSystem).create(origin, Sprite.FlatUp, vec3.ONE)
             this.context.get(ParticleEffectPass).add(this.wave)
 

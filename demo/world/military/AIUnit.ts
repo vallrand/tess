@@ -56,9 +56,11 @@ export abstract class AIUnit extends Unit {
 
     public abstract delete(): void
     public abstract place(column: number, row: number): void
-    public damage(amount: number, type: number): void {
+    public damage(amount: number, type: DamageType): void {
+        if(this.health.amount <= 0) return
         this.strategy.aware = true
         this.health.amount -= amount
+        if((type & DamageType.Immobilize) != 0) this.movement.amount = -this.movement.gain
         if(this.health.amount > 0) DamageEffect.create(this.context, this, type)
         else DeathEffect.create(this.context, this)
     }

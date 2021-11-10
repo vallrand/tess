@@ -12,7 +12,7 @@ import { SharedSystem, ModelAnimation } from '../shared'
 import { Cube, Direction, DirectionAngle, DirectionTile } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
-import { UnitSkill, DamageType } from '../military'
+import { UnitSkill, DamageType, Unit, IUnitAttribute } from '../military'
 import { IAgent, TurnBasedSystem } from '../common'
 
 const actionTimeline = {
@@ -76,9 +76,12 @@ const actionTimeline = {
 class CorrosiveOrb extends UnitSkill {
     static readonly pool: CorrosiveOrb[] = []
     readonly tile: vec2 = vec2()
-    readonly damageType: DamageType = DamageType.Corrosion
+    readonly direction: vec2 = vec2()
+    readonly damageType: DamageType = DamageType.Corrosion | DamageType.Immobilize
+    readonly health: IUnitAttribute = { capacity: 4, amount: 0 }
     damage: number = 1
     range: number = 2
+    group: number = 2
 
     private orb: Mesh
     private aura: Sprite
@@ -87,9 +90,10 @@ class CorrosiveOrb extends UnitSkill {
     private fire: ParticleEmitter
     public place(column: number, row: number): void {
         vec2.set(column, row, this.tile)
+        this.health.amount = this.health.capacity
         this.transform = this.context.get(TransformSystem).create()
         this.context.get(TerrainSystem).tilePosition(column, row, this.transform.position)
-        this.transform.position[1] += 1
+        vec3.add(vec3.AXIS_Y, this.transform.position, this.transform.position)
 
         this.decal = this.context.get(DecalPass).create(8)
         this.decal.material = SharedSystem.materials.corrosionMaterial
@@ -98,14 +102,14 @@ class CorrosiveOrb extends UnitSkill {
 
         this.orb = Mesh.create(SharedSystem.geometry.sphereMesh, 4, 8)
         this.context.get(MeshSystem).list.push(this.orb)
-        this.orb.material = SharedSystem.materials.orbMaterial
-        this.orb.transform = this.context.get(TransformSystem).create()
-        this.orb.transform.parent = this.transform
+        this.orb.material = SharedSystem.materials.mesh.orb
+        this.orb.transform = this.context.get(TransformSystem)
+        .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.transform)
 
         this.aura = Sprite.create(BillboardType.Sphere, 4)
-        this.aura.material = SharedSystem.materials.auraTealMaterial
-        this.aura.transform = this.context.get(TransformSystem).create()
-        this.aura.transform.parent = this.transform
+        this.aura.material = SharedSystem.materials.effect.auraTeal
+        this.aura.transform = this.context.get(TransformSystem)
+        .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.transform)
         this.context.get(ParticleEffectPass).add(this.aura)
 
         this.fire = SharedSystem.particles.fire.add({
@@ -127,7 +131,34 @@ class CorrosiveOrb extends UnitSkill {
         SharedSystem.particles.fire.remove(this.fire)
         CorrosiveOrb.pool.push(this)
     }
-    public *appear(origin: vec3): Generator<ActionSignal> {
+    public *move(target: vec2): Generator<ActionSignal> {
+        const prevPosition = vec3.copy(this.transform.position, vec3())
+        const nextPosition = this.context.get(TerrainSystem).tilePosition(this.tile[0], this.tile[1], vec3())
+        vec3.add(vec3.AXIS_Y, nextPosition, nextPosition)
+
+        const animate = AnimationTimeline(this, {
+            'orb.transform.scale': PropertyAnimation([
+                { frame: 0, value: vec3.copy(this.orb.transform.scale, vec3()) },
+                { frame: 1, value: target ? [0.5,0.5,0.5] : vec3.ONE, ease: ease.cubicIn }
+            ], vec3.lerp),
+            'transform.position': PropertyAnimation([
+                { frame: 0, value: prevPosition },
+                { frame: 1, value: nextPosition, ease: ease.quadInOut }
+            ], vec3.lerp),
+            'fire.uniform.uniforms.uOrigin': PropertyAnimation([
+                { frame: 0, value: prevPosition },
+                { frame: 1, value: nextPosition, ease: ease.quadInOut }
+            ], vec3.lerp)
+        })
+        for(const duration = 1.0, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            animate(elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
+            else yield ActionSignal.WaitNextFrame
+        }
+        if(target) CubeSkill.damage(this, this.tile)
+    }
+    public *appear(origin: vec3, delay: number): Generator<ActionSignal> {
         const animate = AnimationTimeline(this, {
             'decal.transform.scale': PropertyAnimation([
                 { frame: 0, value: vec3.ZERO },
@@ -143,7 +174,7 @@ class CorrosiveOrb extends UnitSkill {
             ], vec3.lerp),
             'orb.transform.scale': PropertyAnimation([
                 { frame: 0, value: vec3.ZERO },
-                { frame: 1, value: [1,1,1], ease: ease.elasticOut(1,0.8) }
+                { frame: 1, value: vec3.ONE, ease: ease.elasticOut(1,0.8) }
             ], vec3.lerp),
             'fire.rate': PropertyAnimation([
                 { frame: 0, value: 0 },
@@ -151,12 +182,13 @@ class CorrosiveOrb extends UnitSkill {
             ], lerp)
         })
 
-        for(const duration = 1.0, startTime = this.context.currentTime + 0.8; true;){
+        for(const duration = 1.0, startTime = this.context.currentTime + delay; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
             else yield ActionSignal.WaitNextFrame
         }
+        CubeSkill.damage(this, this.tile)
     }
     public *dissolve(): Generator<ActionSignal> {
         this.fire.rate = 0
@@ -185,9 +217,62 @@ class CorrosiveOrb extends UnitSkill {
     }
 }
 
-export class OrbSkill extends CubeSkill implements IAgent {
+class CorrosionPhase implements IAgent {
     readonly order: number = 4
     readonly list: CorrosiveOrb[] = []
+    constructor(private readonly context: Application){
+        this.context.get(TurnBasedSystem).add(this)
+    }
+    public execute(): Generator<ActionSignal> {
+        const terrain = this.context.get(TerrainSystem), bounds = terrain.bounds
+        for(let i = this.list.length - 1; i >= 0; i--){
+            const item = this.list[i]
+            if(item.tile[0] < bounds[0] || item.tile[1] < bounds[1] || item.tile[0] >= bounds[2] || item.tile[1] >= bounds[3])
+                item.delete()
+            else if(--item.health.amount <= 0)
+                this.context.get(AnimationSystem).start(item.dissolve(), true)
+            else{
+                const entity = terrain.getTile<Unit>(item.tile[0], item.tile[1])
+                if(entity == null || !(entity instanceof Unit) || (entity.group & item.group) == 0)
+                    vec2.add(item.direction, item.tile, item.tile)
+                let override = false
+                for(let j = this.list.length - 1; j > i; j--){
+                    const { tile, direction } = this.list[j]
+                    if((tile[0] === item.tile[0] && tile[1] === item.tile[1]) || (
+                        tile[0] === item.tile[0] - item.direction[0] &&
+                        tile[1] === item.tile[1] - item.direction[1] &&
+                        tile[0] - direction[0] === item.tile[0] &&
+                        tile[1] - direction[1] === item.tile[1]
+                    )){
+                        override = true
+                        break
+                    }
+                }
+                if(override) this.context.get(AnimationSystem).start(item.dissolve(), true)
+                else{
+                    const entity = terrain.getTile<Unit>(item.tile[0], item.tile[1])
+                    const target = (entity == null || !(entity instanceof Unit) || (entity.group & item.group) == 0) ? null : entity.tile
+                    this.context.get(TurnBasedSystem).enqueue(item.move(target), true)
+                    continue
+                }
+            }
+            this.list.splice(i, 1)
+        }
+        return null
+    }
+    public add(item: CorrosiveOrb): void {
+        for(let i = this.list.length - 1; i >= 0; i--){
+            const replaced = this.list[i]
+            if(replaced.tile[0] !== item.tile[0] || replaced.tile[1] !== item.tile[1]) continue
+            this.list.splice(i, 1)
+            this.context.get(AnimationSystem).start(replaced.dissolve(), true)
+        }
+        this.list.push(item)
+    }
+}
+
+export class OrbSkill extends CubeSkill {
+    public readonly corrosion: CorrosionPhase = new CorrosionPhase(this.context)
 
     private cone: BatchMesh
     private glow: Sprite
@@ -196,33 +281,26 @@ export class OrbSkill extends CubeSkill implements IAgent {
     private distortion: Sprite
     private particles: ParticleEmitter
 
-    constructor(context: Application, cube: Cube){
-        super(context, cube)
-        this.context.get(TurnBasedSystem).add(this)
-    }
-    public execute(): Generator<ActionSignal> {
-        return null
-    }
     public query(): vec2 {
         const step = DirectionTile[mod(this.direction+2,4)]
         const target = vec2.scale(step, 2, vec2())
         return vec2.add(this.cube.tile, target, target)
     }
     public *activate(target: vec2): Generator<ActionSignal> {
+        this.cube.action.amount = 0
+
         const orientation = DirectionAngle[mod(this.direction + 3, 4)]
         const transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, orientation, vec3.ONE, this.cube.transform)
 
         this.cone = BatchMesh.create(SharedSystem.geometry.funnel)
-        this.cone.material = SharedSystem.materials.coneTealMaterial
+        this.cone.material = SharedSystem.materials.effect.coneTeal
         this.cone.transform = this.context.get(TransformSystem)
         .create(vec3.AXIS_Y, orientation, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.sphere = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
-        this.sphere.material = SharedSystem.materials.coneTealMaterial
+        this.sphere.material = SharedSystem.materials.effect.coneTeal
         this.sphere.transform = this.context.get(TransformSystem).create(vec3.ZERO, quat.HALF_X, vec3.ONE, transform)
-        this.sphere.transform.parent = transform
-        quat.axisAngle(vec3.AXIS_X, 0.5*Math.PI, this.sphere.transform.rotation)
         this.context.get(ParticleEffectPass).add(this.sphere)
 
         this.glow = Sprite.create(BillboardType.Sphere, -8)
@@ -251,14 +329,14 @@ export class OrbSkill extends CubeSkill implements IAgent {
             uTarget: quat.transform([0,-0.2,0.5], orientation, vec3())
         })
 
-        if(this.list.length > 0) this.context.get(AnimationSystem).start(this.list[0].dissolve(), true)
-
         const orb = CorrosiveOrb.pool.pop() || new CorrosiveOrb(this.context)
-        this.list.push(orb)
         orb.place(target[0], target[1])
+        this.corrosion.add(orb)
+        vec2.subtract(target, this.cube.tile, orb.direction)
+        vec2.normalize(orb.direction, orb.direction)
         const origin = quat.transform([0,1,-3], transform.rotation, vec3())
         vec3.add(this.cube.transform.position, origin, origin)
-        this.context.get(TurnBasedSystem).enqueue(orb.appear(origin), true)
+        this.context.get(TurnBasedSystem).enqueue(orb.appear(origin, 0.8), true)
         const animate = AnimationTimeline(this, actionTimeline)
 
         for(const duration = 1.6, startTime = this.context.currentTime; true;){

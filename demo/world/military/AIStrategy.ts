@@ -103,6 +103,7 @@ export class AIStrategy {
         this.optimal.priority = Number.MIN_SAFE_INTEGER
         vec2.copy(this.unit.tile, this.optimal.origin)
         this.map.add(this.unit.tile)
+        this.unit.markTiles(false)
         this.map.walk(this.walkFind, this, this.unit.size, this.diagonal, 1, false)
         move: {
             this.optimal.path = null
@@ -117,11 +118,13 @@ export class AIStrategy {
             this.optimal.skill = -1
             if(this.unit.skills[this.skill].cost > this.unit.action.amount) break action
             const target = this.context.get(PlayerSystem).cube
-            this.optimal.reverse = this.unit.skills[this.skill].active
-            this.optimal.target = this.unit.skills[this.skill]
-            .aim(this.optimal.reverse ? this.unit.tile : this.optimal.origin, target.tiles)
+            this.optimal.target = this.unit.skills[this.skill].aim(this.optimal.origin, target.tiles, 1)
+            if(this.optimal.reverse = !this.optimal.target)
+                this.optimal.target = this.unit.skills[this.skill].aim(this.unit.tile, target.tiles, 1)
             if(this.optimal.target) this.optimal.skill = this.skill
+            else this.optimal.priority *= 0.5
         }
+        this.unit.markTiles(true)
         return this.optimal
     }
     private walkPropagate(index: number, tile: vec2, distance: number, parent: number, first: boolean): boolean {
@@ -155,16 +158,15 @@ export class AIStrategy {
     protected evaluate(tile: vec2, originDistance: number, targetDistance: number): number {
         const target = this.context.get(PlayerSystem).cube
         const { range, cardinal, damage } = this.unit.skills[this.skill]
-        let total = 0xF / (1 + targetDistance)
+        let total = 0xFF / (1 + targetDistance)
         offense: {
             if(!this.unit.skills[this.skill].aim(tile, target.tiles)) break offense
-            total = 0xF
-            total *= 2
+            total = 2 * 0xFF
         }
         defense: {
             if(cardinal || range < 2) break defense
             const abs = Math.min(Math.abs(tile[0] - target.tile[0]), Math.abs(tile[1] - target.tile[1]))
-            total *= Math.min(1,0.5+0.25*abs)
+            total *= Math.min(1,0.8+0.1*abs)
         }
         movement: {
             const turns = Math.ceil(Math.max(0, originDistance - this.unit.movement.amount) / this.unit.movement.gain)

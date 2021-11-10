@@ -117,6 +117,9 @@ export class Cube extends Unit implements IAgent {
             }
             DeathEffect.create(this.context, this)
             //TODO orbit + restart?
+            while(true){
+                yield ActionSignal.WaitNextFrame
+            }
         }
 
         this.regenerate()
@@ -178,7 +181,6 @@ export class Cube extends Unit implements IAgent {
     }
     public damage(amount: number, type: DamageType){
         if(this.sides[this.side].type === CubeModule.Shield && this.skill.active) return
-        if(this.health.amount == 0) return
         this.health.amount = Math.max(0, this.health.amount - amount)
         DamageEffect.create(this.context, this, type)
     }

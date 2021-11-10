@@ -1,17 +1,10 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4 } from '../../engine/math'
-import { IKRig, IKBone, SwingTwistConstraint, ArmatureNode } from '../../engine/components'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
+import { vec2, vec3, quat } from '../../engine/math'
+import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { ParticleEmitter } from '../../engine/particles'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, IAnimationTween, EventTrigger, ease } from '../../engine/animation'
-import { ParticleEffectPass } from '../../engine/pipeline'
-import { SpriteMaterial } from '../../engine/materials'
+import { ActionSignal, AnimationTimeline, IAnimationTween } from '../../engine/animation'
 
-import { TerrainSystem } from '../terrain'
-import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
+import { ModelAnimation } from '../shared'
+import { AIUnit, AIStrategy } from '../military'
 import { LungeSkill } from './skills/LungeSkill'
 import { SnakeRig } from './effects/SnakeRig'
 
@@ -51,7 +44,7 @@ export class Stingray extends AIUnit {
     readonly movementDuration: number = 0.4
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("stingray")
+        this.mesh = this.context.get(MeshSystem).loadModel('stingray')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
@@ -63,7 +56,7 @@ export class Stingray extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Stingray.pool.push(this)
     }
     public damage(amount: number, type: number): void {

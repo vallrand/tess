@@ -6,7 +6,6 @@ import { GradientLibrary } from './GradientLibrary'
 import { MaterialLibrary } from './MaterialLibrary'
 import { ParticleLibrary } from './ParticleLibrary'
 import { GeometryLibrary } from './GeometryLibrary'
-import { EffectLibrary } from './EffectLibrary'
 
 import {
     DebrisEffect, GridEffect, SkyEffect, MistEffect
@@ -21,7 +20,6 @@ export class SharedSystem implements ISystem {
     public static materials: ReturnType<typeof MaterialLibrary>
     public static particles: ReturnType<typeof ParticleLibrary>
     public static geometry: ReturnType<typeof GeometryLibrary>
-    public static effects: ReturnType<typeof EffectLibrary>
 
     public debris: DebrisEffect
     public grid: GridEffect
@@ -34,7 +32,6 @@ export class SharedSystem implements ISystem {
         SharedSystem.materials = MaterialLibrary(this.context)
         SharedSystem.geometry = GeometryLibrary(this.context)
         SharedSystem.particles = ParticleLibrary(this.context)
-        SharedSystem.effects = EffectLibrary(this.context)
     }
     public update(): void {}
     public load(): void {

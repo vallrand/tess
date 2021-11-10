@@ -1,16 +1,12 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4, quadraticBezier3D } from '../../engine/math'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../engine/components'
+import { clamp, lerp, vec2, vec3, vec4 } from '../../engine/math'
+import { MeshSystem, Mesh, BatchMesh, Sprite } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../engine/animation'
-import { ParticleEmitter } from '../../engine/particles'
-import { SpriteMaterial, DecalMaterial } from '../../engine/materials'
-import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../engine/pipeline'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../engine/animation'
+import { ParticleEffectPass } from '../../engine/pipeline'
 
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
 import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
 import { FlamethrowerSkill } from './skills/FlamethrowerSkill'
 import { ShieldLinkSkill } from './skills/ShieldLinkSkill'
 
@@ -26,7 +22,7 @@ export class Locust extends AIUnit {
     readonly movementDuration: number = 0.8
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("locust")
+        this.mesh = this.context.get(MeshSystem).loadModel('locust')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
@@ -34,7 +30,7 @@ export class Locust extends AIUnit {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Locust.pool.push(this)
     }
     
@@ -42,13 +38,13 @@ export class Locust extends AIUnit {
     private motorRight: BatchMesh
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
         this.motorLeft = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.motorLeft.material = SharedSystem.materials.stripesMaterial
+        this.motorLeft.material = SharedSystem.materials.effect.stripes
         this.motorLeft.transform = this.context.get(TransformSystem)
         .create([1.3,0.7,1.2], Sprite.FlatUp, [1,-1.6,1], this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.motorLeft)
         
         this.motorRight = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.motorRight.material = SharedSystem.materials.stripesMaterial
+        this.motorRight.material = SharedSystem.materials.effect.stripes
         this.motorRight.transform = this.context.get(TransformSystem)
         .create([-1.3,0.7,1.2], Sprite.FlatUp, [1,-1.6,1], this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.motorRight)
@@ -75,7 +71,7 @@ export class Locust extends AIUnit {
         this.context.get(TransformSystem).delete(this.motorRight.transform)
         this.context.get(ParticleEffectPass).remove(this.motorLeft)
         this.context.get(ParticleEffectPass).remove(this.motorRight)
-        BatchMesh.delete(this.motorLeft)
-        BatchMesh.delete(this.motorRight)
+        this.motorLeft = void BatchMesh.delete(this.motorLeft)
+        this.motorRight = void BatchMesh.delete(this.motorRight)
     }
 }

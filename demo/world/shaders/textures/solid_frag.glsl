@@ -1,4 +1,4 @@
-#pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
+#pragma import(../../../engine/shaders/template/fullscreen_frag.glsl)
 
 uniform vec4 uColor;
 

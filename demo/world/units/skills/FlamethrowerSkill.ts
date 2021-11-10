@@ -1,15 +1,12 @@
-import { Application } from '../../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4, quadraticBezier3D } from '../../../engine/math'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
+import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
+import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEmitter } from '../../../engine/particles'
-import { SpriteMaterial, DecalMaterial } from '../../../engine/materials'
 import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../../engine/pipeline'
 
-import { TerrainSystem } from '../../terrain'
 import { SharedSystem, ModelAnimation } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
     'mesh.armature': ModelAnimation('activateVariant'),
@@ -98,7 +95,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
         }
         this.mesh = source.mesh
         this.corridor = BatchMesh.create(SharedSystem.geometry.openBox)
-        this.corridor.material = SharedSystem.materials.coreYellowMaterial
+        this.corridor.material = SharedSystem.materials.effect.coreYellow
         this.corridor.transform = this.context.get(TransformSystem)
         .create([0,1.2,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.corridor)
@@ -118,15 +115,13 @@ export class FlamethrowerSkill extends AIUnitSkill {
         mat4.transform([0,1.3,10], this.mesh.transform.matrix, this.lineA.path[1])
         mat4.transform([0,1.7,10], this.mesh.transform.matrix, this.lineB.path[1])
 
-        this.lineA.material = SharedSystem.materials.exhaustMaterial
-        this.lineB.material = SharedSystem.materials.exhaustMaterial
+        this.lineA.material = SharedSystem.materials.effect.exhaust
+        this.lineB.material = SharedSystem.materials.effect.exhaust
         this.context.get(ParticleEffectPass).add(this.lineA)
         this.context.get(ParticleEffectPass).add(this.lineB)
 
         this.burn = this.context.get(DecalPass).create(4)
-        this.burn.material = new DecalMaterial()
-        this.burn.material.program = this.context.get(DecalPass).program
-        this.burn.material.diffuse = SharedSystem.textures.groundDust
+        this.burn.material = SharedSystem.materials.decal.dust
         this.burn.transform = this.context.get(TransformSystem)
         .create([0,0,6],quat.axisAngle(vec3.AXIS_Y,-0.5*Math.PI,quat()),vec3.ONE,this.mesh.transform)
 
@@ -135,20 +130,18 @@ export class FlamethrowerSkill extends AIUnitSkill {
         .create([0,2,2], quat.IDENTITY, vec3.ONE, this.mesh.transform)
 
         this.heat = BatchMesh.create(SharedSystem.geometry.openBox)
-        this.heat.material = new SpriteMaterial()
-        this.heat.material.blendMode = null
-        this.heat.material.diffuse = SharedSystem.textures.perlinNoise
-        this.heat.material.program = SharedSystem.materials.heatDistortion
+        this.heat.material = SharedSystem.materials.heat
         this.heat.transform = this.context.get(TransformSystem)
         .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(PostEffectPass).add(this.heat)
 
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = SharedSystem.materials.auraTealMaterial
+        this.ring.material = SharedSystem.materials.effect.auraTeal
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,1,1.5], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
+        const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, {
             ...actionTimeline,
             'lineA.path.1': PropertyAnimation([
@@ -164,8 +157,9 @@ export class FlamethrowerSkill extends AIUnitSkill {
         for(const duration = 1.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(this.corridor.transform)

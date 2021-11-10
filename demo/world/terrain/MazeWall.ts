@@ -52,7 +52,7 @@ export class MazeWall {
         this.batch.bind()
         this.mesh.buffer = this.batch.buffer
         this.mesh.transform = Transform.IDENTITY
-        this.mesh.material = SharedSystem.materials.metalMaterial
+        this.mesh.material = SharedSystem.materials.mesh.metal
     }
     clear(){
         this.context.get(MeshSystem).delete(this.mesh)

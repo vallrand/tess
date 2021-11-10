@@ -1,7 +1,7 @@
 import { Application } from '../../../engine/framework'
 import { vec2, vec3, vec4, quat, lerp } from '../../../engine/math'
-import { DecalMaterial, SpriteMaterial, MeshMaterial } from '../../../engine/materials'
-import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
+import { MeshMaterial } from '../../../engine/materials'
+import { Mesh, Sprite, BillboardType } from '../../../engine/components'
 import { DecalPass, Decal, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
 import { TransformSystem } from '../../../engine/scene'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
@@ -30,15 +30,13 @@ export class DeathEffect {
     public *use(source: AIUnit): Generator<ActionSignal> {
         this.mesh = source.mesh
         MeshMaterial.copy(this.mesh.material as MeshMaterial, this.material)
-        this.material.program = SharedSystem.materials.dissolveProgram
+        this.material.program = SharedSystem.materials.program.dissolve
         this.mesh.material = this.material
 
         this.burn = this.context.get(DecalPass).create(4)
         this.burn.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
-        this.burn.material = new DecalMaterial()
-        this.burn.material.program = this.context.get(DecalPass).program
-        this.burn.material.diffuse = SharedSystem.textures.glow
+        this.burn.material = SharedSystem.materials.decal.glow
 
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.distortion.wave
@@ -59,9 +57,7 @@ export class DeathEffect {
         this.pillar = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.pillar.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
-        this.pillar.material = new SpriteMaterial()
-        this.pillar.material.program = this.context.get(ParticleEffectPass).program
-        this.pillar.material.diffuse = SharedSystem.textures.groundDust
+        this.pillar.material = SharedSystem.materials.sprite.dust
         this.context.get(ParticleEffectPass).add(this.pillar)
 
         this.spikes = SharedSystem.particles.spikes.add({
@@ -115,7 +111,7 @@ export class DeathEffect {
                 { frame: 0.5, value: [source.size[0] * 8, source.size[1] * 8, 1], ease: ease.quartOut }
             ], vec3.lerp),
             'wave.color': PropertyAnimation([
-                { frame: 0.1, value: [1,1,1,1] },
+                { frame: 0.1, value: vec4.ONE },
                 { frame: 0.5, value: vec4.ZERO, ease: ease.sineIn }
             ], vec4.lerp),
             'mesh.color': PropertyAnimation([
@@ -129,7 +125,7 @@ export class DeathEffect {
                 { frame: 0.4, value: vec3.add(source.mesh.transform.position, [0,-0.5,0], vec3()), ease: ease.bounceIn(0.1,0.6) }
             ], vec3.lerp),
             'burn.transform.scale': PropertyAnimation([
-                { frame: 0, value: [0,0,0] },
+                { frame: 0, value: vec3.ZERO },
                 { frame: 0.4, value: [source.size[0] * 8, 4, source.size[1] * 8], ease: ease.cubicOut }
             ], vec3.lerp),
             'burn.color': PropertyAnimation([

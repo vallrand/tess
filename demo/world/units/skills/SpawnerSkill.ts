@@ -1,9 +1,7 @@
-import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
-import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
@@ -55,16 +53,14 @@ export class SpawnerSkill extends AIUnitSkill {
         effect.glow = BatchMesh.create(SharedSystem.geometry.openBox)
         effect.glow.material = SharedSystem.materials.gradientMaterial
         effect.glow.transform = this.context.get(TransformSystem)
-        .create(vec3.ZERO, quat.axisAngle(vec3.AXIS_Y, 0.5*Math.PI, quat()), vec3.ONE, parentTransform)
+        .create(vec3.ZERO, quat.HALF_Y, vec3.ONE, parentTransform)
         this.context.get(ParticleEffectPass).add(effect.glow)
 
     
         effect.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        effect.beam.material = new SpriteMaterial()
-        effect.beam.material.program = this.context.get(ParticleEffectPass).program
-        effect.beam.material.diffuse = SharedSystem.textures.raysBeam
+        effect.beam.material = SharedSystem.materials.sprite.beam
         effect.beam.transform = this.context.get(TransformSystem)
-        .create(vec3.ZERO, quat.axisAngle(vec3.AXIS_Y, 0.5*Math.PI, quat()), vec3.ONE, parentTransform)
+        .create(vec3.ZERO, quat.HALF_Y, vec3.ONE, parentTransform)
         this.context.get(ParticleEffectPass).add(effect.beam)
 
         effect.smoke = SharedSystem.particles.smoke.add({
@@ -76,9 +72,7 @@ export class SpawnerSkill extends AIUnitSkill {
         })
 
         effect.ring = Sprite.create(BillboardType.None)
-        effect.ring.material = new SpriteMaterial()
-        effect.ring.material.program = this.context.get(ParticleEffectPass).program
-        effect.ring.material.diffuse = SharedSystem.textures.swirl
+        effect.ring.material = SharedSystem.materials.sprite.swirl
         effect.ring.transform = this.context.get(TransformSystem)
         .create([0,1,0], Sprite.FlatUp, vec3.ONE, parentTransform)
         this.context.get(ParticleEffectPass).add(effect.ring)

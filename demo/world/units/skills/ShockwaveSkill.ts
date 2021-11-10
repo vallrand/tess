@@ -1,18 +1,12 @@
-import { Application } from '../../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4, shortestAngle } from '../../../engine/math'
-import { ShaderProgram } from '../../../engine/webgl'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
+import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
+import { Mesh, BatchMesh, Sprite, BillboardType} from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
-import { Decal, DecalPass, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
-import { DecalMaterial, SpriteMaterial, ShaderMaterial } from '../../../engine/materials'
+import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
-import { doubleSided } from '../../../engine/geometry'
-import * as shaders from '../../../engine/shaders'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, FollowPath, ease } from '../../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
-import { TerrainSystem } from '../../terrain'
 import { SharedSystem, ModelAnimation } from '../../shared'
-import { AISystem, AIUnit, AIUnitSkill, DamageType } from '../../military'
+import { AIUnit, AIUnitSkill, DamageType } from '../../military'
 
 const actionTimeline = {
     'mesh.armature': ModelAnimation('activate'),
@@ -104,30 +98,20 @@ export class ShockwaveSkill extends AIUnitSkill {
     private mesh: Mesh
 
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
-        this.pulse = new Mesh()
-        this.pulse.order = 1
-        this.pulse.buffer = SharedSystem.geometry.sphereMesh
-        const pulseMaterial = new ShaderMaterial()
-        pulseMaterial.cullFace = 0
-        pulseMaterial.depthTest = 0
-        pulseMaterial.depthWrite = false
-        pulseMaterial.blendMode = ShaderMaterial.Premultiply
-        pulseMaterial.program = ShaderProgram(this.context.gl, shaders.geometry_vert, require('../../shaders/pulse_frag.glsl'), {})
-        this.pulse.material = pulseMaterial
+        this.pulse = Mesh.create(SharedSystem.geometry.sphereMesh, 1)
+        this.pulse.material = SharedSystem.materials.pulseMaterial
         this.pulse.transform = this.context.get(TransformSystem)
         .create([0,6,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(PostEffectPass).add(this.pulse)
 
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,4,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.cylinder.material = SharedSystem.materials.energyHalfPurpleMaterial
+        this.cylinder.material = SharedSystem.materials.effect.energyHalfPurple
         this.cylinder.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO,quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cylinder)
@@ -143,8 +127,8 @@ export class ShockwaveSkill extends AIUnitSkill {
             uTarget: [0,5,0]
         })
 
-        this.cone = new BatchMesh(doubleSided(SharedSystem.geometry.hemisphere))
-        this.cone.material = SharedSystem.materials.absorbTealMaterial
+        this.cone = BatchMesh.create(SharedSystem.geometry.hemisphere)
+        this.cone.material = SharedSystem.materials.effect.absorbTeal
         this.cone.transform = this.context.get(TransformSystem)
         .create([0,2.5,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cone)
@@ -155,26 +139,26 @@ export class ShockwaveSkill extends AIUnitSkill {
         .create([0,5,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
 
-        this.core = new BatchMesh(doubleSided(SharedSystem.geometry.lowpolySphere))
-        this.core.material = SharedSystem.materials.energyPurpleMaterial
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
+        this.core.material = SharedSystem.materials.effect.energyPurple
         this.core.transform = this.context.get(TransformSystem)
         .create([0,4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.sparkle = Sprite.create(BillboardType.Sphere)
-        this.sparkle.material = new SpriteMaterial()
-        this.sparkle.material.program = this.context.get(ParticleEffectPass).program
-        this.sparkle.material.diffuse = SharedSystem.textures.sparkle
+        this.sparkle.material = SharedSystem.materials.sprite.sparkle
         this.sparkle.transform = this.context.get(TransformSystem)
         .create([0,5.4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.sparkle)
 
+        const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 2.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(this.core.transform)
@@ -184,7 +168,6 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.cylinder.transform)
         this.context.get(TransformSystem).delete(this.ring.transform)
         this.context.get(TransformSystem).delete(this.pulse.transform)
-
         SharedSystem.particles.energy.remove(this.speedlines)
         this.context.get(ParticleEffectPass).remove(this.core)
         this.context.get(ParticleEffectPass).remove(this.sparkle)
@@ -193,10 +176,11 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.cone)
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(PostEffectPass).remove(this.pulse)
-
         Sprite.delete(this.sparkle)
         Sprite.delete(this.flash)
         Sprite.delete(this.ring)
         BatchMesh.delete(this.cylinder)
+        BatchMesh.delete(this.cone)
+        BatchMesh.delete(this.core)
     }
 }

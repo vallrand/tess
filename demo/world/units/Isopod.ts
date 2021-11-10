@@ -1,16 +1,13 @@
-import { Application } from '../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat } from '../../engine/math'
-import { MeshSystem, Mesh, Sprite, BillboardType, BatchMesh } from '../../engine/components'
-import { TransformSystem, Transform } from '../../engine/scene'
-import { DecalPass, Decal, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../engine/pipeline'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
+import { vec2, vec3, vec4, quat } from '../../engine/math'
+import { MeshSystem } from '../../engine/components'
+import { TransformSystem } from '../../engine/scene'
+import { DecalPass, Decal } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../engine/animation'
+import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../engine/animation'
 
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
 import { OrbSkill } from './skills/OrbSkill'
 
 export class Isopod extends AIUnit {
@@ -24,24 +21,16 @@ export class Isopod extends AIUnit {
     readonly movementDuration: number = 0.4
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("isopod")
+        this.mesh = this.context.get(MeshSystem).loadModel('isopod')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
         this.markTiles(true)
-
-        this.dust = SharedSystem.particles.dust.add({
-            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
-            uLifespan: [0.6,1.2,0,0], uSize: [2,4],
-            uRadius: [0,0.2], uOrientation: quat.IDENTITY,
-            uForce: [2,5], uGravity: vec3.ZERO,
-            uRotation: [0, 2 * Math.PI], uAngular: [-Math.PI,Math.PI,0,0]
-        })
     }
     public delete(): void {
+        this.dust = void SharedSystem.particles.dust.remove(this.dust)
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
-        SharedSystem.particles.dust.remove(this.dust)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Isopod.pool.push(this)
     }
 
@@ -51,11 +40,15 @@ export class Isopod extends AIUnit {
         this.shadow = this.context.get(DecalPass).create(4)
         this.shadow.transform = this.context.get(TransformSystem).create()
         this.shadow.transform.parent = this.mesh.transform
-        this.shadow.material = new DecalMaterial()
-        this.shadow.material.program = this.context.get(DecalPass).program
-        this.shadow.material.diffuse = SharedSystem.textures.glow
+        this.shadow.material = SharedSystem.materials.decal.glow
 
-        this.context.get(TerrainSystem).tilePosition(path[path.length - 1][0], path[path.length - 1][1], this.dust.uniform.uniforms['uOrigin'] as any)
+        this.dust = this.dust || SharedSystem.particles.dust.add({
+            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
+            uLifespan: [0.6,1.2,0,0], uSize: [2,4],
+            uRadius: [0,0.2], uOrientation: quat.IDENTITY,
+            uForce: [2,5], uGravity: vec3.ZERO,
+            uRotation: [0, 2 * Math.PI], uAngular: [-Math.PI,Math.PI,0,0]
+        })
 
         const animate = AnimationTimeline(this, {
             'shadow.transform.scale': PropertyAnimation([
@@ -71,9 +64,9 @@ export class Isopod extends AIUnit {
             ], BlendTween.vec3)
         })
         
-        const duration = frames[frames.length - 1]
-        const dustEmit = EventTrigger([{ frame: duration - 0.1, value: 16 }], EventTrigger.emit)
-
+        this.context.get(TerrainSystem).tilePosition(path[path.length - 1][0], path[path.length - 1][1], this.dust.uniform.uniforms['uOrigin'] as any)
+        const dustEmit = EventTrigger([{ frame: frames[frames.length - 1] - 0.1, value: 16 }], EventTrigger.emit)
+        
         for(const generator = this.moveAlongPath(path, frames, true), startTime = this.context.currentTime; true;){
             const iterator = generator.next()
             const elapsedTime = this.context.currentTime - startTime
@@ -84,6 +77,6 @@ export class Isopod extends AIUnit {
         }
 
         this.context.get(TransformSystem).delete(this.shadow.transform)
-        this.context.get(DecalPass).delete(this.shadow)
+        this.shadow = void this.context.get(DecalPass).delete(this.shadow)
     }
 }

@@ -1,6 +1,6 @@
 import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4 } from '../../engine/math'
-import { ShaderProgram, GL, OpaqueLayer, createTexture } from '../../engine/webgl'
+import { ShaderProgram, GL, OpaqueLayer } from '../../engine/webgl'
 import * as shaders from '../../engine/shaders'
 import * as localShaders from '../shaders'
 import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
@@ -8,7 +8,7 @@ import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engin
 import { SharedSystem } from '../shared'
 
 function EffectMaterials(gl: WebGL2RenderingContext){
-    const coneTealMaterial = new EffectMaterial(gl, {
+    const coneTeal = new EffectMaterial(gl, {
         VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true
     }, {
         uUVTransform: vec4(0,0,2,0.2),
@@ -18,10 +18,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(0.3, -0.7),
         uColorAdjustment: vec3(1,0.8,0)
     })
-    coneTealMaterial.diffuse = SharedSystem.textures.cellularNoise
-    coneTealMaterial.gradient = SharedSystem.gradients.teal
+    coneTeal.diffuse = SharedSystem.textures.cellularNoise
+    coneTeal.gradient = SharedSystem.gradients.teal
 
-    const absorbTealMaterial = new EffectMaterial(gl, {
+    const absorbTeal = new EffectMaterial(gl, {
         PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
         uVerticalMask: vec4(0,0.9,0.9,1),
@@ -31,10 +31,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(0,-0.64),
         uColorAdjustment: vec3(1.4,0.9,0)
     })
-    absorbTealMaterial.diffuse = SharedSystem.textures.directionalNoise
-    absorbTealMaterial.gradient = SharedSystem.gradients.darkTeal
+    absorbTeal.diffuse = SharedSystem.textures.noiseDirectional
+    absorbTeal.gradient = SharedSystem.gradients.darkTeal
 
-    const stripesMaterial = new EffectMaterial(gl, {
+    const stripes = new EffectMaterial(gl, {
         FRESNEL: true, PANNING: true, VERTICAL_MASK: true
     }, {
         uUVTransform: vec4(0,0,1,1),
@@ -42,9 +42,9 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uVerticalMask: vec4(0,0,0.8,1),
         uFresnelMask: vec2(0.1,0.5)
     })
-    stripesMaterial.diffuse = SharedSystem.textures.stripes
+    stripes.diffuse = SharedSystem.textures.stripes
 
-    const auraTealMaterial = new EffectMaterial(gl, {
+    const auraTeal = new EffectMaterial(gl, {
         VERTICAL_MASK: true, PANNING: true, GREYSCALE: true, GRADIENT: true, POLAR: true, DEPTH_OFFSET: 5.2
     }, {
         uUVTransform: vec4(0,0,1,0.8),
@@ -54,10 +54,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(-0.2, -0.3),
         uColorAdjustment: vec3(1,0.9,0)
     })
-    auraTealMaterial.diffuse = SharedSystem.textures.cellularNoise
-    auraTealMaterial.gradient = SharedSystem.gradients.teal
+    auraTeal.diffuse = SharedSystem.textures.cellularNoise
+    auraTeal.gradient = SharedSystem.gradients.teal
 
-    const energyHalfPurpleMaterial = new EffectMaterial(gl, {
+    const energyHalfPurple = new EffectMaterial(gl, {
         VERTICAL_MASK: true, PANNING: true, HALF: true, GREYSCALE: true, GRADIENT: true
     }, {
         uUVTransform: vec4(0,0,1,0.3),
@@ -67,10 +67,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Transform: vec4(0,0,1,0.6),
         uUV2Panning: vec2(-0.2, -0.3)
     })
-    energyHalfPurpleMaterial.diffuse = SharedSystem.textures.voronoiNoise
-    energyHalfPurpleMaterial.gradient = SharedSystem.gradients.purple
+    energyHalfPurple.diffuse = SharedSystem.textures.voronoiNoise
+    energyHalfPurple.gradient = SharedSystem.gradients.purple
 
-    const flashYellowMaterial = new EffectMaterial(gl, {
+    const flashYellow = new EffectMaterial(gl, {
         POLAR: true, VERTICAL_MASK: true, PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true
     }, {
         uUVTransform: vec4(0.1,0,2,2.4),
@@ -82,10 +82,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uDissolveColor: vec4(1,0,0,1),
         uDissolveThreshold: vec3(0.2,0,0)
     })
-    flashYellowMaterial.diffuse = SharedSystem.textures.cellularNoise
-    flashYellowMaterial.gradient = SharedSystem.gradients.yellowViolet
+    flashYellow.diffuse = SharedSystem.textures.cellularNoise
+    flashYellow.gradient = SharedSystem.gradients.yellowViolet
 
-    const coreYellowMaterial = new EffectMaterial(gl, {
+    const coreYellow = new EffectMaterial(gl, {
         PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true, FRESNEL: true
     }, {
         uUVTransform: vec4(0,0,1,1.8),
@@ -98,10 +98,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uVerticalMask: vec4(0.2,0.5,0.8,1.0),
         uFresnelMask: vec2(0.1,0.5)
     })
-    coreYellowMaterial.diffuse = SharedSystem.textures.cellularNoise
-    coreYellowMaterial.gradient = SharedSystem.gradients.yellowRed2D
+    coreYellow.diffuse = SharedSystem.textures.cellularNoise
+    coreYellow.gradient = SharedSystem.gradients.yellowRed2D
 
-    const coreWhiteMaterial = new EffectMaterial(gl, {
+    const coreWhite = new EffectMaterial(gl, {
         FRESNEL: true, PANNING: true, GRADIENT: true, GREYSCALE: true
     }, {
         uUVTransform: vec4(0,0,2,1.7),
@@ -111,10 +111,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Transform: vec4(0,0.7,3,2.9),
         uUV2Panning: vec2(0.1,0.7),
     })
-    coreWhiteMaterial.diffuse = SharedSystem.textures.sineNoise
-    coreWhiteMaterial.gradient = SharedSystem.gradients.brightRed
+    coreWhite.diffuse = SharedSystem.textures.sineNoise
+    coreWhite.gradient = SharedSystem.gradients.brightRed
 
-    const ringDustMaterial = new EffectMaterial(gl, {
+    const ringDust = new EffectMaterial(gl, {
         PANNING: true, GRADIENT: true, DISSOLVE: true, GREYSCALE: true, VERTICAL_MASK: true
     }, {
         uUVTransform: vec4(0,0,1,0.6),
@@ -126,10 +126,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(-0.5,0.1),
         uVerticalMask: vec4(0.0,0.1,0.9,1.0),
     })
-    ringDustMaterial.diffuse = SharedSystem.textures.cellularNoise
-    ringDustMaterial.gradient = SharedSystem.gradients.orange2D
+    ringDust.diffuse = SharedSystem.textures.cellularNoise
+    ringDust.gradient = SharedSystem.gradients.orange2D
 
-    const stripesRedMaterial = new EffectMaterial(gl, {
+    const stripesRed = new EffectMaterial(gl, {
         PANNING: true, GREYSCALE: true, GRADIENT: true, VERTICAL_MASK: true
     }, {
         uUVTransform: vec4(0,0,3,2),
@@ -139,10 +139,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(0.4,-0.8),
         uVerticalMask: vec4(0.0,0.5,0.8,1.0),
     })
-    stripesRedMaterial.diffuse = SharedSystem.textures.blocklines
-    stripesRedMaterial.gradient = SharedSystem.gradients.darkRed
+    stripesRed.diffuse = SharedSystem.textures.blocklines
+    stripesRed.gradient = SharedSystem.gradients.darkRed
 
-    const stripesBlockyMaterial = new EffectMaterial(gl, {
+    const stripesBlocky = new EffectMaterial(gl, {
         VERTICAL_MASK: true, PANNING: true, HALF: true, DISSOLVE: true, GRADIENT: true, DISPLACEMENT: true
     }, {
         uUVTransform: vec4(0,0,1,1.4),
@@ -154,11 +154,11 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV3Transform: vec4(0,0,1,3),
         uUV3Panning: vec2(0,0.1)
     })
-    stripesBlockyMaterial.diffuse = SharedSystem.textures.blocklines
-    stripesBlockyMaterial.gradient = SharedSystem.gradients.white
-    stripesBlockyMaterial.displacement = SharedSystem.textures.blocklines
+    stripesBlocky.diffuse = SharedSystem.textures.blocklines
+    stripesBlocky.gradient = SharedSystem.gradients.white
+    stripesBlocky.displacement = SharedSystem.textures.blocklines
 
-    const trailSmokeMaterial = new EffectMaterial(gl, {
+    const trailSmoke = new EffectMaterial(gl, {
         PANNING: true, HORIZONTAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
         uHorizontalMask: vec4(0,0.4,0.6,1.0),
@@ -168,10 +168,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(0.1,0.5+0.4),
         uColorAdjustment: vec3(1,0.8,0.2)
     })
-    trailSmokeMaterial.gradient = SharedSystem.gradients.purpleGrey2D
-    trailSmokeMaterial.diffuse = SharedSystem.textures.cloudNoise
+    trailSmoke.gradient = SharedSystem.gradients.purpleGrey2D
+    trailSmoke.diffuse = SharedSystem.textures.cloudNoise
 
-    const trailEnergyMaterial = new EffectMaterial(gl, {
+    const trailEnergy = new EffectMaterial(gl, {
         PANNING: true, HORIZONTAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
         uHorizontalMask: vec4(0,0.5,0.5,1.0),
@@ -181,10 +181,10 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(-0.08,-0.4),
         uColorAdjustment: vec3(1,1.2,0.1)
     })
-    trailEnergyMaterial.diffuse = SharedSystem.textures.sineNoise
-    trailEnergyMaterial.gradient = SharedSystem.gradients.purple
+    trailEnergy.diffuse = SharedSystem.textures.sineNoise
+    trailEnergy.gradient = SharedSystem.gradients.purple
 
-    const energyPurpleMaterial = new EffectMaterial(gl, {
+    const energyPurple = new EffectMaterial(gl, {
         PANNING: true, VERTICAL_MASK: true, FRESNEL: true, GRADIENT: true, DISPLACEMENT: true
     }, {
         uUVTransform: vec4(0,0,1,0.6),
@@ -195,11 +195,11 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV3Transform: vec4(0,0,1,1),
         uUV3Panning: vec2(0,-0.2)
     })
-    energyPurpleMaterial.diffuse = SharedSystem.textures.sineNoise
-    energyPurpleMaterial.gradient = SharedSystem.gradients.purple
-    energyPurpleMaterial.displacement = SharedSystem.textures.perlinNoise
+    energyPurple.diffuse = SharedSystem.textures.sineNoise
+    energyPurple.gradient = SharedSystem.gradients.purple
+    energyPurple.displacement = SharedSystem.textures.perlinNoise
 
-    const planeDissolveMaterial = new EffectMaterial(gl, {
+    const planeDissolve = new EffectMaterial(gl, {
         GRADIENT: true, DISSOLVE: true, DISPLACEMENT: true, PANNING: true
     }, {
         uUVTransform: vec4(0,0,1,1),
@@ -210,11 +210,11 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV3Transform: vec4(0,0,1,1),
         uUV3Panning: vec2(0,0.2)
     })
-    planeDissolveMaterial.diffuse = SharedSystem.textures.sineNoise
-    planeDissolveMaterial.gradient = SharedSystem.gradients.white
-    planeDissolveMaterial.displacement = SharedSystem.textures.perlinNoise
+    planeDissolve.diffuse = SharedSystem.textures.sineNoise
+    planeDissolve.gradient = SharedSystem.gradients.white
+    planeDissolve.displacement = SharedSystem.textures.perlinNoise
 
-    const exhaustMaterial = new EffectMaterial(gl, {
+    const exhaust = new EffectMaterial(gl, {
         PANNING: true, VERTICAL_MASK: true, GREYSCALE: true, GRADIENT: true
     }, {
         uVerticalMask: vec4(0,0.4,0.6,0.8),
@@ -224,28 +224,20 @@ function EffectMaterials(gl: WebGL2RenderingContext){
         uUV2Panning: vec2(0.2, 1.8),
         uColorAdjustment: vec3(2.0,2.0,0.2)
     })
-    exhaustMaterial.diffuse = SharedSystem.textures.cellularNoise
-    exhaustMaterial.gradient = SharedSystem.gradients.brightPurple
+    exhaust.diffuse = SharedSystem.textures.cellularNoise
+    exhaust.gradient = SharedSystem.gradients.brightPurple
+    exhaust.cullFace = GL.NONE
 
     return {
-        coneTealMaterial, absorbTealMaterial, stripesMaterial, auraTealMaterial, energyHalfPurpleMaterial,
-        flashYellowMaterial, coreYellowMaterial, coreWhiteMaterial,
-        ringDustMaterial, stripesRedMaterial, stripesBlockyMaterial, trailSmokeMaterial, trailEnergyMaterial,
-        energyPurpleMaterial, planeDissolveMaterial, exhaustMaterial,
+        coneTeal, absorbTeal, auraTeal, energyPurple, energyHalfPurple,
+        flashYellow, coreYellow, coreWhite, ringDust, planeDissolve, exhaust,
+        stripes, stripesRed, stripesBlocky, trailSmoke, trailEnergy,
     }
 }
 
 export function MaterialLibrary(context: Application){
-    const materials = context.get(MaterialSystem)
-
-    const mossMaterial = new DecalMaterial()
-    mossMaterial.program = context.get(DecalPass).program
-    mossMaterial.diffuse = SharedSystem.textures.moss
-
     const resourceSpotMaterial = new DecalMaterial()
-    resourceSpotMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/spot_frag.glsl'), {
-        INSTANCED: true, ALPHA_CUTOFF: 0.01
-    })
+    resourceSpotMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.spot, { INSTANCED: true, ALPHA_CUTOFF: 0.01 })
     resourceSpotMaterial.program.uniforms['uLayer'] = OpaqueLayer.Terrain
 
     const heatDistortion = ShaderProgram(context.gl, shaders.batch_vert, shaders.distortion_frag, {
@@ -267,41 +259,39 @@ export function MaterialLibrary(context: Application){
     const dunesMaterial = new MeshMaterial()
     dunesMaterial.program = context.get(DeferredGeometryPass).programs[0]
     dunesMaterial.diffuse = SharedSystem.textures.sandstone
-    dunesMaterial.normal = materials.addRenderTexture(
-        materials.createRenderTexture(MaterialSystem.textureSize, MaterialSystem.textureSize), 0,
-        ShaderProgram(context.gl, shaders.fullscreen_vert, require('../shaders/dunes_frag.glsl')), {
-            uScreenSize: [MaterialSystem.textureSize, MaterialSystem.textureSize]
-        }, 0
-    ).target
+    dunesMaterial.normal = SharedSystem.textures.dunesNormal
 
     const metalMaterial = new MeshMaterial()
     metalMaterial.program = context.get(DeferredGeometryPass).programs[0]
     metalMaterial.diffuse = SharedSystem.textures.wreck
-    metalMaterial.normal = createTexture(context.gl, {
-        width: 1, height: 1, data: new Uint8Array([0x7F,0x7F,0xFF,0xFF])
-    })
+    metalMaterial.normal = SharedSystem.textures.flatNormal
 
     const orbMaterial = new MeshMaterial()
-    orbMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/orb_frag.glsl'), {})
+    orbMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, localShaders.orb, {})
 
     const corrosionMaterial = new DecalMaterial()
-    corrosionMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/corrode_frag.glsl'), {
+    corrosionMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.acid, {
         INSTANCED: true, ALPHA_CUTOFF: 0.01
     })
     corrosionMaterial.program.uniforms['uLayer'] = OpaqueLayer.Skinned
 
 
     const shieldMaterial = new ShaderMaterial()
-    shieldMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), {})
+    shieldMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, localShaders.shield, {})
     shieldMaterial.cullFace = GL.NONE
     shieldMaterial.blendMode = ShaderMaterial.Add
 
     const shieldDisplacementMaterial = new ShaderMaterial()
-    shieldDisplacementMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, require('../shaders/shield_frag.glsl'), { DISPLACEMENT: true })
+    shieldDisplacementMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, localShaders.shield, { DISPLACEMENT: true })
 
     
 
-
+    const pulseMaterial = new ShaderMaterial()
+    pulseMaterial.cullFace = 0
+    pulseMaterial.depthTest = 0
+    pulseMaterial.depthWrite = false
+    pulseMaterial.blendMode = ShaderMaterial.Premultiply
+    pulseMaterial.program = ShaderProgram(context.gl, shaders.geometry_vert, localShaders.pulse, {})
 
     const gradientMaterial = new SpriteMaterial()
     gradientMaterial.program = context.get(ParticleEffectPass).program
@@ -316,29 +306,23 @@ export function MaterialLibrary(context: Application){
     dissolveProgram.uniforms.uDissolveUVScale = vec3(16,16, 0.8)
 
 
-    const beamLinearProgram = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'))
-    const beamRadialProgram = ShaderProgram(context.gl, shaders.batch_vert, require('../shaders/beam_frag.glsl'), { RADIAL: true })
+    const beamLinearProgram = ShaderProgram(context.gl, shaders.batch_vert, localShaders.beam)
+    const beamRadialProgram = ShaderProgram(context.gl, shaders.batch_vert, localShaders.beam, { RADIAL: true })
 
 
 
     const glowSquaresLinearMaterial = new DecalMaterial()
-    glowSquaresLinearMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
-        INSTANCED: true
-    })
+    glowSquaresLinearMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.battery, { INSTANCED: true })
     glowSquaresLinearMaterial.program.uniforms['uLayer'] = glowSquaresLinearMaterial.layer
     glowSquaresLinearMaterial.program.uniforms['uDissolveEdge'] = 1
 
     const glowSquaresRadialMaterial = new DecalMaterial()
-    glowSquaresRadialMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/charger_frag.glsl'), {
-        INSTANCED: true, POLAR: true
-    })
+    glowSquaresRadialMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.battery, { INSTANCED: true, POLAR: true })
     glowSquaresRadialMaterial.program.uniforms['uLayer'] = glowSquaresRadialMaterial.layer
     glowSquaresRadialMaterial.program.uniforms['uDissolveEdge'] = 1
 
     const reticleMaterial = new DecalMaterial()
-    reticleMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, require('../shaders/reticle_frag.glsl'), {
-        INSTANCED: true
-    })
+    reticleMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.mark, { INSTANCED: true })
     reticleMaterial.program.uniforms['uLayer'] = reticleMaterial.layer
 
 
@@ -362,8 +346,20 @@ export function MaterialLibrary(context: Application){
     cracksMaterial.diffuse = SharedSystem.textures.cracks
     cracksMaterial.normal = SharedSystem.textures.cracksNormal
 
+    const beamRadialYellowMaterial = new SpriteMaterial(vec4(8, 10, 1, 1))
+    beamRadialYellowMaterial.program = beamRadialProgram
+    beamRadialYellowMaterial.diffuse = SharedSystem.gradients.yellowViolet
+
+    const beamLinearRedMaterial = new SpriteMaterial(vec4(4, 8, 1, 1))
+    beamLinearRedMaterial.program = beamLinearProgram
+    beamLinearRedMaterial.diffuse = SharedSystem.gradients.redPurple
+
+    const beamRadialRedMaterial = new SpriteMaterial(vec4(8, -16, 1, 1))
+    beamRadialRedMaterial.program = beamRadialProgram
+    beamRadialRedMaterial.diffuse = SharedSystem.gradients.redPurple
+
     return {
-        ...EffectMaterials(context.gl),
+        effect: EffectMaterials(context.gl),
         radialProgram: ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.radial),
 
         decal: {
@@ -372,20 +368,27 @@ export function MaterialLibrary(context: Application){
             ring: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.ring),
             rays: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.rays),
             particle: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.particle),
+            dust: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.dust),
+            reticle: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.reticle),
+            moss: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.moss),
         },
         sprite: {
+            glow: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.glow),
             rays: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.rays),
             halo: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.halo),
             burst: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.burst),
             ring: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.ring),
             wave: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.wave),
-            beam: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.raysBeam),
+            beam: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.beam),
             sparkle: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.sparkle),
             spiral: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.spiral),
-            dust: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.groundDust),
+            dust: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.dust),
             swirl: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.swirl),
+            streak: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.streak),
+            particle: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.particle),
 
-            yellowLine: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.yellowLine),
+            lineYellow: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.yellowLine),
+            lineTeal: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.tealLine),
         },
         displacement: {
             ring: SpriteMaterial.create(distortion, SharedSystem.textures.ring, true),
@@ -398,18 +401,22 @@ export function MaterialLibrary(context: Application){
             bulge: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.bulge, true),
             particle: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.particle, true),
         },
-
-
-
+        heat: SpriteMaterial.create(heatDistortion, SharedSystem.textures.perlinNoise, true),
+        mesh: {
+            orb: orbMaterial,
+            dunes: dunesMaterial,
+            metal: metalMaterial
+        },
+        program: {
+            dissolve: dissolveProgram,
+            beamLinear: beamLinearProgram,
+            beamRadial: beamRadialProgram
+        },
+        beamRadialYellowMaterial, beamLinearRedMaterial, beamRadialRedMaterial,
+        pulseMaterial,
         stampMaterial, shatterMaterial, cracksMaterial,
-        heatDistortion, dunesMaterial, metalMaterial, dissolveProgram, orbMaterial,
-
-        gradientMaterial, beamLinearProgram, beamRadialProgram,
-
+        gradientMaterial,
         glowSquaresLinearMaterial, glowSquaresRadialMaterial, reticleMaterial,
-
         shieldDisplacementMaterial, shieldMaterial, resourceSpotMaterial, corrosionMaterial,
-
-        mossMaterial
     }
 }

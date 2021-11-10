@@ -36,8 +36,8 @@ const actionTimeline = {
         { frame: 1.5, value: [0,6,0], ease: ease.cubicIn }
     ], vec3.lerp),
     'cone.color': PropertyAnimation([
-        { frame: 0, value: [0,0,0,0] },
-        { frame: 1.2, value: [1,1,1,1], ease: ease.quadOut },
+        { frame: 0, value: vec4.ZERO },
+        { frame: 1.2, value: vec4.ONE, ease: ease.quadOut },
         { frame: 1.4, value: [1,1,1,0], ease: ease.quadIn }
     ], vec4.lerp),
     'cone.material.uniform.uniforms.uUVTransform.1': PropertyAnimation([
@@ -53,15 +53,15 @@ const actionTimeline = {
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [4,4,4] },
         { frame: 1.1, value: [8,8,8], ease: ease.sineOut },
-        { frame: 1.4, value: [0,0,0], ease: ease.cubicIn }
+        { frame: 1.4, value: vec3.ZERO, ease: ease.cubicIn }
     ], vec3.lerp),
     'ring.color': PropertyAnimation([
-        { frame: 0.8, value: [0,0,0,0] },
+        { frame: 0.8, value: vec4.ZERO },
         { frame: 1.1, value: [0.1,0.5,0.6,0.5], ease: ease.quadOut },
         { frame: 1.4, value: [0.5,1,1,0], ease: ease.sineIn }
     ], vec4.lerp),
     'flash.transform.scale': PropertyAnimation([
-        { frame: 1.3, value: [0,0,0] },
+        { frame: 1.3, value: vec3.ZERO },
         { frame: 1.8, value: [10,10,10], ease: ease.cubicOut }
     ], vec3.lerp),
     'flash.color': PropertyAnimation([
@@ -82,7 +82,7 @@ const actionTimeline = {
 }
 
 export class BeamSkill extends CubeSkill {
-    readonly damageType: DamageType = DamageType.Temperature
+    readonly damageType: DamageType = DamageType.Temperature | DamageType.Electric
     damage: number = 1
     range: number = 8
 
@@ -101,12 +101,12 @@ export class BeamSkill extends CubeSkill {
         super(context, cube)
         this.center = Sprite.create(BillboardType.Sphere)
         this.center.material = new SpriteMaterial(vec4(8,4,1,1))
-        this.center.material.program = SharedSystem.materials.beamRadialProgram
+        this.center.material.program = SharedSystem.materials.program.beamRadial
         this.center.material.diffuse = SharedSystem.gradients.tealBlue
 
         this.beam = Line.create(2, 0)
         this.beam.material = new SpriteMaterial(vec4(4,8,1,1))
-        this.beam.material.program = SharedSystem.materials.beamLinearProgram
+        this.beam.material.program = SharedSystem.materials.program.beamLinear
         this.beam.material.diffuse = SharedSystem.gradients.tealBlue
     }
     public query(direction: Direction): vec2[] { return CubeSkill.queryLine(this.context, this.cube.tile, mod(this.direction+2,4), this.range, 2) }
@@ -121,7 +121,7 @@ export class BeamSkill extends CubeSkill {
         mat4.transform(target, transform, target)
         
         this.cone = BatchMesh.create(SharedSystem.geometry.cone)
-        this.cone.material = SharedSystem.materials.absorbTealMaterial
+        this.cone.material = SharedSystem.materials.effect.absorbTeal
         this.cone.transform = this.context.get(TransformSystem).create(origin)
         const direction = vec3.subtract(target, origin, vec3())
         quat.rotation([0,-1,0], direction, this.cone.transform.rotation)

@@ -1,4 +1,3 @@
-#define TAU 6.283185307179586
 float noise1D(in float v, in float period, in float seed){
     float i = floor(v);
     float f = fract(v); f = f*f*(3.0-2.0*f);

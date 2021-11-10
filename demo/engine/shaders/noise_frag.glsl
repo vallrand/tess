@@ -1,4 +1,4 @@
-#pragma import(./headers/fullscreen_frag.glsl)
+#pragma import(./template/fullscreen_frag.glsl)
 #pragma import(./common/hash.glsl)
 #pragma import(./common/noise.glsl)
 

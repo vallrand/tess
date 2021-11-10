@@ -71,22 +71,16 @@ export class TurretSkill extends AIUnitSkill {
         const targetRotation = quat.fromNormal(vec3.normalize(direction, vec3()), vec3.AXIS_Y, quat())
         
         effect.dust = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        effect.dust.material = new SpriteMaterial()
-        effect.dust.material.program = this.context.get(ParticleEffectPass).program
-        effect.dust.material.diffuse = SharedSystem.textures.groundDust
+        effect.dust.material = SharedSystem.materials.sprite.dust
         effect.dust.transform = this.context.get(TransformSystem).create(targetPosition)
         this.context.get(ParticleEffectPass).add(effect.dust)
 
-        const trailMaterial = new SpriteMaterial()
-        trailMaterial.program = this.context.get(ParticleEffectPass).program
-        trailMaterial.diffuse = SharedSystem.gradients.tealLine
-
         effect.trailLeft = Line.create(2, 0, 0.3, ease.reverse(ease.quadIn), true)
-        effect.trailLeft.material = trailMaterial
+        effect.trailLeft.material = SharedSystem.materials.sprite.lineTeal
         this.context.get(ParticleEffectPass).add(effect.trailLeft)
 
         effect.trailRight = Line.create(2, 0, 0.3, ease.reverse(ease.quadIn), true)
-        effect.trailRight.material = trailMaterial
+        effect.trailRight.material = SharedSystem.materials.sprite.lineTeal
         this.context.get(ParticleEffectPass).add(effect.trailRight)
 
         const transformMatrix = mat4.fromRotationTranslationScale(targetRotation,originPosition,vec3.ONE,mat4())
@@ -97,13 +91,8 @@ export class TurretSkill extends AIUnitSkill {
         const targetLeft = vec3.add(originLeft, direction, vec3())
         const targetRight = vec3.add(originRight, direction, vec3())
 
-        const flashMaterial = new SpriteMaterial()
-        flashMaterial.program = this.context.get(ParticleEffectPass).program
-        flashMaterial.diffuse = SharedSystem.textures.rays
-
-
         effect.flashLeft = Sprite.create(BillboardType.Sphere)
-        effect.flashLeft.material = flashMaterial
+        effect.flashLeft.material = SharedSystem.materials.sprite.rays
         effect.flashRight = Sprite.create(BillboardType.Sphere)
         effect.flashRight.material = effect.flashLeft.material
         effect.flashLeft.transform = this.context.get(TransformSystem)
@@ -121,15 +110,13 @@ export class TurretSkill extends AIUnitSkill {
         })
 
         effect.ring = Sprite.create(BillboardType.None)
-        effect.ring.material = new SpriteMaterial()
-        effect.ring.material.program = this.context.get(ParticleEffectPass).program
-        effect.ring.material.diffuse = SharedSystem.textures.ring
+        effect.ring.material = SharedSystem.materials.sprite.ring
         effect.ring.transform = this.context.get(TransformSystem)
         .create(vec3.add(targetPosition, [0,0.2,0], vec3()), Sprite.FlatUp)
         this.context.get(ParticleEffectPass).add(effect.ring)
 
         effect.wave = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        effect.wave.material = SharedSystem.materials.ringDustMaterial
+        effect.wave.material = SharedSystem.materials.effect.ringDust
         effect.wave.transform = this.context.get(TransformSystem)
         .create(targetPosition, quat.IDENTITY)
         this.context.get(ParticleEffectPass).add(effect.wave)
@@ -138,6 +125,7 @@ export class TurretSkill extends AIUnitSkill {
         effect.light.transform = this.context.get(TransformSystem)
         .create(vec3.add([0,1,0], targetPosition, vec3()))
 
+        const damage = EventTrigger([{ frame: 0.6, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(effect, {
             'parent.mesh.armature': ModelAnimation(effect.key),
             [`parent.mesh.armature.nodes.${effect.index}.rotation`]: PropertyAnimation([
@@ -205,14 +193,13 @@ export class TurretSkill extends AIUnitSkill {
             'wave.color': PropertyAnimation([
                 { frame: 0.7, value: [0.2,1,0.8,1] },
                 { frame: 1.2, value: vec4.ZERO, ease: ease.sineOut }
-            ], vec4.lerp),
-
-            'parent.damage': EventTrigger([{ frame: 0.6, value: target }], AIUnitSkill.damage)
+            ], vec4.lerp)
         })
 
         for(const duration = 1.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
             else yield ActionSignal.WaitNextFrame
         }

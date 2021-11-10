@@ -1,4 +1,4 @@
-#pragma import(../../../engine/shaders/headers/fullscreen_frag.glsl)
+#pragma import(../../../engine/shaders/template/fullscreen_frag.glsl)
 
 float hash21(in vec2 src) {
     const uint M = 0x5bd1e995u;

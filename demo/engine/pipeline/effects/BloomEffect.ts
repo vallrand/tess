@@ -22,10 +22,8 @@ export class BloomEffect implements IPostEffect {
     public readonly mask: vec4 = vec4(2,2,2,2)
     constructor(private readonly context: Application){
         const gl: WebGL2RenderingContext = context.gl
-        this.brightness = ShaderProgram(gl, shaders.fullscreen_vert, require('../../shaders/threshold.glsl'), {
-            MASK: true, BRIGHTNESS: false
-        })
-        this.blur = ShaderProgram(gl, shaders.fullscreen_vert, require('../../shaders/gauss_blur.glsl'), { KERNEL_SIZE: 9 })
+        this.brightness = ShaderProgram(gl, shaders.fullscreen_vert, shaders.threshold_frag, { MASK: true, BRIGHTNESS: false })
+        this.blur = ShaderProgram(gl, shaders.fullscreen_vert, shaders.blur_frag, { KERNEL_SIZE: 9 })
         this.width = gl.drawingBufferWidth / BloomEffect.downscale
         this.height = gl.drawingBufferHeight / BloomEffect.downscale
 

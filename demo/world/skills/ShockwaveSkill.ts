@@ -41,7 +41,7 @@ const actionTimeline = {
         { frame: 1.8, value: [6,7], ease: ease.sineOut }
     ], vec2.lerp),
     'wave.transform.scale': PropertyAnimation([
-        { frame: 0.7, value: [0,0,0] },
+        { frame: 0.7, value: vec3.ZERO },
         { frame: 1.2, value: [20,20,20], ease: ease.cubicOut }
     ], vec3.lerp),
     'wave.color': PropertyAnimation([
@@ -69,7 +69,7 @@ const actionTimeline = {
     ], vec3.lerp),
     'flash.color': PropertyAnimation([
         { frame: 0.6, value: [0.6,0.8,1.0,0] },
-        { frame: 1.0, value: [0,0,0,0], ease: ease.quadIn }
+        { frame: 1.0, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
     'beam.transform.scale': PropertyAnimation([
         { frame: 0.6, value: [0,2,1] },
@@ -91,13 +91,13 @@ const actionTimeline = {
     ], quat.slerp),
     'cylinder.color': PropertyAnimation([
         { frame: 0, value: vec4.ZERO },
-        { frame: 0.5, value: [1,1,1,1], ease: ease.quadOut },
+        { frame: 0.5, value: vec4.ONE, ease: ease.quadOut },
         { frame: 0.8, value: vec4.ZERO, ease: ease.quartIn }
     ], vec4.lerp)
 }
 
 export class ShockwaveSkill extends CubeSkill {
-    readonly damageType: DamageType = DamageType.Electric
+    readonly damageType: DamageType = DamageType.Electric | DamageType.Immobilize
     damage: number = 2
     range: number = 2
 
@@ -110,7 +110,7 @@ export class ShockwaveSkill extends CubeSkill {
     private cylinder: BatchMesh
     private bolts: ParticleEmitter
 
-    public query(): vec2[] { return CubeSkill.queryArea(this.context, this.cube.tile, 0, this.range, 2) }
+    public query(): vec2[] { return CubeSkill.queryArea(this.context, this.cube.tile, this.minRange, this.range, 2) }
     public *activate(targets: vec2[]): Generator<ActionSignal> {
         this.cube.action.amount = 0
         

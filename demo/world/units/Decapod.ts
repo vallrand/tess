@@ -1,20 +1,18 @@
-import { clamp, vec2, vec3, vec4, quat } from '../../engine/math'
+import { vec2, vec3, vec4, quat } from '../../engine/math'
 import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
 import { DecalPass, Decal } from '../../engine/pipeline'
-import { DecalMaterial } from '../../engine/materials'
 import { ParticleEmitter } from '../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, BlendTween, ease } from '../../engine/animation'
 
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { DeathEffect, DamageEffect } from './effects'
-import { ArtillerySkill } from './skills/ArtillerySkill'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { MortarSkill } from './skills/MortarSkill'
 
 export class Decapod extends AIUnit {
     static readonly pool: Decapod[] = []
-    readonly skills = [new ArtillerySkill(this.context)]
+    readonly skills = [new MortarSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 2, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
@@ -23,23 +21,16 @@ export class Decapod extends AIUnit {
     readonly movementDuration: number = 0.4
 
     public place(column: number, row: number): void {
-        this.mesh = this.context.get(MeshSystem).loadModel("decapod")
+        this.mesh = this.context.get(MeshSystem).loadModel('decapod')
         this.mesh.transform = this.context.get(TransformSystem).create()
         this.snapPosition(vec2.set(column, row, this.tile), this.mesh.transform.position)
         ModelAnimation('activate')(0, this.mesh.armature)
         this.markTiles(true)
-
-        this.dust = SharedSystem.particles.dust.add({
-            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
-            uLifespan: [0.6,1.2,0,0], uSize: [2,4],
-            uRadius: [0,0.2], uOrientation: quat.IDENTITY,
-            uForce: [2,5], uGravity: vec3.ZERO,
-            uRotation: [0, 2 * Math.PI], uAngular: [-Math.PI,Math.PI,0,0]
-        })
     }
     public delete(): void {
+        this.dust = void SharedSystem.particles.dust.remove(this.dust)
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Decapod.pool.push(this)
     }
     private dust: ParticleEmitter
@@ -48,9 +39,15 @@ export class Decapod extends AIUnit {
         this.shadow = this.context.get(DecalPass).create(4)
         this.shadow.transform = this.context.get(TransformSystem).create()
         this.shadow.transform.parent = this.mesh.transform
-        this.shadow.material = new DecalMaterial()
-        this.shadow.material.program = this.context.get(DecalPass).program
-        this.shadow.material.diffuse = SharedSystem.textures.glow
+        this.shadow.material = SharedSystem.materials.decal.glow
+
+        this.dust = this.dust || SharedSystem.particles.dust.add({
+            uOrigin: vec3.ZERO, uTarget: vec3.ZERO,
+            uLifespan: [0.6,1.2,0,0], uSize: [2,4],
+            uRadius: [0,0.2], uOrientation: quat.IDENTITY,
+            uForce: [2,5], uGravity: vec3.ZERO,
+            uRotation: [0, 2 * Math.PI], uAngular: [-Math.PI,Math.PI,0,0]
+        })
 
         const animate = AnimationTimeline(this, {
             'shadow.color': PropertyAnimation([
@@ -70,11 +67,9 @@ export class Decapod extends AIUnit {
             ], BlendTween.quat)
         })
 
-        const duration = frames[frames.length - 1]
-
         this.context.get(TerrainSystem).tilePosition(path[path.length - 1][0], path[path.length - 1][1], this.dust.uniform.uniforms['uOrigin'] as any)
         const dustEmit = EventTrigger([
-            { frame: duration - 0.5 * this.movementDuration, value: 16 }
+            { frame: frames[frames.length - 1] - 0.5 * this.movementDuration, value: 16 }
         ], EventTrigger.emit)
 
         for(const generator = this.moveAlongPath(path, frames, true), startTime = this.context.currentTime; true;){
@@ -87,6 +82,6 @@ export class Decapod extends AIUnit {
         }
 
         this.context.get(TransformSystem).delete(this.shadow.transform)
-        this.context.get(DecalPass).delete(this.shadow)
+        this.shadow = void this.context.get(DecalPass).delete(this.shadow)
     }
 }

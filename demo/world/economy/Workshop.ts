@@ -146,10 +146,8 @@ export class Workshop {
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
 
-        this.cover = Sprite.create()
-        vec4.copy(vec4.ZERO, this.cover.color)
-        this.cover.billboard = BillboardType.None
-        this.cover.material = SharedSystem.materials.planeDissolveMaterial
+        this.cover = Sprite.create(BillboardType.None, 0, vec4.ZERO)
+        this.cover.material = SharedSystem.materials.effect.planeDissolve
         this.cover.transform = this.context.get(TransformSystem)
         .create([0,2.02,0], Sprite.FlatUp, vec3(2,2,2), mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cover)

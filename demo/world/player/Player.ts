@@ -41,14 +41,14 @@ export class PlayerSystem implements ISystem {
 
             window['curUnit'] = 3
 
-            // this.context.get(AISystem).create(5,7,0)
+            this.context.get(AISystem).create(5,7,7)
             // this.context.get(AISystem).create(5,6,0)
             // this.context.get(AISystem).create(5,5,0)
             // this.context.get(AISystem).create(4,4,0)
 
             // ;[
-            //     [5,7],[5,6],[5,5],[6,7],[6,6],[6,4]
-            // ].map(tile=>[tile[0]+2,tile[1]+3-3])
+            //     [5,7],[5,6],[5,5],[6,7],//[6,6],[6,4]
+            // ].map(tile=>[tile[0]+2+5,tile[1]+3-3])
             // .forEach(([c,r]) => {
             //     this.context.get(AISystem).create(c,r,0)
             // })
@@ -58,6 +58,8 @@ export class PlayerSystem implements ISystem {
             // .forEach(([c,r]) => {
             //     this.context.get(AISystem).create(c,r,6)
             // })
+
+            //TODO isopod, monolith, locust
 
             // window['u0'] = this.context.get(AISystem).create(6,7+3,0) //scarab
             // window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
@@ -71,7 +73,7 @@ export class PlayerSystem implements ISystem {
             window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
             window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [2,8,4]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
+            window['app'].systems[17].cameraOffset= [-2,8,4]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
         const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)

@@ -77,7 +77,7 @@ export class DetonateSkill extends CubeSkill {
         this.cube.matter.amount--
         
         this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
-        this.tube.material = SharedSystem.materials.stripesRedMaterial
+        this.tube.material = SharedSystem.materials.effect.stripesRed
         this.tube.transform = this.context.get(TransformSystem).create([0,3,0],quat.IDENTITY,vec3.ONE,this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.tube)
 

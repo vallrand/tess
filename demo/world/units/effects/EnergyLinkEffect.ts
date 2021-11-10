@@ -1,11 +1,9 @@
 import { Application } from '../../../engine/framework'
-import { clamp, lerp, vec2, vec3, vec4, quat, mat4, quadraticBezier3D } from '../../../engine/math'
-import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
+import { lerp, vec2, vec3, vec4, quat, mat4, quadraticBezier3D } from '../../../engine/math'
+import { Mesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
-import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
-import { ParticleEmitter } from '../../../engine/particles'
-import { SpriteMaterial, DecalMaterial } from '../../../engine/materials'
-import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../../engine/pipeline'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, FollowPath, ease } from '../../../engine/animation'
+import { ParticleEffectPass } from '../../../engine/pipeline'
 
 import { TerrainSystem } from '../../terrain'
 import { SharedSystem } from '../../shared'
@@ -38,9 +36,7 @@ export class EnergyLinkEffect {
         this.context.get(ParticleEffectPass).add(this.shield)
         
         this.glow = Sprite.create(BillboardType.Sphere)
-        this.glow.material = new SpriteMaterial()
-        this.glow.material.program = this.context.get(ParticleEffectPass).program
-        this.glow.material.diffuse = SharedSystem.textures.particle
+        this.glow.material = SharedSystem.materials.sprite.particle
         this.glow.transform = this.context.get(TransformSystem)
         .create([0,1.5,0], quat.IDENTITY, vec3.ONE, this.target.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.glow)
@@ -48,7 +44,7 @@ export class EnergyLinkEffect {
         this.line = Line.create(16, 0, 1, x => 0.2 + 0.8 * ease.sineIn(Math.max(0, 1-2*x)))
         const fadeEase: ease.IEase = x => 1 - ease.quadOut(Math.max(0, 1-2*x)) - ease.quadIn(Math.max(0, 4*(x-1)+1))
         this.line.addColorFade(fadeEase, [1,0.8,1])
-        this.line.material = SharedSystem.materials.trailEnergyMaterial
+        this.line.material = SharedSystem.materials.effect.trailEnergy
         this.context.get(ParticleEffectPass).add(this.line)
 
         const animate = AnimationTimeline(this, {

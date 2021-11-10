@@ -23,15 +23,12 @@ export class StaticOrb {
         this.transform = this.context.get(TransformSystem).create()
         this.context.get(TerrainSystem).tilePosition(this.tile[0], this.tile[1], this.transform.position)
 
-        this.orb = new Mesh()
-        this.orb.buffer = SharedSystem.geometry.sphereMesh
-        this.orb.order = 4
-        this.orb.layer = 8
+        this.orb = Mesh.create(SharedSystem.geometry.sphereMesh, 4, 8)
         this.context.get(MeshSystem).list.push(this.orb)
         this.orb.transform = this.context.get(TransformSystem).create()
         this.orb.transform.parent = this.transform
 
-        this.orb.material = SharedSystem.materials.orbMaterial
+        this.orb.material = SharedSystem.materials.mesh.orb
         this.orb.color[0] = 0
 
         this.decal = this.context.get(DecalPass).create(8)

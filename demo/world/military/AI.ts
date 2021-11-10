@@ -54,14 +54,6 @@ export class AISystem implements ISystem, IAgent {
         else this.list[index] = this.list.pop()
         unit.markTiles(false)
     }
-    public query(origin: vec2, radius: number): AIUnit[] {
-        const out = []
-        out.push(this.list[0])
-        for(let i = this.list.length - 1; i >= 0; i--){
-
-        }
-        return out
-    }
     private readonly propagationRadius: number = 2
     private readonly revealRadius: number = 8
     public execute(): Generator<ActionSignal> {

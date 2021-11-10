@@ -1,9 +1,6 @@
-import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
-import { SpriteMaterial, DecalMaterial } from '../../../engine/materials'
 import { TransformSystem } from '../../../engine/scene'
-import { doubleSided } from '../../../engine/geometry'
 import { ParticleEmitter } from '../../../engine/particles'
 import { PointLightPass, PointLight, DecalPass, Decal, ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
@@ -44,7 +41,7 @@ const actionTimeline = {
         { frame: 0, value: null }
     ], (rotation: quat) => quat.axisAngle(vec3.AXIS_Y, 2*Math.PI*SharedSystem.random(), rotation)),
     'cracks.transform.scale': PropertyAnimation([
-        { frame: 0.8, value: [12,4,12] }
+        { frame: 0.8, value: [16,4,16] }
     ], vec3.lerp),
     'cracks.color': PropertyAnimation([
         { frame: 0.8, value: [0.6,0.6,1,1] }
@@ -56,7 +53,7 @@ const actionTimeline = {
     ], lerp),
     'wave.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
-        { frame: 1.4, value: [10,10,10], ease: ease.cubicOut }
+        { frame: 1.4, value: [12,12,12], ease: ease.cubicOut }
     ], vec3.lerp),
     'wave.color': PropertyAnimation([
         { frame: 0.8, value: vec4.ONE },
@@ -64,7 +61,7 @@ const actionTimeline = {
     ], vec4.lerp),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
-        { frame: 1.4, value: [10,10,10], ease: ease.quartOut }
+        { frame: 1.4, value: [16,16,16], ease: ease.quartOut }
     ], vec3.lerp),
     'ring.color': PropertyAnimation([
         { frame: 0.8, value: [0.6,0.4,1,0] },
@@ -80,7 +77,7 @@ const actionTimeline = {
     ], vec4.lerp),
     'pillar.transform.scale': PropertyAnimation([
         { frame: 0.8, value: [0,-8,0] },
-        { frame: 1.4, value: [5,-2,5], ease: ease.cubicOut }
+        { frame: 1.4, value: [7,-2,7], ease: ease.cubicOut }
     ], vec3.lerp),
     'pillar.color': PropertyAnimation([
         { frame: 0.8, value: [0.8,0.6,1,0.4] },
@@ -90,11 +87,11 @@ const actionTimeline = {
 
 export class WaveSkill extends AIUnitSkill {
     readonly cost: number = 1
-    readonly range: number = 3
+    readonly range: number = Math.sqrt(5)
     readonly cardinal: boolean = false
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Electric
-    readonly damage: number = 4
+    readonly damage: number = 1
 
     private beam: Sprite
     private cracks: Decal
@@ -109,18 +106,13 @@ export class WaveSkill extends AIUnitSkill {
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
         this.mesh = source.mesh
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
-        this.beam.material = new SpriteMaterial()
-        this.beam.material.program = this.context.get(ParticleEffectPass).program
-        this.beam.material.diffuse = SharedSystem.textures.raysBeam
+        this.beam.material = SharedSystem.materials.sprite.beam
         this.beam.transform = this.context.get(TransformSystem)
-        .create([0,0,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
+        .create(vec3.ZERO,quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
     
         this.cracks = this.context.get(DecalPass).create(4)
-        this.cracks.material = new DecalMaterial()
-        this.cracks.material.program = this.context.get(DecalPass).program
-        this.cracks.material.diffuse = SharedSystem.textures.cracks
-        this.cracks.material.normal = SharedSystem.textures.cracksNormal
+        this.cracks.material = SharedSystem.materials.cracksMaterial
         this.cracks.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
     
@@ -131,25 +123,21 @@ export class WaveSkill extends AIUnitSkill {
         this.context.get(PostEffectPass).add(this.wave)
     
         this.ring = Sprite.create(BillboardType.None)
-        this.ring.material = new SpriteMaterial()
-        this.ring.material.program = this.context.get(ParticleEffectPass).program
-        this.ring.material.diffuse = SharedSystem.textures.swirl
+        this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
         .create([0,0.5,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
     
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
-        this.cylinder.material = SharedSystem.materials.stripesMaterial
+        this.cylinder.material = SharedSystem.materials.effect.stripes
         this.cylinder.transform = this.context.get(TransformSystem)
         .create([0,2,0], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cylinder)
     
-        this.pillar = BatchMesh.create(SharedSystem.geometry.lopolyCylinderFlip)
-        this.pillar.material = new SpriteMaterial()
-        this.pillar.material.program = this.context.get(ParticleEffectPass).program
-        this.pillar.material.diffuse = SharedSystem.textures.raysWrap
+        this.pillar = BatchMesh.create(SharedSystem.geometry.lowpolyCylinderFlip)
+        this.pillar.material = SharedSystem.materials.sprite.streak
         this.pillar.transform = this.context.get(TransformSystem)
-        .create([0,0,0], quat.IDENTITY, vec3.ONE, this.mesh.transform)
+        .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
     
         this.bolts = SharedSystem.particles.bolts.add({
@@ -167,20 +155,21 @@ export class WaveSkill extends AIUnitSkill {
         this.light.transform = this.context.get(TransformSystem)
         .create([0,4,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
     
-        this.core = new BatchMesh(doubleSided(SharedSystem.geometry.lowpolySphere))
-        this.core.material = SharedSystem.materials.energyPurpleMaterial
+        this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
+        this.core.material = SharedSystem.materials.effect.energyPurple
         this.core.transform = this.context.get(TransformSystem)
         .create([0,1,0],quat.IDENTITY,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.core)
     
+        const damage = EventTrigger([{ frame: 1, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
-        //const damage = EventTrigger([{ frame: 0, value: this.query() }])
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
+            damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
     
         this.context.get(TransformSystem).delete(this.beam.transform)
@@ -191,7 +180,6 @@ export class WaveSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.light.transform)
         this.context.get(TransformSystem).delete(this.core.transform)
-    
         SharedSystem.particles.bolts.remove(this.bolts)
         this.context.get(DecalPass).delete(this.cracks)
         this.context.get(PointLightPass).delete(this.light)
@@ -201,11 +189,11 @@ export class WaveSkill extends AIUnitSkill {
         this.context.get(ParticleEffectPass).remove(this.cylinder)
         this.context.get(ParticleEffectPass).remove(this.ring)
         this.context.get(ParticleEffectPass).remove(this.core)
-
         Sprite.delete(this.beam)
         Sprite.delete(this.wave)
         Sprite.delete(this.ring)
         BatchMesh.delete(this.cylinder)
         BatchMesh.delete(this.pillar)
+        BatchMesh.delete(this.core)
     }
 }

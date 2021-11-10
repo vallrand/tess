@@ -37,7 +37,7 @@ const steeringTimeline = {
     ], vec3.lerp),
     'ring.color': PropertyAnimation([
         { frame: 0, value: [0.3,0.3,0.4,1] },
-        { frame: 0.8, value: [0,0,0,0], ease: ease.sineIn }
+        { frame: 0.8, value: vec4.ZERO, ease: ease.sineIn }
     ], vec4.lerp),
     'pillar.transform.scale': PropertyAnimation([
         { frame: 0, value: [1,0,1] },
@@ -87,11 +87,11 @@ class Missile {
         quat.normalize(this.head.transform.rotation, this.head.transform.rotation)
 
         this.trail = Line.create(16, 4, 0.4, ease.cubicFadeInOut, true)
-        this.trail.material = SharedSystem.materials.trailSmokeMaterial
+        this.trail.material = SharedSystem.materials.effect.trailSmoke
         this.context.get(ParticleEffectPass).add(this.trail)
 
         this.exhaust = BatchMesh.create(SharedSystem.geometry.hemisphere, 2)
-        this.exhaust.material = SharedSystem.materials.exhaustMaterial
+        this.exhaust.material = SharedSystem.materials.effect.exhaust
         this.exhaust.transform = this.context.get(TransformSystem).create()
         this.exhaust.transform.parent = this.head.transform
         vec3.set(0.24,0.24,1.2, this.exhaust.transform.scale)
@@ -133,7 +133,7 @@ class Missile {
         this.context.get(PostEffectPass).add(this.wave)
 
         this.ring = BatchMesh.create(SharedSystem.geometry.cylinder, 6)
-        this.ring.material = SharedSystem.materials.ringDustMaterial
+        this.ring.material = SharedSystem.materials.effect.ringDust
         this.ring.transform = this.context.get(TransformSystem).create()
         vec3.copy(this.target, this.ring.transform.position)
         this.context.get(ParticleEffectPass).add(this.ring)
@@ -248,8 +248,8 @@ export class ArtillerySkill extends CubeSkill {
     public query(direction: Direction): vec2[] | null {
         if(direction === Direction.None || !this.indicator.amount) return
         const origin = this.cube.tile
-        const forward = (direction - 1) * 0.5 * Math.PI
-        const candidates = CubeSkill.queryArea(this.context, origin, 0, this.range, 2)
+        const forward = -(direction - 1) * 0.5 * Math.PI
+        const candidates = CubeSkill.queryArea(this.context, origin, this.minRange, this.range, 2)
         const out: vec2[] = []
         for(let i = 4; i > 0; i--){
             let index = -1, min = Infinity
