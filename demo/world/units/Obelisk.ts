@@ -36,8 +36,9 @@ export class Obelisk extends AIUnit {
         if(this.expanded && plan.path){
             this.markTiles(false)
             this.expanded = false
+            plan.delay += 1
             const map = this.context.get(TerrainSystem).pathfinder
-            const time = this.context.currentTime + 2 * this.movementDuration
+            const time = this.context.currentTime + 2 * this.movementDuration + plan.delay
             for(let i = 0; i < DirectionTile.length; i++)
                 map.marked[map.tileIndex(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1])] = time
         }
@@ -52,8 +53,9 @@ export class Obelisk extends AIUnit {
         for(let i = 0; i < DirectionTile.length; i++)
             terrain.setTile(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1], toggle ? this : null)
     }
+    public deactivate(): Generator<ActionSignal> { return this.skills[0].deactivate() }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {
-        for(const generator = this.skills[0].deactivate(); true;){
+        for(const generator = this.deactivate(); true;){
             const iterator = generator.next()
             if(iterator.done) break
             else yield iterator.value

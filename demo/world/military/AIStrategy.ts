@@ -6,6 +6,7 @@ import { AIUnit } from './AIUnit'
 
 export interface AIStrategyPlan {
     priority: number
+    delay: number
     path?: vec2[]
     origin: vec2
     target?: vec2
@@ -19,26 +20,21 @@ export class AIStrategy {
     static lineOfSight(map: Pathfinder, start: vec2, end: vec2): boolean {
         const tx = start[0] <= end[0] ? 1 : -1, ty = start[1] <= end[1] ? 1 : -1
         const nx = Math.abs(end[0] - start[0]), ny = Math.abs(end[1] - start[1])
-        let x = start[0], y = start[1]
         for(let ix = 0, iy = 0; ix < nx || iy < ny;){
             let direction = (1 + 2*ix) * ny - (1 + 2*iy) * nx
+            const x = start[0] + ix * tx
+            const y = start[1] + iy * ty
+            if(map.weight[map.tileIndex(x, y)] == 0) return false
+
             if(direction === 0){
                 if(
                     map.weight[map.tileIndex(x + tx, y)] == 0 &&
                     map.weight[map.tileIndex(x, y + ty)] == 0
                 ) return false
-                x += tx
-                y += ty
                 ix++
                 iy++
-            }else if(direction < 0){
-                x += tx
-                ix++
-            }else{
-                y += ty
-                iy++
-            }
-            if(map.weight[map.tileIndex(x, y)] == 0) return false
+            }else if(direction < 0) ix++
+            else iy++
         }
         return true
     }
@@ -47,7 +43,7 @@ export class AIStrategy {
     private readonly influence: Uint16Array = new Uint16Array(this.size * this.size).fill(0xFFFF)
     private readonly map: Pathfinder = this.context.get(TerrainSystem).pathfinder
     private readonly optimal: AIStrategyPlan = {
-        priority: 0, skill: -1, origin: vec2()
+        priority: 0, delay: 0, skill: -1, origin: vec2()
     }
 
     public diagonal: boolean = false
@@ -100,6 +96,7 @@ export class AIStrategy {
     }
     plan(limit?: number): AIStrategyPlan {
         if(!this.aware) return this.optimal
+        this.optimal.delay = 0
         this.optimal.priority = Number.MIN_SAFE_INTEGER
         vec2.copy(this.unit.tile, this.optimal.origin)
         this.map.add(this.unit.tile)

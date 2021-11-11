@@ -17,6 +17,7 @@ export abstract class AIUnit extends Unit {
 
     public actionIndex: number
     public hash: number
+    public shield: number = 0
     readonly weight: number = 2
 
     abstract readonly movementDuration: number
@@ -25,10 +26,11 @@ export abstract class AIUnit extends Unit {
     public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
         const map = this.context.get(TerrainSystem).pathfinder
         const actions: Generator<ActionSignal>[] = []
+        if(plan.skill != -1 && plan.reverse) plan.delay += this.skills[plan.skill].duration
         if(plan.path){
             this.movement.amount -= plan.path.length - 1
             const frames = []
-            let time = this.context.currentTime
+            let time = this.context.currentTime + plan.delay
             for(let i = 0; i < plan.path.length - 1; i++){
                 const prev = plan.path[i], next = plan.path[i + 1]
                 const availableTime = map.marked[map.tileIndex(next[0], next[1])]
@@ -57,6 +59,8 @@ export abstract class AIUnit extends Unit {
     public abstract delete(): void
     public abstract place(column: number, row: number): void
     public damage(amount: number, type: DamageType): void {
+        if(this.shield) return
+
         if(this.health.amount <= 0) return
         this.strategy.aware = true
         this.health.amount -= amount
@@ -64,6 +68,7 @@ export abstract class AIUnit extends Unit {
         if(this.health.amount > 0) DamageEffect.create(this.context, this, type)
         else DeathEffect.create(this.context, this)
     }
+    public *deactivate(): Generator<ActionSignal> {}
     public abstract move(path: vec2[], frames: number[], target?: vec2): Generator<ActionSignal>
 
     protected *moveAlongPath(path: vec2[], frames: number[], rotate: boolean): Generator<ActionSignal> {

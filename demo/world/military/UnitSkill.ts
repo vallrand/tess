@@ -22,12 +22,14 @@ export abstract class UnitSkill {
     readonly pierce?: boolean
     readonly damageType: DamageType = DamageType.None
     readonly damage: number = 0
+    readonly group: number
 
     public active: boolean = false
 
     public static damage(source: UnitSkill, target: vec2): void {
-        const targetUnit = source.context.get(TerrainSystem).getTile<Unit>(target[0], target[1])
-        if(targetUnit && targetUnit.damage) targetUnit.damage(source.damage, source.damageType)
+        const unit = source.context.get(TerrainSystem).getTile<Unit>(target[0], target[1])
+        if(!unit || !(unit instanceof Unit) || (unit.group & source.group) == 0) return
+        unit.damage(source.damage, source.damageType)
     }
     public static queryArea(context: Application, origin: vec2, minRange: number, maxRange: number, group: number): vec2[] {
         const size = Math.ceil(maxRange)

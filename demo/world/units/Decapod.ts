@@ -33,6 +33,7 @@ export class Decapod extends AIUnit {
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Decapod.pool.push(this)
     }
+    public deactivate(): Generator<ActionSignal> { return this.skills[0].deactivate() }
     private dust: ParticleEmitter
     private shadow: Decal
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {

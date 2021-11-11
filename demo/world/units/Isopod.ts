@@ -7,15 +7,15 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTr
 
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
-import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
-import { OrbSkill } from './skills/OrbSkill'
+import { AIUnit, AIStrategy } from '../military'
+import { StaticOrbSkill } from './skills/StaticOrbSkill'
 
 export class Isopod extends AIUnit {
     static readonly pool: Isopod[] = []
-    readonly skills = [new OrbSkill(this.context)]
+    readonly skills = [new StaticOrbSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 12, amount: 0, gain: 0 }
-    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly action = { capacity: 1, amount: 0, gain: 0.25 }
     readonly movement = { capacity: 1, amount: 0, gain: 1 }
     readonly group: number = 2
     readonly movementDuration: number = 0.4

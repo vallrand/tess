@@ -1,15 +1,13 @@
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh, Line } from '../../../engine/components'
-import { SpriteMaterial } from '../../../engine/materials'
 import { TransformSystem } from '../../../engine/scene'
-import { doubleSided } from '../../../engine/geometry'
 import { ParticleEmitter } from '../../../engine/particles'
 import { PointLightPass, PointLight, ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
 
 import { TerrainSystem } from '../../terrain'
 import { SharedSystem, ModelAnimation } from '../../shared'
-import { AIUnit, AIUnitSkill, DamageType } from '../../military'
+import { AIUnit, AIUnitSkill, DamageType, AIStrategy } from '../../military'
 
 const actionTimeline = {
     'mesh.armature': ModelAnimation('activateVariant'),
@@ -90,6 +88,10 @@ export class ProjectileSkill extends AIUnitSkill {
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Kinetic | DamageType.Corrosion
     readonly damage: number = 2
+
+    public validate(origin: vec2, target: vec2): boolean {
+        return super.validate(origin, target) && AIStrategy.lineOfSight(this.context.get(TerrainSystem).pathfinder, origin, target)
+    }
 
     private ring: Sprite
     private flash: Sprite

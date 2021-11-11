@@ -23,17 +23,12 @@ export class PlayerSystem implements ISystem {
     public readonly skills = CubeSkills(this.context, this.cube)
 
     constructor(private readonly context: Application){
-        window['orbit'] = (speed = 0.1) => setInterval(() => {
-            this.cameraOffset[0] = 4 * Math.sin(speed * performance.now() / 1000)
-            this.cameraOffset[2] = 4 * Math.cos(speed * performance.now() / 1000)
-        }, 10)
-
         this.context.get(TurnBasedSystem).add(this.cube)
     }
     public update(): void {
         if(this.context.frame == 1) this.cube.place(4, 6)
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.side, 0, CubeModule.Voidgun)
+            this.cube.installModule(this.cube.side, 0, CubeModule.Railgun)
             // this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
@@ -41,7 +36,9 @@ export class PlayerSystem implements ISystem {
 
             window['curUnit'] = 3
 
-            this.context.get(AISystem).create(5,7,7)
+            // this.context.get(AISystem).create(5,5,5)
+
+            // this.context.get(AISystem).create(5,7,0)
             // this.context.get(AISystem).create(5,6,0)
             // this.context.get(AISystem).create(5,5,0)
             // this.context.get(AISystem).create(4,4,0)
@@ -59,7 +56,7 @@ export class PlayerSystem implements ISystem {
             //     this.context.get(AISystem).create(c,r,6)
             // })
 
-            //TODO isopod, monolith, locust
+            //TODO monolith, locust
 
             // window['u0'] = this.context.get(AISystem).create(6,7+3,0) //scarab
             // window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
@@ -75,19 +72,8 @@ export class PlayerSystem implements ISystem {
             window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
             window['app'].systems[17].cameraOffset= [-2,8,4]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
         }
-        const mainUnit = window['u' + window['curUnit']]
         this.tilemap.renderFaceTiles(this.cube)
         this.indicator.update(this.cube)
-
-        this.cube.meshes[this.cube.side].armature.frame = 0
-        window['a'] = this.cube.meshes[this.cube.side].armature
-
-        for(let i = 0; i <= 8; i++){
-            const unit = window[`u${i}`]
-            if(!unit) continue
-           unit.mesh.armature.frame = 0
-            window[`a${i}`] =unit.mesh.armature
-        }
 
         const keys = this.context.get(KeyboardSystem)
         // if(keys.trigger('KeyA')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
@@ -99,7 +85,6 @@ export class PlayerSystem implements ISystem {
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
         this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
-        // this.context.get(CameraSystem).controller.adjustCamera(mainUnit.mesh.transform.position || this.cube.transform.position)
     }
     public *execute(): Generator<ActionSignal> {
         

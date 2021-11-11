@@ -1,5 +1,5 @@
 import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
-import { Mesh, BatchMesh, Sprite, BillboardType} from '../../../engine/components'
+import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
@@ -15,7 +15,6 @@ const actionTimeline = {
         { frame: 1.4, value: [0.8,0,0.6,1], ease: ease.cubicOut },
         { frame: 2.0, value: vec4.ONE, ease: ease.sineIn }
     ], vec4.lerp),
-
     'pulse.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
         { frame: 2.0, value: [16,16,16], ease: ease.quadOut }
@@ -41,7 +40,6 @@ const actionTimeline = {
         { frame: 0.7, value: [0.6,1,1,0] },
         { frame: 0.9, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
-
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.8, value: vec3.ZERO },
         { frame: 1.4, value: [8,8,8], ease: ease.cubicOut }
@@ -84,8 +82,9 @@ export class ShockwaveSkill extends AIUnitSkill {
     readonly range: number = 5
     readonly cardinal: boolean = false
     readonly pierce: boolean = false
-    readonly damageType: DamageType = DamageType.Electric | DamageType.Temperature | DamageType.Corrosion | DamageType.Kinetic
-    readonly damage: number = 10
+    readonly damageType: DamageType = DamageType.Electric | DamageType.Temperature |
+    DamageType.Corrosion | DamageType.Kinetic | DamageType.Immobilize
+    readonly damage: number = 1
 
     private pulse: Mesh
     private ring: Sprite
@@ -98,6 +97,7 @@ export class ShockwaveSkill extends AIUnitSkill {
     private mesh: Mesh
 
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
+        this.mesh = source.mesh
         this.pulse = Mesh.create(SharedSystem.geometry.sphereMesh, 1)
         this.pulse.material = SharedSystem.materials.pulseMaterial
         this.pulse.transform = this.context.get(TransformSystem)
@@ -153,7 +153,7 @@ export class ShockwaveSkill extends AIUnitSkill {
 
         const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
-        for(const duration = 2.4, startTime = this.context.currentTime; true;){
+        for(const duration = 3.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             damage(elapsedTime, this.context.deltaTime, this)

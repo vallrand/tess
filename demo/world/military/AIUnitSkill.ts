@@ -4,6 +4,8 @@ import { UnitSkill } from './UnitSkill'
 import { AIUnit } from './AIUnit'
 
 export abstract class AIUnitSkill extends UnitSkill {
+    readonly group: number = 1
+    readonly duration: number = 0
     abstract use(source: AIUnit, target: vec2): Generator<ActionSignal>
 
     public validate(origin: vec2, target: vec2): boolean {

@@ -69,7 +69,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
     readonly cardinal: boolean = true
     readonly pierce: boolean = true
     readonly damageType: DamageType = DamageType.Temperature | DamageType.Corrosion
-    readonly damage: number = 5
+    readonly damage: number = 2
 
     public validate(origin: vec2, target: vec2): boolean {
         const dx = Math.max(target[0] - origin[0] - 1, origin[0] - target[0])
@@ -141,7 +141,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
         .create([0,1,1.5], quat.IDENTITY, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
-        const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
+        const damage = EventTrigger([{ frame: 0.8, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, {
             ...actionTimeline,
             'lineA.path.1': PropertyAnimation([
@@ -178,5 +178,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
         Sprite.delete(this.ring)
         BatchMesh.delete(this.heat)
         BatchMesh.delete(this.corridor)
+        Line.delete(this.lineA)
+        Line.delete(this.lineB)
     }
 }

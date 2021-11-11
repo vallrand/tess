@@ -1,21 +1,37 @@
 import { Application, ISystem } from '../../engine/framework'
-import { range, vec2, hashCantor } from '../../engine/math'
+import { range, vec2 } from '../../engine/math'
 import { AnimationSystem, ActionSignal } from '../../engine/animation'
 import { TurnBasedSystem, IAgent } from '../common'
-
 import { PlayerSystem } from '../player'
-import { UnitFactory } from '../units'
-import { TerrainSystem, Pathfinder } from '../terrain'
+import { UnitFactory, UnitType } from '../units'
+import { TerrainSystem } from '../terrain'
 import { AIUnit } from './AIUnit'
-import { AIStrategy, AIStrategyPlan } from './AIStrategy'
+import { AIStrategyPlan } from './AIStrategy'
+
+function WeightTable<T>(values: T[], weights: number[]){
+    const total = weights.reduce((total, value) => total + value, 0)
+    return function(random: number){
+        const index = random * total | 0
+        for(let weight = 0, i = 0; i < weights.length; i++)
+            if(index < (weight += weights[i])) return values[i]
+    }
+}
 
 export class AISystem implements ISystem, IAgent {
     readonly order: number = 2
 
-    public static readonly groups: Array<keyof typeof UnitFactory>[] = [
-        [0,0,0,0,2,2],
-        [1,1,4,4,8],
-        [6,6,7,7]
+    public static readonly special = WeightTable<{
+        value: UnitType
+        size: number
+    }>([
+        {size:0,value:null},
+        {size:2,value:UnitType.Locust},
+        {size:3,value:UnitType.Monolith}
+    ], [2,3,1])
+    public static readonly groups: Array<UnitType>[] = [
+        [UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Stingray,UnitType.Stingray],
+        [UnitType.Tarantula,UnitType.Tarantula,UnitType.Obelisk,UnitType.Obelisk,UnitType.TarantulaVariant],
+        [UnitType.Decapod,UnitType.Decapod,UnitType.Isopod,UnitType.Isopod]
     ]
     private readonly list: AIUnit[] = []
     constructor(private readonly context: Application){
@@ -34,9 +50,8 @@ export class AISystem implements ISystem, IAgent {
             item.delete()
         }
     }
-    public create<K extends keyof typeof UnitFactory>(column: number, row: number, type: K): InstanceType<typeof UnitFactory[K]> {
-        const hash = hashCantor(column, row)
-        for(let i = this.list.length - 1; i >= 0; i--) if(this.list[i].hash === hash) return null
+    public create<K extends keyof typeof UnitFactory>(column: number, row: number, type: K, hash?: number): InstanceType<typeof UnitFactory[K]> {
+        if(hash) for(let i = this.list.length - 1; i >= 0; i--) if(this.list[i].hash === hash) return null
         const factory = UnitFactory[type]
         const unit = factory.pool.pop() || new factory(this.context)
         unit.hash = hash

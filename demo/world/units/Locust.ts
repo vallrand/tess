@@ -1,12 +1,11 @@
-import { clamp, lerp, vec2, vec3, vec4 } from '../../engine/math'
-import { MeshSystem, Mesh, BatchMesh, Sprite } from '../../engine/components'
+import { vec2, vec4 } from '../../engine/math'
+import { MeshSystem, BatchMesh, Sprite } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../engine/animation'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../engine/animation'
 import { ParticleEffectPass } from '../../engine/pipeline'
 
-import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
 import { FlamethrowerSkill } from './skills/FlamethrowerSkill'
 import { ShieldLinkSkill } from './skills/ShieldLinkSkill'
 
@@ -17,7 +16,7 @@ export class Locust extends AIUnit {
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 40, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
-    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 0.25 }
     readonly group: number = 2
     readonly movementDuration: number = 0.8
 
@@ -32,6 +31,22 @@ export class Locust extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Locust.pool.push(this)
+    }
+    public deactivate(): Generator<ActionSignal> { return (this.skills[1] as ShieldLinkSkill).deactivate() }
+    public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
+        const actions: Generator<ActionSignal>[] = []
+        if(this.skills[1].active){
+            plan.delay += 1
+            actions.unshift(this.deactivate())
+        }
+        actions.push(super.execute(plan))
+
+        const targets = (this.skills[1] as ShieldLinkSkill).query(this)
+        if(targets.length >= 2 && !this.skills[1].active){
+            this.movement.amount = 0
+            actions.push(this.skills[1].use(this, null))
+        }
+        return AnimationSystem.join(actions)
     }
     
     private motorLeft: BatchMesh

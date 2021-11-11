@@ -116,8 +116,12 @@ export class Cube extends Unit implements IAgent {
                 else yield iterator.value
             }
             DeathEffect.create(this.context, this)
-            //TODO orbit + restart?
-            while(true){
+            const camera = this.context.get(PlayerSystem).cameraOffset
+            const orbitDuration = 0.1, orbitRadius = 4
+            for(const startTime = this.context.currentTime; true;){
+                const elapsedTime = this.context.currentTime - startTime
+                camera[0] = orbitRadius * Math.sin(elapsedTime * orbitDuration)
+                camera[2] = orbitRadius * Math.cos(elapsedTime * orbitDuration)
                 yield ActionSignal.WaitNextFrame
             }
         }
@@ -130,7 +134,7 @@ export class Cube extends Unit implements IAgent {
             if(frame === this.context.frame) yield ActionSignal.WaitNextFrame
 
             const state = this.sides[this.side]
-            //const rotation = DirectionAngle[(this.direction + state.direction) % 4]
+            const rotation = DirectionAngle[(this.direction + state.direction) % 4]
             const skill = this.context.get(PlayerSystem).skills[state.type]
             
             let direction = Direction.None
@@ -181,6 +185,7 @@ export class Cube extends Unit implements IAgent {
     }
     public damage(amount: number, type: DamageType){
         if(this.sides[this.side].type === CubeModule.Shield && this.skill.active) return
+        if(type & DamageType.Immobilize) this.action.amount = -this.action.gain
         this.health.amount = Math.max(0, this.health.amount - amount)
         DamageEffect.create(this.context, this, type)
     }

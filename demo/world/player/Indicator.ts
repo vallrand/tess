@@ -194,7 +194,7 @@ export class Indicator {
         })
     }
     public update(cube: Cube): void {
-        this.turnRadial.update(2, cube.movement.amount + cube.action.amount * 2)
+        this.turnRadial.update(2, Math.max(0, cube.movement.amount) + Math.max(0, cube.action.amount) * 2)
         this.healthRadial.update(cube.health.capacity, cube.health.amount)
         this.resourceRadial.update(cube.matter.capacity, cube.matter.amount)
         const skill = cube.skill

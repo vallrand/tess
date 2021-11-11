@@ -8,6 +8,7 @@ import { UnitSkill } from '../military'
 
 export class CubeSkill extends UnitSkill {
     constructor(context: Application, protected readonly cube: Cube){super(context)}
+    readonly group: number = 2
     get direction(): Direction { return mod(this.cube.direction + this.cube.sides[this.cube.side].direction, 4) }
     get mesh(): Mesh { return this.cube.meshes[this.cube.side] }
     public *open(): Generator<ActionSignal> {

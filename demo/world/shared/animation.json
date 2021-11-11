@@ -715,11 +715,11 @@
             {"index":5,"frame":0.8,"rotation":[0,1,0,0],"ease":"cubicIn"},
             {"index":5,"frame":1.6,"rotation":[0,0,0,1],"ease":"quadOut"},
 
-            {"index":5,"frame":2.4,"position":[0,0,0],"rotation":[0,0,0,-1],"ease":"cubicIn"},
-            {"index":1,"frame":2.4,"rotation":[0,0,0,1],"ease":"quartIn"},
-            {"index":2,"frame":2.4,"rotation":[0,1,0,0],"ease":"quartIn"},
-            {"index":3,"frame":2.4,"rotation":[0,0.707107,0,0.707107],"ease":"quartIn"},
-            {"index":4,"frame":2.4,"rotation":[0,-0.707107,0,0.707107],"ease":"quartIn"}
+            {"index":5,"frame":3.0,"position":[0,0,0],"rotation":[0,0,0,-1],"ease":"cubicIn"},
+            {"index":1,"frame":3.0,"rotation":[0,0,0,1],"ease":"quartIn"},
+            {"index":2,"frame":3.0,"rotation":[0,1,0,0],"ease":"quartIn"},
+            {"index":3,"frame":3.0,"rotation":[0,0.707107,0,0.707107],"ease":"quartIn"},
+            {"index":4,"frame":3.0,"rotation":[0,-0.707107,0,0.707107],"ease":"quartIn"}
         ],
         "turret11":[
             {"index":11,"frame":0.0,"position":[0,0,0.5]},

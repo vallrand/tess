@@ -1,12 +1,12 @@
 import { lerp, vec2, vec3, vec4, quat } from '../../engine/math'
-import { MeshSystem, Mesh, BatchMesh } from '../../engine/components'
+import { MeshSystem, BatchMesh } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
-import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
+import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
-import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
-import { AISystem, AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { AIUnit, AIStrategyPlan, AIStrategy } from '../military'
+import { PlayerSystem } from '../player'
 import { ShockwaveSkill } from './skills/ShockwaveSkill'
 import { TurretSkill } from './skills/TurretSkill'
 import { SpawnerSkill } from './skills/SpawnerSkill'
@@ -18,7 +18,7 @@ export class Monolith extends AIUnit {
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 100, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
-    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 0.2 }
     readonly group: number = 2
     readonly movementDuration: number = 1
 
@@ -33,6 +33,28 @@ export class Monolith extends AIUnit {
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Monolith.pool.push(this)
+    }
+    public execute(plan: AIStrategyPlan): Generator<ActionSignal> {
+        const actions = [super.execute(plan)]
+        const origin = vec2.subtract(this.tile, vec2.ONE, vec2())
+
+        spawn:{
+            if(plan.path) break spawn
+            const skill: SpawnerSkill = this.skills[1] as SpawnerSkill
+            console.log(ShockwaveSkill.queryArea(this.context, origin, 0, 8, 2))
+            if(!skill.validate(this.tile, null)) break spawn
+            if(ShockwaveSkill.queryArea(this.context, origin, 0, 8, 2).length > 4) break spawn
+            actions.push(skill.use(this, null))
+        }
+        wave:{
+            if(plan.path || plan.skill != -1) break wave
+            const skill: ShockwaveSkill = this.skills[2] as ShockwaveSkill
+            const unit = this.context.get(PlayerSystem).cube
+            if(!skill.validate(this.tile, unit.tile)) break wave
+            actions.push(skill.use(this, unit.tile))
+        }
+
+        return AnimationSystem.join(actions)
     }
 
     private glow: BatchMesh

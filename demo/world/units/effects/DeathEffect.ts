@@ -28,6 +28,12 @@ export class DeathEffect {
     private spikes: ParticleEmitter
     private mesh: Mesh
     public *use(source: AIUnit): Generator<ActionSignal> {
+        for(const generator = source.deactivate(); true;){
+            const iterator = generator.next()
+            if(iterator.done) break
+            else yield iterator.value
+        }
+
         this.mesh = source.mesh
         MeshMaterial.copy(this.mesh.material as MeshMaterial, this.material)
         this.material.program = SharedSystem.materials.program.dissolve

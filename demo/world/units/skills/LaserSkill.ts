@@ -159,6 +159,7 @@ export class LaserSkill extends AIUnitSkill {
     readonly damage: number = 2
 
     private beams: Line[] = []
+    private targets: vec3[] = Array(4).fill(null).map(() => vec3())
     private beam: Sprite
     private ring: Sprite
     private tubeX: BatchMesh
@@ -178,22 +179,33 @@ export class LaserSkill extends AIUnitSkill {
         return super.aim(origin, tiles)
     }
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {
-        if(this.active) return AIUnitSkill.damage(this, target)
-        this.active = true
         this.mesh = source.mesh
+        let hit: boolean = false
+        const terrain = this.context.get(TerrainSystem), map = terrain.pathfinder
+        for(let i = 0; i < DirectionTile.length; i++){
+            let x: number, y: number, distance = 0
+            while(++distance <= this.range){
+                x = source.tile[0] + DirectionTile[i][0] * distance
+                y = source.tile[1] + DirectionTile[i][1] * distance
+                if(target[0] === x && target[1] === y) hit = true
+                else if(map.weight[map.tileIndex(x, y)] == 0) break
+            }
+            terrain.tilePosition(x, y, this.targets[i])
+            this.targets[i][1] = this.mesh.transform.position[1] + 0.8
+        }
+
+        if(this.active && hit) return AIUnitSkill.damage(this, target)
+        this.active = true
 
         const origins = [
             vec3(0,0.8,0.5),vec3(0.5,0.8,0),vec3(0,0.8,-0.5),vec3(-0.5,0.8,0)
-        ].map(relative => mat4.transform(relative, this.mesh.transform.matrix, vec3()))
-        const targets = [
-            vec3(0,0.8,20),vec3(20,0.8,0),vec3(0,0.8,-20),vec3(-20,0.8,0)
         ].map(relative => mat4.transform(relative, this.mesh.transform.matrix, vec3()))
 
         for(let i = 0; i < 4; i++){
             this.beams[i] = Line.create(2)
             this.beams[i].material = SharedSystem.materials.beamLinearRedMaterial
             this.context.get(ParticleEffectPass).add(this.beams[i])
-            vec3.copy(origins[i], this.beams[i].path[0])
+            vec3.copy(origins[i], this.beams[i].path[0])            
         }
 
         this.center = Sprite.create(BillboardType.None)
@@ -244,26 +256,26 @@ export class LaserSkill extends AIUnitSkill {
             ...activateTimeline,
             'beams.0.path.1': PropertyAnimation([
                 { frame: 0.7, value: origins[0] },
-                { frame: 1.2, value: targets[0], ease: ease.cubicOut }
+                { frame: 1.2, value: this.targets[0], ease: ease.cubicOut }
             ], vec3.lerp),
             'beams.1.path.1': PropertyAnimation([
                 { frame: 0.7, value: origins[1] },
-                { frame: 1.2, value: targets[1], ease: ease.cubicOut }
+                { frame: 1.2, value: this.targets[1], ease: ease.cubicOut }
             ], vec3.lerp),
             'beams.2.path.1': PropertyAnimation([
                 { frame: 0.7, value: origins[2] },
-                { frame: 1.2, value: targets[2], ease: ease.cubicOut }
+                { frame: 1.2, value: this.targets[2], ease: ease.cubicOut }
             ], vec3.lerp),
             'beams.3.path.1': PropertyAnimation([
                 { frame: 0.7, value: origins[3] },
-                { frame: 1.2, value: targets[3], ease: ease.cubicOut }
+                { frame: 1.2, value: this.targets[3], ease: ease.cubicOut }
             ], vec3.lerp)
         })
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            damage(elapsedTime, this.context.deltaTime, this)
+            if(hit) damage(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
             else yield ActionSignal.WaitNextFrame
         }

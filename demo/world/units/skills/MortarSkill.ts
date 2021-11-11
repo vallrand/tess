@@ -297,7 +297,9 @@ export class MortarSkill extends AIUnitSkill {
         this.context.get(TransformSystem).delete(this.pillar.transform)
         this.context.get(TransformSystem).delete(this.projectile.transform)
         this.context.get(TransformSystem).delete(this.reticle.transform)
+        this.context.get(TransformSystem).delete(this.hitLight.transform)
         this.context.get(PointLightPass).delete(this.light)
+        this.context.get(PointLightPass).delete(this.hitLight)
         this.context.get(DecalPass).delete(this.aura)
         this.context.get(DecalPass).delete(this.burn)
         this.context.get(DecalPass).delete(this.reticle)
@@ -374,5 +376,38 @@ export class MortarSkill extends AIUnitSkill {
         Sprite.delete(this.ring)
         Sprite.delete(this.flash)
         BatchMesh.delete(this.cylinder)
+    }
+    public *deactivate(): Generator<ActionSignal> {
+        if(!this.active) return
+        this.active = false
+        const animate = AnimationTimeline(this, {
+            'mesh.armature': ModelAnimation('activate'),
+            'light.intensity': PropertyAnimation([
+                { frame: 0, value: 0 },
+                { frame: 0.5, value: 2, ease: ease.sineOut }
+            ], lerp),
+            'aura.threshold': PropertyAnimation([
+                { frame: 0, value: -3 },
+                { frame: 0.5, value: 0, ease: ease.sineOut }
+            ], lerp),
+            'reticle.color': PropertyAnimation([
+                { frame: 0, value: vec4.ZERO },
+                { frame: 0.5, value: [1,0.4,0.8,0.4], ease: ease.quadOut }
+            ], vec4.lerp)
+        })
+
+        for(const duration = 0.5, startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            animate(duration - elapsedTime, this.context.deltaTime)
+            if(elapsedTime > duration) break
+            else yield ActionSignal.WaitNextFrame
+        }
+
+        this.context.get(TransformSystem).delete(this.aura.transform)
+        this.context.get(TransformSystem).delete(this.light.transform)
+        this.context.get(TransformSystem).delete(this.reticle.transform)
+        this.context.get(PointLightPass).delete(this.light)
+        this.context.get(DecalPass).delete(this.aura)
+        this.context.get(DecalPass).delete(this.reticle)
     }
 }

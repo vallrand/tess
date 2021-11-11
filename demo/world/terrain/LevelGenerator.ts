@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { aabb2, smoothstep, noise1D, noise2D, perlin2D, shuffle } from '../../engine/math'
+import { aabb2, smoothstep, noise1D, noise2D, perlin2D, shuffle, hashCantor } from '../../engine/math'
 import { EconomySystem } from '../economy'
 import { AISystem } from '../military'
 import { TerrainSystem } from './Terrain'
@@ -99,6 +99,7 @@ export class LevelGenerator {
         zone.data = new Uint32Array(zone.map.data.buffer)
         this.zones.unshift(zone)
 
+        const specialIndex = random() * (encounters.length >>> 1) | 0
         for(let i = 0; i < encounters.length; i+=2){
             const c = encounters[i] | 0, r = encounters[i + 1] | 0
             const index = c + r * this.tilemap.width
@@ -106,6 +107,10 @@ export class LevelGenerator {
                 zone.data[index] = SHOP
                 zone.data[c + (r + 2) * this.tilemap.width] = ____
                 continue
+            }else if(i === specialIndex){
+                const special = AISystem.special(random())
+                for(let dx = 0; dx < special.size; dx++) for(let dy = 0; dy < special.size; dy++)
+                    zone.data[c + dx + (r + dy) * this.tilemap.width] = UNIT + (!dx && !dy ? special.value + 1 : 0)
             }
             const group = AISystem.groups[random() * AISystem.groups.length | 0]
             shuffle(group, random)
@@ -126,8 +131,10 @@ export class LevelGenerator {
             if(randomIndex === this.stack.length - 1) this.stack.length--
             else this.stack[randomIndex] = this.stack.pop()
 
-            grid[c + r * this.tilemap.width] = UNIT + values[limit]
-            if(--limit < 0) break
+            if((grid[c + r * this.tilemap.width] & ~0xFF) >>> 0 !== UNIT){
+                grid[c + r * this.tilemap.width] = UNIT + values[limit] + 1
+                if(--limit < 0) break
+            }
 
             for(let i = neighbours.length - 1; i >= 0; i--){
                 const c1 = c + neighbours[i][0]
@@ -179,7 +186,9 @@ export class LevelGenerator {
                     break
                 case UNIT: {
                     const variation = C & 0xFF
-                    //this.context.get(AISystem).create(x, y, variation as any)
+                    if(!variation) break
+                    const hash = hashCantor(x, y)
+                    //this.context.get(AISystem).create(x, y, variation - 1 as any, hash)
                     break
                 }
             }
