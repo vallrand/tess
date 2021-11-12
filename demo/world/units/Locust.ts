@@ -14,7 +14,7 @@ export class Locust extends AIUnit {
     public readonly size: vec2 = vec2(2,2)
     readonly skills = [new FlamethrowerSkill(this.context), new ShieldLinkSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    readonly health = { capacity: 40, amount: 0, gain: 0 }
+    readonly health = { capacity: 8, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
     readonly movement = { capacity: 1, amount: 0, gain: 0.25 }
     readonly group: number = 2
@@ -28,6 +28,7 @@ export class Locust extends AIUnit {
         this.markTiles(true)
     }
     public delete(): void {
+        this.skills[1].deactivate(true).next()
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Locust.pool.push(this)

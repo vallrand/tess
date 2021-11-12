@@ -5,6 +5,7 @@ import { MeshSystem, MeshBuffer, Mesh } from '../../../engine/components'
 import { MeshMaterial } from '../../../engine/materials'
 import { TransformSystem } from '../../../engine/scene'
 import * as shaders from '../../../engine/shaders'
+import * as localShaders from '../../shaders'
 import { SharedSystem } from '../../shared'
 
 export class DebrisEffect {
@@ -12,7 +13,7 @@ export class DebrisEffect {
     private buffer: MeshBuffer
     constructor(private readonly context: Application, name: string){
         this.material = new MeshMaterial()
-        this.material.program = ShaderProgram(this.context.gl, shaders.debris_vert, shaders.geometry_frag, {
+        this.material.program = ShaderProgram(this.context.gl, localShaders.debris_vert, shaders.geometry_frag, {
             VERTEX_COLOR: true, COLOR_INDEX: true
         })
         this.material.array = SharedSystem.textures.indexedTexture.array

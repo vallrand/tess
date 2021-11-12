@@ -1,17 +1,14 @@
-import { vec4, mat4, binarySearch, insertionSort } from '../math'
+import { vec4, binarySearch } from '../math'
 import { Application, ISystem } from '../framework'
-import { createBox } from '../geometry'
 import { CameraSystem } from '../scene/Camera'
 import { Transform } from '../scene/Transform'
-import { MeshSystem, MeshBuffer } from '../components/Mesh'
 import { DeferredGeometryPass } from './GeometryPass'
 import { BoundingVolume } from '../scene/FrustumCulling'
-import { createTexture, GL, ShaderProgram, UniformBlock, UniformBlockBindings, UniformSamplerBindings, VertexDataFormat } from '../webgl'
+import { createTexture, GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import { DecalBatch, IBatchedDecal } from './batch'
-import { DecalMaterial, SpriteMaterial } from '../materials'
-import { IEffect } from './PipelinePass'
+import { DecalMaterial } from '../materials'
 import * as shaders from '../shaders'
-import { PipelinePass } from './PipelinePass'
+import { PipelinePass, IEffect } from './PipelinePass'
 
 export class Decal implements IBatchedDecal {
     frame: number = 0

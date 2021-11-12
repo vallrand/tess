@@ -10,12 +10,13 @@ import { CubeSkills } from '../skills'
 import { SharedSystem } from '../shared'
 import { MeshSystem } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
-import { TurnBasedSystem } from '../common'
+import { TurnBasedSystem } from './TurnBasedFlow'
 import { AISystem } from '../military'
 import { KeyboardSystem } from '../../engine/device'
 import { Indicator } from './Indicator'
 
 export class PlayerSystem implements ISystem {
+    public readonly origin: vec2 = vec2(4, 6)
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
     public readonly cube: Cube = new Cube(this.context)
     public readonly tilemap: CubeTileMap = new CubeTileMap(this.context)
@@ -26,9 +27,8 @@ export class PlayerSystem implements ISystem {
         this.context.get(TurnBasedSystem).add(this.cube)
     }
     public update(): void {
-        if(this.context.frame == 1) this.cube.place(4, 6)
+        if(this.context.frame == 1) this.restart()
         if(this.context.frame == 1){
-            this.cube.installModule(this.cube.side, 0, CubeModule.Railgun)
             // this.cube['execute'] = function*(){}
             window['quat'] = quat
             window['vec3'] = vec3
@@ -36,7 +36,7 @@ export class PlayerSystem implements ISystem {
 
             window['curUnit'] = 3
 
-            // this.context.get(AISystem).create(5,5,5)
+            this.context.get(AISystem).create(5,5,0)
 
             // this.context.get(AISystem).create(5,7,0)
             // this.context.get(AISystem).create(5,6,0)
@@ -56,7 +56,6 @@ export class PlayerSystem implements ISystem {
             //     this.context.get(AISystem).create(c,r,6)
             // })
 
-            //TODO monolith, locust
 
             // window['u0'] = this.context.get(AISystem).create(6,7+3,0) //scarab
             // window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
@@ -88,6 +87,17 @@ export class PlayerSystem implements ISystem {
     }
     public *execute(): Generator<ActionSignal> {
         
+    }
+    public restart(): void {
+        this.cube.delete()
+        this.context.get(TurnBasedSystem).signalReset.broadcast()
+        this.context.get(TerrainSystem).tilePosition(this.origin[0], this.origin[1], this.cube.transform.position)
+        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
+        this.context.get(TerrainSystem).clear()
+        this.context.get(TerrainSystem).update()
+        this.cube.place(this.origin[0], this.origin[1])
+        this.cube.installModule(this.cube.side, 0, CubeModule.Machinegun)
+        vec3.set(0, 8, 4, this.cameraOffset)
     }
     public load(): void {
         this.context.get(SharedSystem).grid.decal.transform.parent = this.cube.transform

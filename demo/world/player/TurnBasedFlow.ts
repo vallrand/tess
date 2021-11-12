@@ -8,6 +8,7 @@ export interface IAgent {
 
 export class TurnBasedSystem implements ISystem {
     readonly signalEnterTile = new Signal<(column: number, row: number, unit: any) => void>()
+    readonly signalReset = new Signal<() => void>()
 
     private readonly agents: IAgent[] = []
     private readonly queue: ActionSignal[] = []

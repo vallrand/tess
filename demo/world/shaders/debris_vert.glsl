@@ -42,7 +42,7 @@ float hash11(uint n){
     n = n * (n * n * 15731U + 789221U) + 1376312589U;
     return float(n & uvec3(0x7fffffffU))/float(0x7fffffff);
 }
-#pragma import(./common/quat.glsl)
+#pragma import(../../engine/shaders/common/quat.glsl)
 float solveQuadratic(float a, float b, float c){
     float d = b*b - 4.*a*c;
     if(d < 0.) return -1.;

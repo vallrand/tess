@@ -188,7 +188,7 @@ export class LevelGenerator {
                     const variation = C & 0xFF
                     if(!variation) break
                     const hash = hashCantor(x, y)
-                    //this.context.get(AISystem).create(x, y, variation - 1 as any, hash)
+                    this.context.get(AISystem).create(x, y, variation - 1 as any, hash)
                     break
                 }
             }

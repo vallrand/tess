@@ -11,6 +11,7 @@ import { KeyboardSystem } from '../../engine/device'
 import { TerrainSystem } from '../terrain'
 import { SharedSystem, ModelAnimation } from '../shared'
 import { PlayerSystem, Cube, CubeModule, Direction } from '../player'
+import { UpgradeMenu } from './UpgradeMenu'
 
 const actionTimeline = {
     'cubeMesh.color': PropertyAnimation([
@@ -51,6 +52,7 @@ export class Workshop {
     private smoke: ParticleEmitter
     private glow: BatchMesh
     private cubeMesh: Mesh
+    private readonly menu: UpgradeMenu = new UpgradeMenu(this.context)
 
     constructor(private readonly context: Application){}
     place(column: number, row: number){
@@ -78,7 +80,7 @@ export class Workshop {
     }
     delete(){
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Workshop.pool.push(this)
     }
     public *react(cube: Cube): Generator<ActionSignal> {
@@ -105,6 +107,7 @@ export class Workshop {
         }
     }
     public *enterWorkshop(cube: Cube): Generator<ActionSignal> {
+        vec2.set(this.tile[0], this.tile[1] + 3, this.context.get(PlayerSystem).origin)
         const mesh = this.cubeMesh = cube.meshes[cube.side]
         const prevPosition = vec3.copy(mesh.transform.position, vec3())
         const nextPosition = vec3.add(this.mesh.transform.position, [0,2,0], vec3())
@@ -152,6 +155,7 @@ export class Workshop {
         .create([0,2.02,0], Sprite.FlatUp, vec3(2,2,2), mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cover)
 
+        this.menu.open()
         upgradeMenu: while(true){
             if(keys.down('KeyW') || keys.down('KeyS')) break upgradeMenu
             if(keys.trigger('KeyA')){

@@ -1,8 +1,8 @@
 import { Application } from '../../engine/framework'
-import { vec2 } from '../../engine/math'
+import { vec2, aabb2 } from '../../engine/math'
 import { AnimationSystem, ActionSignal } from '../../engine/animation'
 
-import { IAgent, TurnBasedSystem } from '../common'
+import { IAgent, TurnBasedSystem } from '../player'
 import { TerrainSystem } from '../terrain'
 import { UnitSkill, Unit, IUnitAttribute } from '../military'
 
@@ -21,12 +21,15 @@ export class CorrosionPhase implements IAgent {
     readonly list: IUnitOrb[] = []
     constructor(private readonly context: Application){
         this.context.get(TurnBasedSystem).add(this)
+        this.context.get(TurnBasedSystem).signalReset.add(() => {
+            while(this.list.length) this.list.pop().delete()
+        })
     }
     public execute(): Generator<ActionSignal> {
         const terrain = this.context.get(TerrainSystem), bounds = terrain.bounds
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
-            if(item.tile[0] < bounds[0] || item.tile[1] < bounds[1] || item.tile[0] >= bounds[2] || item.tile[1] >= bounds[3])
+            if(!aabb2.inside(bounds, item.tile))
                 item.delete()
             else if(--item.health.amount <= 0)
                 this.context.get(AnimationSystem).start(item.dissolve(), true)

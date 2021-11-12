@@ -1,19 +1,21 @@
-import { Application } from '../../engine/framework'
 import { clamp, vec2, vec3, quat, quadraticBezier3D, quadraticBezierNormal3D } from '../../engine/math'
 import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
 import { Mesh } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
+import { TurnBasedSystem } from '../player'
+
+import { DeathEffect, DamageEffect } from '../units/effects'
+import { StatusBar } from '../units/effects/StatusBar'
 import { Unit } from './Unit'
 import { DamageType } from './UnitSkill'
 import { AIUnitSkill } from './AIUnitSkill'
 import { AIStrategy, AIStrategyPlan } from './AIStrategy'
-import { DeathEffect, DamageEffect } from '../units/effects'
-import { TurnBasedSystem } from '../common'
 
 export abstract class AIUnit extends Unit {
     public abstract readonly skills: AIUnitSkill[]
     public abstract readonly strategy: AIStrategy
     public mesh: Mesh
+    public status: StatusBar
 
     public actionIndex: number
     public hash: number
@@ -64,6 +66,7 @@ export abstract class AIUnit extends Unit {
         if(this.health.amount <= 0) return
         this.strategy.aware = true
         this.health.amount -= amount
+        this.status.update(this)
         if((type & DamageType.Immobilize) != 0) this.movement.amount = -this.movement.gain
         if(this.health.amount > 0) DamageEffect.create(this.context, this, type)
         else DeathEffect.create(this.context, this)
@@ -79,7 +82,6 @@ export abstract class AIUnit extends Unit {
         for(let last = path.length - 1, i = 0; i <= last; i++){
             const tile = path[i]
             this.snapPosition(tile, center)
-            //TODO still use terrain?
             this.context.get(TurnBasedSystem).signalEnterTile.broadcast(tile[0], tile[1], this)
 
             if(i == 0) vec3.copy(center, entry)

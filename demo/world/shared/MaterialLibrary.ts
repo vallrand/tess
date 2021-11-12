@@ -386,6 +386,7 @@ export function MaterialLibrary(context: Application){
             swirl: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.swirl),
             streak: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.streak),
             particle: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.particle),
+            bar: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.bar),
 
             lineYellow: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.yellowLine),
             lineTeal: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.tealLine),

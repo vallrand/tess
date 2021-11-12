@@ -57,8 +57,8 @@ void main(){
 #endif
     vec3 indirectDiffuse = irradiance * albedo.rgb;
 #ifdef REFLECTION_MAP
-    vec3 prefilteredColor = textureLod(uEnvironmentMap, reflect(V, N),  roughness * 8.0).rgb;   
-    vec2 envBRDF  = texture(uBRDFLUT, vec2(NdotV, roughness)).rg;
+    vec3 prefilteredColor = textureLod(uEnvironmentMap, reflect(V, N), roughness * 8.0).rgb;   
+    vec2 envBRDF = texture(uBRDFLUT, vec2(NdotV, roughness)).rg;
     vec3 indirectSpecular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 #else
     vec3 indirectSpecular = vec3(0);

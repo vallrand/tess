@@ -295,11 +295,12 @@ export class LaserSkill extends AIUnitSkill {
         Sprite.delete(this.beam)
         BatchMesh.delete(this.cylinder)
     }
-    public *deactivate(): Generator<ActionSignal> {
+    public *deactivate(immediate?: boolean): Generator<ActionSignal> {
         if(!this.active) return
         this.active = false
 
         const animate = AnimationTimeline(this, deactivateTimeline)
+        if(!immediate)
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

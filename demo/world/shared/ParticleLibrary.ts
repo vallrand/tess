@@ -337,7 +337,7 @@ export function ParticleLibrary(context: Application){
     }>(
         context, { limit: 2048, format: VertexDataFormat.StaticParticle },
         ParticleGeometry.board(context.gl, 0.2),
-        ShaderProgram(context.gl, localShaders.grass_vert, shaders.foliage_frag, {
+        ShaderProgram(context.gl, localShaders.grass_vert, localShaders.foliage_frag, {
             FRAMES: true
         }), {
             aLifetime(options, offset, buffer){

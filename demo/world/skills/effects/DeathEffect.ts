@@ -91,10 +91,11 @@ function ImpulseAnimation(tracks: {
 export class DeathEffect {
     public static create(context: Application, source: Cube): DeathEffect {
         const effect = new DeathEffect(context)
-        context.get(AnimationSystem).start(effect.play(source), true)
+        effect.index = context.get(AnimationSystem).start(effect.play(source), true)
         return effect
     }
     
+    public index: number
     private spikes: ParticleEmitter
     private light: PointLight
     private wreck: Mesh

@@ -7,11 +7,10 @@ import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Line } from '../../
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
 import { SharedSystem, ModelAnimation } from '../shared'
-import { DirectionAngle, Direction } from '../player'
+import { TurnBasedSystem, DirectionAngle, Direction } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
-import { DamageType, Unit, IUnitAttribute } from '../military'
-import { TurnBasedSystem } from '../common'
+import { DamageType, IUnitAttribute } from '../military'
 
 const steeringTimeline = {
     'burn.transform.scale': PropertyAnimation([

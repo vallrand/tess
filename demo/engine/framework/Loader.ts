@@ -64,6 +64,7 @@ export class Loader {
         overlay.addEventListener('pointerup', function handleUserGesture(){
             overlay.removeEventListener('pointerup', handleUserGesture)
             overlay.style.opacity = '0'
+            overlay.style.pointerEvents = 'none'
             callback()
         })
     }

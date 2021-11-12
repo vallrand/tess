@@ -28,6 +28,7 @@ export class Obelisk extends AIUnit {
         this.markTiles(true)
     }
     public delete(): void {
+        this.skills[0].deactivate(true).next()
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
         Obelisk.pool.push(this)

@@ -1,6 +1,6 @@
 import { Application, ISystem } from '../../engine/framework'
 import { mulberry32 } from '../../engine/math'
-import { DeferredGeometryPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
+import { DeferredGeometryPass, ParticleEffectPass } from '../../engine/pipeline'
 import { TextureLibrary } from './TextureLibrary'
 import { GradientLibrary } from './GradientLibrary'
 import { MaterialLibrary } from './MaterialLibrary'
@@ -42,9 +42,5 @@ export class SharedSystem implements ISystem {
         
         this.mist = new MistEffect(this.context, 256, [-8,0,-8,8,6,8])
         this.context.get(ParticleEffectPass).effects.push(this.mist)
-
-        // this.grid.enabled = false
-        this.mist.enabled = false
-        //this.sky.enabled = false
     }
 }

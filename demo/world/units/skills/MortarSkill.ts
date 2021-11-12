@@ -377,7 +377,7 @@ export class MortarSkill extends AIUnitSkill {
         Sprite.delete(this.flash)
         BatchMesh.delete(this.cylinder)
     }
-    public *deactivate(): Generator<ActionSignal> {
+    public *deactivate(immediate?: boolean): Generator<ActionSignal> {
         if(!this.active) return
         this.active = false
         const animate = AnimationTimeline(this, {
@@ -396,6 +396,7 @@ export class MortarSkill extends AIUnitSkill {
             ], vec4.lerp)
         })
 
+        if(!immediate)
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(duration - elapsedTime, this.context.deltaTime)

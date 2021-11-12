@@ -1,12 +1,12 @@
 import { Application, ISystem } from '../../engine/framework'
-import { range, vec2 } from '../../engine/math'
+import { range, vec2, aabb2 } from '../../engine/math'
 import { AnimationSystem, ActionSignal } from '../../engine/animation'
-import { TurnBasedSystem, IAgent } from '../common'
-import { PlayerSystem } from '../player'
+import { TurnBasedSystem, IAgent, PlayerSystem } from '../player'
 import { UnitFactory, UnitType } from '../units'
 import { TerrainSystem } from '../terrain'
 import { AIUnit } from './AIUnit'
 import { AIStrategyPlan } from './AIStrategy'
+import { StatusBar } from '../units/effects/StatusBar'
 
 function WeightTable<T>(values: T[], weights: number[]){
     const total = weights.reduce((total, value) => total + value, 0)
@@ -36,6 +36,13 @@ export class AISystem implements ISystem, IAgent {
     private readonly list: AIUnit[] = []
     constructor(private readonly context: Application){
         this.context.get(TurnBasedSystem).add(this)
+        this.context.get(TurnBasedSystem).signalReset.add(() => {
+            for(let i = this.list.length - 1; i >= 0; i--){
+                const item = this.list[i]
+                this.remove(item)
+                item.delete()
+            }
+        })
     }
     public update(): void {
         const { bounds, frame } = this.context.get(TerrainSystem)
@@ -43,9 +50,7 @@ export class AISystem implements ISystem, IAgent {
 
         for(let i = this.list.length - 1; i >= 0; i--){
             const item = this.list[i]
-            if(item.tile[0] >= bounds[0] && item.tile[1] >= bounds[1] &&
-                item.tile[0] < bounds[3] && item.tile[1] < bounds[3]
-            ) continue
+            if(aabb2.inside(bounds, item.tile)) continue
             this.remove(item)
             item.delete()
         }
@@ -58,8 +63,10 @@ export class AISystem implements ISystem, IAgent {
         unit.health.amount = unit.health.capacity
         unit.action.amount = unit.movement.amount = 0
         unit.strategy.unit = unit
+        unit.strategy.aware = false
         this.list.push(unit)
         unit.place(column, row)
+        unit.status = StatusBar.create(this.context, unit)
         return unit as any
     }
     public remove(unit: AIUnit): void {
@@ -67,6 +74,7 @@ export class AISystem implements ISystem, IAgent {
         if(index === -1) return
         else if(index === this.list.length - 1) this.list.length--
         else this.list[index] = this.list.pop()
+        unit.status.delete()
         unit.markTiles(false)
     }
     private readonly propagationRadius: number = 2

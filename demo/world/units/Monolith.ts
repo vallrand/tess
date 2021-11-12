@@ -16,7 +16,7 @@ export class Monolith extends AIUnit {
     public readonly size: vec2 = vec2(3,3)
     readonly skills = [new TurretSkill(this.context),new SpawnerSkill(this.context),new ShockwaveSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    readonly health = { capacity: 100, amount: 0, gain: 0 }
+    readonly health = { capacity: 12, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
     readonly movement = { capacity: 1, amount: 0, gain: 0.2 }
     readonly group: number = 2

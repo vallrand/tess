@@ -7,9 +7,8 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../
 
 import { SharedSystem, ModelAnimation } from '../../shared'
 import { TerrainSystem } from '../../terrain'
-import { PlayerSystem, CubeModule } from '../../player'
+import { TurnBasedSystem, PlayerSystem, CubeModule } from '../../player'
 import { AIUnit, AIUnitSkill, DamageType, UnitSkill, IUnitAttribute } from '../../military'
-import { TurnBasedSystem } from '../../common'
 
 class StaticOrb extends UnitSkill {
     static readonly pool: StaticOrb[] = []
@@ -31,9 +30,9 @@ class StaticOrb extends UnitSkill {
         this.health.amount = this.health.capacity
         this.transform = this.context.get(TransformSystem).create()
         this.context.get(TerrainSystem).tilePosition(this.tile[0], this.tile[1], this.transform.position)
+        vec3.add(vec3.AXIS_Y, this.transform.position, this.transform.position)
 
-        this.orb = Mesh.create(SharedSystem.geometry.sphereMesh, 4, 8)
-        this.context.get(MeshSystem).list.push(this.orb)
+        this.orb = this.context.get(MeshSystem).create(SharedSystem.geometry.sphereMesh, 4, 8)
         this.orb.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.transform)
         this.orb.material = SharedSystem.materials.mesh.orb
@@ -44,7 +43,7 @@ class StaticOrb extends UnitSkill {
         this.decal.material = SharedSystem.materials.corrosionMaterial
 
         this.bolts = SharedSystem.particles.bolts.add({
-            uOrigin: vec3.add([0,0.5,0], this.transform.position, vec3()),
+            uOrigin: this.transform.position,
             uLifespan: [0.2,0.4,0,0],
             uRadius: [0.6,1.2], uRotation: [0,2*Math.PI],
             uGravity: vec3.ZERO, uOrientation: quat.IDENTITY,
@@ -56,20 +55,21 @@ class StaticOrb extends UnitSkill {
         this.context.get(TransformSystem).delete(this.orb.transform)
         this.context.get(TransformSystem).delete(this.decal.transform)
         this.decal = void this.context.get(DecalPass).delete(this.decal)
-        this.orb = null
+        this.orb = void this.context.get(MeshSystem).delete(this.orb)
         this.bolts = void SharedSystem.particles.bolts.remove(this.bolts)
         StaticOrb.pool.push(this)
     }
     public *move(target: vec2): Generator<ActionSignal> {
         const prevPosition = vec3.copy(this.transform.position, vec3())
         const nextPosition = this.context.get(TerrainSystem).tilePosition(this.tile[0], this.tile[1], vec3())
+        vec3.add(vec3.AXIS_Y, nextPosition, nextPosition)
         const animate = AnimationTimeline(this, {
             'transform.position': PropertyAnimation([
                 { frame: 0, value: prevPosition },
                 { frame: 1, value: nextPosition, ease: ease.quadInOut }
             ], vec3.lerp),
             'bolts.uniform.uniforms.uOrigin': PropertyAnimation([
-                { frame: 0.5, value: vec3.add([0,0.5,0], nextPosition, vec3()) }
+                { frame: 0.5, value: nextPosition }
             ], vec3.lerp)
         })
         for(const duration = 1, startTime = this.context.currentTime; true;){
@@ -213,7 +213,7 @@ const actionTimeline = {
 }
 
 export class StaticOrbSkill extends AIUnitSkill {
-    private static readonly temp: vec2 = vec2()
+    private readonly target: vec2 = vec2()
     readonly cost: number = 1
     readonly range: number = 4
     readonly cardinal: boolean = true
@@ -230,14 +230,13 @@ export class StaticOrbSkill extends AIUnitSkill {
 
     public aim(origin: vec2, tiles: vec2[], threshold?: number): vec2 | null {
         if(threshold == null) return super.aim(origin, tiles, threshold)
-        const target = StaticOrbSkill.temp
         for(let i = tiles.length - 1; i >= 0; i--){
             const dx = tiles[i][0] - origin[0]
             const dy = tiles[i][1] - origin[1]
-            vec2.copy(origin, target)
-            if(Math.abs(dx) > Math.abs(dy)) target[0] += this.range * Math.sign(dx)
-            else target[1] += this.range * Math.sign(dy)
-            if(vec2.manhattan(target, tiles[i]) < this.range) return target
+            vec2.copy(origin, this.target)
+            if(Math.abs(dx) > Math.abs(dy)) this.target[0] += this.range * Math.sign(dx)
+            else this.target[1] += this.range * Math.sign(dy)
+            if(vec2.manhattan(this.target, tiles[i]) < this.range) return this.target
         }
     }
     public *use(source: AIUnit, target: vec2): Generator<ActionSignal> {

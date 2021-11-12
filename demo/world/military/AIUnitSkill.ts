@@ -22,4 +22,5 @@ export abstract class AIUnitSkill extends UnitSkill {
         for(let i = tiles.length - 1; i >= 0; i--)
             if(this.validate(origin, tiles[i])) return tiles[i]
     }
+    public deactivate(immediate?: boolean): Generator<ActionSignal> { return null }
 }

@@ -147,10 +147,16 @@ export class MeshSystem implements ISystem {
         const plane = createPlane({ width: 2, height: -2, columns: 1, rows: 1 })
         this.plane = this.uploadVertexData(plane.vertexArray, plane.indexArray, plane.format)
     }
-    public create(): Mesh {
+    public create(buffer?: MeshBuffer, order?: number, layer?: number): Mesh {
         const item = this.pool.pop() || new Mesh()
         item.index = this.list.push(item) - 1
+        item.buffer = buffer
+        item.order = order || 0
+        item.layer = layer || 0
         return item
+    }
+    public add(item: Mesh): void {
+        item.index = this.list.push(item) - 1
     }
     public delete(item: Mesh): void {
         if(item.index == -1) return

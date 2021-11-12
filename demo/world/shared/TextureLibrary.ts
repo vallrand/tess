@@ -132,7 +132,13 @@ export function TextureLibrary(context: Application){
         rectangle: materials.addRenderTexture(
             materials.createRenderTexture(128, 128, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NONE }), 0,
             ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.rectangle), {
-                    uColor: vec4.ONE, uRadius: 0.4, uSize: 0.2
+                    uColor: vec4.ONE, uRadius: 0.4, uSize: vec2(0.2,0.2)
+                }, 0
+        ).target,
+        bar: materials.addRenderTexture(
+            materials.createRenderTexture(64, 64, 1, { wrap: GL.CLAMP_TO_EDGE, mipmaps: GL.NEAREST }), 0,
+            ShaderProgram(context.gl, shaders.fullscreen_vert, localShaders.rectangle, { FRAME: true }), {
+                    uColor: [0.5,0.5,0.5,0.4], uRadius: 0, uSize: vec2(0.8,0.8)
                 }, 0
         ).target,
         reticle: materials.addRenderTexture(

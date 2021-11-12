@@ -1,17 +1,20 @@
-import { range, mat3x2, vec4, mat3, insertionSort } from '../math'
+import { range, mat3x2, mat3, insertionSort } from '../math'
 import { Application, ISystem } from '../framework'
 import { GL, ShaderProgram, UniformSamplerBindings } from '../webgl'
 import * as shaders from '../shaders'
-import { Batch2D, IBatched2D } from './batch'
+import { Batch2D, IBatched2D, IBatched } from './batch'
 import { PipelinePass, IMaterial } from './PipelinePass'
+import { ParticleEffectPass } from './ParticleEffectPass'
 
 export class OverlayPass extends PipelinePass implements ISystem {
     private static readonly orderSort = (a: { order: number }, b: { order: number }) => a.order - b.order
     private static readonly batchSize: number = 1024
-    private readonly list: IBatched2D[] = []
+    private readonly list2d: IBatched2D[] = []
+    public readonly list: IBatched[] = []
     public readonly program: ShaderProgram
     public readonly batch: Batch2D
     private readonly projectionMatrix: mat3 = mat3()
+    public enabled: boolean = true
     constructor(context: Application){
         super(context)
         const maxTextures = context.gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)
@@ -24,19 +27,20 @@ export class OverlayPass extends PipelinePass implements ISystem {
         const projection = mat3x2.orthogonal(0, context.gl.drawingBufferWidth, 0, context.gl.drawingBufferHeight, mat3x2())
         mat3.fromMat3x2(projection, this.projectionMatrix)
     }
-    public add(item: IBatched2D): void { this.list.push(item) }
+    public add(item: IBatched2D): void { this.list2d.push(item) }
     public remove(item: IBatched2D): void {
-        const index = this.list.indexOf(item)
+        const index = this.list2d.indexOf(item)
         if(index === - 1) return
         else if(index === this.list.length - 1) this.list.length--
         else this.list[index] = this.list.pop()
     }
     public update(): void {
         const { gl } = this.context
-        insertionSort(this.list, OverlayPass.orderSort)
+        if(this.enabled && this.list.length) this.context.get(ParticleEffectPass).render(this.list)
+        insertionSort(this.list2d, OverlayPass.orderSort)
         let material: IMaterial = null
-        for(let i = this.list.length - 1; i >= 0; i--){
-            const item = this.list[i]
+        for(let i = this.list2d.length - 1; i >= 0; i--){
+            const item = this.list2d[i]
             item.update(this.context.frame)
 
             if(!material) material = item.material

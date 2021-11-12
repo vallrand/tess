@@ -33,7 +33,7 @@ export class Application {
             if(systems[index].index == null) systems[index].index = index
             this.systems[systems[index].index] = new systems[index](this)
         }
-        Loader.awaitDocumentLoad(() => document.body.appendChild(this.canvas))
+        Loader.awaitDocumentLoad(() => document.body.prepend(this.canvas))
     }
     public get<T extends ISystem>(type: SystemType<T>): T { return this.systems[type.index] as T }
     update = (currentTime: number) => {

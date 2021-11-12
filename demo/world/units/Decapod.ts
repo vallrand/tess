@@ -28,6 +28,7 @@ export class Decapod extends AIUnit {
         this.markTiles(true)
     }
     public delete(): void {
+        this.skills[0].deactivate(true).next()
         this.dust = void SharedSystem.particles.dust.remove(this.dust)
         this.context.get(TransformSystem).delete(this.mesh.transform)
         this.mesh = void this.context.get(MeshSystem).delete(this.mesh)

@@ -1,5 +1,4 @@
-import { Application } from '../../engine/framework'
-import { range, clamp, lerp, vec2, vec3, vec4, mat4, quat } from '../../engine/math'
+import { range, vec2, vec3, quat } from '../../engine/math'
 import { MeshSystem, Mesh } from '../../engine/components'
 import { TransformSystem, Transform } from '../../engine/scene'
 import { AnimationSystem, ActionSignal, EventTrigger, ease } from '../../engine/animation'
@@ -7,7 +6,7 @@ import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/device'
 import { PointLightPass, PointLight } from '../../engine/pipeline'
 
-import { TurnBasedSystem, IAgent } from '../common'
+import { TurnBasedSystem, IAgent } from './TurnBasedFlow'
 import { Direction, CubeOrientation, DirectionAngle } from './CubeOrientation'
 import { PlayerSystem } from './Player'
 import { TerrainSystem, TerrainChunk } from '../terrain'
@@ -105,30 +104,46 @@ export class Cube extends Unit implements IAgent {
         ), 0)
         this.skill.enter()
     }
-    delete(){}
+    delete(){
+        for(let i = 0; i < this.meshes.length; i++)
+            if(this.meshes[i]) this.meshes[i] = void this.context.get(MeshSystem).delete(this.meshes[i])
+        if(this.dust) this.dust = void SharedSystem.particles.dust.remove(this.dust)
+        if(this.light) this.light = void this.context.get(PointLightPass).delete(this.light)
+    }
     get skill(){ return this.context.get(PlayerSystem).skills[this.sides[this.side].type] }
-    *execute(): Generator<ActionSignal, void> {
-        if(this.health.amount === 0){
-            if(this.sides[this.side].open == 1)
-            for(const generator = this.skill.close(); true;){
-                const iterator = generator.next()
-                if(iterator.done) break
-                else yield iterator.value
-            }
-            DeathEffect.create(this.context, this)
-            const camera = this.context.get(PlayerSystem).cameraOffset
-            const orbitDuration = 0.1, orbitRadius = 4
-            for(const startTime = this.context.currentTime; true;){
-                const elapsedTime = this.context.currentTime - startTime
-                camera[0] = orbitRadius * Math.sin(elapsedTime * orbitDuration)
-                camera[2] = orbitRadius * Math.cos(elapsedTime * orbitDuration)
-                yield ActionSignal.WaitNextFrame
+    *death(): Generator<ActionSignal> {
+        if(this.sides[this.side].open == 1)
+        for(const generator = this.skill.close(); true;){
+            const iterator = generator.next()
+            if(iterator.done) break
+            else yield iterator.value
+        }
+        const effect = DeathEffect.create(this.context, this)
+        const waiter = this.context.get(AnimationSystem).await(effect.index)
+        const keys = this.context.get(KeyboardSystem)
+        const camera = this.context.get(PlayerSystem).cameraOffset
+        const orbitDuration = 0.1, orbitRadius = 4
+        for(const startTime = this.context.currentTime; true;){
+            const elapsedTime = this.context.currentTime - startTime
+            camera[0] = orbitRadius * Math.sin(elapsedTime * orbitDuration)
+            camera[2] = orbitRadius * Math.cos(elapsedTime * orbitDuration)
+            if(!keys.down('Space') || !waiter.continue) yield ActionSignal.WaitNextFrame
+            else{
+                this.context.get(PlayerSystem).restart()
+                break
             }
         }
-
+    }
+    *execute(): Generator<ActionSignal, void> {
+        const keys = this.context.get(KeyboardSystem)
+        if(this.health.amount === 0) for(const generator = this.death(); true;){
+            const iterator = generator.next()
+            if(iterator.done) return iterator.value
+            else yield iterator.value
+        }
+        
         this.regenerate()
         this.skill.update()
-        const keys = this.context.get(KeyboardSystem)
         idle: for(let frame = 0; true;){
             if(this.action.amount <= 0 && this.movement.amount <= 0) break
             if(frame === this.context.frame) yield ActionSignal.WaitNextFrame

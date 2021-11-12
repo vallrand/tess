@@ -1,56 +1,46 @@
 import { Application, ISystem } from '../framework'
-import { vec3, vec4, quat, mat4 } from '../math'
-import { GL, UniformSamplerBindings, ShaderProgram } from '../webgl'
-import * as shaders from '../shaders'
-import { createBox, applyTransform } from '../geometry'
-import { DeferredGeometryPass, PostEffectPass } from '../pipeline'
-import { MaterialSystem, MeshMaterial } from '../materials'
-import { TransformSystem } from '../scene'
-import { Armature, Mesh, MeshSystem } from '../components'
-import { SkeletonHelper } from './SkeletonHelper'
-import { MapHelper } from './MapHelper'
-
+import { DomNode, IDebugHelper } from './DebugHelper'
 import { Monitor } from './Monitor'
+import { MapHelper } from './MapHelper'
+import { SkeletonHelper } from './SkeletonHelper'
+import { TextureHelper } from './TextureHelper'
+import { SettingsHelper } from './SettingsHelper'
 
 export class DebugSystem implements ISystem {
-    public texture: WebGLTexture
-    public cubemap: WebGLTexture
-    private readonly textureProgram: ShaderProgram
-    private readonly cubemapProgram: ShaderProgram
-    public readonly skeleton: SkeletonHelper = new SkeletonHelper(this.context)
-    public readonly map: MapHelper = new MapHelper(this.context)
+    readonly enabled: boolean = location.search.indexOf('debug') != -1
+    public readonly helpers: IDebugHelper[]
     constructor(private readonly context: Application){
+        if(!this.enabled) return
+        this.helpers = [
+            new TextureHelper(this.context),
+            new SkeletonHelper(this.context),
+            new SettingsHelper(this.context),
+            new MapHelper(this.context),
+        ]
+        console.log(`%cDebug Mode`,'color:#ff0000')
         window['app'] = context
-        this.textureProgram = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag)
-        this.textureProgram.uniforms['uMask'] = vec4.ONE
-        this.cubemapProgram = ShaderProgram(this.context.gl, shaders.fullscreen_vert, shaders.fullscreen_frag, { CUBEMAP: true })
-        this.cubemapProgram.uniforms['uMask'] = vec4.ONE
         this.attachDebugPanel()
     }
     update(){
-        this.skeleton.update()
-        if(this.texture) this.renderDebugTexture(this.texture, GL.TEXTURE_2D)
-        if(this.cubemap) this.renderDebugTexture(this.cubemap, GL.TEXTURE_CUBE_MAP)
+        if(!this.enabled) return
+        for(let i = this.helpers.length - 1; i >= 0; i--) this.helpers[i].update()
     }
-    renderDebugTexture(texture: WebGLTexture, type: number = GL.TEXTURE_2D){
-        const gl = this.context.gl
-        const plane = this.context.get(PostEffectPass).plane
+    public load(): void {
+        if(!this.enabled) return
+        const root = DomNode('div', {
+            style: {
+                display: 'flex', flexDirection: 'column', justifyContent: 'start',
+                position: 'fixed', left: 0, top: '64px', width: '154px'
+            }
+        }, [
+            DomNode('div', {
 
-        gl.bindFramebuffer(GL.FRAMEBUFFER, null)
-        gl.bindVertexArray(plane.vao)
-        switch(type){
-            case GL.TEXTURE_2D:
-                gl.useProgram(this.textureProgram.target)
-                break
-            case GL.TEXTURE_CUBE_MAP:
-                gl.useProgram(this.cubemapProgram.target)
-                break
-        }
-
-        gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uSampler)
-        gl.bindTexture(type, texture)
-
-        gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
+            }),
+            DomNode('div', {
+                style: { display: 'flex', flexDirection: 'column', justifyContent: 'start' }
+            }, this.helpers.map(helper => helper.open()))
+        ])
+        document.body.appendChild(root)
     }
     private attachDebugPanel(){
         const panel = document.createElement('div')

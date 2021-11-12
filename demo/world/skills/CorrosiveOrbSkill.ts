@@ -6,8 +6,7 @@ import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh } from '../../engine
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
 import { SharedSystem, ModelAnimation } from '../shared'
-import { TurnBasedSystem } from '../common'
-import { DirectionAngle, DirectionTile } from '../player'
+import { TurnBasedSystem, DirectionAngle, DirectionTile } from '../player'
 import { TerrainSystem } from '../terrain'
 import { UnitSkill, DamageType, IUnitAttribute } from '../military'
 import { CubeSkill } from './CubeSkill'
@@ -40,8 +39,7 @@ class CorrosiveOrb extends UnitSkill implements IUnitOrb {
         this.decal.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ZERO, this.transform)
 
-        this.orb = Mesh.create(SharedSystem.geometry.sphereMesh, 4, 8)
-        this.context.get(MeshSystem).list.push(this.orb)
+        this.orb = this.context.get(MeshSystem).create(SharedSystem.geometry.sphereMesh, 4, 8)
         this.orb.material = SharedSystem.materials.mesh.orb
         this.orb.transform = this.context.get(TransformSystem)
         .create(vec3.ZERO, quat.IDENTITY, vec3.ONE, this.transform)
@@ -68,7 +66,7 @@ class CorrosiveOrb extends UnitSkill implements IUnitOrb {
         this.context.get(TransformSystem).delete(this.decal.transform)
         this.decal = void this.context.get(DecalPass).delete(this.decal)
         this.aura = void Sprite.delete(this.aura)
-        this.orb = null
+        this.orb = void this.context.get(MeshSystem).delete(this.orb)
         this.fire = void SharedSystem.particles.fire.remove(this.fire)
         CorrosiveOrb.pool.push(this)
     }

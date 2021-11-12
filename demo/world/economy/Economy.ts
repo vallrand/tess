@@ -1,8 +1,8 @@
 import { Application, ISystem } from '../../engine/framework'
+import { aabb2 } from '../../engine/math'
 import { ActionSignal } from '../../engine/animation'
 import { TerrainSystem } from '../terrain'
-import { TurnBasedSystem, IAgent } from '../common'
-import { Cube } from '../player'
+import { TurnBasedSystem, IAgent, Cube } from '../player'
 
 import { Workshop } from './Workshop'
 import { ResourceSpot } from './ResourceSpot'
@@ -17,6 +17,10 @@ export class EconomySystem implements ISystem, IAgent {
             if(!(cube instanceof Cube) || !this.workshop) return
             this.context.get(TurnBasedSystem).enqueue(this.workshop.react(cube), true)
         })
+        this.context.get(TurnBasedSystem).signalReset.add(() => {
+            while(this.list.length) this.list.pop().delete()
+            if(this.workshop) this.workshop = void this.workshop.delete()
+        })
     }
     public execute(): Generator<ActionSignal> {
         if(this.workshop && this.workshop.cube) return this.workshop.enterWorkshop(this.workshop.cube)
@@ -27,11 +31,11 @@ export class EconomySystem implements ISystem, IAgent {
 
         for(let i = this.list.length - 1; i >= 0; i--){
             const spot = this.list[i]
-            if(spot.tile[0] >= bounds[0] && spot.tile[1] >= bounds[1] &&
-                spot.tile[0] < bounds[3] && spot.tile[1] < bounds[3]
-            ) continue
+            if(aabb2.inside(bounds, spot.tile)) continue
             this.delete(spot)
         }
+        if(this.workshop && !aabb2.inside(bounds, this.workshop.tile))
+            this.workshop = void this.workshop.delete()
     }
     public createDeposit(column: number, row: number, capacity: number): ResourceSpot {
         const spot = ResourceSpot.pool.pop() || new ResourceSpot(this.context)
@@ -41,6 +45,7 @@ export class EconomySystem implements ISystem, IAgent {
         return spot
     }
     public createWorkshop(column: number, row: number): Workshop {
+        if(this.workshop) return this.workshop
         const workshop = Workshop.pool.pop() || new Workshop(this.context)
         workshop.place(column, row)
         this.workshop = workshop

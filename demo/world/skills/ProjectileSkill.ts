@@ -5,12 +5,12 @@ import { ParticleEmitter } from '../../engine/particles'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass, PostEffectPass } from '../../engine/pipeline'
 import { TransformSystem, Transform } from '../../engine/scene'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
-import { Direction, DirectionAngle, DirectionTile } from '../player'
-import { CubeSkill } from './CubeSkill'
+
+import { TurnBasedSystem, Direction, DirectionAngle, DirectionTile } from '../player'
 import { SharedSystem, ModelAnimation } from '../shared'
 import { TerrainSystem } from '../terrain'
 import { DamageType, IUnitAttribute } from '../military'
-import { TurnBasedSystem } from '../common'
+import { CubeSkill } from './CubeSkill'
 
 const steeringTimeline = {
     'sphere.color': PropertyAnimation([

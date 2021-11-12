@@ -48,6 +48,15 @@ export class AnimationSystem implements ISystem {
         this.pending.push(signal)
         return signal
     }
+    public stop(index: number): void {
+        for(let i = this.queue.length - 1; i >= 0; i--)
+            if(this.queue[i].index === index){
+                this.queue[i].generator.return(null)
+                this.queue.splice(i, 1)
+                this.dispatch(index)
+                break
+            }
+    }
     private dispatch(index: number): void {
         let removed = 0
         for(let i = 0; i < this.pending.length; i++)

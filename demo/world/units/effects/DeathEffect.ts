@@ -26,6 +26,7 @@ export class DeathEffect {
     private pillar: Sprite
     private ring: Sprite
     private spikes: ParticleEmitter
+    private debris: Mesh
     private mesh: Mesh
     public *use(source: AIUnit): Generator<ActionSignal> {
         for(const generator = source.deactivate(); true;){
@@ -140,14 +141,16 @@ export class DeathEffect {
             ], vec4.lerp)
         })
 
-        // const debris = this.context.get(SharedSystem).debris.create(mesh.transform.position)
-        // vec4.set(0,0,0,1, debris.color)
+        this.debris = this.context.get(SharedSystem).debris.create(this.mesh.transform.position)
+        const scale = 0.4 + 0.4 * source.size[0]
+        vec3.set(scale, scale, scale, this.debris.transform.scale)
+        vec4.set(0,0,0,1, this.debris.color)
 
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         SharedSystem.particles.spikes.remove(this.spikes)
@@ -167,6 +170,8 @@ export class DeathEffect {
         Sprite.delete(this.wave)
         Sprite.delete(this.pillar)
         Sprite.delete(this.ring)
+
+        this.debris = void this.context.get(SharedSystem).debris.delete(this.debris)
 
         source.delete()
         DeathEffect.pool.push(this)

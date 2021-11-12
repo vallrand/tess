@@ -1,4 +1,4 @@
-import { Application, Signal, ISystem } from '../../engine/framework'
+import { Application, ISystem } from '../../engine/framework'
 import { vec2, vec3, aabb2, vec4 } from '../../engine/math'
 import { CameraSystem } from '../../engine/scene'
 
@@ -6,13 +6,9 @@ import { LevelGenerator } from './LevelGenerator'
 import { Pathfinder } from './Pathfinder'
 
 import { TerrainChunk } from './TerrainChunk'
-import { SharedSystem } from '../shared'
 
 export class TerrainSystem implements ISystem {
     private static readonly pool: TerrainChunk[] = []
-    readonly signalEnterTile = new Signal<(column: number, row: number, value: any) => void>()
-    readonly signalClearChunk = new Signal<(chunk: TerrainChunk) => void>()
-
     private readonly positionOffset = -0.5 * TerrainChunk.chunkSize + 0.5 * TerrainChunk.tileSize
     private readonly gridSize = 3
     private readonly gridBounds: aabb2 = aabb2()
@@ -26,7 +22,7 @@ export class TerrainSystem implements ISystem {
         const position = this.context.get(CameraSystem).controller.cameraTarget
         const offsetX = Math.floor(position[0] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
         const offsetZ = Math.floor(position[2] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
-        if(this.gridBounds[0] == offsetX && this.gridBounds[1] == offsetZ) return
+        if(this.gridBounds[0] == offsetX && this.gridBounds[1] == offsetZ && this.frame) return
 
         for(let i = this.chunks.length - 1; i >= 0; i--){
             const chunk = this.chunks[i]
@@ -39,7 +35,6 @@ export class TerrainSystem implements ISystem {
                 chunk.column >= offsetX + this.gridSize ||
                 chunk.row >= offsetZ + this.gridSize
             ){
-                this.signalClearChunk.broadcast(chunk)
                 chunk.clear()
                 TerrainSystem.pool.push(chunk)
                 this.chunks[i] = null
@@ -76,6 +71,15 @@ export class TerrainSystem implements ISystem {
             this.levelGenerator.populate(chunk)
             chunk.build()
         }
+    }
+    public clear(){
+        for(let i = this.chunks.length - 1; i >= 0; i--){
+            if(!this.chunks[i]) continue
+            this.chunks[i].clear()
+            this.chunks[i] = void TerrainSystem.pool.push(this.chunks[i])
+        }
+        aabb2.copy(aabb2.INFINITE, this.bounds)
+        this.frame = 0
     }
     public chunk(column: number, row: number): TerrainChunk | null {
         const x = Math.floor(column / TerrainChunk.chunkTiles) - this.gridBounds[0]

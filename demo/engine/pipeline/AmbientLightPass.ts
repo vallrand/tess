@@ -71,7 +71,7 @@ export class AmbientLightPass extends PipelinePass implements ISystem {
 
             this.program.uniforms['uWeight'] = weight
             gl.activeTexture(GL.TEXTURE0 + UniformSamplerBindings.uEnvironmentMap)
-            gl.bindTexture(GL.TEXTURE_CUBE_MAP, probe.cubemap)
+            gl.bindTexture(GL.TEXTURE_CUBE_MAP, this.reflection.enabled ? probe.cubemap : null)
 
             gl.drawElements(GL.TRIANGLES, plane.indexCount, GL.UNSIGNED_SHORT, plane.indexOffset)
         }

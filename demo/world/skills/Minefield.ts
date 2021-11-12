@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { vec2, vec3, vec4, lerp, quat } from '../../engine/math'
+import { vec2, vec3, vec4, lerp, quat, aabb2 } from '../../engine/math'
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { TransformSystem } from '../../engine/scene'
@@ -7,7 +7,7 @@ import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, Ev
 import { ParticleEffectPass, PointLightPass, DecalPass, PostEffectPass, PointLight, Decal } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
 import { TerrainSystem } from '../terrain'
-import { TurnBasedSystem, IAgent } from '../common'
+import { TurnBasedSystem, IAgent } from '../player'
 import { DamageType, AIUnit, UnitSkill } from '../military'
 
 const actionTimeline = {
@@ -113,7 +113,12 @@ export class LandMine extends UnitSkill {
     public delete(){
         this.triggered = false
         this.context.get(TransformSystem).delete(this.mesh.transform)
-        this.context.get(MeshSystem).delete(this.mesh)
+        this.mesh = void this.context.get(MeshSystem).delete(this.mesh)
+        if(this.pillar){
+            this.context.get(TransformSystem).delete(this.pillar.transform)
+            this.context.get(ParticleEffectPass).remove(this.pillar)
+            this.pillar = void Sprite.delete(this.pillar)
+        }
         LandMine.pool.push(this)
     }
     private pillar: Sprite
@@ -240,7 +245,7 @@ export class LandMine extends UnitSkill {
         Sprite.delete(this.wave)
         this.context.get(TransformSystem).delete(this.pillar.transform)
         this.context.get(ParticleEffectPass).remove(this.pillar)
-        Sprite.delete(this.pillar)
+        this.pillar = void Sprite.delete(this.pillar)
         this.delete()
     }
 }
@@ -257,13 +262,16 @@ export class Minefield implements IAgent {
             mine.triggered = true
             this.context.get(TurnBasedSystem).enqueue(mine.trigger(), true)
         })
+        this.context.get(TurnBasedSystem).signalReset.add(() => {
+            while(this.list.length) this.list.pop().delete()
+        })
     }
     public execute(): Generator<ActionSignal> {
         const bounds = this.context.get(TerrainSystem).bounds
         const actions = []
         for(let i = this.list.length - 1; i >= 0; i--){
             const mine = this.list[i]
-            if(mine.tile[0] < bounds[0] || mine.tile[1] < bounds[1] || mine.tile[0] >= bounds[2] || mine.tile[1] >= bounds[3])
+            if(!aabb2.inside(bounds, mine.tile))
                 mine.delete()
             else if(mine.triggered)
                 actions.push(mine.detonate())

@@ -46,8 +46,11 @@ export const grid: string = require('./effects/grid_frag.glsl')
 export const battery: string = require('./effects/battery_frag.glsl')
 
 export const batch2d_rg_frag: string = require('./batch2d_rg_frag.glsl')
+export const debris_vert: string = require('./debris_vert.glsl')
+export const sky_frag: string = require('./sky_frag.glsl')
 
 export const mist_vert: string = require('./particle/mist_vert.glsl')
 export const grass_vert: string = require('./particle/grass_vert.glsl')
 export const smoke_frag: string = require('./particle/smoke_frag.glsl')
 export const fire_frag: string = require('./particle/fire_frag.glsl')
+export const foliage_frag: string = require('./particle/foliage_frag.glsl')

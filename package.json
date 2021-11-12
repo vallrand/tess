@@ -4,6 +4,7 @@
   "description": "TBS Demo",
   "type": "module",
   "scripts": {
+    "copy_files": "node ./tasks/copy-files.js ./output -clear ./demo/index.html ./demo/favicon32.png",
     "pack_textures": "node ./tasks/pack-texture.js ./source/textures ./output/assets",
     "pack_meshes": "node ./tasks/pack-mesh.js ./source ./output/assets/models.bin ./demo/manifest.json",
     "build": "webpack --mode production",

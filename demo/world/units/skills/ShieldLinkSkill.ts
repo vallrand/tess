@@ -325,6 +325,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         })
 
         for(let i = 0; i < this.links.length; i++) this.links[i].idleIndex = -1
+        this.links.length = 0
 
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -340,10 +341,16 @@ export class ShieldLinkSkill extends AIUnitSkill {
         Sprite.delete(this.glow)
         BatchMesh.delete(this.core)
     }
-    public *deactivate(): Generator<ActionSignal> {
+    public *deactivate(immediate?: boolean): Generator<ActionSignal> {
         if(this.idleIndex == -1) return
-        const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
-        this.idleIndex = -1
-        yield waiter
+        if(immediate){
+            while(this.links.length) this.links.pop().idleIndex = -1
+            this.context.get(AnimationSystem).stop(this.idleIndex)
+            this.active = false
+        }else{
+            const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
+            this.idleIndex = -1
+            yield waiter
+        }
     }
 }

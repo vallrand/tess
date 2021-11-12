@@ -6,15 +6,16 @@ import { createBox, applyTransform } from '../geometry'
 import { MaterialSystem, MeshMaterial } from '../materials'
 import { CameraSystem } from '../scene'
 import { Armature, IKRig, Mesh, MeshBuffer, MeshSystem } from '../components'
+import { DomNode, IDebugHelper } from './DebugHelper'
 
-export class SkeletonHelper {
+export class SkeletonHelper implements IDebugHelper {
     private readonly material: MeshMaterial
     private readonly buffer: MeshBuffer
     private readonly uniform: UniformBlock
     private readonly modelMatrix: mat4
     private readonly color: vec4
 
-    public enabled: boolean = !true
+    public enabled: boolean = false
     constructor(private readonly context: Application){
         this.material = new MeshMaterial()
         this.material.program = ShaderProgram(this.context.gl, shaders.geometry_vert, shaders.geometry_frag, {})
@@ -31,7 +32,7 @@ export class SkeletonHelper {
         this.modelMatrix = this.uniform.data.subarray(0, 16) as any
         this.color = this.uniform.data.subarray(16, 16 + 4) as any
     }
-    update(){
+    public update(): void {
         if(!this.enabled) return
         const { gl } = this.context
         const meshes = this.context.get(MeshSystem).list
@@ -70,5 +71,18 @@ export class SkeletonHelper {
                 gl.drawElements(GL.TRIANGLES, this.buffer.indexCount, GL.UNSIGNED_SHORT, this.buffer.indexOffset)
             }
         }
+    }
+    public open(): HTMLElement {
+        return DomNode('div', {
+            style: { display: 'flex', flexDirection: 'column' }
+        }, [
+            DomNode('div', {
+                innerText: 'rig', style: { textTransform: 'uppercase', display: 'flex', borderBottom: '1px solid #efefef' }
+            }, [DomNode('input', {
+                type: 'checkbox', checked: this.enabled, style: { pointerEvents: 'all', marginLeft: 'auto' }
+            }, null, {
+                change: event => this.enabled = (event.target as HTMLInputElement).checked
+            })])
+        ])
     }
 }
