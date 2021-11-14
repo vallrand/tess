@@ -51,7 +51,7 @@ aabb2.pad = (aabb: aabb2, padding: number, out: aabb2): aabb2 => {
 }
 aabb2.inside = (bounds: aabb2, tile: vec2): boolean => (
     tile[0] >= bounds[0] && tile[1] >= bounds[1] &&
-    tile[0] < bounds[3] && tile[1] < bounds[3]
+    tile[0] < bounds[2] && tile[1] < bounds[3]
 )
 
 aabb2.INFINITE = aabb2()

@@ -91,7 +91,7 @@ export class WaveSkill extends AIUnitSkill {
     readonly cardinal: boolean = false
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Electric
-    readonly damage: number = 1
+    readonly damage: number = 2
 
     private beam: Sprite
     private cracks: Decal
@@ -119,13 +119,13 @@ export class WaveSkill extends AIUnitSkill {
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.displacement.ring
         this.wave.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,1,0], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(PostEffectPass).add(this.wave)
     
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
-        .create([0,0.5,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,0.5,0], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
     
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)

@@ -72,6 +72,7 @@ class StaticOrb extends UnitSkill {
                 { frame: 0.5, value: nextPosition }
             ], vec3.lerp)
         })
+        if(!vec3.equals(prevPosition, nextPosition, 1e-6))
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
@@ -203,8 +204,8 @@ const actionTimeline = {
         { frame: 1.2, value: [0.6,4,0.6], ease: ease.sineOut }
     ], vec3.lerp),
     'cone.transform.rotation': PropertyAnimation([
-        { frame: 0.6, value: Sprite.FlatDown },
-        { frame: 1.2, value: quat.multiply(Sprite.FlatDown, quat.axisAngle(vec3.AXIS_Y, Math.PI, quat()), quat()), ease: ease.quadOut }
+        { frame: 0.6, value: quat.HALF_N_X },
+        { frame: 1.2, value: quat.multiply(quat.HALF_N_X, quat.axisAngle(vec3.AXIS_Y, Math.PI, quat()), quat()), ease: ease.quadOut }
     ], quat.slerp),
     'cone.color': PropertyAnimation([
         { frame: 0.6, value: [0.4,0.6,1,1] },
@@ -255,20 +256,20 @@ export class StaticOrbSkill extends AIUnitSkill {
 
         this.core = BatchMesh.create(SharedSystem.geometry.lowpolySphere)
         this.core.transform = this.context.get(TransformSystem)
-        .create([0,0.7,2.5],Sprite.FlatDown,vec3.ONE,this.mesh.transform)
+        .create([0,0.7,2.5],quat.HALF_N_X,vec3.ONE,this.mesh.transform)
         this.core.material = SharedSystem.materials.effect.coreYellow
         this.context.get(ParticleEffectPass).add(this.core)
 
         this.cone = BatchMesh.create(SharedSystem.geometry.cone)
         this.cone.transform = this.context.get(TransformSystem)
-        .create([0,0.7,0.8],Sprite.FlatDown,vec3.ONE,this.mesh.transform)
+        .create([0,0.7,0.8],quat.HALF_N_X,vec3.ONE,this.mesh.transform)
         this.cone.material = SharedSystem.materials.sprite.spiral
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = SharedSystem.materials.sprite.beam
         this.beam.transform = this.context.get(TransformSystem)
-        .create(vec3.ZERO,Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create(vec3.ZERO,quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
         this.light = this.context.get(PointLightPass).create()

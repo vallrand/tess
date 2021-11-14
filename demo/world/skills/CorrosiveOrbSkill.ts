@@ -65,6 +65,7 @@ class CorrosiveOrb extends UnitSkill implements IUnitOrb {
         this.context.get(TransformSystem).delete(this.orb.transform)
         this.context.get(TransformSystem).delete(this.decal.transform)
         this.decal = void this.context.get(DecalPass).delete(this.decal)
+        this.context.get(ParticleEffectPass).remove(this.aura)
         this.aura = void Sprite.delete(this.aura)
         this.orb = void this.context.get(MeshSystem).delete(this.orb)
         this.fire = void SharedSystem.particles.fire.remove(this.fire)
@@ -89,6 +90,7 @@ class CorrosiveOrb extends UnitSkill implements IUnitOrb {
                 { frame: 1, value: nextPosition, ease: ease.quadInOut }
             ], vec3.lerp)
         })
+        if(!vec3.equals(prevPosition, nextPosition, 1e-6))
         for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
@@ -222,6 +224,8 @@ const actionTimeline = {
 
 export class CorrosiveOrbSkill extends CubeSkill {
     public readonly corrosion: CorrosionPhase = new CorrosionPhase(this.context)
+    range: number = 4
+    damage: number = 1
 
     private cone: BatchMesh
     private glow: Sprite
@@ -279,6 +283,8 @@ export class CorrosiveOrbSkill extends CubeSkill {
         })
 
         const orb = CorrosiveOrb.pool.pop() || new CorrosiveOrb(this.context)
+        orb.health.capacity = this.range
+        orb.damage = this.damage
         orb.direction[0] = Math.sign(target[0] - this.cube.tile[0])
         orb.direction[1] = Math.sign(target[1] - this.cube.tile[1])
         orb.place(target[0], target[1])

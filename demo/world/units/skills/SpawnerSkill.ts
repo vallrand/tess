@@ -103,7 +103,7 @@ class Spawner {
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE, parentTransform)
+        .create([0,1,0], quat.HALF_X, vec3.ONE, parentTransform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.light = this.context.get(PointLightPass).create([1,0.6,0.7])

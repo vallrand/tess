@@ -4,26 +4,29 @@ import { ActionSignal } from '../../engine/animation'
 import { TerrainSystem } from '../terrain'
 import { TurnBasedSystem, IAgent, Cube } from '../player'
 
+import { UpgradeMenu } from './UpgradeMenu'
 import { Workshop } from './Workshop'
 import { ResourceSpot } from './ResourceSpot'
 
 export class EconomySystem implements ISystem, IAgent {
     readonly order: number = 1
     private readonly list: ResourceSpot[] = []
-    private workshop: Workshop
+    readonly menu: UpgradeMenu = new UpgradeMenu(this.context)
+    private workshops: Workshop[] = []
     constructor(private readonly context: Application){
         this.context.get(TurnBasedSystem).add(this)
         this.context.get(TurnBasedSystem).signalEnterTile.add((column: number, row: number, cube: Cube) => {
-            if(!(cube instanceof Cube) || !this.workshop) return
-            this.context.get(TurnBasedSystem).enqueue(this.workshop.react(cube), true)
+            if(cube instanceof Cube) for(let i = this.workshops.length - 1; i >= 0; i--)
+                this.context.get(TurnBasedSystem).enqueue(this.workshops[i].react(cube), true)
         })
         this.context.get(TurnBasedSystem).signalReset.add(() => {
             while(this.list.length) this.list.pop().delete()
-            if(this.workshop) this.workshop = void this.workshop.delete()
+            while(this.workshops.length) this.workshops.pop().delete()
         })
     }
     public execute(): Generator<ActionSignal> {
-        if(this.workshop && this.workshop.cube) return this.workshop.enterWorkshop(this.workshop.cube)
+        for(let i = this.workshops.length - 1; i >= 0; i--)
+            if(this.workshops[i].cube) return this.workshops[i].enterWorkshop(this.workshops[i].cube)
     }
     public update(): void {
         const { bounds, frame } = this.context.get(TerrainSystem)
@@ -34,21 +37,22 @@ export class EconomySystem implements ISystem, IAgent {
             if(aabb2.inside(bounds, spot.tile)) continue
             this.delete(spot)
         }
-        if(this.workshop && !aabb2.inside(bounds, this.workshop.tile))
-            this.workshop = void this.workshop.delete()
+        for(let i = this.workshops.length - 1; i >= 0; i--)
+            if(!aabb2.inside(bounds, this.workshops[i].tile))
+                this.workshops.splice(i, 1)[0].delete()
     }
-    public createDeposit(column: number, row: number, capacity: number): ResourceSpot {
+    public createDeposit(column: number, row: number): ResourceSpot {
         const spot = ResourceSpot.pool.pop() || new ResourceSpot(this.context)
         spot.place(column, row)
-        spot.capacity = spot.amount = capacity
+        spot.capacity = spot.amount = 1
         this.list.push(spot)
         return spot
     }
     public createWorkshop(column: number, row: number): Workshop {
-        if(this.workshop) return this.workshop
         const workshop = Workshop.pool.pop() || new Workshop(this.context)
         workshop.place(column, row)
-        this.workshop = workshop
+        workshop.menu = this.menu
+        this.workshops.push(workshop)
         return workshop
     }
     public delete(item: ResourceSpot): void {

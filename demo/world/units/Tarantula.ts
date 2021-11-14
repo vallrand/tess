@@ -57,7 +57,7 @@ export class TarantulaVariant extends AIUnit {
     readonly skills = [new ProjectileSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 4, amount: 0, gain: 0 }
-    readonly action = { capacity: 1, amount: 0, gain: 1 }
+    readonly action = { capacity: 1, amount: 0, gain: 0.5 }
     readonly movement = { capacity: 1, amount: 0, gain: 1 }
     readonly group: number = 2
     readonly movementDuration: number = 0.8

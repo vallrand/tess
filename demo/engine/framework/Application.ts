@@ -12,7 +12,7 @@ export interface SystemType<T extends ISystem> {
 
 export class Application {
     private static readonly timestep = 2 * 1000/60
-    private readonly canvas: HTMLCanvasElement = document.createElement('canvas')
+    public readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     public readonly gl: WebGL2RenderingContext
     private readonly loader: Loader = new Loader
     private readonly systems: ISystem[] = []

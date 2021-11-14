@@ -98,6 +98,7 @@ export class LandMine extends UnitSkill {
     static readonly pool: LandMine[] = []
     readonly tile: vec2 = vec2()
     readonly damageType = DamageType.Kinetic | DamageType.Temperature
+    readonly group: number = 2
     readonly minRange: number = 0
     range: number = 4
     damage: number = 2
@@ -132,7 +133,7 @@ export class LandMine extends UnitSkill {
 
         this.circle = Sprite.create(BillboardType.None)
         this.circle.material = SharedSystem.materials.sprite.ring
-        this.circle.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        this.circle.transform = this.context.get(TransformSystem).create(vec3.AXIS_Y, quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.circle)
 
         const animate = AnimationTimeline(this, activateTimeline)
@@ -167,7 +168,7 @@ export class LandMine extends UnitSkill {
 
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.distortion.ring
-        this.wave.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp), Sprite.FlatDown, vec3.ONE)
+        this.wave.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp), quat.HALF_N_X, vec3.ONE)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.ring = BatchMesh.create(SharedSystem.geometry.cylinder)
@@ -212,7 +213,7 @@ export class LandMine extends UnitSkill {
         this.light = this.context.get(PointLightPass).create([1,0.5,0.5])
         this.light.transform = this.context.get(TransformSystem).create(vec3.add([0,2,0], origin, temp))
 
-        const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, this.minRange, this.range, 2)
+        const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, this.minRange, this.range, this.group)
         .map(value => ({ frame: 0.4, value })), UnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 3, startTime = this.context.currentTime; true;){

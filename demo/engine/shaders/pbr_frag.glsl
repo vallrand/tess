@@ -85,7 +85,7 @@ vec3 fresnelSchlick(vec3 F0, float cosTheta, float roughness){
 
 void main(){
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
-    vec3 position = texelFetch(uPositionBuffer, fragCoord, 0).xyz;
+    vec3 position = texelFetch(uPositionBuffer, fragCoord, 0).xyz + uEyePosition;
     vec4 normal = texelFetch(uNormalBuffer, fragCoord, 0);
     vec4 albedo = texelFetch(uAlbedoBuffer, fragCoord, 0);
     float emission = max(0.,2.*albedo.a-1.);

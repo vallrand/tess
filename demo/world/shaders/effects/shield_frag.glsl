@@ -79,7 +79,7 @@ void main(){
 #else
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
     vec4 fragPosition = texelFetch(uPositionBuffer, fragCoord, 0);
-    float distance = length(fragPosition.xyz - position);
+    float distance = length(fragPosition.xyz + uEyePosition - position);
 
     float edge = smoothstep(1.0,0.0,NdV)*smoothstep(-0.5,0.0,NdV);
     edge += smoothstep(0.5,0.0,distance);

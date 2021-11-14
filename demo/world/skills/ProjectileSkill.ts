@@ -125,12 +125,12 @@ class Projectile {
 
         this.glow = Sprite.create(BillboardType.None)
         this.glow.material = SharedSystem.materials.sprite.halo
-        this.glow.transform = this.context.get(TransformSystem).create(this.target, Sprite.FlatDown)
+        this.glow.transform = this.context.get(TransformSystem).create(this.target, quat.HALF_N_X)
         this.context.get(ParticleEffectPass).add(this.glow)
 
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.displacement.wave
-        this.wave.transform = this.context.get(TransformSystem).create(this.target, Sprite.FlatDown)
+        this.wave.transform = this.context.get(TransformSystem).create(this.target, quat.HALF_N_X)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.burn = this.context.get(DecalPass).create(0)
@@ -224,6 +224,7 @@ export class ProjectileSkill extends CubeSkill {
     private particles: ParticleEmitter
 
     public update(): void { this.indicator.amount = this.indicator.capacity }
+    protected clear(): void { if(this.indicator.amount < this.indicator.capacity) this.cube.action.amount = 0 }
     public query(direction: Direction): vec2 | null {
         if(direction === Direction.None || !this.indicator.amount) return
         const origin = this.cube.tile, target = vec2()
@@ -237,8 +238,7 @@ export class ProjectileSkill extends CubeSkill {
         return target
     }
     public *activate(target: vec2, direction: Direction): Generator<ActionSignal> {
-        this.indicator.amount--
-        if(!this.indicator.amount) this.cube.action.amount = 0
+        if(--this.indicator.amount <= 0) this.cube.action.amount = 0
 
         const rotationalIndex = mod(direction - this.cube.direction - this.cube.sides[this.cube.side].direction, 4)
 

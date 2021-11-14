@@ -14,9 +14,9 @@ export class Isopod extends AIUnit {
     static readonly pool: Isopod[] = []
     readonly skills = [new StaticOrbSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    readonly health = { capacity: 12, amount: 0, gain: 0 }
+    readonly health = { capacity: 6, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 0.25 }
-    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 0.5 }
     readonly group: number = 2
     readonly movementDuration: number = 0.4
 

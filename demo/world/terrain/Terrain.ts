@@ -19,7 +19,8 @@ export class TerrainSystem implements ISystem {
     public readonly pathfinder: Pathfinder = new Pathfinder(this.context, this.gridSize * TerrainChunk.chunkTiles)
     constructor(private readonly context: Application){}
     public update(): void {
-        const position = this.context.get(CameraSystem).controller.cameraTarget
+        const { controller } = this.context.get(CameraSystem), position = controller.cameraTarget
+        if(controller.frame == 0) return
         const offsetX = Math.floor(position[0] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
         const offsetZ = Math.floor(position[2] / TerrainChunk.chunkSize - 0.5*this.gridSize + 1)
         if(this.gridBounds[0] == offsetX && this.gridBounds[1] == offsetZ && this.frame) return

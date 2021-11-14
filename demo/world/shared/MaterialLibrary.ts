@@ -3,8 +3,8 @@ import { vec2, vec3, vec4 } from '../../engine/math'
 import { ShaderProgram, GL, OpaqueLayer } from '../../engine/webgl'
 import * as shaders from '../../engine/shaders'
 import * as localShaders from '../shaders'
-import { MaterialSystem, ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
-import { DeferredGeometryPass, ParticleEffectPass, DecalPass } from '../../engine/pipeline'
+import { ShaderMaterial, MeshMaterial, EffectMaterial, SpriteMaterial, DecalMaterial } from '../../engine/materials'
+import { DeferredGeometryPass, ParticleEffectPass, DecalPass, OverlayPass } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
 
 function EffectMaterials(gl: WebGL2RenderingContext){
@@ -235,6 +235,15 @@ function EffectMaterials(gl: WebGL2RenderingContext){
     }
 }
 
+const createSpriteMaterial = (program: ShaderProgram, diffuse: WebGLTexture, double?: boolean, post?: boolean): SpriteMaterial => {
+    const material = new SpriteMaterial()
+    material.program = program
+    material.diffuse = diffuse
+    if(double) material.cullFace = GL.NONE
+    if(post) material.blendMode = null
+    return material
+}
+
 export function MaterialLibrary(context: Application){
     const resourceSpotMaterial = new DecalMaterial()
     resourceSpotMaterial.program = ShaderProgram(context.gl, shaders.decal_vert, localShaders.spot, { INSTANCED: true, ALPHA_CUTOFF: 0.01 })
@@ -373,36 +382,38 @@ export function MaterialLibrary(context: Application){
             moss: DecalMaterial.create(context.get(DecalPass).program, SharedSystem.textures.moss),
         },
         sprite: {
-            glow: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.glow),
-            rays: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.rays),
-            halo: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.halo),
-            burst: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.burst),
-            ring: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.ring),
-            wave: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.wave),
-            beam: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.beam),
-            sparkle: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.sparkle),
-            spiral: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.spiral),
-            dust: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.dust),
-            swirl: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.swirl),
-            streak: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.streak),
-            particle: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.particle),
-            bar: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.textures.bar),
+            glow: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.glow),
+            rays: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.rays),
+            halo: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.halo),
+            burst: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.burst),
+            ring: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.ring),
+            wave: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.wave),
+            beam: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.beam),
+            sparkle: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.sparkle),
+            spiral: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.spiral),
+            dust: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.dust),
+            swirl: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.swirl),
+            streak: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.streak),
+            particle: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.particle),
+            bar: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.textures.bar),
 
-            lineYellow: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.yellowLine),
-            lineTeal: SpriteMaterial.create(context.get(ParticleEffectPass).program, SharedSystem.gradients.tealLine),
+            lineYellow: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.gradients.yellowLine),
+            lineTeal: createSpriteMaterial(context.get(ParticleEffectPass).program, SharedSystem.gradients.tealLine),
+
+            fade: createSpriteMaterial(context.get(OverlayPass).program, SharedSystem.textures.white, true),
         },
         displacement: {
-            ring: SpriteMaterial.create(distortion, SharedSystem.textures.ring, true),
-            wave: SpriteMaterial.create(distortion, SharedSystem.textures.wave, true),
-            bulge: SpriteMaterial.create(distortion, SharedSystem.textures.bulge, true),
+            ring: createSpriteMaterial(distortion, SharedSystem.textures.ring, true, true),
+            wave: createSpriteMaterial(distortion, SharedSystem.textures.wave, true, true),
+            bulge: createSpriteMaterial(distortion, SharedSystem.textures.bulge, true, true),
         },
         distortion: {
-            ring: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.ring, true),
-            wave: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.wave, true),
-            bulge: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.bulge, true),
-            particle: SpriteMaterial.create(chromaticAberration, SharedSystem.textures.particle, true),
+            ring: createSpriteMaterial(chromaticAberration, SharedSystem.textures.ring, true, true),
+            wave: createSpriteMaterial(chromaticAberration, SharedSystem.textures.wave, true, true),
+            bulge: createSpriteMaterial(chromaticAberration, SharedSystem.textures.bulge, true, true),
+            particle: createSpriteMaterial(chromaticAberration, SharedSystem.textures.particle, true, true),
         },
-        heat: SpriteMaterial.create(heatDistortion, SharedSystem.textures.perlinNoise, true),
+        heat: createSpriteMaterial(heatDistortion, SharedSystem.textures.perlinNoise, true, true),
         mesh: {
             orb: orbMaterial,
             dunes: dunesMaterial,

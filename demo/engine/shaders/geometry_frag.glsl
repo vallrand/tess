@@ -128,7 +128,7 @@ void main(){
 #endif
     float metallic = 2.0 * 0.5 * smoothstep(0.25, 0.0, diffuse.a);
 
-    fragPosition = vec4(position, uLayer);
+    fragPosition = vec4(position - uEyePosition, uLayer);
     fragNormal = vec4(normal, metallic);
     fragAlbedo = diffuse;
 }

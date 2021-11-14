@@ -37,7 +37,7 @@ export abstract class AIUnit extends Unit {
                 const prev = plan.path[i], next = plan.path[i + 1]
                 const availableTime = map.marked[map.tileIndex(next[0], next[1])]
                 time = Math.max(time, availableTime)
-                frames.push(time - this.context.currentTime)
+                frames.push(time - this.context.currentTime - plan.delay)
                 time += i ? this.movementDuration : (2 * this.movementDuration)
                 map.marked[map.tileIndex(prev[0], prev[1])] = time
             }

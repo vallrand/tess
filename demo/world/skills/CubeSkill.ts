@@ -39,7 +39,6 @@ export class CubeSkill extends UnitSkill {
         state.open = 0
         this.clear()
     }
-    public enter(): void {}
     public update(): void {}
     protected validate(): boolean { return true }
     protected clear(): void {}

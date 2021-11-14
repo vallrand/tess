@@ -64,6 +64,7 @@ const actionTimeline = {
 
 export class DetonateSkill extends CubeSkill {
     public readonly minefield: Minefield = new Minefield(this.context)
+    damage: number = 2
     private dust: ParticleEmitter
     private light: PointLight
     private stamp: Decal
@@ -71,10 +72,13 @@ export class DetonateSkill extends CubeSkill {
     private chargeX: Decal
     private chargeY: Decal
     private beam: Sprite
-    public query(): vec2 | null { return this.cube.matter.amount > 0 ? this.cube.tile : null }
+    public query(): vec2 | null { return this.cube.tile }
+    private static placeMine(skill: DetonateSkill, target: vec2){
+        const mine = skill.minefield.create(target[0], target[1])
+        mine.damage = skill.damage
+    }
     public *activate(target: vec2): Generator<ActionSignal> {
         this.cube.action.amount = 0
-        this.cube.matter.amount--
         
         this.tube = BatchMesh.create(SharedSystem.geometry.cylinder)
         this.tube.material = SharedSystem.materials.effect.stripesRed
@@ -110,13 +114,13 @@ export class DetonateSkill extends CubeSkill {
             uAngular: [-Math.PI,Math.PI,0,0]
         })
 
-        const place = EventTrigger([{ frame: 1, value: target }], (field: Minefield, target: vec2) => field.create(target[0], target[1]))
+        const place = EventTrigger([{ frame: 1, value: target }], DetonateSkill.placeMine)
         const animate = AnimationTimeline(this, actionTimeline)
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
-            place(elapsedTime, this.context.deltaTime, this.minefield)
+            place(elapsedTime, this.context.deltaTime, this)
             if(elapsedTime > duration) break
             else yield ActionSignal.WaitNextFrame
         }

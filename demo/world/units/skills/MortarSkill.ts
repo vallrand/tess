@@ -157,7 +157,7 @@ export class MortarSkill extends AIUnitSkill {
     readonly cardinal: boolean = false
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Kinetic | DamageType.Temperature
-    readonly damage: number = 10
+    readonly damage: number = 3
     
     private aura: Decal
     private light: PointLight
@@ -227,7 +227,7 @@ export class MortarSkill extends AIUnitSkill {
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.displacement.wave
         this.wave.transform = this.context.get(TransformSystem)
-        .create(vec3.add([0,0.5,0], this.targetPosition, vec3()), Sprite.FlatUp, vec3.ONE)
+        .create(vec3.add([0,0.5,0], this.targetPosition, vec3()), quat.HALF_X, vec3.ONE)
         this.context.get(PostEffectPass).add(this.wave)
         
         this.embers = SharedSystem.particles.embers.add({
@@ -245,7 +245,7 @@ export class MortarSkill extends AIUnitSkill {
 
         this.splash = Sprite.create(BillboardType.None)
         this.splash.transform = this.context.get(TransformSystem)
-        .create(vec3.add(this.targetPosition, [0,0.5,0], vec3()), Sprite.FlatUp, vec3.ONE)
+        .create(vec3.add(this.targetPosition, [0,0.5,0], vec3()), quat.HALF_X, vec3.ONE)
         this.splash.material = SharedSystem.materials.sprite.burst
         this.context.get(ParticleEffectPass).add(this.splash)
 
@@ -348,7 +348,7 @@ export class MortarSkill extends AIUnitSkill {
 
         this.ring = Sprite.create(BillboardType.None)
         this.ring.transform = this.context.get(TransformSystem)
-        .create(vec3.AXIS_Y,Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create(vec3.AXIS_Y,quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.ring.material = SharedSystem.materials.sprite.ring
         this.context.get(ParticleEffectPass).add(this.ring)
 

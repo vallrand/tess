@@ -1,11 +1,11 @@
 export const lerp = (start: number, end: number, factor: number): number => start + (end - start) * factor
 export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
 export const mod = (n: number, m: number): number => ((n % m) + m) % m
-export const shortestAngle = (a: number, b: number): number => {
-    const da = (b - a) % (2 * Math.PI)
-    return 2 * da % (2 * Math.PI) - da
+export const moddelta = (m: number, a: number, b: number) => {
+    const d = (b - a) % m
+    return 2 * d % m - d
 }
-export const lerpAngle = (a: number, b: number, t: number): number => a + shortestAngle(a, b) * t
+export const lerpAngle = (a: number, b: number, t: number): number => a + moddelta(2 * Math.PI, a, b) * t
 
 export function smoothstep(min: number, max: number, value: number): number {
     if(min === max) return value < min ? 0 : 1

@@ -16,7 +16,7 @@ export class Decapod extends AIUnit {
     readonly strategy = new AIStrategy(this.context)
     readonly health = { capacity: 2, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
-    readonly movement = { capacity: 1, amount: 0, gain: 1 }
+    readonly movement = { capacity: 1, amount: 0, gain: 0.5 }
     readonly group: number = 2
     readonly movementDuration: number = 0.4
 

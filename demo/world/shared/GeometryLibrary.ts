@@ -21,7 +21,7 @@ export function GeometryLibrary(context: Application){
         thetaStart: 0, thetaLength: 0.5 * Math.PI,
         phiStart: 0, phiLength: 2 * Math.PI
     }), mat4.fromRotationTranslationScale(
-        Sprite.FlatUp, vec3(0,0,-1), vec3.ONE, transform
+        quat.HALF_X, vec3(0,0,-1), vec3.ONE, transform
     )))
     const cylinder = doubleSided(createCylinder({
         radiusTop: 0.5, radiusBottom: 0.5, height: 1,
@@ -69,7 +69,7 @@ export function GeometryLibrary(context: Application){
         quat.transform(position, rotation, position)
         quat.transform(normal, rotation, normal)
     }), mat4.fromRotationTranslationScale(
-        Sprite.FlatUp, vec3(0,0,-2), vec3.ONE, transform
+        quat.HALF_X, vec3(0,0,-2), vec3.ONE, transform
     )))
 
     return {
@@ -82,7 +82,7 @@ export function GeometryLibrary(context: Application){
                 thetaStart: 0, thetaLength: 0.5 * Math.PI,
                 phiStart: 0, phiLength: 2 * Math.PI
             }), mat4.fromRotationTranslationScale(
-                Sprite.FlatUp, vec3(0,0,-1), vec3.ONE, transform
+                quat.HALF_X, vec3(0,0,-1), vec3.ONE, transform
             ))
         },
 

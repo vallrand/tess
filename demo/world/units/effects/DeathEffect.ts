@@ -48,13 +48,13 @@ export class DeathEffect {
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.distortion.wave
         this.wave.transform = this.context.get(TransformSystem)
-        .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), Sprite.FlatUp, vec3.ONE)
+        .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), quat.HALF_X, vec3.ONE)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.burst
         this.ring.transform = this.context.get(TransformSystem)
-        .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), Sprite.FlatUp, vec3.ONE)
+        .create(vec3.add([0,0.5,0], this.mesh.transform.position, vec3()), quat.HALF_X, vec3.ONE)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.light = this.context.get(PointLightPass).create()

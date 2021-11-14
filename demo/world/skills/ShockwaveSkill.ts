@@ -98,8 +98,8 @@ const actionTimeline = {
 
 export class ShockwaveSkill extends CubeSkill {
     readonly damageType: DamageType = DamageType.Electric | DamageType.Immobilize
-    damage: number = 2
-    range: number = 2
+    damage: number = 1
+    range: number = Math.sqrt(5)
 
     private ring: Decal
     private crack: Decal
@@ -124,12 +124,12 @@ export class ShockwaveSkill extends CubeSkill {
 
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.displacement.wave
-        this.wave.transform = this.context.get(TransformSystem).create([0,1.5,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
+        this.wave.transform = this.context.get(TransformSystem).create([0,1.5,0], quat.HALF_N_X, vec3.ONE, this.cube.transform)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.flash = Sprite.create(BillboardType.None)
         this.flash.material = SharedSystem.materials.sprite.wave
-        this.flash.transform = this.context.get(TransformSystem).create([0,1.6,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
+        this.flash.transform = this.context.get(TransformSystem).create([0,1.6,0], quat.HALF_N_X, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
 
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])

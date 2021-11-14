@@ -110,6 +110,7 @@ const deactivateTimeline = {
 }
 
 export class RestoreSkill extends CubeSkill {
+    damage: number = 1
     private tubeX: BatchMesh
     private tubeZ: BatchMesh
     private light: PointLight
@@ -122,7 +123,7 @@ export class RestoreSkill extends CubeSkill {
     private restore(): void {
         if(this.cube.matter.amount <= 0 || this.cube.health.amount >= this.cube.health.capacity) return
         this.cube.matter.amount--
-        this.cube.health.amount++
+        this.cube.health.amount = Math.min(this.cube.health.capacity, this.cube.health.amount + this.damage)
     }
     public *activate(): Generator<ActionSignal> {
         this.cube.action.amount = this.cube.movement.amount = 0
@@ -140,7 +141,7 @@ export class RestoreSkill extends CubeSkill {
 
         this.flash = Sprite.create(BillboardType.None)
         this.flash.material = SharedSystem.materials.sprite.sparkle
-        this.flash.transform = this.context.get(TransformSystem).create([0,2.2,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
+        this.flash.transform = this.context.get(TransformSystem).create([0,2.2,0], quat.HALF_N_X, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.flash)
 
         this.light = this.context.get(PointLightPass).create([0.6,0.6,1.0])

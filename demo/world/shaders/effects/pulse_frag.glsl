@@ -76,7 +76,7 @@ void main(){
 
     vec3 center = uModelMatrix[3].xyz;
     float radius = length(vPosition - center);
-    vec3 relativePosition = fragPosition.xyz - center;
+    vec3 relativePosition = fragPosition.xyz + uEyePosition - center;
     float distance = radius - length(relativePosition);
     if(distance <= 0.0) discard;
 

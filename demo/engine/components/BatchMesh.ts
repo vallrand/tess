@@ -1,10 +1,10 @@
 import { Application } from '../framework'
 import { ICamera } from '../scene/Camera'
-import { lerp, mat3, mat4, vec2, vec3, vec4 } from '../math'
+import { vec4 } from '../math'
 import { Transform } from '../scene/Transform'
 import { IBatched } from '../pipeline/batch/GeometryBatch'
 import { BoundingVolume, calculateBoundingRadius } from '../scene/FrustumCulling'
-import { SpriteMaterial } from '../materials'
+import { SpriteMaterial, EffectMaterial } from '../materials'
 import { IGeometry } from '../geometry/common'
 
 export class BatchMesh implements IBatched {
@@ -30,7 +30,7 @@ export class BatchMesh implements IBatched {
     public readonly normals: Float32Array
     public readonly indices: Uint16Array
     public readonly color: vec4 = vec4(1,1,1,1)
-    public material: SpriteMaterial
+    public material: SpriteMaterial | EffectMaterial<any>
     public transform: Transform
     private readonly boundingRadius: number
     public readonly bounds = new BoundingVolume

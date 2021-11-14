@@ -27,10 +27,15 @@ export class AISystem implements ISystem, IAgent {
         {size:0,value:null},
         {size:2,value:UnitType.Locust},
         {size:3,value:UnitType.Monolith}
-    ], [2,3,1])
+    ], [4,3,1])
     public static readonly groups: Array<UnitType>[] = [
+        [UnitType.Tarantula,UnitType.Tarantula,UnitType.Stingray,UnitType.Obelisk],
+        [UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Stingray,UnitType.Obelisk],
+        [UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Obelisk],
+        [UnitType.Scarab,UnitType.Scarab,UnitType.Tarantula],
         [UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Scarab,UnitType.Stingray,UnitType.Stingray],
         [UnitType.Tarantula,UnitType.Tarantula,UnitType.Obelisk,UnitType.Obelisk,UnitType.TarantulaVariant],
+        [UnitType.TarantulaVariant,UnitType.TarantulaVariant,UnitType.Decapod,UnitType.Stingray],
         [UnitType.Decapod,UnitType.Decapod,UnitType.Isopod,UnitType.Isopod]
     ]
     private readonly list: AIUnit[] = []
@@ -78,7 +83,7 @@ export class AISystem implements ISystem, IAgent {
         unit.markTiles(false)
     }
     private readonly propagationRadius: number = 2
-    private readonly revealRadius: number = 8
+    private readonly revealRadius: number = 6
     public execute(): Generator<ActionSignal> {
         console.time('AI')
         const queue: AIUnit[] = [], actions: Generator<ActionSignal>[] = []

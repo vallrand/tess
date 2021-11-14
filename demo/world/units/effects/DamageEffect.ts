@@ -87,7 +87,7 @@ export class DamageEffect {
 
             this.ring = Sprite.create(BillboardType.None)
             this.ring.material = SharedSystem.materials.sprite.burst
-            this.ring.transform = this.context.get(TransformSystem).create(origin, Sprite.FlatUp, vec3.ONE)
+            this.ring.transform = this.context.get(TransformSystem).create(origin, quat.HALF_X, vec3.ONE)
             this.context.get(ParticleEffectPass).add(this.ring)
 
             Object.assign(animations, timeline[DamageType.Kinetic])
@@ -121,7 +121,7 @@ export class DamageEffect {
     
             this.wave = Sprite.create(BillboardType.Sphere)
             this.wave.material = SharedSystem.materials.sprite.ring
-            this.wave.transform = this.context.get(TransformSystem).create(origin, Sprite.FlatUp, vec3.ONE)
+            this.wave.transform = this.context.get(TransformSystem).create(origin, quat.HALF_X, vec3.ONE)
             this.context.get(ParticleEffectPass).add(this.wave)
 
             Object.assign(animations, timeline[DamageType.Temperature])

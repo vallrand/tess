@@ -6,18 +6,18 @@ import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } 
 import { ModelAnimation } from '../shared'
 import { AIUnit, AIStrategy, AIStrategyPlan } from '../military'
 import { TerrainSystem } from '../terrain'
-import { DirectionTile } from '../player'
+import { TurnBasedSystem, DirectionTile } from '../player'
 import { LaserSkill } from './skills/LaserSkill'
 
 export class Obelisk extends AIUnit {
     static readonly pool: Obelisk[] = []
     readonly skills = [new LaserSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    readonly health = { capacity: 10, amount: 0, gain: 0 }
+    readonly health = { capacity: 6, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
     readonly movement = { capacity: 1, amount: 0, gain: 0.2 }
     readonly group: number = 2
-    readonly movementDuration: number = 0.8
+    readonly movementDuration: number = 0.6
     private expanded: boolean = false
 
     public place(column: number, row: number): void {
@@ -51,8 +51,10 @@ export class Obelisk extends AIUnit {
         const terrain = this.context.get(TerrainSystem)
         terrain.setTile(this.tile[0], this.tile[1], toggle ? this : null)
         if(!this.expanded) return
-        for(let i = 0; i < DirectionTile.length; i++)
+        for(let i = 0; i < DirectionTile.length; i++){
             terrain.setTile(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1], toggle ? this : null)
+            if(toggle) this.context.get(TurnBasedSystem).signalEnterTile.broadcast(this.tile[0] + DirectionTile[i][0], this.tile[1] + DirectionTile[i][1], this)
+        }
     }
     public deactivate(): Generator<ActionSignal> { return this.skills[0].deactivate() }
     public *move(path: vec2[], frames: number[]): Generator<ActionSignal> {

@@ -1,24 +1,11 @@
-// window.addEventListener('mousemove', function(e) {
-//     var dx, dy;
-//     if (e.movementX != null) {
-//       dx = e.movementX;
-//       dy = e.movementY;
-//     } else if (lastMouseX != null) {
-//       dx = e.screenX - lastMouseX;
-//       dy = e.screenY - lastMouseY;
-//     } else {
-//       dx = dy = 0;
-//     }
+import { Application, ISystem } from '../framework'
 
-//     tilt += 0.005 * dy;
-//     tilt = Math.max(tilt, -Math.PI / 2);
-//     tilt = Math.min(tilt, Math.PI / 2);
-//     direction -= 0.005 * dx;
+export class PointerSystem implements ISystem {
+    constructor(private readonly context: Application){
+        addEventListener('mousemove', (event: MouseEvent) => {
 
-//     lastMouseX = e.screenX;
-//     lastMouseY = e.screenY;
-//   });
-
-//   canvas.addEventListener("click", function(e) {
-//     canvas.requestPointerLock();
-//   });
+        })
+        this.context.canvas.addEventListener('click', () => this.context.canvas.requestPointerLock())
+    }
+    public update(): void {}
+}

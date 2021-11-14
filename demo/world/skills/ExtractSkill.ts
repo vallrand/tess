@@ -9,6 +9,7 @@ import { SharedSystem, ModelAnimation } from '../shared'
 import { DirectionTile } from '../player'
 import { TerrainSystem } from '../terrain'
 import { EconomySystem, ResourceSpot } from '../economy'
+import { IUnitAttribute } from '../military'
 import { CubeSkill } from './CubeSkill'
 
 const actionTimeline = {
@@ -75,7 +76,8 @@ const actionTimeline = {
 }
 
 export class ExtractSkill extends CubeSkill {
-    indicator?: ResourceSpot
+    indicator: IUnitAttribute = { capacity: 4, amount: 0 }
+    deposit?: ResourceSpot
 
     private smoke: ParticleEmitter
     private cracks: Decal
@@ -85,7 +87,10 @@ export class ExtractSkill extends CubeSkill {
     private glow: BatchMesh
     
     public query(): vec2 { return this.cube.tile }
-    public enter(): void { this.indicator = this.context.get(EconomySystem).get(this.cube.tile[0], this.cube.tile[1]) }
+    public update(): void {
+        this.deposit = this.context.get(EconomySystem).get(this.cube.tile[0], this.cube.tile[1])
+        this.indicator.amount = this.deposit ? Math.floor(this.deposit.amount * this.indicator.capacity) : 0
+    }
     public *open(): Generator<ActionSignal> {
         const trigger = EventTrigger([{ frame: 0.6, value: { amount: 36, uOrigin: this.cube.transform.position } }], EventTrigger.emitReset)
         for(const generator = super.open(), startTime = this.context.currentTime; true;){
@@ -120,7 +125,7 @@ export class ExtractSkill extends CubeSkill {
 
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.ring
-        this.ring.transform = this.context.get(TransformSystem).create([0,4,0], Sprite.FlatDown, vec3.ONE, this.cube.transform)
+        this.ring.transform = this.context.get(TransformSystem).create([0,4,0], quat.HALF_N_X, vec3.ONE, this.cube.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.smoke = this.smoke || SharedSystem.particles.smoke.add({
@@ -134,8 +139,11 @@ export class ExtractSkill extends CubeSkill {
         })
 
         const animate = AnimationTimeline(this, actionTimeline)
-        if(this.indicator && this.indicator.amount)
-            this.context.get(AnimationSystem).start(this.indicator.drain(1), true)
+        if(this.deposit && this.indicator.amount){
+            this.indicator.amount--
+            this.context.get(AnimationSystem).start(this.deposit.drain(1, 1 / this.indicator.capacity), true)
+            this.cube.matter.amount = Math.min(this.cube.matter.capacity, this.cube.matter.amount + 1)
+        }
 
         excavation: for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -143,8 +151,6 @@ export class ExtractSkill extends CubeSkill {
             if(elapsedTime > duration) break
             else yield ActionSignal.WaitNextFrame
         }
-        if(this.indicator && this.indicator.amount)
-            this.cube.matter.amount = Math.min(this.cube.matter.capacity, this.cube.matter.amount + 1)
 
         this.context.get(TransformSystem).delete(this.cracks.transform)
         this.context.get(TransformSystem).delete(this.tube.transform)

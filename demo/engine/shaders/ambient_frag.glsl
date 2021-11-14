@@ -39,7 +39,7 @@ void main(){
     float metallic = normal.a;
 
     vec3 N = normalize(normal.xyz);
-    vec3 V = normalize(position.xyz - uEyePosition);
+    vec3 V = normalize(position.xyz);
 
     vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
     float NdotV = max(dot(N, V), 0.0);

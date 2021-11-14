@@ -1,9 +1,9 @@
 import { Application } from '../../engine/framework'
 import { lerp, vec2, vec4, aabb2 } from '../../engine/math'
 import { GL, ShaderProgram } from '../../engine/webgl'
-import { MaterialSystem, TextureAtlas } from '../../engine/materials'
+import { MaterialSystem, TextureAtlas, SpriteMaterial } from '../../engine/materials'
 import { OverlayPass } from '../../engine/pipeline'
-import { MeshSystem, Transform2D, Sprite2D, Sprite2DMaterial } from '../../engine/components'
+import { MeshSystem, Transform2D, Sprite2D } from '../../engine/components'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, ease } from '../../engine/animation'
 import { SharedSystem } from '../shared'
 import { Cube } from './Cube'
@@ -11,7 +11,7 @@ import { Cube } from './Cube'
 interface AtlasRegion {
     readonly atlas: TextureAtlas
     readonly bounds: aabb2
-    readonly material: Sprite2DMaterial
+    readonly material: SpriteMaterial
     readonly program: ShaderProgram
     render(uniforms: Record<string, number | number[]>, clear?: vec4): void
 }
@@ -21,7 +21,7 @@ function AtlasRegionFactory(context: Application){
     const atlas = new TextureAtlas(context.gl, texture, context.get(MeshSystem).plane)
     return function(size: number, program: ShaderProgram): AtlasRegion {
         const bounds = atlas.insert(size, size)
-        const material = Sprite2DMaterial.create(atlas.texture.target, bounds, atlas.size)
+        const material = SpriteMaterial.create(atlas.texture.target, bounds, atlas.size)
         material.program = context.get(OverlayPass).program
         return { material, bounds, atlas, program, render: atlas.render.bind(atlas, bounds, program) }
     }
@@ -42,12 +42,16 @@ class RadialBar {
     protected readonly effect: Sprite2D
     protected readonly rotation: number
     protected readonly colors: vec4[]
+    protected throttleDelay: number = 10
     protected index: number
     protected frame: number = 0
     protected prevCapacity: number = 0
     protected prevValue: number = 0
     protected capacity: number = 0
     protected value: number = 0
+    protected animateUpgrade: ReturnType<typeof AnimationTimeline>
+    protected animateIncrease: ReturnType<typeof AnimationTimeline>
+    protected animateDecrease: ReturnType<typeof AnimationTimeline>
     constructor(protected readonly context: Application, options: {
         index: number
         radius: vec2
@@ -67,17 +71,41 @@ class RadialBar {
         this.effect = Sprite2D.create(1, [0.5,0.5])
         this.effect.material = this.effectMaterial.material
         this.effect.transform = Transform2D.create([0.5*options.size,0.5*options.size])
-        this.context.get(OverlayPass).add(this.radial)
-        this.context.get(OverlayPass).add(this.effect)
+        this.context.get(OverlayPass).list2d.push(this.radial)
+        this.context.get(OverlayPass).list2d.push(this.effect)
         this.uniforms = {
             uStrokeWidth: 0.016, uStrokeColor: vec4(0.75, 0.87, 0.87, 0.8), uAngle: vec2(0.04, options.angle),
             uSegments: vec2.ZERO, uColor: vec4.ZERO, uRadius: options.radius
         }
+
+        this.animateUpgrade = AnimationTimeline(this, {
+            'effect.color': PropertyAnimation([
+                { frame: 0, value: [1,1,1,0] },
+                { frame: 0.4, value: vec4.ZERO, ease: ease.sineIn }
+            ], vec4.lerp),
+            'radial.transform.rotation': PropertyAnimation([
+                { frame: 0, value: this.rotation + 4 * Math.PI * (this.index&1?1:-1) },
+                { frame: 0.4, value: this.rotation, ease: ease.cubicOut }
+            ], lerp)
+        })
+        this.animateIncrease = AnimationTimeline(this, {
+            'effect.color': PropertyAnimation([
+                { frame: 0, value: [1,1,1,0] },
+                { frame: 0.4, value: vec4.ZERO, ease: ease.quadIn }
+            ], vec4.lerp)
+        })
+        this.animateDecrease = AnimationTimeline(this, {
+            'effect.color': PropertyAnimation([
+                { frame: 0, value: vec4.ONE },
+                { frame: 0.2, value: [1,0,0,1], ease: ease.quadOut },
+                { frame: 0.4, value: vec4.ZERO, ease: ease.quadIn }
+            ], vec4.lerp)
+        })
     }
     public update(capacity: number, value: number): void {
         if(capacity === this.capacity && value === this.value) return
         const elapsed = this.context.frame - this.frame
-        if(elapsed > 10){
+        if(elapsed > this.throttleDelay){
             this.prevCapacity = this.capacity
             this.prevValue = this.value
         }
@@ -86,7 +114,6 @@ class RadialBar {
         this.value = value
 
         const delta = this.updateTexture(this.prevCapacity, this.prevValue)
-
         this.context.get(AnimationSystem).start(this.animate(delta), true)
     }
     protected updateTexture(prevCapacity: number, prevValue: number): number {
@@ -106,31 +133,7 @@ class RadialBar {
         }
     }
     protected *animate(direction: number): Generator<ActionSignal> {
-        let animate: ReturnType<typeof AnimationTimeline>
-        //TODO cache animations?
-        if(direction == 0) animate = AnimationTimeline(this, {
-            'effect.color': PropertyAnimation([
-                { frame: 0, value: [1,1,1,0] },
-                { frame: 0.4, value: vec4.ZERO, ease: ease.sineIn }
-            ], vec4.lerp),
-            'radial.transform.rotation': PropertyAnimation([
-                { frame: 0, value: this.rotation + 4 * Math.PI * (this.index&1?1:-1) },
-                { frame: 0.4, value: this.rotation, ease: ease.cubicOut }
-            ], lerp)
-        })
-        else if(direction > 0) animate = AnimationTimeline(this, {
-            'effect.color': PropertyAnimation([
-                { frame: 0, value: [1,1,1,0] },
-                { frame: 0.4, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp)
-        })
-        else animate = AnimationTimeline(this, {
-            'effect.color': PropertyAnimation([
-                { frame: 0, value: vec4.ONE },
-                { frame: 0.2, value: [1,0,0,1], ease: ease.quadOut },
-                { frame: 0.4, value: vec4.ZERO, ease: ease.quadIn }
-            ], vec4.lerp)
-        })
+        const animate = direction == 0 ? this.animateUpgrade : direction > 0 ? this.animateIncrease : this.animateDecrease
         for(const duration = 0.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

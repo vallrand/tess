@@ -9,8 +9,8 @@ import { ParticleEffectPass } from './ParticleEffectPass'
 export class OverlayPass extends PipelinePass implements ISystem {
     private static readonly orderSort = (a: { order: number }, b: { order: number }) => a.order - b.order
     private static readonly batchSize: number = 1024
-    private readonly list2d: IBatched2D[] = []
-    public readonly list: IBatched[] = []
+    public readonly list2d: IBatched2D[] = []
+    private readonly list: IBatched[] = []
     public readonly program: ShaderProgram
     public readonly batch: Batch2D
     private readonly projectionMatrix: mat3 = mat3()
@@ -27,9 +27,9 @@ export class OverlayPass extends PipelinePass implements ISystem {
         const projection = mat3x2.orthogonal(0, context.gl.drawingBufferWidth, 0, context.gl.drawingBufferHeight, mat3x2())
         mat3.fromMat3x2(projection, this.projectionMatrix)
     }
-    public add(item: IBatched2D): void { this.list2d.push(item) }
-    public remove(item: IBatched2D): void {
-        const index = this.list2d.indexOf(item)
+    public add(item: IBatched): void { this.list.push(item) }
+    public remove(item: IBatched): void {
+        const index = this.list.indexOf(item)
         if(index === - 1) return
         else if(index === this.list.length - 1) this.list.length--
         else this.list[index] = this.list.pop()

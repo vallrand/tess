@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { randomFloat, shortestAngle, clamp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
+import { randomFloat, moddelta, clamp, mod, mat4, quat, vec2, vec3, vec4, cubicBezier3D } from '../../engine/math'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
@@ -10,7 +10,7 @@ import { SharedSystem, ModelAnimation } from '../shared'
 import { TurnBasedSystem, DirectionAngle, Direction } from '../player'
 import { CubeSkill } from './CubeSkill'
 import { TerrainSystem } from '../terrain'
-import { DamageType, IUnitAttribute } from '../military'
+import { DamageType, IUnitAttribute, Unit } from '../military'
 
 const steeringTimeline = {
     'burn.transform.scale': PropertyAnimation([
@@ -232,7 +232,7 @@ class Missile {
 }
 
 export class ArtillerySkill extends CubeSkill {
-    indicator: IUnitAttribute = { capacity: 2, amount: 0 }
+    indicator: IUnitAttribute = { capacity: 2, amount: 2 }
     readonly pool: Missile[] = []
     readonly pivots = [
         vec3(-1.0, 4.4, -2.1),
@@ -244,6 +244,7 @@ export class ArtillerySkill extends CubeSkill {
     damage: number = 1
     range: number = 4
     public update(): void { this.indicator.amount = this.indicator.capacity }
+    protected clear(): void { if(this.indicator.amount < this.indicator.capacity) this.cube.action.amount = 0 }
     public query(direction: Direction): vec2[] | null {
         if(direction === Direction.None || !this.indicator.amount) return
         const origin = this.cube.tile
@@ -254,7 +255,7 @@ export class ArtillerySkill extends CubeSkill {
             let index = -1, min = Infinity
             for(let j = candidates.length - 1; j >= 0; j--){
                 const target = candidates[j]
-                const angle = shortestAngle(forward, Math.atan2(target[1]-origin[1], target[0]-origin[0]))
+                const angle = moddelta(2*Math.PI,forward, Math.atan2(target[1]-origin[1], target[0]-origin[0]))
                 const distance = vec2.distance(origin, target) / this.range
                 const heuristic = angle + distance
                 if(heuristic >= min) continue
@@ -270,14 +271,15 @@ export class ArtillerySkill extends CubeSkill {
                     Math.sin(angle) * distance | 0
                 )
                 vec2.add(origin, tile, tile)
-                out.push(tile)
+                const entity = this.context.get(TerrainSystem).getTile<Unit>(tile[0], tile[1])
+                if(entity && entity instanceof Unit) i++
+                else out.push(tile)
             }
         }
         return out
     }
     public *activate(targets: vec2[], direction: Direction): Generator<ActionSignal> {
-        this.indicator.amount--
-        if(!this.indicator.amount) this.cube.action.amount = 0
+        if(--this.indicator.amount <= 0) this.cube.action.amount = 0
 
         const animate = AnimationTimeline(this, {
             'mesh.armature': ModelAnimation('activate'),

@@ -2,7 +2,7 @@ import { Application } from '../../engine/framework'
 import { vec2, vec3, vec4, quat, aabb2 } from '../../engine/math'
 import { OpaqueLayer } from '../../engine/webgl'
 import { TransformSystem } from '../../engine/scene'
-import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
+import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { ParticleEffectPass } from '../../engine/pipeline'
@@ -48,11 +48,11 @@ export class Workshop {
     cube: Cube = null
     
     mesh: Mesh
+    menu: UpgradeMenu
     private cover: Sprite
     private smoke: ParticleEmitter
     private glow: BatchMesh
     private cubeMesh: Mesh
-    private readonly menu: UpgradeMenu = new UpgradeMenu(this.context)
 
     constructor(private readonly context: Application){}
     place(column: number, row: number){
@@ -122,20 +122,10 @@ export class Workshop {
             vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(fraction), cameraOffset)
             mesh.transform.frame = 0
             if(fraction >= 1) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
-        const availableModules = [
-            CubeModule.Machinegun,
-            CubeModule.Railgun,
-            CubeModule.EMP,
-            CubeModule.Voidgun,
-            CubeModule.Repair,
-            CubeModule.Minelayer,
-            CubeModule.Auger,
-            CubeModule.Shield,
-            CubeModule.Missile
-        ]
         const keys = this.context.get(KeyboardSystem)
+        cube.health.amount = cube.health.capacity
 
         this.smoke = SharedSystem.particles.smoke.add({
             uOrigin: vec3.add(mesh.transform.position, [0,1,0], vec3()),
@@ -152,33 +142,33 @@ export class Workshop {
         this.cover = Sprite.create(BillboardType.None, 0, vec4.ZERO)
         this.cover.material = SharedSystem.materials.effect.planeDissolve
         this.cover.transform = this.context.get(TransformSystem)
-        .create([0,2.02,0], Sprite.FlatUp, vec3(2,2,2), mesh.transform)
+        .create([0,2.02,0], quat.HALF_X, vec3(2,2,2), mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cover)
 
-        this.menu.open()
+        this.menu.actionIndex = this.context.get(AnimationSystem).start(this.menu.open(cube), true)
         upgradeMenu: while(true){
-            if(keys.down('KeyW') || keys.down('KeyS')) break upgradeMenu
-            if(keys.trigger('KeyA')){
-                availableModules.push(availableModules.shift())
-                console.log('available', availableModules[0])
-            }else if(keys.trigger('KeyD')){
-                availableModules.unshift(availableModules.pop())
-                console.log('available', availableModules[0])
-            }else if(keys.trigger('Space')){
+            if(keys.down(PlayerSystem.input.down)) break upgradeMenu
+            else if(keys.trigger(PlayerSystem.input.left)){
+                this.menu.moduleIndex++
+            }else if(keys.trigger(PlayerSystem.input.right)){
+                this.menu.moduleIndex--
+            }else if(keys.trigger(PlayerSystem.input.action)){
                 const forward = (4-cube.direction)%4
-                cube.installModule(cube.side, forward, availableModules[0])
-                install: {
-                    const animate = AnimationTimeline(this, actionTimeline)
-                    for(const duration = 0.6, startTime = this.context.currentTime; true;){
-                        const elapsedTime = this.context.currentTime - startTime
-                        animate(elapsedTime, this.context.deltaTime)
-                        if(elapsedTime > duration) break
-                        else yield ActionSignal.WaitNextFrame
-                    }
+                cube.installModule(cube.side, forward, this.menu.availableModules[this.menu.moduleIndex])
+                const animate = AnimationTimeline(this, actionTimeline)
+                install: for(const duration = 0.6, startTime = this.context.currentTime; true;){
+                    const elapsedTime = this.context.currentTime - startTime
+                    animate(elapsedTime, this.context.deltaTime)
+                    if(elapsedTime > duration) break
+                    else yield ActionSignal.WaitNextFrame
                 }
             }
+            if(keys.down(PlayerSystem.input.up)) for(const generator = this.menu.upgrade(); true;)
+                if(generator.next().done) break
+                else yield ActionSignal.WaitNextFrame
             yield ActionSignal.WaitNextFrame
         }
+        this.menu.actionIndex = -1
         lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
             ModelAnimation.map.dock.lift(1-fraction, this.mesh.armature)
@@ -186,7 +176,7 @@ export class Workshop {
             vec3.lerp(prevCameraOffset, nextCameraOffset, ease.quadInOut(1-fraction), cameraOffset)
             mesh.transform.frame = 0
             if(fraction >= 1) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.cube = null
@@ -194,8 +184,8 @@ export class Workshop {
         this.context.get(TransformSystem).delete(this.cover.transform)
         this.context.get(ParticleEffectPass).remove(this.cover)
         this.context.get(ParticleEffectPass).remove(this.glow)
-        Sprite.delete(this.cover)
-        BatchMesh.delete(this.glow)
-        SharedSystem.particles.smoke.remove(this.smoke)
+        this.cover = void Sprite.delete(this.cover)
+        this.glow = void BatchMesh.delete(this.glow)
+        this.smoke = void SharedSystem.particles.smoke.remove(this.smoke)
     }
 }

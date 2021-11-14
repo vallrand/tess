@@ -1,13 +1,11 @@
 import { Application } from '../../engine/framework'
-import { clamp, vec2, vec3, quat } from '../../engine/math'
-import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
-import { TerrainSystem } from '../terrain'
+import { vec2 } from '../../engine/math'
 import { DamageType } from './UnitSkill'
 
 export interface IUnitAttribute {
-    readonly capacity: number
-    readonly gain?: number
+    capacity: number
     amount: number
+    gain?: number
 }
 
 export abstract class Unit {

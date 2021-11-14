@@ -83,11 +83,11 @@ const actionTimeline = {
 
 export class ProjectileSkill extends AIUnitSkill {
     readonly cost: number = 1
-    readonly range: number = 6
+    readonly range: number = 5
     readonly cardinal: boolean = true
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Kinetic | DamageType.Corrosion
-    readonly damage: number = 2
+    readonly damage: number = 1
 
     public validate(origin: vec2, target: vec2): boolean {
         return super.validate(origin, target) && AIStrategy.lineOfSight(this.context.get(TerrainSystem).pathfinder, origin, target)
@@ -113,13 +113,13 @@ export class ProjectileSkill extends AIUnitSkill {
         this.pillar = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
         this.pillar.material = SharedSystem.materials.effect.stripesRed
         this.pillar.transform = this.context.get(TransformSystem)
-        .create([0,1.8,0], Sprite.FlatUp, vec3.ONE, transform)
+        .create([0,1.8,0], quat.HALF_X, vec3.ONE, transform)
         this.context.get(ParticleEffectPass).add(this.pillar)
     
         this.muzzle = BatchMesh.create(SharedSystem.geometry.cone)
         this.muzzle.material = SharedSystem.materials.sprite.streak
         this.muzzle.transform = this.context.get(TransformSystem)
-        .create([0,1.8,1.2],Sprite.FlatUp,vec3.ONE,transform)
+        .create([0,1.8,1.2],quat.HALF_X,vec3.ONE,transform)
         this.context.get(ParticleEffectPass).add(this.muzzle)
     
         this.flash = Sprite.create(BillboardType.None)
@@ -167,7 +167,7 @@ export class ProjectileSkill extends AIUnitSkill {
         this.circle = Sprite.create(BillboardType.None)
         this.circle.material = SharedSystem.materials.sprite.burst
         this.circle.transform = this.context.get(TransformSystem)
-        .create(vec3.add([0,0.5,0], targetPosition, vec3()), Sprite.FlatUp)
+        .create(vec3.add([0,0.5,0], targetPosition, vec3()), quat.HALF_X)
         this.context.get(ParticleEffectPass).add(this.circle)
     
         const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)

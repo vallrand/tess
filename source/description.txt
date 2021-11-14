@@ -9,7 +9,7 @@ b: open - collect 1356
 5: repair station 1280
 6: EMP 980
 7: auger mining 2041
-8: shield ? 2656
+8: shield 2656
 9: homing missiles 1500
 
 hangar 2084
@@ -20,22 +20,10 @@ hangar 2084
 3: tarantula 2218 a/b
 4: monolith 2243
 --plains--
-5: stingray 796 (melee diagonal)
-6: locust 2146 (aoe-shield front-immune)
+5: stingray 796
+6: locust 2146
 7: isopod 981
 8: decapod 1212
-
---matrix--
-X |1 2 3 4 6 8 9
-1 |+ + + + + + +
-2 |- - 0 + + 0 +
-3a|0 0 + + + 0 +
-3b|+ + 0 - 0 0 +
-4 |+ + 0 - + 0 +
-5 |0 0 + - + + +
-6 |0 + 0 + + 0 0
-7 |+ + + + + + +
-8 |- - + + - 0 +
 
 == FORMAT ==
 1 - heightmap / bump

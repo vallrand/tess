@@ -56,7 +56,7 @@ void main(){
     vec3 position = vOrigin + vRay;
     vec3 ray = normalize(vRay);
     gl_FragDepth = gl_DepthRange.far;
-    fragPosition = vec4(position,uLayer);
+    fragPosition = vec4(position - uEyePosition,uLayer);
     fragNormal = vec4(-ray*0.0,0);
 
     float rayDotUp = max(0.0,dot(vec3(0,1,0),ray));

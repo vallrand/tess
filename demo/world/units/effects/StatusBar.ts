@@ -21,13 +21,9 @@ export class StatusBar {
 
     public delete(): void {
         this.context.get(TransformSystem).delete(this.segments[0].transform)
-        const overlay = this.context.get(OverlayPass)
         for(let i = this.segments.length - 1; i >= 0; i--){
-            const sprite = this.segments[i]
-            const index = overlay.list.indexOf(sprite)
-            overlay.list[index] = overlay.list[overlay.list.length - 1]
-            overlay.list.length--
-            Sprite.delete(sprite)
+            this.context.get(OverlayPass).remove(this.segments[i])
+            this.segments[i] = void Sprite.delete(this.segments[i])
         }
         StatusBar.pool.push(this)
     }
@@ -39,7 +35,7 @@ export class StatusBar {
             sprite.origin[0] = 0.5 + i - 0.5 * unit.health.capacity
             sprite.transform = transform
             sprite.material = SharedSystem.materials.sprite.bar
-            this.context.get(OverlayPass).list.push(sprite)
+            this.context.get(OverlayPass).add(sprite)
             return sprite
         })
         this.update(unit)

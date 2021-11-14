@@ -3,7 +3,7 @@ import { range, vec3, vec4 } from '../math'
 import { IEase } from '../animation/ease'
 import { ICamera, BoundingVolume } from '../scene'
 import { IBatched, uintNorm4x8 } from '../pipeline/batch'
-import { SpriteMaterial } from '../materials'
+import { SpriteMaterial, EffectMaterial } from '../materials'
 
 export class Line implements IBatched {
     public static create(length: number, order?: number, width?: number, ease?: IEase, fade?: boolean): Line {
@@ -28,7 +28,7 @@ export class Line implements IBatched {
     public colors: Uint32Array
     public readonly color: vec4 = vec4(1,1,1,1)
     public readonly normal: vec3 = vec3(0,1,0)
-    public material: SpriteMaterial
+    public material: SpriteMaterial | EffectMaterial<any>
     public readonly bounds = new BoundingVolume
     public path: vec3[]
     public ease: IEase = One

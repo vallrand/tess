@@ -101,7 +101,7 @@ export class StrikeSkill extends AIUnitSkill {
         this.beam = Sprite.create(BillboardType.Cylinder, 0, vec4.ONE, [0,0.5])
         this.beam.material = SharedSystem.materials.sprite.beam
         this.beam.transform = this.context.get(TransformSystem)
-        .create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create(vec3.AXIS_Y, quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beam)
 
         this.sparks = SharedSystem.particles.sparks.add({

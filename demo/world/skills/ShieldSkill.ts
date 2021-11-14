@@ -1,13 +1,13 @@
-import { mat4, quat, vec2, vec3, vec4 } from '../../engine/math'
+import { quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
-import { DecalMaterial, SpriteMaterial } from '../../engine/materials'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
 import { SharedSystem, ModelAnimation } from '../shared'
+import { IUnitAttribute } from '../military'
 import { Cube } from '../player'
 import { CubeSkill } from './CubeSkill'
 
@@ -91,6 +91,7 @@ const outroTimeline = {
 }
 
 export class ShieldSkill extends CubeSkill {
+    indicator: IUnitAttribute = { capacity: 6, amount: 6 }
     private idleIndex: number = -1
     private shield: Mesh
     private displacement: Mesh
@@ -106,6 +107,7 @@ export class ShieldSkill extends CubeSkill {
         this.displacement = Mesh.create(SharedSystem.geometry.sphereMesh, 0)
         this.displacement.material = SharedSystem.materials.shieldDisplacementMaterial
     }
+    public update(): void { this.indicator.amount = this.indicator.capacity }
     public query(): vec2 { return this.cube.tile }
     public *activate(): Generator<ActionSignal> {
         this.cube.movement.amount = this.cube.action.amount = 0

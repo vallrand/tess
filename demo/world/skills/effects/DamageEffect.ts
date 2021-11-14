@@ -2,7 +2,6 @@ import { Application } from '../../../engine/framework'
 import { vec2, vec3, vec4, quat } from '../../../engine/math'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
 import { Sprite, BillboardType, Mesh } from '../../../engine/components'
-import { SpriteMaterial } from '../../../engine/materials'
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { TransformSystem } from '../../../engine/scene'
@@ -29,19 +28,19 @@ export class DamageEffect {
     private static readonly pool: DamageEffect[] = []
     public static create(context: Application, source: Cube, type: DamageType): DamageEffect {
         const effect = this.pool.pop() || new DamageEffect(context)
-        context.get(AnimationSystem).start(effect.play(source), true)
+        context.get(AnimationSystem).start(effect.play(source, type), true)
         return effect
     }
     ring: Sprite
     spikes: ParticleEmitter
     debris: Mesh
     constructor(private readonly context: Application){}
-    public *play(cube: Cube): Generator<ActionSignal> {
+    public *play(cube: Cube, type: DamageType): Generator<ActionSignal> {
         this.debris = this.context.get(SharedSystem).debris.create(cube.transform.position)
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.burst
         this.ring.transform = this.context.get(TransformSystem)
-        .create(vec3.AXIS_Y,Sprite.FlatUp,vec3.ONE,cube.transform)
+        .create(vec3.AXIS_Y,quat.HALF_X,vec3.ONE,cube.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.spikes = SharedSystem.particles.spikes.add({

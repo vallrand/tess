@@ -4,8 +4,8 @@ import { Application } from '../../engine/framework'
 import { Batch2D } from '../../engine/pipeline/batch'
 import { OverlayPass } from '../../engine/pipeline/OverlayPass'
 import { IMaterial } from '../../engine/pipeline'
-import { Transform2D, Sprite2D, Sprite2DMaterial } from '../../engine/components/Sprite2D'
-import { MaterialSystem, MeshMaterial } from '../../engine/materials'
+import { Transform2D, Sprite2D } from '../../engine/components/Sprite2D'
+import { MaterialSystem, MeshMaterial, SpriteMaterial } from '../../engine/materials'
 import * as shaders from '../../engine/shaders'
 import * as localShaders from '../shaders'
 import { Direction, CubeOrientation } from './CubeOrientation'
@@ -16,7 +16,7 @@ export class CubeTileMap {
     private readonly batch: Batch2D
     private readonly program: ShaderProgram
     private readonly batchRanges: [number,number][] = []
-    private readonly tiles: Sprite2DMaterial[] = []
+    private readonly tiles: SpriteMaterial[] = []
     private readonly materials: {
         fbo: WebGLFramebuffer
         size: vec2
@@ -49,10 +49,10 @@ export class CubeTileMap {
         const sourceSize = vec2(tileSize * gridSize, tileSize * gridSize)
         const sprite = Sprite2D.create()
         sprite.transform = Transform2D.create()
-        sprite.material = new Sprite2DMaterial()
+        sprite.material = new SpriteMaterial()
     
         vec2.set(tileSize, tileSize, sprite.material.size)
-        Sprite2DMaterial.calculateUVMatrix(aabb2(5*tileSize,0,6*tileSize,tileSize), sourceSize, sprite.material.uvMatrix)
+        SpriteMaterial.calculateUVMatrix(aabb2(5*tileSize,0,6*tileSize,tileSize), sourceSize, sprite.material.uvMatrix)
         
         for(let i = 0; i < materials.length; i++){
             const material = materials[i]
@@ -71,10 +71,10 @@ export class CubeTileMap {
     
             this.batch.render(sprite)
 
-            const tileMaterial = this.tiles[material.index] = new Sprite2DMaterial()
+            const tileMaterial = this.tiles[material.index] = new SpriteMaterial()
             tileMaterial.diffuse = tileMap.target
             vec2.set(tileSize, tileSize, tileMaterial.size)
-            Sprite2DMaterial.calculateUVMatrix(
+            SpriteMaterial.calculateUVMatrix(
                 aabb2(i * tileSize,0,(i+1)*tileSize,tileSize),
                 vec2(tileSize * materials.length, tileSize),
                 tileMaterial.uvMatrix

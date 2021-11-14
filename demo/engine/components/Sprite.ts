@@ -1,7 +1,7 @@
 import { Application } from '../framework'
-import { vec2, vec3, vec4, quat, mat4, mat3x2 } from '../math'
+import { vec2, vec3, vec4, quat } from '../math'
 import { Transform, ICamera, BoundingVolume } from '../scene'
-import { SpriteMaterial } from '../materials'
+import { SpriteMaterial, EffectMaterial } from '../materials'
 import { IBatched } from '../pipeline/batch/GeometryBatch'
 
 export const enum BillboardType {
@@ -20,6 +20,7 @@ export class Sprite implements IBatched {
         const item = this.pool.pop() || new Sprite()
         item.billboard = billboard || BillboardType.None
         item.order = order || 0
+        item.uvs.set(Sprite.quadUVs)
         vec4.copy(color || vec4.ONE, item.color)
         vec2.copy(origin || vec2.HALF, item.origin)
         return item
@@ -30,11 +31,8 @@ export class Sprite implements IBatched {
         item.index = -1
         item.material = item.transform = null
     }
-    public static readonly FlatUp: quat = quat.axisAngle(vec3.AXIS_X, 0.5 * Math.PI, quat())
-    public static readonly FlatDown: quat = quat.axisAngle(vec3.AXIS_X, -0.5 * Math.PI, quat())
-
-    private static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
-    private static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1])
+    static readonly quadIndices: Uint16Array = new Uint16Array([0,1,2,0,2,3])
+    static readonly quadUVs: Float32Array = new Float32Array([0,0,1,0,1,1,0,1])
     private static readonly tangent: vec3 = vec3()
     private static readonly binormal: vec3 = vec3()
     private static readonly forward: vec3 = vec3()
@@ -44,16 +42,17 @@ export class Sprite implements IBatched {
     public frame: number = 0
     public order: number = 0
     public readonly vertices: Float32Array = new Float32Array(12)
-    public readonly uvs: Float32Array = Sprite.quadUVs
+    public readonly uvs: Float32Array = new Float32Array(8)
     public readonly indices: Uint16Array = Sprite.quadIndices
     public readonly color: vec4 = vec4(1,1,1,1)
     public readonly normal: vec3 = vec3(1,0,0)
-    public material: SpriteMaterial
+    public material: SpriteMaterial | EffectMaterial<any>
     public transform: Transform
     public readonly bounds = new BoundingVolume
     public readonly origin: vec2 = vec2(0.5, 0.5)
 
     public update(context: Application, camera: ICamera){
+        if(this.frame === 0 && this.material instanceof SpriteMaterial) SpriteMaterial.applyTransform(Sprite.quadUVs, this.material.uvMatrix, this.uvs, 0)
         if(this.frame > 0 && this.frame >= camera.frame && this.frame >= this.transform.frame) return
 
         const width = 1, height = 1

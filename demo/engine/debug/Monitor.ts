@@ -13,7 +13,7 @@ export class Monitor {
         label: string
         update: (dt: number) => void
     }){
-        Object.assign(this.dom.style, { display: 'inline-block', padding: '0.2em', backgroundColor: 'rgba(0,0,0,1)', color: options.color })
+        Object.assign(this.dom.style, { display: 'inline-block', padding: '0.2em', backgroundColor: 'rgba(0,0,0,1)', color: options.color, zIndex: 16 })
         this.dom.appendChild(this.label)
         Object.assign(this.canvas.style, { boxSizing: 'border-box', border: `1px solid ${options.color}` })
         this.dom.appendChild(this.canvas)

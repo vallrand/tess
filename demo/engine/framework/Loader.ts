@@ -61,12 +61,14 @@ export class Loader {
     }
     public static awaitUserGesture(callback: () => void){
         const overlay: HTMLDivElement = document.querySelector('.overlay')
-        overlay.addEventListener('pointerup', function handleUserGesture(){
-            overlay.removeEventListener('pointerup', handleUserGesture)
-            overlay.style.opacity = '0'
-            overlay.style.pointerEvents = 'none'
+        overlay.classList.remove('loading')
+        const events = ['touchend', 'mousedown', 'keydown']
+        function handleUserGesture(){
+            for(let event of events) document.removeEventListener(event, handleUserGesture)
             callback()
-        })
+            overlay.classList.add('hide')
+        }
+        for(let event of events) document.addEventListener(event, handleUserGesture)
     }
     public static awaitDocumentLoad(callback: () => void){
         if(document.readyState !== 'loading') callback()

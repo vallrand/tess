@@ -228,7 +228,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.sprite.ring
         this.wave.transform = this.context.get(TransformSystem)
-        .create([0,4,-1.3],Sprite.FlatUp,vec3.ONE, this.mesh.transform)
+        .create([0,4,-1.3],quat.HALF_X,vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.wave)
 
         this.core = BatchMesh.create(SharedSystem.geometry.lowpoly.sphere)
@@ -252,7 +252,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
         this.circle = Sprite.create(BillboardType.None)
         this.circle.material = SharedSystem.materials.effect.flashYellow
         this.circle.transform = this.context.get(TransformSystem)
-        .create([0,4.5,-1.3],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create([0,4.5,-1.3],quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.circle)
 
         this.bulge = Sprite.create(BillboardType.Sphere)

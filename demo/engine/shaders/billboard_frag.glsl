@@ -57,7 +57,7 @@ void main(void){
 #ifdef SOFT
     ivec2 fragCoord = ivec2(gl_FragCoord.xy);
     vec4 position = texelFetch(uPositionBuffer, fragCoord, 0);
-    float difference = length(position.xyz - uEyePosition) - length(vPosition - uEyePosition);
+    float difference = length(position.xyz) - length(vPosition - uEyePosition);
     color.a *= smoothstep(0.0, 0.5, difference);
 #endif
     fragColor = color;

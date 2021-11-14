@@ -59,7 +59,7 @@ void main(){
     color.rgb = mix(color.rgb, vec3(0.3,0.1,0.5), smoothstep(-uThresholdEdge,0.0,threshold - alpha));
     if(alpha <= threshold) discard; 
     const float metallic = 0.0;
-    fragPosition = vec4(vPosition, uLayer);
+    fragPosition = vec4(vPosition - uEyePosition, uLayer);
     fragNormal = vec4(0,0,0, metallic);
     fragAlbedo = vec4(color.rgb,.5+.5*color.a);
 #endif

@@ -1,6 +1,7 @@
 export * from './GradientRamp'
 export * from './Material'
 export * from './TextureAtlas'
+export * from './VectorGraphics'
 export * from './ShaderMaterial'
 export * from './MeshMaterial'
 export * from './SpriteMaterial'

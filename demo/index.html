@@ -3,39 +3,50 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-        <title>[TESS]</title>
+        <title>[ TESS ]</title>
         <link rel="icon" type="image/png" href="favicon32.png" sizes="32x32">
         <style>
-            html, body {
-                margin: 0; padding: 0; box-sizing: border-box;
-                background-color: #242428; color: #bfc7c6;
-                pointer-events: none; user-select: none; cursor: default; touch-action: none;
+            html,body{
+                margin:0;padding:0;box-sizing:border-box;
+                background-color:#242428;color:#bfc7c6;
+                pointer-events:none;user-select:none;cursor:default;touch-action:none;
             }
-            canvas {
-                max-width: 100%; max-height: 100%;
-                overflow: hidden; box-sizing: border-box;
-                margin: 0 auto; display: block; pointer-events: all;
-                image-rendering: pixelated
+            canvas{
+                max-width:100%;max-height:100%;
+                overflow:hidden;box-sizing:border-box;
+                margin:0 auto;display:block;pointer-events:all;
+                image-rendering:pixelated
             }
             .overlay{
-                width: 100%; height: 100%; transition: opacity 1s; pointer-events: all;
-                position: fixed;
-                display: flex; align-items: center; justify-content: center;
-                top:0; left:0; right:0; bottom:0;
-                background-color: #101418;
+                width:100%;height:100%;transition:opacity 0.8s;pointer-events:all;
+                position:fixed;flex-direction:column;z-index:8;
+                display:flex;align-items:center;justify-content:space-evenly;
+                top:0;left:0;right:0;bottom:0;
+                background-color:#101418;
             }
+            .overlay.hide{opacity:0;pointer-events:none;}
             .progress_bar{
-                height: 4vmin; width: 80vmin; margin-top: 50vh;
-                background-image: linear-gradient(to right,#20282F,#303438);
+                height:4vmin;width:80vmin;
+                background-image:linear-gradient(to right,#20282F,#303438);
             }
             .progress_bar div{
-                height: 100%; width: 0%; transition: width 1s ease-in-out;
-                background-color: #d6fcff; box-shadow: 0px 0px 5px 2px #d6fcff;
+                height:100%;width:0%;transition:width 0.4s ease-in-out;
+                background-color:#d6fcff;box-shadow:0px 0px 5px 2px #d6fcff;
             }
+            .overlay::before{content:"";height:4vmin;width:100%;visibility:hidden;}
+            .play_icon{
+                width:36vmin;height:36vmin;transition:background-color 0.5s,box-shadow 0.5s;
+                display:flex;align-items:center;justify-content:center;
+                background-color:#d6fcff;box-shadow:0px 0px 5px 2px #d6fcff;
+            }
+            .loading .play_icon{background-color:#20282F;box-shadow:none;}
+            .play_icon div{width:24vmin;height:24vmin;position:relative;background:#101418;box-shadow:0px 0px 5px 2px #101418;}
+            .play_icon div::before{content:"";width:8vmin;height:42vmin;background:inherit;position:absolute;left:8vmin;top:-9vmin;}
+            .play_icon div::after{content:"";width:42vmin;height:8vmin;background:inherit;position:absolute;left:-9vmin;top:8vmin;}
         </style>
     </head>
     <body>
-        <div class="overlay"><div class="progress_bar"><div></div></div></div>
+        <div class="overlay loading"><div class="play_icon"><div></div></div><div class="progress_bar"><div></div></div></div>
         <script src="index.js"></script>
     </body>
 </html>

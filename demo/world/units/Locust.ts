@@ -1,5 +1,5 @@
-import { vec2, vec4 } from '../../engine/math'
-import { MeshSystem, BatchMesh, Sprite } from '../../engine/components'
+import { vec2, vec4, quat } from '../../engine/math'
+import { MeshSystem, BatchMesh } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../engine/animation'
 import { ParticleEffectPass } from '../../engine/pipeline'
@@ -56,13 +56,13 @@ export class Locust extends AIUnit {
         this.motorLeft = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
         this.motorLeft.material = SharedSystem.materials.effect.stripes
         this.motorLeft.transform = this.context.get(TransformSystem)
-        .create([1.3,0.7,1.2], Sprite.FlatUp, [1,-1.6,1], this.mesh.transform)
+        .create([1.3,0.7,1.2], quat.HALF_X, [1,-1.6,1], this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.motorLeft)
         
         this.motorRight = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
         this.motorRight.material = SharedSystem.materials.effect.stripes
         this.motorRight.transform = this.context.get(TransformSystem)
-        .create([-1.3,0.7,1.2], Sprite.FlatUp, [1,-1.6,1], this.mesh.transform)
+        .create([-1.3,0.7,1.2], quat.HALF_X, [1,-1.6,1], this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.motorRight)
 
         const animate = AnimationTimeline(this, {

@@ -1,5 +1,5 @@
 import { Application } from '../../../engine/framework'
-import { lerp, vec2, vec3, vec4, quat, mat4, shortestAngle } from '../../../engine/math'
+import { lerp, vec2, vec3, vec4, quat, mat4, moddelta } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
@@ -90,7 +90,7 @@ class Turret {
         const dx = target[0] - origin[0] - this.tile[0]
         const dy = target[1] - origin[1] - this.tile[1]
         if(dx*dx + dy*dy > this.skill.range*this.skill.range) return false
-        if(Math.abs(shortestAngle(this.angle, Math.atan2(dx, dy))) > this.maxAngle) return false
+        if(Math.abs(moddelta(2*Math.PI,this.angle, Math.atan2(dx, dy))) > this.maxAngle) return false
         return true
     }
     public *activate(source: AIUnit, target: vec2): Generator<ActionSignal> {
@@ -149,7 +149,7 @@ class Turret {
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.ring
         this.ring.transform = this.context.get(TransformSystem)
-        .create(vec3.add(targetPosition, [0,0.2,0], vec3()), Sprite.FlatUp)
+        .create(vec3.add(targetPosition, [0,0.2,0], vec3()), quat.HALF_X)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.wave = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)

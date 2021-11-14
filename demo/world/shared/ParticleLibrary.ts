@@ -1,10 +1,10 @@
-import { Application, One, Zero } from '../../engine/framework'
+import { Application, Zero } from '../../engine/framework'
 import { vec2, vec3, vec4, quat, randomInt, randomFloat, mulberry32 } from '../../engine/math'
 import { ease } from '../../engine/animation'
 import { GL, ShaderProgram, VertexDataFormat } from '../../engine/webgl'
 import { ParticleEffectPass, DeferredGeometryPass } from '../../engine/pipeline'
 import * as shaders from '../../engine/shaders'
-import { MaterialSystem, EmitterMaterial, GradientRamp } from '../../engine/materials'
+import { EmitterMaterial, GradientRamp } from '../../engine/materials'
 import {
     AttributeCurveSampler, ParticleGeometry, ParticleOvertimeAttributes,
     ParticleSystem, StaticParticleSystem
@@ -14,6 +14,7 @@ import { SharedSystem } from './index'
 
 export function ParticleLibrary(context: Application){
     const random = mulberry32()
+    const quadGeometry = ParticleGeometry.quad(context.gl)
 
     const energy = new ParticleSystem<{
         uLifespan: vec4
@@ -25,8 +26,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 512, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             ALIGNED: true, SOFT: false, MASK: false, GRADIENT: true, STRETCH: 0.04
         }),
@@ -94,8 +94,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 1024, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             SPHERICAL: true, SOFT: false, MASK: true, GRADIENT: true, UV_OFFSET: 0.2
         }),
@@ -129,8 +128,7 @@ export function ParticleLibrary(context: Application){
         uFieldDomain: vec4
         uFieldStrength: vec2
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 1024, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, localShaders.smoke_frag, {
             SPHERICAL: true, MASK: true, GRADIENT: true
         }),
@@ -163,8 +161,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uFrame: vec2
     }>(
-        context, { limit: 1024, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 1024, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             FRAMES: true, SWIPE: 0.1
         }),
@@ -186,8 +183,7 @@ export function ParticleLibrary(context: Application){
         uForce: vec2
         uTarget: vec3
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 512, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, shaders.billboard_frag, {
             ALIGNED: true, GRADIENT: true, STRETCH: 0.04
         }),
@@ -219,8 +215,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uRadius: vec2
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 512, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.billboard_vert, localShaders.fire_frag, {
             ALIGNED: true
         }),
@@ -275,8 +270,7 @@ export function ParticleLibrary(context: Application){
         uSize: vec2
         uRadius: vec2
     }>(
-        context, { limit: 512, format: VertexDataFormat.Particle },
-        ParticleGeometry.quad(context.gl),
+        context, { limit: 512, format: VertexDataFormat.Particle }, quadGeometry,
         ShaderProgram(context.gl, shaders.verlet_vert, shaders.billboard_frag, {
             SPHERICAL: true, GRADIENT: true, VECTOR_FIELD: true, LUT: true
         }), {

@@ -76,8 +76,8 @@ const activateTimeline = {
         { frame: 1.0, value: vec4.ZERO, ease: ease.quadIn }
     ], vec4.lerp),
     'ring.transform.rotation': PropertyAnimation([
-        { frame: 0.5, value: Sprite.FlatUp },
-        { frame: 1.0, value: quat.multiply(quat.axisAngle(vec3.AXIS_Y, -Math.PI, quat()), Sprite.FlatUp, quat()), ease: ease.quadOut }
+        { frame: 0.5, value: quat.HALF_X },
+        { frame: 1.0, value: quat.multiply(quat.axisAngle(vec3.AXIS_Y, -Math.PI, quat()), quat.HALF_X, quat()), ease: ease.quadOut }
     ], quat.slerp),
     'ring.transform.scale': PropertyAnimation([
         { frame: 0.5, value: vec3.ZERO },
@@ -156,7 +156,7 @@ export class LaserSkill extends AIUnitSkill {
     readonly cardinal: boolean = true
     readonly pierce: boolean = true
     readonly damageType: DamageType = DamageType.Temperature
-    readonly damage: number = 2
+    readonly damage: number = 1
 
     private beams: Line[] = []
     private targets: vec3[] = Array(4).fill(null).map(() => vec3())
@@ -194,7 +194,8 @@ export class LaserSkill extends AIUnitSkill {
             this.targets[i][1] = this.mesh.transform.position[1] + 0.8
         }
 
-        if(this.active && hit) return AIUnitSkill.damage(this, target)
+        if(this.active && hit) AIUnitSkill.damage(this, target)
+        if(this.active) return
         this.active = true
 
         const origins = [
@@ -211,7 +212,7 @@ export class LaserSkill extends AIUnitSkill {
         this.center = Sprite.create(BillboardType.None)
         this.center.material = SharedSystem.materials.beamRadialRedMaterial
         this.center.transform = this.context.get(TransformSystem)
-        .create([0,1,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create([0,1,0],quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.center)
 
 
@@ -224,7 +225,7 @@ export class LaserSkill extends AIUnitSkill {
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
-        .create([0,2,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,2,0], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.tubeX = BatchMesh.create(SharedSystem.geometry.cylinder)

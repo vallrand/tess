@@ -107,7 +107,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.swirl
         this.ring.transform = this.context.get(TransformSystem)
-        .create([0,4,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create([0,4,0],quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.cylinder = BatchMesh.create(SharedSystem.geometry.lowpolyCylinder)
@@ -130,7 +130,7 @@ export class ShockwaveSkill extends AIUnitSkill {
         this.cone = BatchMesh.create(SharedSystem.geometry.hemisphere)
         this.cone.material = SharedSystem.materials.effect.absorbTeal
         this.cone.transform = this.context.get(TransformSystem)
-        .create([0,2.5,0],Sprite.FlatUp,vec3.ONE,this.mesh.transform)
+        .create([0,2.5,0],quat.HALF_X,vec3.ONE,this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.cone)
 
         this.flash = Sprite.create(BillboardType.Sphere)

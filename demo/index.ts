@@ -2,6 +2,7 @@ import { Application } from './engine/framework'
 
 import { TransformSystem } from './engine/scene/Transform'
 import { CameraSystem } from './engine/scene/Camera'
+import { AudioSystem } from './engine/audio/Audio'
 import { AnimationSystem } from './engine/animation/Animation'
 import { MaterialSystem } from './engine/materials/Material'
 import { MeshSystem } from './engine/components/Mesh'
@@ -26,6 +27,7 @@ new Application([
     AnimationSystem,
     TransformSystem,
     CameraSystem,
+    AudioSystem,
     MaterialSystem,
     MeshSystem,
 

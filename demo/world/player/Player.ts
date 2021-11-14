@@ -1,21 +1,25 @@
-import { clamp, lerp, vec2, vec3, vec4, mat4, quat, aabb2, mat3x2 } from '../../engine/math'
 import { Application, ISystem } from '../../engine/framework'
-import { CameraSystem } from '../../engine/scene/Camera'
-import { MaterialSystem, MeshMaterial } from '../../engine/materials'
-import { AnimationSystem, ActionSignal, ease } from '../../engine/animation'
+import { vec2, vec3 } from '../../engine/math'
+import { CameraSystem } from '../../engine/scene'
+import { MeshMaterial } from '../../engine/materials'
 import { Cube } from './Cube'
 import { CubeTileMap } from './CubeTileMap'
-import { CubeModule } from './CubeModules'
 import { CubeSkills } from '../skills'
 import { SharedSystem } from '../shared'
 import { MeshSystem } from '../../engine/components'
 import { TerrainSystem } from '../terrain'
 import { TurnBasedSystem } from './TurnBasedFlow'
-import { AISystem } from '../military'
-import { KeyboardSystem } from '../../engine/device'
 import { Indicator } from './Indicator'
+import { FadeEffect } from '../skills/effects/FadeEffect'
 
 export class PlayerSystem implements ISystem {
+    static readonly input = {
+        up: 'KeyW',
+        down: 'KeyS',
+        left: 'KeyA',
+        right: 'KeyD',
+        action: 'Space'
+    }
     public readonly origin: vec2 = vec2(4, 6)
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
     public readonly cube: Cube = new Cube(this.context)
@@ -27,76 +31,24 @@ export class PlayerSystem implements ISystem {
         this.context.get(TurnBasedSystem).add(this.cube)
     }
     public update(): void {
-        if(this.context.frame == 1) this.restart()
-        if(this.context.frame == 1){
-            // this.cube['execute'] = function*(){}
-            window['quat'] = quat
-            window['vec3'] = vec3
-            //this.context.get(TerrainSystem).resources.create(5,6)
+        if(this.context.frame == 0) return
+        else if(this.context.frame == 1) this.restart()
 
-            window['curUnit'] = 3
-
-            this.context.get(AISystem).create(5,5,0)
-
-            // this.context.get(AISystem).create(5,7,0)
-            // this.context.get(AISystem).create(5,6,0)
-            // this.context.get(AISystem).create(5,5,0)
-            // this.context.get(AISystem).create(4,4,0)
-
-            // ;[
-            //     [5,7],[5,6],[5,5],[6,7],//[6,6],[6,4]
-            // ].map(tile=>[tile[0]+2+5,tile[1]+3-3])
-            // .forEach(([c,r]) => {
-            //     this.context.get(AISystem).create(c,r,0)
-            // })
-
-            // ;[[5,8],[3,8],[2,7]]
-            // //.map(tile=>[tile[0]+2,tile[1]+3])
-            // .forEach(([c,r]) => {
-            //     this.context.get(AISystem).create(c,r,6)
-            // })
-
-
-            // window['u0'] = this.context.get(AISystem).create(6,7+3,0) //scarab
-            // window['u1'] = this.context.get(AISystem).create(7,7,1) //tarantula
-            // window['u2'] = this.context.get(AISystem).create(7,8,2) //stingray
-            // window['u3'] = this.context.get(AISystem).create(2+3,6,3) //locust
-            // window['u4'] = this.context.get(AISystem).create(6,11,4) //obelisk
-            // window['u5'] = this.context.get(AISystem).create(1,4,5) //monolith
-            // window['u6'] = this.context.get(AISystem).create(5,10,6) //decapod
-            // window['u7'] = this.context.get(AISystem).create(3,10,7) //isopod
-            // window['u8'] = this.context.get(AISystem).create(8,7,8) //tarantula variant
-            window['move'] = (path, unit) => this.context.get(AnimationSystem).start(unit.move(path), true)
-            window['strike'] = (t, unit) => this.context.get(AnimationSystem).start(unit.strike(t), true)
-            window['die'] = (unit) => this.context.get(AnimationSystem).start(unit.disappear(), true)
-            window['app'].systems[17].cameraOffset= [-2,8,4]//[0,16,2]//[2,6,2]//[0,8+4,2]//[-2,6,2]//[2,5,-2]//[4,8,2]//[4,6,2]//[2,3,3]//[4,6,3]
-        }
         this.tilemap.renderFaceTiles(this.cube)
         this.indicator.update(this.cube)
-
-        const keys = this.context.get(KeyboardSystem)
-        // if(keys.trigger('KeyA')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [-1,0], vec2())], mainUnit)
-        // else if(keys.trigger('KeyD')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [1,0], vec2())], mainUnit)
-        // else if(keys.trigger('KeyW')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,-1], vec2())], mainUnit)
-        // else if(keys.trigger('KeyS')) window['move']([vec2.copy(mainUnit.tile, vec2()), vec2.add(mainUnit.tile, [0,1], vec2())], mainUnit)
-        // else if(keys.trigger('Space')) window['strike']([], mainUnit)
-        // else if(keys.trigger('KeyX')) window['die'](mainUnit)
         
         vec3.copy(this.cameraOffset, this.context.get(CameraSystem).controller.cameraOffset)
-        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
-    }
-    public *execute(): Generator<ActionSignal> {
-        
+        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position, this.context.frame)
     }
     public restart(): void {
+        FadeEffect.create(this.context, 1)
         this.cube.delete()
         this.context.get(TurnBasedSystem).signalReset.broadcast()
         this.context.get(TerrainSystem).tilePosition(this.origin[0], this.origin[1], this.cube.transform.position)
-        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position)
+        this.context.get(CameraSystem).controller.adjustCamera(this.cube.transform.position, this.context.frame)
         this.context.get(TerrainSystem).clear()
         this.context.get(TerrainSystem).update()
         this.cube.place(this.origin[0], this.origin[1])
-        this.cube.installModule(this.cube.side, 0, CubeModule.Machinegun)
         vec3.set(0, 8, 4, this.cameraOffset)
     }
     public load(): void {

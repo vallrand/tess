@@ -31,7 +31,7 @@ export interface CubeState {
 
 export class Cube extends Unit implements IAgent {
     readonly weight: number = 0
-    readonly matter = { capacity: 10, amount: 0, gain: 0 }
+    readonly matter = { capacity: 8, amount: 0, gain: 0 }
     readonly health = { capacity: 6, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
     readonly movement = { capacity: 1, amount: 0, gain: 1 }
@@ -102,7 +102,7 @@ export class Cube extends Unit implements IAgent {
         this.hash = this.sides.reduce((hash, side) => (
             (hash * 4 * CubeModule.Max) + side.direction * CubeModule.Max + side.type
         ), 0)
-        this.skill.enter()
+        this.skill.update()
     }
     delete(){
         for(let i = 0; i < this.meshes.length; i++)
@@ -127,7 +127,7 @@ export class Cube extends Unit implements IAgent {
             const elapsedTime = this.context.currentTime - startTime
             camera[0] = orbitRadius * Math.sin(elapsedTime * orbitDuration)
             camera[2] = orbitRadius * Math.cos(elapsedTime * orbitDuration)
-            if(!keys.down('Space') || !waiter.continue) yield ActionSignal.WaitNextFrame
+            if(!keys.release('Space') || !waiter.continue) yield ActionSignal.WaitNextFrame
             else{
                 this.context.get(PlayerSystem).restart()
                 break
@@ -152,12 +152,13 @@ export class Cube extends Unit implements IAgent {
             const rotation = DirectionAngle[(this.direction + state.direction) % 4]
             const skill = this.context.get(PlayerSystem).skills[state.type]
             
-            let direction = Direction.None
-            if(keys.down('KeyA')) direction = Direction.Right
-            else if(keys.down('KeyD')) direction = Direction.Left
-            else if(keys.down('KeyW')) direction = Direction.Down
-            else if(keys.down('KeyS')) direction = Direction.Up
-            const trigger = keys.down('Space')
+            let direction = Direction.None, intentional = false
+            for(let key in PlayerSystem.input) if(keys.trigger(PlayerSystem.input[key])) intentional = true
+            if(keys.down(PlayerSystem.input.left)) direction = Direction.Right
+            else if(keys.down(PlayerSystem.input.right)) direction = Direction.Left
+            else if(keys.down(PlayerSystem.input.up)) direction = Direction.Down
+            else if(keys.down(PlayerSystem.input.down)) direction = Direction.Up
+            const trigger = keys.down(PlayerSystem.input.action)
             frame = this.context.frame
 
             if(state.open == 0 && trigger)
@@ -175,7 +176,9 @@ export class Cube extends Unit implements IAgent {
 
             action: {
                 if(state.open != 1 || !trigger) break action
-                if(this.action.amount <= 0) return void (this.movement.amount = 0)
+                if(this.action.amount <= 0)
+                    if(intentional) return void (this.movement.amount = 0)
+                    else break action
                 const target = skill.query(direction)
                 if(!target) break action
                 for(const generator = skill.activate(target, direction); true;){
@@ -185,7 +188,7 @@ export class Cube extends Unit implements IAgent {
                 }
             }
             movement: {
-                if(state.open != 0 || direction == Direction.None) break movement
+                if(state.open != 0 || direction == Direction.None || trigger) break movement
                 if(this.movement.amount <= 0) return void (this.action.amount = 0)
                 const move = this.moveTransition(direction)
                 if(!move) break movement
@@ -199,7 +202,7 @@ export class Cube extends Unit implements IAgent {
         }
     }
     public damage(amount: number, type: DamageType){
-        if(this.sides[this.side].type === CubeModule.Shield && this.skill.active) return
+        if(this.sides[this.side].type === CubeModule.Shield && this.skill.active && --this.skill.indicator.amount > 0) return
         if(type & DamageType.Immobilize) this.action.amount = -this.action.gain
         this.health.amount = Math.max(0, this.health.amount - amount)
         DamageEffect.create(this.context, this, type)
@@ -251,7 +254,7 @@ export class Cube extends Unit implements IAgent {
         this.context.get(TerrainSystem).setTile(nextTile[0], nextTile[1], this)
         vec2.copy(nextTile, this.tile)
         this.context.get(TurnBasedSystem).signalEnterTile.broadcast(nextTile[0], nextTile[1], this)
-        this.skill.enter()
+        this.skill.update()
 
         const mesh = this.meshes[this.side]
         ModelAnimation.map[mesh.armature.key].close(0, mesh.armature)

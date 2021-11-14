@@ -505,9 +505,9 @@
         "close":[
             {"index":1,"frame":0,"position":[0,1,0],"rotation":[0,0,0,1]},
             {"index":2,"frame":0,"position":[0,0,0.8],"rotation":[-0.707107,0,0,0.707107]},
-            {"index":3,"frame":0,"position":[0,1.1,-0.3]},
+            {"index":3,"frame":0,"position":[0,1,-0.3]},
             {"index":4,"frame":0,"position":[0,0,-0.8],"rotation":[0,0.707107,0.707107,0]},
-            {"index":5,"frame":0,"position":[0,1.1,-0.3]},
+            {"index":5,"frame":0,"position":[0,1,-0.3]},
             {"index":6,"frame":0,"position":[0,0.5,0],"rotation":[-0.707107,-0,-0.707107,0]}
         ],
         "open":[

@@ -37,7 +37,7 @@ export class Stingray extends AIUnit {
     static readonly pool: Stingray[] = []
     readonly skills = [new LungeSkill(this.context)]
     readonly strategy = new AIStrategy(this.context)
-    readonly health = { capacity: 8, amount: 0, gain: 0 }
+    readonly health = { capacity: 4, amount: 0, gain: 0 }
     readonly action = { capacity: 1, amount: 0, gain: 1 }
     readonly movement = { capacity: 2, amount: 0, gain: 2 }
     readonly group: number = 2

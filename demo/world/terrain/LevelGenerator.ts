@@ -43,6 +43,12 @@ interface IZoneRegion {
 }
 
 export class LevelGenerator {
+    static readonly initialSeeds: number[] = [
+        0x9b0fdbc, 0x8436616, 0x7098712, 0x45fd318, 0x67a5fc3, 0xd69221a,
+        0xf3a0178, 0xfe97438, 0xefdb85f, 0xc729803, 0x22c6c51, 0x3f87540,
+        0xb0eea92, 0x6f02636, 0x49dca01, 0xfd703d3, 0x138068a, 0xdd5395b,
+        0xd5948d7, 0x54f5418, 0x2bd7c7f, 0xd0abaa9, 0xa7720c8, 0xa098743
+    ]
     private static readonly region: aabb2 = aabb2()
     private readonly tilemap: TextureMapGenerator
     private readonly groupSampler: PoissonDisk
@@ -68,7 +74,7 @@ export class LevelGenerator {
                 return this.zones[0]
             }
         console.log(`%czone(${zoneX},${zoneY})`,'color:#5f8cb0;text-decoration:underline')
-        const random = LevelGenerator.random2D(zoneX, zoneY, 0xD7AA02)
+        const random = LevelGenerator.random2D(zoneX, zoneY, LevelGenerator.initialSeeds[0])
 
         this.tilemap.unset()
         for(let i = 0; i <= this.zoneSize; i++){
@@ -79,10 +85,11 @@ export class LevelGenerator {
         }
         this.groupSampler.clear()
         const encounters = this.groupSampler.fill(random, 10)
+
         for(let i = 0; i < encounters.length; i+=2){
-            const c = encounters[i] | 0, r = encounters[i + 1] | 0
+            const c = 1 + encounters[i] | 0, r = 1 + encounters[i + 1] | 0
             for(let dx = -1; dx <= 1; dx++) for(let dy = -1; dy <= 1; dy++)
-                this.tilemap.set(c + dx, r + dy, ____)
+                this.tilemap.set(c + dx , r + dy, ____)
         }
 
         for(let limit = 6; true; limit--)
@@ -99,9 +106,9 @@ export class LevelGenerator {
         zone.data = new Uint32Array(zone.map.data.buffer)
         this.zones.unshift(zone)
 
-        const specialIndex = random() * (encounters.length >>> 1) | 0
+        const specialIndex = (random() * encounters.length) & ~1
         for(let i = 0; i < encounters.length; i+=2){
-            const c = encounters[i] | 0, r = encounters[i + 1] | 0
+            const c = 1 + encounters[i] | 0, r = 1 + encounters[i + 1] | 0
             const index = c + r * this.tilemap.width
             if(i == 0){
                 zone.data[index] = SHOP
@@ -178,8 +185,8 @@ export class LevelGenerator {
                     this.context.get(TerrainSystem).setTile(x, y, chunk.wall)
                     break
                 }
-                case MARK: 
-                    this.context.get(EconomySystem).createDeposit(x, y, 4)
+                case MARK:
+                    this.context.get(EconomySystem).createDeposit(x, y)
                     break
                 case SHOP: 
                     this.context.get(EconomySystem).createWorkshop(x, y)

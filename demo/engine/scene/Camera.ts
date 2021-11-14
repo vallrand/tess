@@ -27,6 +27,7 @@ export class PerspectiveCamera implements ICamera {
 }
 
 class CameraController {
+    public frame: number = 0
     public readonly cameraTarget: vec3 = vec3(0,0,0)
     public readonly cameraOffset: vec3 = vec3(0, 8, 4)
     private readonly cameraPivot: vec3 = vec3(0,0,0)
@@ -34,7 +35,8 @@ class CameraController {
     private readonly cameraPitch: quat = quat()
     private readonly cameraSmoothness: number = 0.1
     constructor(private readonly camera: PerspectiveCamera){}
-    public adjustCamera(target: vec3){        
+    public adjustCamera(target: vec3, frame: number){
+        this.frame = frame
         vec3.add(this.cameraOffset, target, this.cameraPivot)
         vec3.lerp(this.camera.transform.position, this.cameraPivot, this.cameraSmoothness, this.camera.transform.position)
 

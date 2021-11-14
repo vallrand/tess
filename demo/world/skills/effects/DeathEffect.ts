@@ -131,7 +131,7 @@ export class DeathEffect {
         this.wave = Sprite.create(BillboardType.None)
         this.wave.material = SharedSystem.materials.displacement.ring
         this.wave.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE,this.wreck.transform)
+        .create([0,1,0], quat.HALF_X, vec3.ONE,this.wreck.transform)
         this.context.get(PostEffectPass).add(this.wave)
 
         this.burn = this.context.get(DecalPass).create(4)
@@ -142,7 +142,7 @@ export class DeathEffect {
         this.ring = Sprite.create(BillboardType.None)
         this.ring.material = SharedSystem.materials.sprite.burst
         this.ring.transform = this.context.get(TransformSystem)
-        .create(vec3.AXIS_Y, Sprite.FlatUp, vec3.ONE, this.wreck.transform)
+        .create(vec3.AXIS_Y, quat.HALF_X, vec3.ONE, this.wreck.transform)
         this.context.get(ParticleEffectPass).add(this.ring)
 
         this.debris = this.context.get(SharedSystem).debris.create(this.wreck.transform.position)

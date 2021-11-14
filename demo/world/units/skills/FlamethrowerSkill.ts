@@ -97,7 +97,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
         this.corridor = BatchMesh.create(SharedSystem.geometry.openBox)
         this.corridor.material = SharedSystem.materials.effect.coreYellow
         this.corridor.transform = this.context.get(TransformSystem)
-        .create([0,1.2,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,1.2,0], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.corridor)
 
         this.fire = SharedSystem.particles.fire.add({
@@ -132,7 +132,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
         this.heat = BatchMesh.create(SharedSystem.geometry.openBox)
         this.heat.material = SharedSystem.materials.heat
         this.heat.transform = this.context.get(TransformSystem)
-        .create([0,1,0], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0,1,0], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(PostEffectPass).add(this.heat)
 
         this.ring = Sprite.create(BillboardType.None)

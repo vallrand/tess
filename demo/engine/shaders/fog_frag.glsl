@@ -44,11 +44,11 @@ void main(){
     vec4 color = texelFetch(uSampler, fragCoord, 0);
 
     vec4 position = texelFetch(uPositionBuffer, fragCoord, 0);
-    vec3 viewRay = position.xyz - uEyePosition;
+    vec3 viewRay = position.xyz;
     float distance = length(viewRay) * step(.5,position.a);
 
 #ifdef HALFSPACE
-    distance += halfspace(uEyePosition, position.xyz, viewRay, uFogHeight.x, uFogHeight.y);
+    distance += halfspace(uEyePosition, position.xyz + uEyePosition, viewRay, uFogHeight.x, uFogHeight.y);
 #endif
 
 #if defined(LINEAR_FOG)

@@ -94,7 +94,7 @@ export class LungeSkill extends AIUnitSkill {
     readonly cardinal: boolean = false
     readonly pierce: boolean = false
     readonly damageType: DamageType = DamageType.Kinetic
-    readonly damage: number = 4
+    readonly damage: number = 2
 
     private spikesLeft: ParticleEmitter
     private spikesRight: ParticleEmitter
@@ -149,9 +149,9 @@ export class LungeSkill extends AIUnitSkill {
         this.beamLeft.material = SharedSystem.materials.sprite.sparkle
         this.beamRight.material = SharedSystem.materials.sprite.sparkle
         this.beamLeft.transform = this.context.get(TransformSystem)
-        .create([-0.5,1.3,3], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([-0.5,1.3,3], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.beamRight.transform = this.context.get(TransformSystem)
-        .create([0.5,1.3,3], Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create([0.5,1.3,3], quat.HALF_X, vec3.ONE, this.mesh.transform)
         this.context.get(ParticleEffectPass).add(this.beamLeft)
         this.context.get(ParticleEffectPass).add(this.beamRight)
     
@@ -199,7 +199,7 @@ export class LungeSkill extends AIUnitSkill {
     
         this.cone = BatchMesh.create(SharedSystem.geometry.cone)
         this.cone.transform = this.context.get(TransformSystem)
-        .create(vec3.ZERO, Sprite.FlatUp, vec3.ONE, this.mesh.transform)
+        .create(vec3.ZERO, quat.HALF_X, vec3.ONE, this.mesh.transform)
     
         this.cone.material = SharedSystem.materials.sprite.streak
         this.context.get(ParticleEffectPass).add(this.cone)

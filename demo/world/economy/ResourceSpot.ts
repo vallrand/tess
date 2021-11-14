@@ -38,12 +38,12 @@ export class ResourceSpot implements IUnitAttribute {
     }
     public delete(): void {
         this.context.get(TransformSystem).delete(this.decal.transform)
-        this.context.get(DecalPass).delete(this.decal)
-        SharedSystem.particles.glow.stop(this.emitter)
+        this.decal = void this.context.get(DecalPass).delete(this.decal)
+        this.emitter = void SharedSystem.particles.glow.stop(this.emitter)
         ResourceSpot.pool.push(this)
     }
-    public *drain(duration: number): Generator<ActionSignal> {
-        this.amount--
+    public *drain(duration: number, amount: number): Generator<ActionSignal> {
+        this.amount -= amount
         const animate = AnimationTimeline(this, {
             'decal.threshold': PropertyAnimation([
                 { frame: 0, value: this.decal.threshold },
@@ -58,7 +58,7 @@ export class ResourceSpot implements IUnitAttribute {
             else yield ActionSignal.WaitNextFrame
         }
 
-        if(this.amount > 0) return
+        if(this.amount >= amount) return
         this.context.get(EconomySystem).delete(this)
     }
 }
