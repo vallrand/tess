@@ -25,8 +25,8 @@ export class DebugSystem implements ISystem {
         if(!this.enabled) return
         for(let i = this.helpers.length - 1; i >= 0; i--) this.helpers[i].update()
     }
-    public load(): void {
-        if(!this.enabled) return
+    public load(manifest, loaded, next): void {
+        if(!this.enabled) return next()
         const root = DomNode('div', {
             style: {
                 display: 'flex', flexDirection: 'column', justifyContent: 'start',
@@ -41,6 +41,7 @@ export class DebugSystem implements ISystem {
             }, this.helpers.map(helper => helper.open()))
         ])
         document.body.appendChild(root)
+        next()
     }
     private attachDebugPanel(){
         const panel = document.createElement('div')

@@ -3,6 +3,7 @@ import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass } from
 import { BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { SharedSystem, ModelAnimation } from '../shared'
 import { CubeSkill } from './CubeSkill'
@@ -75,7 +76,7 @@ export class DetonateSkill extends CubeSkill {
     public query(): vec2 | null { return this.cube.tile }
     private static placeMine(skill: DetonateSkill, target: vec2){
         const mine = skill.minefield.create(target[0], target[1])
-        mine.damage = skill.damage
+        if(mine) mine.damage = skill.damage
     }
     public *activate(target: vec2): Generator<ActionSignal> {
         this.cube.action.amount = 0
@@ -116,6 +117,7 @@ export class DetonateSkill extends CubeSkill {
 
         const place = EventTrigger([{ frame: 1, value: target }], DetonateSkill.placeMine)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0.4)
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

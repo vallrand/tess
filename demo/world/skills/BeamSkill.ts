@@ -3,6 +3,7 @@ import { Application } from '../../engine/framework'
 import { PointLight, PointLightPass, ParticleEffectPass } from '../../engine/pipeline'
 import { SpriteMaterial } from '../../engine/materials'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, BatchMesh, Line } from '../../engine/components'
@@ -186,6 +187,7 @@ export class BeamSkill extends CubeSkill {
                 { frame: 1.6, value: target, ease: ease.cubicOut }
             ], vec3.lerp)
         })
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

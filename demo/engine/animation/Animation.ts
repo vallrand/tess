@@ -48,14 +48,12 @@ export class AnimationSystem implements ISystem {
         this.pending.push(signal)
         return signal
     }
-    public stop(index: number): void {
-        for(let i = this.queue.length - 1; i >= 0; i--)
-            if(this.queue[i].index === index){
-                this.queue[i].generator.return(null)
-                this.queue.splice(i, 1)
-                this.dispatch(index)
-                break
-            }
+    public stop(index: number, skip: boolean): void {
+        const i = this.indexOf(index)
+        if(i == -1) return
+        const routine = this.queue[i]
+        if(!skip) routine.iterator = routine.generator.return(null)
+        else while(!routine.iterator.done) routine.iterator = routine.generator.next()
     }
     private dispatch(index: number): void {
         let removed = 0
@@ -72,8 +70,8 @@ export class AnimationSystem implements ISystem {
             const routine = this.queue[i]
             if(
                 !routine.iterator ||
-                routine.iterator.value === ActionSignal.WaitNextFrame ||
-                routine.iterator.value.continue
+                !routine.iterator.done && (routine.iterator.value === ActionSignal.WaitNextFrame ||
+                routine.iterator.value.continue)
             ) routine.iterator = routine.generator.next()
 
             if(routine.iterator.done) this.dispatch(routine.index)

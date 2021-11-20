@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat } from '../../../engine/math'
 import { MeshSystem, Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { TransformSystem, Transform } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEmitter } from '../../../engine/particles'
 import { Decal, DecalPass, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../../engine/animation'
@@ -296,6 +297,7 @@ export class StaticOrbSkill extends AIUnitSkill {
         this.context.get(TurnBasedSystem).enqueue(orb.appear(this.mesh.transform.position, 1), true)
 
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/orb_use.mp3`, 'sfx', this.mesh.transform).play(0)
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

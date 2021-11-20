@@ -1,6 +1,7 @@
 import { lerp, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
 import { Decal, DecalPass, ParticleEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
@@ -179,6 +180,8 @@ export class RestoreSkill extends CubeSkill {
         })
 
         const animate = AnimationTimeline(this, activateTimeline)
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
+        
         for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

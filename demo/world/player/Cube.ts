@@ -1,9 +1,10 @@
-import { range, vec2, vec3, quat } from '../../engine/math'
+import { range, randomFloat, vec2, vec3, quat } from '../../engine/math'
 import { MeshSystem, Mesh } from '../../engine/components'
 import { TransformSystem, Transform } from '../../engine/scene'
 import { AnimationSystem, ActionSignal, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEmitter } from '../../engine/particles'
 import { KeyboardSystem } from '../../engine/device'
+import { AudioSystem } from '../../engine/audio'
 import { PointLightPass, PointLight } from '../../engine/pipeline'
 
 import { TurnBasedSystem, IAgent } from './TurnBasedFlow'
@@ -84,8 +85,9 @@ export class Cube extends Unit implements IAgent {
             uRotation: [0, 2 * Math.PI],
             uAngular: [-Math.PI,Math.PI,0,0],
         })
-
         this.health.amount = this.health.capacity
+
+        this.context.get(TurnBasedSystem).signalEnterTile.broadcast(this.tile[0], this.tile[1], this)
     }
     installModule(side: number, direction: Direction, type: CubeModule){
         if(this.meshes[side]) this.context.get(MeshSystem).delete(this.meshes[side])
@@ -112,6 +114,7 @@ export class Cube extends Unit implements IAgent {
     }
     get skill(){ return this.context.get(PlayerSystem).skills[this.sides[this.side].type] }
     *death(): Generator<ActionSignal> {
+        this.context.get(PlayerSystem).theme.set(0, false)
         if(this.sides[this.side].open == 1)
         for(const generator = this.skill.close(); true;){
             const iterator = generator.next()
@@ -274,6 +277,10 @@ export class Cube extends Unit implements IAgent {
                 frame: 0.36, value: { amount: 16, uOrigin: nextPosition, uTarget: vec3.ZERO }
             }], EventTrigger.emitReset)
             const movementEase = ease.bounceIn(0.064, 0.8)
+            this.context.get(AudioSystem)
+            .create('assets/cube_step.mp3', 'sfx', this.transform)
+            .volume(0, 0.4)
+            .play(0.5, randomFloat(0.84, 1.16, SharedSystem.random()))
             for(const duration = 0.64, startTime = this.context.currentTime; true;){
                 const elapsedTime = this.context.currentTime - startTime
                 const fraction = Math.min(1, elapsedTime / duration)

@@ -4,6 +4,7 @@ import { BatchMesh, BillboardType, Line, Sprite } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { Decal, DecalPass, ParticleEffectPass, PointLight, PointLightPass, PostEffectPass } from '../../engine/pipeline'
 import { TransformSystem, Transform } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 
 import { TurnBasedSystem, Direction, DirectionAngle, DirectionTile } from '../player'
@@ -302,6 +303,7 @@ export class ProjectileSkill extends CubeSkill {
 
         const projectile = this.pool.pop() || new Projectile(this.context, this)
         this.context.get(TurnBasedSystem).enqueue(projectile.play(worldTransform, target), true)
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

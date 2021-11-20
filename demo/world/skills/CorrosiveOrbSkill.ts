@@ -1,6 +1,7 @@
 import { quat, vec2, vec3, vec4, mod, lerp } from '../../engine/math'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem, Transform } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh } from '../../engine/components'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
@@ -294,11 +295,13 @@ export class CorrosiveOrbSkill extends CubeSkill {
         this.context.get(TurnBasedSystem).enqueue(orb.appear(origin, 0.8), true)
 
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
+
         for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(TransformSystem).delete(transform)

@@ -1,10 +1,11 @@
 import { Application } from '../../../engine/framework'
-import { vec2, vec3, vec4, quat } from '../../../engine/math'
+import { randomFloat, vec2, vec3, vec4, quat } from '../../../engine/math'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
 import { Sprite, BillboardType, Mesh } from '../../../engine/components'
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { Cube } from '../../player'
 import { SharedSystem } from '../../shared'
 import { DamageType } from '../../military'
@@ -52,6 +53,9 @@ export class DamageEffect {
             uRadius: [0.2,0.4], uForce: [1,4]
         })
 
+        this.context.get(AudioSystem)
+        .create(`assets/cube_damage.mp3`, 'sfx', cube.transform)
+        .play(0, randomFloat(0.84, 1.16, SharedSystem.random()))
         const animate = AnimationTimeline(this, actionTimeline)
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

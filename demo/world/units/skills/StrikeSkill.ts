@@ -2,6 +2,7 @@ import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { ParticleEmitter } from '../../../engine/particles'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
@@ -114,6 +115,7 @@ export class StrikeSkill extends AIUnitSkill {
 
         const damage = EventTrigger([{ frame: 0.2, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/strike_use.mp3`, 'sfx', this.mesh.transform).play(0.2)
 
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

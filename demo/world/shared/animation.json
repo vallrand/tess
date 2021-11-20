@@ -55,6 +55,7 @@
     },
     "death":{
         "close":[
+            {"index":0,"frame":0,"position":[0,0,0]},
             {"index":1,"frame":0,"position":[0.6,0.4,0.6]},
             {"index":2,"frame":0,"position":[0.6,0.4,-0.6]},
             {"index":3,"frame":0,"position":[0.6,1.6,0.6]},

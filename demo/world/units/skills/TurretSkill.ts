@@ -2,6 +2,7 @@ import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat, mat4, moddelta } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
@@ -181,6 +182,7 @@ class Turret {
             ], vec3.lerp), { length: 0.24 }),
             ...actionTimeline
         })
+        this.context.get(AudioSystem).create(`assets/turret_use.mp3`, 'sfx', this.mesh.transform).play(0.4)
 
         for(const duration = 1.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEmitter } from '../../../engine/particles'
 import { ParticleEffectPass, PostEffectPass, PointLightPass, PointLight, DecalPass, Decal } from '../../../engine/pipeline'
@@ -153,6 +154,7 @@ export class FlamethrowerSkill extends AIUnitSkill {
                 { frame: 1.4, value: vec3.copy(this.lineB.path[1], vec3()), ease: ease.quartOut }
             ], vec3.lerp)
         })
+        this.context.get(AudioSystem).create(`assets/flamethrower_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 1.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

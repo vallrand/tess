@@ -1,6 +1,7 @@
 import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
@@ -153,6 +154,7 @@ export class ShockwaveSkill extends AIUnitSkill {
 
         const damage = EventTrigger([{ frame: 1.0, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/wave_use.mp3`, 'sfx', this.mesh.transform).play(0.2)
         for(const duration = 3.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

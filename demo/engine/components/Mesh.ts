@@ -230,7 +230,7 @@ export class MeshSystem implements ISystem {
             mesh.armature?.ik?.update()
         }
     }
-    public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, data: ILoadedData): void {
+    public load(manifest: { format: IVertexAttribute[][], buffer: string[], model: IModelData[] }, data: ILoadedData, next): void {
         const arraybuffer = data.buffers[0]
         for(let i = 0; i < manifest.model.length; i++){
             const model = manifest.model[i]
@@ -253,6 +253,7 @@ export class MeshSystem implements ISystem {
                 material.index = this.context.get(MaterialSystem).materials[model.texture].index
             }
         }
+        next()
     }
     public loadModel(key: string): Mesh {
         if(!this.models[key].buffer){

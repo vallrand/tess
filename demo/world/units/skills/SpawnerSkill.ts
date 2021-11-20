@@ -2,6 +2,7 @@ import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
@@ -68,7 +69,10 @@ class Spawner {
         readonly index: number,
         readonly tile: vec2
     ){}
-    public *activate(source: AIUnit): Generator<ActionSignal> {
+    public validate(origin: vec2): boolean {
+        return this.context.get(TerrainSystem).getTile(origin[0] + this.tile[0], origin[1] + this.tile[1]) == null
+    }
+    public *activate(source: AIUnit, index: number): Generator<ActionSignal> {
         this.mesh = source.mesh
 
         if(this.context.get(TerrainSystem).getTile(source.tile[0] + this.tile[0], source.tile[1] + this.tile[1]) != null) return
@@ -120,6 +124,7 @@ class Spawner {
             ], vec3.lerp),
             ...actionTimeline
         })
+        if(index == 0) this.context.get(AudioSystem).create(`assets/spawner_use.mp3`, 'sfx', source.mesh.transform).play(0)
 
         for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -157,13 +162,14 @@ export class SpawnerSkill extends AIUnitSkill {
         new Spawner(this.context, this, 'spawner9', 9, vec2(-1,1)),
     ]
     public validate(origin: vec2, target: vec2): boolean {
-        const terrain = this.context.get(TerrainSystem)
         let open: number = 0
-        for(let i = 0; i < this.spawners.length; i++)
-        if(terrain.getTile(origin[0] + this.spawners[i].tile[0], origin[1] + this.spawners[i].tile[1]) == null) open++
+        for(let i = 0; i < this.spawners.length; i++) if(this.spawners[i].validate(origin)) open++
         return open >= 4
     }
     public use(source: AIUnit, target: vec2): Generator<ActionSignal> {
-        return AnimationSystem.zip(this.spawners.map(spawner => spawner.activate(source)))
+        return AnimationSystem.zip(this.spawners
+            .filter(spawner => spawner.validate(source.tile))
+            .map((spawner, i) => spawner.activate(source, i))
+        )
     }
 }

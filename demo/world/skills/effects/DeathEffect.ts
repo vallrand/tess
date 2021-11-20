@@ -1,7 +1,8 @@
 import { Application } from '../../../engine/framework'
-import { randomFloat, quat, vec2, vec3, vec4, lerp, solveQuadratic } from '../../../engine/math'
+import { randomFloat, clamp, quat, vec2, vec3, vec4, lerp, solveQuadratic } from '../../../engine/math'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, IAnimationTween, ease } from '../../../engine/animation'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEmitter } from '../../../engine/particles'
 import { Sprite, BillboardType, MeshSystem, Mesh, Armature } from '../../../engine/components'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass, PointLightPass, PointLight } from '../../../engine/pipeline'
@@ -71,7 +72,7 @@ function ImpulseAnimation(tracks: {
     return function(elapsedTime: number, target: Armature){
         for(let i = tracks.length - 1; i >= 0; i--){
             const { index, position: p, rotation: r, velocity: v, angular: a, gravity } = tracks[i]
-            const time = Math.min(elapsedTime, endTime[i])
+            const time = clamp(elapsedTime, 0, endTime[i])
             const node = target.nodes[index]
 
             node.position[0] = p[0] + time * v[0] + 0.5 * time * time * gravity[0]
@@ -167,14 +168,19 @@ export class DeathEffect {
                     index: index + 1, position, rotation,
                     gravity: vec3(0, -30, 0), velocity: force, angular: torque
                 }
-            }))
+            })),
+            'wreck.armature.nodes.0.position': PropertyAnimation([
+                { frame: 1.2, value: vec3.ZERO },
+                { frame: 1.6, value: [0,-1,0], ease: ease.quadIn }
+            ], vec3.lerp)
         })
+        this.context.get(AudioSystem).create(`assets/cube_death.mp3`, 'sfx', this.wreck.transform).play(0)
 
-        for(const duration = 1.2, startTime = this.context.currentTime; true;){
+        for(const duration = 1.6, startTime = this.context.currentTime + 0.2; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
-            yield ActionSignal.WaitNextFrame
+            else yield ActionSignal.WaitNextFrame
         }
 
         this.context.get(SharedSystem).debris.delete(this.debris)

@@ -1,4 +1,3 @@
-import { Application } from '../../engine/framework'
 import { clamp, vec3, quat } from '../../engine/math'
 import { Armature } from '../../engine/components/Mesh'
 import { ease, parseEase, PropertyAnimation } from '../../engine/animation'

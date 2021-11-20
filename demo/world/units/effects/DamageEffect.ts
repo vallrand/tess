@@ -1,8 +1,9 @@
 import { Application } from '../../../engine/framework'
-import { vec2, vec3, vec4, quat } from '../../../engine/math'
+import { randomFloat, vec2, vec3, vec4, quat } from '../../../engine/math'
 import { Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { ParticleEffectPass } from '../../../engine/pipeline'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEmitter } from '../../../engine/particles'
 import { SharedSystem } from '../../shared'
@@ -127,6 +128,9 @@ export class DamageEffect {
             Object.assign(animations, timeline[DamageType.Temperature])
         }
         const animate = AnimationTimeline(this, animations)
+        this.context.get(AudioSystem)
+        .create(`assets/unit_damage.mp3`, 'sfx', source.mesh.transform)
+        .play(0, randomFloat(0.84, 1.16, SharedSystem.random()))
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

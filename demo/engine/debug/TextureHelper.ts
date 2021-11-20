@@ -2,7 +2,7 @@ import { Application } from '../framework'
 import { vec4 } from '../math'
 import { GL, UniformSamplerBindings, ShaderProgram } from '../webgl'
 import * as shaders from '../shaders'
-import { PostEffectPass } from '../pipeline'
+import { DeferredGeometryPass, PostEffectPass } from '../pipeline'
 
 import { SharedSystem } from '../../world/shared'
 import { AmbientLightPass } from '../pipeline'
@@ -36,6 +36,13 @@ export class TextureHelper implements IDebugHelper {
         for(let i = 0; i < reflection.probes.length; i++) textures.push({
             key: `envmap_${i}`, texture: reflection.probes[i].cubemap, type:  GL.TEXTURE_CUBE_MAP
         })
+
+        textures.unshift(
+            { texture: this.context.get(DeferredGeometryPass).position, type: GL.TEXTURE_2D, key: 'position_buffer' },
+            { texture: this.context.get(DeferredGeometryPass).normal, type: GL.TEXTURE_2D, key: 'normal_buffer' },
+            { texture: this.context.get(DeferredGeometryPass).albedo, type: GL.TEXTURE_2D, key: 'albedo_buffer' },
+            { texture: this.context.get(PostEffectPass).bloom.texture, type: GL.TEXTURE_2D, key: 'bloom_buffer' }
+        )
 
         return DomNode('div', {
             style: { display: 'flex', flexDirection: 'column' }

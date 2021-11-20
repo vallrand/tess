@@ -1,6 +1,7 @@
 import { vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEmitter } from '../../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEffectPass } from '../../../engine/pipeline'
@@ -204,8 +205,9 @@ export class LungeSkill extends AIUnitSkill {
         this.cone.material = SharedSystem.materials.sprite.streak
         this.context.get(ParticleEffectPass).add(this.cone)
     
-        const damage = EventTrigger([{ frame: 0.5, value: target }], AIUnitSkill.damage)
+        const damage = EventTrigger([{ frame: 0.6, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/lunge_use.mp3`, 'sfx', this.mesh.transform).play(0.25)
     
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

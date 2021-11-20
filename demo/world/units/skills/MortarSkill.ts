@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat, mat4, cubicBezier3D } from '../../../engine/math'
 import { Mesh, Line, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { DecalPass, Decal, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
 import { ParticleEmitter } from '../../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
@@ -277,6 +278,8 @@ export class MortarSkill extends AIUnitSkill {
             'trail': FollowPath.Line(curve, { length: 0.1 }),
             'projectile.transform': FollowPath(curve)
         })
+        this.context.get(AudioSystem).create(`assets/mortar_use.mp3`, 'sfx', this.mesh.transform).play(0)
+        this.context.get(AudioSystem).create(`assets/mortar_hit.mp3`, 'sfx', this.burn.transform).play(1.4)
 
         for(const duration = 2.4, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -359,6 +362,7 @@ export class MortarSkill extends AIUnitSkill {
                 { frame: 0.8, value: quat.axisAngle(vec3.AXIS_Y, angle, quat()), ease: ease.quadInOut }
             ], quat.slerp),
         })
+        this.context.get(AudioSystem).create(`assets/mortar_aim.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 1.6, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEmitter } from '../../../engine/particles'
 import { PointLightPass, PointLight, ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, FollowPath, ease } from '../../../engine/animation'
@@ -192,6 +193,8 @@ export class ProjectileSkill extends AIUnitSkill {
             ), { length: 0.06 }),
             ...actionTimeline
         })
+        this.context.get(AudioSystem).create(`assets/cannon_use.mp3`, 'sfx', this.mesh.transform).play(0.6)
+        this.context.get(AudioSystem).create(`assets/cannon_hit.mp3`, 'sfx', this.light.transform).play(1)
     
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

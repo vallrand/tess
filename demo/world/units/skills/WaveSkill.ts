@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat } from '../../../engine/math'
 import { Mesh, Sprite, BillboardType, BatchMesh } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { ParticleEmitter } from '../../../engine/particles'
 import { PointLightPass, PointLight, DecalPass, Decal, ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
@@ -163,6 +164,7 @@ export class WaveSkill extends AIUnitSkill {
     
         const damage = EventTrigger([{ frame: 1, value: target }], AIUnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/shock_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

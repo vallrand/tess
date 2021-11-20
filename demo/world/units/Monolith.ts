@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat } from '../../engine/math'
 import { MeshSystem, BatchMesh } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ParticleEffectPass, PointLightPass, PointLight } from '../../engine/pipeline'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, ease } from '../../engine/animation'
 
@@ -94,6 +95,7 @@ export class Monolith extends AIUnit {
                 { frame: 1, value: [0,0.2,0], ease: ease.sineInOut }
             ], BlendTween.vec3)
         })
+        this.context.get(AudioSystem).create(`assets/unit_move.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const generator = this.moveAlongPath(path, frames, false); true;){
             const iterator = generator.next()

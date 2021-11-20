@@ -3,6 +3,7 @@ import { vec2, vec3, vec4, lerp, quat, aabb2 } from '../../engine/math'
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { ParticleEffectPass, PointLightPass, DecalPass, PostEffectPass, PointLight, Decal } from '../../engine/pipeline'
 import { SharedSystem } from '../shared'
@@ -137,6 +138,7 @@ export class LandMine extends UnitSkill {
         this.context.get(ParticleEffectPass).add(this.circle)
 
         const animate = AnimationTimeline(this, activateTimeline)
+        this.context.get(AudioSystem).create(`assets/cube_5_trigger.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -216,6 +218,8 @@ export class LandMine extends UnitSkill {
         const damage = EventTrigger(UnitSkill.queryArea(this.context, this.tile, this.minRange, this.range, this.group)
         .map(value => ({ frame: 0.4, value })), UnitSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/cube_5_explode.mp3`, 'sfx', this.mesh.transform).play(0)
+
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)

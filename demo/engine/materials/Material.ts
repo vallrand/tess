@@ -119,7 +119,7 @@ export class MaterialSystem implements ISystem {
             this.renderTexture(texture, layer, program, uniforms)
         }
     }
-    public load(manifest: { texture: string[], model: {texture:number}[] }, data: ILoadedData): void {
+    public load(manifest: { texture: string[], model: {texture:number}[] }, data: ILoadedData, next): void {
         function renderNormalMap(material: MeshMaterial, width: number, height: number){
             if(!manifest.model.find(model => model.texture === material.index)) return
             const normalTexture = this.addRenderTexture(
@@ -140,6 +140,7 @@ export class MaterialSystem implements ISystem {
             material.diffuse = texture
             renderNormalMap.call(this, material, width, height)
         }
+        next()
     }
     public loadTexture(){
         const image: HTMLImageElement = new Image()

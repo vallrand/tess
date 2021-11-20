@@ -1,6 +1,7 @@
 import { vec2, vec3, vec4, quat } from '../../engine/math'
 import { MeshSystem } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { DecalPass, Decal } from '../../engine/pipeline'
 import { ParticleEmitter } from '../../engine/particles'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, BlendTween, EventTrigger, ease } from '../../engine/animation'
@@ -66,6 +67,10 @@ export class Isopod extends AIUnit {
         
         this.context.get(TerrainSystem).tilePosition(path[path.length - 1][0], path[path.length - 1][1], this.dust.uniform.uniforms['uOrigin'] as any)
         const dustEmit = EventTrigger([{ frame: frames[frames.length - 1] - 0.1, value: 16 }], EventTrigger.emit)
+        this.context.get(AudioSystem)
+        .create(`assets/unit_land.mp3`, 'sfx', this.mesh.transform)
+        .volume(0, 1)
+        .play(frames[frames.length - 1] - 0.2)
         
         for(const generator = this.moveAlongPath(path, frames, true), startTime = this.context.currentTime; true;){
             const iterator = generator.next()

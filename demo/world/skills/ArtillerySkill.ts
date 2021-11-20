@@ -3,6 +3,7 @@ import { randomFloat, moddelta, clamp, mod, mat4, quat, vec2, vec3, vec4, cubicB
 import { ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, FollowPath, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
 import { ParticleEmitter } from '../../engine/particles'
+import { AudioSystem } from '../../engine/audio'
 import { Sprite, BillboardType, MeshSystem, Mesh, BatchMesh, Line } from '../../engine/components'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
 
@@ -165,6 +166,7 @@ class Missile {
             'trail': FollowPath.Line(curve, { length: 0.08 }),
             'head.transform': FollowPath(curve)
         })
+        this.context.get(AudioSystem).create(`assets/cube_8_hit.mp3`, 'sfx', this.head.transform).play(travelDuration - 0.3)
 
         for(const duration = 1, startTime = this.context.currentTime + travelDuration; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -298,6 +300,7 @@ export class ArtillerySkill extends CubeSkill {
             quat.transform(missile.normal, DirectionAngle[direction], missile.normal)
             this.context.get(TurnBasedSystem).enqueue(missile.launch(targets[i], i), true)
         }
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

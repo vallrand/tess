@@ -2,6 +2,7 @@ import { Application } from '../../engine/framework'
 import { mod, vec2 } from '../../engine/math'
 import { Mesh } from '../../engine/components'
 import { ActionSignal } from '../../engine/animation'
+import { AudioSystem, AudioSource } from '../../engine/audio'
 import { ModelAnimation } from '../shared'
 import { Cube, Direction } from '../player'
 import { UnitSkill } from '../military'
@@ -16,6 +17,9 @@ export class CubeSkill extends UnitSkill {
         const state = this.cube.sides[this.cube.side]
         const mesh = this.cube.meshes[this.cube.side]
         const open = ModelAnimation('open')
+        this.context.get(AudioSystem)
+        .create(`assets/${mesh.armature.key}_open.mp3`, 'sfx', this.mesh.transform)
+        .play(0)
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -29,6 +33,9 @@ export class CubeSkill extends UnitSkill {
         const state = this.cube.sides[this.cube.side]
         const mesh = this.cube.meshes[this.cube.side]
         const open = ModelAnimation('open')
+        this.context.get(AudioSystem)
+        .create(`assets/${mesh.armature.key}_close.mp3`, 'sfx', this.mesh.transform)
+        .play(0)
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

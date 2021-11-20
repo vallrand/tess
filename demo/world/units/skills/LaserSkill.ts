@@ -1,6 +1,7 @@
 import { lerp, vec2, vec3, vec4, quat, mat4 } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem, AudioSource } from '../../../engine/audio'
 import { ParticleEffectPass, PointLight, PointLightPass } from '../../../engine/pipeline'
 import { ActionSignal, PropertyAnimation, AnimationTimeline, EventTrigger, ease } from '../../../engine/animation'
 
@@ -168,6 +169,7 @@ export class LaserSkill extends AIUnitSkill {
     private center: Sprite
     private light: PointLight
     private mesh: Mesh
+    private sound: AudioSource
 
     public aim(origin: vec2, tiles: vec2[], threshold?: number): vec2 | null {
         const map = this.context.get(TerrainSystem).pathfinder
@@ -272,6 +274,10 @@ export class LaserSkill extends AIUnitSkill {
                 { frame: 1.2, value: this.targets[3], ease: ease.cubicOut }
             ], vec3.lerp)
         })
+        this.context.get(AudioSystem).clips[`assets/laser_loop.mp3`].loop = 0.06
+        this.context.get(AudioSystem).create(`assets/laser_use.mp3`, 'sfx', this.mesh.transform).play(0)
+        this.sound = this.context.get(AudioSystem).create(`assets/laser_loop.mp3`, 'sfx', this.mesh.transform)
+        this.sound.volume(0, 0).volume(0.5, 0.5).play(0)
 
         for(const duration = 2, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -301,6 +307,8 @@ export class LaserSkill extends AIUnitSkill {
         this.active = false
 
         const animate = AnimationTimeline(this, deactivateTimeline)
+        this.sound = void this.sound.stop(0)
+        if(!immediate) this.context.get(AudioSystem).create(`assets/laser_close.mp3`, 'sfx', this.mesh.transform).play(0)
         if(!immediate)
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

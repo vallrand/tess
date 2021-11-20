@@ -95,13 +95,17 @@ export class AISystem implements ISystem, IAgent {
             unit.strategy.aware = vec2.distanceSquared(unit.tile, target) <= revealRadius
         }
         this.propagate(this.propagationRadius)
+        let level: number = 0
         update: for(let i = this.list.length - 1; i >= 0; i--){
             const unit = this.list[i]
             if(unit.health.amount <= 0) continue
             unit.regenerate()
             unit.strategy.precalculate()
             if(unit.strategy.aware) queue.push(unit)
+            if(unit.strategy.aware) level = Math.max(unit.size[0], level)
         }
+        this.context.get(PlayerSystem).theme.set(2, level > 0)
+        this.context.get(PlayerSystem).theme.set(3, level > 1)
 
         tactics: while(queue.length){
             let index: number, optimal: AIStrategyPlan

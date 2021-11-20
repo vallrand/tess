@@ -6,6 +6,7 @@ import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, Ev
 import { MeshSystem, Mesh, BatchMesh, Sprite, BillboardType } from '../../engine/components'
 import { ParticleEmitter } from '../../engine/particles'
 import { ParticleEffectPass } from '../../engine/pipeline'
+import { AudioSystem } from '../../engine/audio'
 import { KeyboardSystem } from '../../engine/device'
 
 import { TerrainSystem } from '../terrain'
@@ -84,8 +85,12 @@ export class Workshop {
         Workshop.pool.push(this)
     }
     public *react(cube: Cube): Generator<ActionSignal> {
-        const open = cube.tile[0] === this.tile[0] && Math.abs(cube.tile[1] - this.tile[1]) <= 2
-        if(open && cube.tile[1] === this.tile[1]){
+        const dx = Math.abs(cube.tile[0] - this.tile[0])
+        const dy = Math.abs(cube.tile[1] - this.tile[1])
+        this.context.get(PlayerSystem).theme.set(1, Math.max(dx, dy) <= 4)
+
+        const open = dx === 0 && dy <= 2
+        if(open && dy === 0){
             cube.action.amount = cube.movement.amount = 0
             this.cube = cube
         }
@@ -115,6 +120,7 @@ export class Workshop {
         const prevCameraOffset = vec3.copy(cameraOffset, vec3())
         const nextCameraOffset = vec3(-2,4,2)
 
+        this.context.get(AudioSystem).create('assets/lift_up.mp3', 'sfx', this.mesh.transform).play(0)
         lift: for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
             ModelAnimation.map.dock.lift(fraction, this.mesh.armature)
@@ -147,15 +153,19 @@ export class Workshop {
 
         this.menu.actionIndex = this.context.get(AnimationSystem).start(this.menu.open(cube), true)
         upgradeMenu: while(true){
+            yield ActionSignal.WaitNextFrame
             if(keys.down(PlayerSystem.input.down)) break upgradeMenu
             else if(keys.trigger(PlayerSystem.input.left)){
+                this.context.get(AudioSystem).create('assets/menu_select.mp3', 'sfx', null).play(0)
                 this.menu.moduleIndex++
             }else if(keys.trigger(PlayerSystem.input.right)){
+                this.context.get(AudioSystem).create('assets/menu_select.mp3', 'sfx', null).play(0)
                 this.menu.moduleIndex--
             }else if(keys.trigger(PlayerSystem.input.action)){
                 const forward = (4-cube.direction)%4
                 cube.installModule(cube.side, forward, this.menu.availableModules[this.menu.moduleIndex])
                 const animate = AnimationTimeline(this, actionTimeline)
+                this.context.get(AudioSystem).create('assets/menu_install.mp3', 'sfx', cube.transform).play(0)
                 install: for(const duration = 0.6, startTime = this.context.currentTime; true;){
                     const elapsedTime = this.context.currentTime - startTime
                     animate(elapsedTime, this.context.deltaTime)
@@ -166,9 +176,9 @@ export class Workshop {
             if(keys.down(PlayerSystem.input.up)) for(const generator = this.menu.upgrade(); true;)
                 if(generator.next().done) break
                 else yield ActionSignal.WaitNextFrame
-            yield ActionSignal.WaitNextFrame
         }
         this.menu.actionIndex = -1
+        this.context.get(AudioSystem).create('assets/lift_down.mp3', 'sfx', this.mesh.transform).play(0)
         lower: for(const duration = 1.0, startTime = this.context.currentTime; true;){
             const fraction = Math.min(1, (this.context.currentTime - startTime) / duration)
             ModelAnimation.map.dock.lift(1-fraction, this.mesh.armature)

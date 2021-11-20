@@ -1,5 +1,6 @@
 import { lerp, quat, vec2, vec3, vec4 } from '../../engine/math'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { AnimationTimeline, PropertyAnimation, EventTrigger, ActionSignal, ease } from '../../engine/animation'
 import { Sprite, BillboardType, BatchMesh } from '../../engine/components'
 import { PointLight, PointLightPass, ParticleEffectPass, PostEffectPass, Decal, DecalPass } from '../../engine/pipeline'
@@ -153,6 +154,7 @@ export class ShockwaveSkill extends CubeSkill {
 
         const damage = EventTrigger(targets.map(value => ({ frame: 0.6, value })), CubeSkill.damage)
         const animate = AnimationTimeline(this, actionTimeline)
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_use.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 2.0, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

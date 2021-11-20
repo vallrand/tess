@@ -1,10 +1,11 @@
 import { Application } from '../../engine/framework'
-import { lerp, vec2, vec3, vec4, quat, mod, moddelta, mat3x2 } from '../../engine/math'
+import { vec2, vec3, vec4, quat, mod, moddelta } from '../../engine/math'
 import { ActionSignal, AnimationTimeline, PropertyAnimation, ease } from '../../engine/animation'
 import { Sprite, BillboardType, Sprite2D, Transform2D } from '../../engine/components'
 import { TransformSystem, Transform } from '../../engine/scene'
-import { ParticleEffectPass, OverlayPass } from '../../engine/pipeline'
-import { VectorGraphicsTexture, SpriteMaterial } from '../../engine/materials'
+import { OverlayPass } from '../../engine/pipeline'
+import { AudioSystem } from '../../engine/audio'
+import { SpriteMaterial } from '../../engine/materials'
 import { KeyboardSystem } from '../../engine/device'
 import { PlayerSystem, Cube, CubeModule } from '../player'
 import { SharedSystem } from '../shared'
@@ -62,7 +63,7 @@ export class UpgradeMenu {
     ]
     actionIndex: number
     moduleIndex: number
-    private static readonly enabled: vec4 = vec4(1,1,1,0.4) 
+    private static readonly enabled: vec4 = vec4(1,1,1,0.4)
     private carouselTransform: Transform
     private color: vec4 = vec4()
     private carouselIcons: Sprite[] = []
@@ -173,6 +174,7 @@ export class UpgradeMenu {
         const disabled = vec4(0.4,0.4,0.5,1)
         const enabled = vec4(1,1,1,0)
 
+        this.context.get(AudioSystem).create('assets/menu_select.mp3', 'sfx', null).play(0)
         for(const startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
@@ -208,6 +210,7 @@ export class UpgradeMenu {
 
             yield ActionSignal.WaitNextFrame
         }
+        this.context.get(AudioSystem).create('assets/menu_select.mp3', 'sfx', null).play(0)
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(duration - elapsedTime, this.context.deltaTime)
@@ -232,6 +235,7 @@ export class UpgradeMenu {
             { frame: 0.2, value: [1,1,1,0], ease: ease.quadOut },
             { frame: 0.5, value: vec4.ZERO, ease: ease.sineIn }
         ], vec4.lerp)
+        this.context.get(AudioSystem).create('assets/menu_upgrade.mp3', 'sfx', null).play(0)
         for(const duration = 0.5, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, glow.color)

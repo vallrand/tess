@@ -2,6 +2,7 @@ import { quat, vec2, vec3, vec4 } from '../../engine/math'
 import { Application } from '../../engine/framework'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../engine/animation'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { ParticleEmitter } from '../../engine/particles'
 import { Sprite, BillboardType, Mesh, BatchMesh } from '../../engine/components'
 import { Decal, DecalPass, ParticleEffectPass, PostEffectPass } from '../../engine/pipeline'
@@ -157,6 +158,7 @@ export class ShieldSkill extends CubeSkill {
 
         const animate = AnimationTimeline(this, introTimeline)
         const open = ModelAnimation('open')
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_open.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 3, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -193,6 +195,7 @@ export class ShieldSkill extends CubeSkill {
 
         const animate = AnimationTimeline(this, outroTimeline)
         const open = ModelAnimation('open')
+        this.context.get(AudioSystem).create(`assets/${this.mesh.armature.key}_close.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const duration = 1, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -213,6 +216,8 @@ export class ShieldSkill extends CubeSkill {
         const mesh = this.cube.meshes[this.cube.side]
         const accelerationEase = ease.velocity(0, 1, 0.5)
         const loop = ModelAnimation('loop')
+        const sound = this.context.get(AudioSystem).create('assets/cube_7_loop.mp3', 'sfx', this.mesh.transform)
+        sound.volume(0, 0).volume(0.8, 0.5).play(0)
 
         let head: number = 0
         for(const startTime = this.context.currentTime; true;){
@@ -225,6 +230,7 @@ export class ShieldSkill extends CubeSkill {
         const decelerationDistance = .25 - head % .25
         const decelerationDuration = ease.velocity.duration(1, 0, decelerationDistance)
         const decelerationEase = ease.velocity(1, 0, decelerationDuration)
+        sound.volume(1, 0).stop(1)
         for(const startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
             loop((head + decelerationEase(elapsedTime)) % 1, mesh.armature)

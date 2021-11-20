@@ -34,7 +34,7 @@ export class SharedSystem implements ISystem {
         SharedSystem.particles = ParticleLibrary(this.context)
     }
     public update(): void {}
-    public load(): void {
+    public load(manifest, loaded, next): void {
         this.sky = new SkyEffect(this.context)
         this.context.get(DeferredGeometryPass).effects.push(this.sky)
         this.debris = new DebrisEffect(this.context, 'cube_debris')
@@ -42,5 +42,6 @@ export class SharedSystem implements ISystem {
         
         this.mist = new MistEffect(this.context, 256, [-8,0,-8,8,6,8])
         this.context.get(ParticleEffectPass).effects.push(this.mist)
+        next()
     }
 }

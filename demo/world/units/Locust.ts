@@ -1,6 +1,7 @@
 import { vec2, vec4, quat } from '../../engine/math'
 import { MeshSystem, BatchMesh } from '../../engine/components'
 import { TransformSystem } from '../../engine/scene'
+import { AudioSystem } from '../../engine/audio'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, ease } from '../../engine/animation'
 import { ParticleEffectPass } from '../../engine/pipeline'
 
@@ -75,6 +76,7 @@ export class Locust extends AIUnit {
                 { frame: 1, value: [0.5,0.3,0.8,1], ease: ease.cubicOut }
             ], vec4.lerp)
         })
+        this.context.get(AudioSystem).create(`assets/unit_move.mp3`, 'sfx', this.mesh.transform).play(0)
 
         for(const generator = this.moveAlongPath(path, frames, true); true;){
             const iterator = generator.next()

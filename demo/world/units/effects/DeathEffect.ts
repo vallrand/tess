@@ -4,6 +4,7 @@ import { MeshMaterial } from '../../../engine/materials'
 import { Mesh, Sprite, BillboardType } from '../../../engine/components'
 import { DecalPass, Decal, ParticleEffectPass, PointLightPass, PointLight, PostEffectPass } from '../../../engine/pipeline'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem } from '../../../engine/audio'
 import { AnimationSystem, ActionSignal, AnimationTimeline, PropertyAnimation, EventTrigger, ease } from '../../../engine/animation'
 import { ParticleEmitter } from '../../../engine/particles'
 import { SharedSystem } from '../../shared'
@@ -140,6 +141,7 @@ export class DeathEffect {
                 { frame: 3, value: vec4.ZERO, ease: ease.cubicIn }
             ], vec4.lerp)
         })
+        this.context.get(AudioSystem).create(`assets/unit_death.mp3`, 'sfx', this.mesh.transform).play(0)
 
         this.debris = this.context.get(SharedSystem).debris.create(this.mesh.transform.position)
         const scale = 0.4 + 0.4 * source.size[0]

@@ -3,7 +3,6 @@ type IProgressHandler<T> = (remaining: number, value?: T | Error) => void
 export interface ILoadedData {
     readonly textures: HTMLImageElement[]
     readonly buffers: ArrayBuffer[]
-    readonly audio: ArrayBuffer[]
 }
 
 export class Loader {
@@ -15,8 +14,7 @@ export class Loader {
     }, callback: (store: ILoadedData) => void){
         const textures: HTMLImageElement[] = []
         const buffers: ArrayBuffer[] = []
-        const audio: ArrayBuffer[] = []
-        let total = manifest.texture.length + manifest.buffer.length// + manifest.audio.length
+        let total = manifest.texture.length + manifest.buffer.length
         let progress = 0, totalRemaining = total
 
         const progressHandler = <T>(index: number, list: T[]): IProgressHandler<T> => {
@@ -31,7 +29,7 @@ export class Loader {
                 prevRemaining = remaining
                 this.progressBarElement.style.width = `${Math.round(100 * (1 - progress / total))}%`
 
-                if(totalRemaining == 0) callback({ textures, buffers, audio })
+                if(totalRemaining == 0) callback({ textures, buffers })
             }
         }
 
@@ -39,8 +37,6 @@ export class Loader {
             this.loadImage(manifest.texture[i], progressHandler(i, textures))
         for(let i = 0; i < manifest.buffer.length; i++)
             this.loadFile<ArrayBuffer>(manifest.buffer[i], 'arraybuffer', progressHandler(i, buffers))
-        //for(let i = 0; i < manifest.audio.length; i++)
-        //    this.loadFile<ArrayBuffer>(manifest.audio[i], 'arraybuffer', progressHandler(i, audio))
     }
     private loadFile<T>(url: string, responseType: XMLHttpRequestResponseType, progress: IProgressHandler<T>){
         const xhr = new XMLHttpRequest()

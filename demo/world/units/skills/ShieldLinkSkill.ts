@@ -2,6 +2,7 @@ import { Application } from '../../../engine/framework'
 import { lerp, vec2, vec3, vec4, quat, mat4, quadraticBezier3D } from '../../../engine/math'
 import { Mesh, BatchMesh, Sprite, BillboardType, Line } from '../../../engine/components'
 import { TransformSystem } from '../../../engine/scene'
+import { AudioSystem, AudioSource } from '../../../engine/audio'
 import { AnimationSystem, ActionSignal, PropertyAnimation, AnimationTimeline, FollowPath, ease } from '../../../engine/animation'
 import { ParticleEffectPass, PostEffectPass } from '../../../engine/pipeline'
 
@@ -91,11 +92,11 @@ class EnergyLink {
             for(let i = 0; i < this.line.path.length; i++)
                 this.line.path[i][1] += 0.4 * Math.cos((this.context.currentTime + 0.08*i) * Math.PI * 2) * EnergyLink.fade(i / (this.line.path.length - 1))
 
-            if(elapsedTime > duration && this.idleIndex == -1) break
+            if(elapsedTime > duration && this.idleIndex < 0 || this.idleIndex < -1) break
             else yield ActionSignal.WaitNextFrame
         }
         this.target.shield--
-        disconnect: for(const duration = 2, startTime = this.context.currentTime; true;){
+        disconnect: for(const duration = 2, startTime = this.context.currentTime; this.idleIndex >= -1;){
             const elapsedTime = this.context.currentTime - startTime + 1
 
             mat4.transform(start, this.parent.mesh.transform.matrix, this.start)
@@ -118,6 +119,12 @@ class EnergyLink {
         this.context.get(ParticleEffectPass).remove(this.line)
         Sprite.delete(this.glow)
         EnergyLink.pool.push(this)
+    }
+    public deactivate(immediate?: boolean): void {
+        const index = this.idleIndex
+        if(index < 0) return
+        this.idleIndex = immediate ? -2 : -1
+        if(immediate) this.context.get(AnimationSystem).stop(index, true)
     }
 }
 
@@ -210,6 +217,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
     private circle: Sprite
     private bulge: Sprite
     private mesh: Mesh
+    private sound: AudioSource
 
     public query(source: AIUnit): AIUnit[] {
         const terrain = this.context.get(TerrainSystem)
@@ -270,6 +278,9 @@ export class ShieldLinkSkill extends AIUnitSkill {
             link.idleIndex = this.context.get(AnimationSystem).start(link.activate(0.5), true)
         }
         const animate = AnimationTimeline(this, activateTimeline)
+        this.context.get(AudioSystem).create(`assets/link_use.mp3`, 'sfx', this.mesh.transform).play(0)
+        this.sound = this.context.get(AudioSystem).create(`assets/link_loop.mp3`, 'sfx', this.mesh.transform)
+        this.sound.volume(0, 0).volume(0.5, 0.5).play(0)
 
         for(const duration = 1.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -303,7 +314,7 @@ export class ShieldLinkSkill extends AIUnitSkill {
             angle = (elapsedTime * angularVelocity - 0.5 * Math.PI) % (2 * Math.PI)
             quat.axisAngle(vec3.AXIS_Y, angle, this.mesh.armature.nodes[2].rotation)
             this.mesh.armature.frame = 0
-            if(this.idleIndex == -1) break
+            if(this.idleIndex < 0) break
             else yield ActionSignal.WaitNextFrame
         }
         this.active = false
@@ -323,11 +334,10 @@ export class ShieldLinkSkill extends AIUnitSkill {
                 { frame: 0.4, value: vec4.ZERO, ease: ease.sineIn }
             ], vec4.lerp)
         })
+        while(this.links.length) this.links.pop().deactivate(this.idleIndex < -1)
 
-        for(let i = 0; i < this.links.length; i++) this.links[i].idleIndex = -1
-        this.links.length = 0
-
-        for(const duration = 1, startTime = this.context.currentTime; true;){
+        this.sound = void this.sound.volume(1, 0).stop(1)
+        for(const duration = 1, startTime = this.context.currentTime; this.idleIndex >= -1;){
             const elapsedTime = this.context.currentTime - startTime
             animate(elapsedTime, this.context.deltaTime)
             if(elapsedTime > duration) break
@@ -342,15 +352,12 @@ export class ShieldLinkSkill extends AIUnitSkill {
         BatchMesh.delete(this.core)
     }
     public *deactivate(immediate?: boolean): Generator<ActionSignal> {
-        if(this.idleIndex == -1) return
-        if(immediate){
-            while(this.links.length) this.links.pop().idleIndex = -1
-            this.context.get(AnimationSystem).stop(this.idleIndex)
-            this.active = false
-        }else{
-            const waiter = this.context.get(AnimationSystem).await(this.idleIndex)
-            this.idleIndex = -1
-            yield waiter
-        }
+        const index = this.idleIndex
+        if(index < 0) return
+        this.idleIndex = immediate ? -2 : -1
+        if(immediate)
+            this.context.get(AnimationSystem).stop(index, true)
+        else
+            yield this.context.get(AnimationSystem).await(index)
     }
 }

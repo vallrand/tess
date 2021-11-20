@@ -3,7 +3,7 @@ import { WebGLState } from '../webgl'
 
 export interface ISystem {
     update(): void
-    load?(manifest: any, data: ILoadedData): void
+    load?(manifest: any, data: ILoadedData, next: () => void): void
 }
 export interface SystemType<T extends ISystem> {
     index?: number
@@ -46,12 +46,11 @@ export class Application {
         requestAnimationFrame(this.update)
     }
     public load(manifest: any){
-        this.loader.load(manifest, (loadedData: ILoadedData) => {
-            for(let i = 0; i < this.systems.length; i++){
-                if(!this.systems[i].load) continue
-                this.systems[i].load(manifest, loadedData)
-            }
-            Loader.awaitUserGesture(() => this.update(0))
-        })
+        function next(this: Application, i: number, data: ILoadedData){
+            if(i === this.systems.length) Loader.awaitUserGesture(() => this.update(0))
+            else if(!this.systems[i].load) next.call(this, i + 1, data)
+            else this.systems[i].load(manifest, data, next.bind(this, i + 1, data))
+        }
+        this.loader.load(manifest, next.bind(this, 0))
     }
 }
