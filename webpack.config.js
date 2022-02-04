@@ -2,7 +2,7 @@ import path from 'path'
 import webpack from 'webpack'
 
 export default (env, argv) => ({
-    entry: './demo/index.ts',
+    entry: './app/index.ts',
     output:{ filename: 'index.js', path: path.resolve('output') },
     resolve:{ extensions: ['.js','.ts','.json'] },
     module:{ rules:[

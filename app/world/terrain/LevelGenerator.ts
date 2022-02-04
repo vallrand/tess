@@ -1,5 +1,5 @@
 import { Application } from '../../engine/framework'
-import { aabb2, smoothstep, noise1D, noise2D, perlin2D, shuffle, hashCantor } from '../../engine/math'
+import { aabb2, smoothstep, noise1D, noise2D, perlin2D, shuffle, pairSzudzik } from '../../engine/math'
 import { EconomySystem } from '../economy'
 import { AISystem } from '../military'
 import { TerrainSystem } from './Terrain'
@@ -194,7 +194,7 @@ export class LevelGenerator {
                 case UNIT: {
                     const variation = C & 0xFF
                     if(!variation) break
-                    const hash = hashCantor(x, y)
+                    const hash = pairSzudzik(x, y)
                     this.context.get(AISystem).create(x, y, variation - 1 as any, hash)
                     break
                 }

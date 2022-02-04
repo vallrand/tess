@@ -53,7 +53,7 @@ npm run start
 - [Tileable Noise](https://github.com/tuxalin/procedural-tileable-shaders) [4D Noise](https://www.gamedev.net/forums/topic/642794-tileable-fbm-noise/)
 - [Screen Space Decals](https://martindevans.me/game-development/2015/02/27/Drawing-Stuff-On-Other-Stuff-With-Deferred-Screenspace-Decals/)
 - [Image Based Lightning](https://learnopengl.com/PBR/IBL/Specular-IBL) [PBR](https://www.jordanstevenstechart.com/physically-based-rendering) [Specular BRDF](http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html)
-- [Cantor Pairing Function](https://en.wikipedia.org/wiki/Pairing_function) [Line Drawing](https://www.redblobgames.com/grids/line-drawing.html)
+- [Cantor Pairing Function](https://en.wikipedia.org/wiki/Pairing_function) [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) [Line Drawing](https://www.redblobgames.com/grids/line-drawing.html)
 - [Cubemap Blending](https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/)
 - [Vertex Data Packing](https://dev.to/keaukraine/optimization-of-opengl-es-vertex-data-15d0)
 - [Derivative Maps](https://www.rorydriscoll.com/2012/01/11/derivative-maps/) [Derivative Maps vs Normal Maps](https://computergraphics.stackexchange.com/questions/4937/derivative-maps-vs-tangent-space-normal-maps) [Bump Mapping](https://apoorvaj.io/exploring-bump-mapping-with-webgl/)

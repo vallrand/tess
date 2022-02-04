@@ -57,10 +57,32 @@ export function hashString(value: string): number {
     return hash
 }
 
-export function hashCantor(c: number, r: number): number {
+export function pairCantor(c: number, r: number): number {
     c = c >= 0 ? c*2 : -c*2 - 1
     r = r >= 0 ? r*2 : -r*2 - 1
     return (c + r) * (c + r + 1) / 2 + c
+}
+export function unpairCantor(value: number, out: [number, number]): [number, number] {
+    const sqrt = Math.floor((Math.floor(Math.sqrt(1 + value * 8)) - 1) / 2)
+    out[0] = value - sqrt * (sqrt + 1) / 2
+    out[1] = sqrt * (sqrt + 3) / 2 - value
+    out[0] = out[0] % 2 === 0 ? out[0] / 2 : (out[0] + 1) / -2
+    out[1] = out[1] % 2 === 0 ? out[1] / 2 : (out[1] + 1) / -2
+    return out
+}
+
+export function pairSzudzik(c: number, r: number): number {
+    c = c >= 0 ? c*2 : -c*2 - 1
+    r = r >= 0 ? r*2 : -r*2 - 1
+    return c >= r ? c*c + c + r : r*r + c
+}
+export function unpairSzudzik(value: number, out: [number, number]): [number, number] {
+    const sqrt = Math.sqrt(value) | 0, sq = sqrt*sqrt
+    out[0] = value - sq >= sqrt ? sqrt : value - sq
+    out[1] = value - sq >= sqrt ? value - sq - sqrt : sqrt
+    out[0] = out[0] % 2 === 0 ? out[0] / 2 : (out[0] + 1) / -2
+    out[1] = out[1] % 2 === 0 ? out[1] / 2 : (out[1] + 1) / -2
+    return out
 }
 
 export function binarySearch<T>(list: T[], target: T, compare: (a: T, b: T) => number, last?: boolean): number {

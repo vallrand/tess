@@ -80,7 +80,7 @@ class EnergyLink {
         })
         const start = vec3(0,4.5,-1.3), end = vec3(0,2,0)
         this.target.shield++
-        connect: for(const duration = 1, startTime = this.context.currentTime; true;){
+        connect: for(const duration = 1, startTime = this.context.currentTime; this.idleIndex >= -1;){
             const elapsedTime = this.context.currentTime - startTime
 
             mat4.transform(start, this.parent.mesh.transform.matrix, this.start)
@@ -92,7 +92,7 @@ class EnergyLink {
             for(let i = 0; i < this.line.path.length; i++)
                 this.line.path[i][1] += 0.4 * Math.cos((this.context.currentTime + 0.08*i) * Math.PI * 2) * EnergyLink.fade(i / (this.line.path.length - 1))
 
-            if(elapsedTime > duration && this.idleIndex < 0 || this.idleIndex < -1) break
+            if(elapsedTime > duration && this.idleIndex < 0) break
             else yield ActionSignal.WaitNextFrame
         }
         this.target.shield--

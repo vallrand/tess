@@ -13,7 +13,7 @@
         "typeRoots": ["./node_modules/@types"]
     },
     "include": [
-        "demo/**/*"
+        "app/**/*"
     ],
     "exclude": [
         "node_modules"
