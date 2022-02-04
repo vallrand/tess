@@ -18,8 +18,7 @@ export class CubeSkill extends UnitSkill {
         const mesh = this.cube.meshes[this.cube.side]
         const open = ModelAnimation('open')
         this.context.get(AudioSystem)
-        .create(`assets/${mesh.armature.key}_open.mp3`, 'sfx', this.mesh.transform)
-        .play(0)
+        .create(`assets/${mesh.armature.key}_open.mp3`, 'sfx', this.mesh.transform)?.play(0)
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime
@@ -34,8 +33,7 @@ export class CubeSkill extends UnitSkill {
         const mesh = this.cube.meshes[this.cube.side]
         const open = ModelAnimation('open')
         this.context.get(AudioSystem)
-        .create(`assets/${mesh.armature.key}_close.mp3`, 'sfx', this.mesh.transform)
-        .play(0)
+        .create(`assets/${mesh.armature.key}_close.mp3`, 'sfx', this.mesh.transform)?.play(0)
 
         for(const duration = 0.8, startTime = this.context.currentTime; true;){
             const elapsedTime = this.context.currentTime - startTime

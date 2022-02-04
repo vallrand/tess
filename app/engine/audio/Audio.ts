@@ -25,6 +25,7 @@ export class AudioSystem implements ISystem {
             this.list[i].update(this.context.frame)
     }
     public create(key: string, channel: keyof AudioMixer['channel'], transform: Transform): AudioSource {
+        if(!this.clips[key]) return
         const source = AudioSource.pool.pop() || new AudioSource(this.audio)
         source.clip = this.clips[key]
         if(transform){
