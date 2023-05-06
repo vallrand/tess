@@ -180,19 +180,19 @@ export class Indicator {
     constructor(private readonly context: Application){
         Indicator.create = AtlasRegionFactory(context) //TODO move elsewhere?
         this.turnRadial = new DoubleRadialBar(this.context, {
-            index: 0, radius: vec2(0.10, 0.30), rotation: 0.25*Math.PI, angle: 1, size: 128,
+            index: 0, radius: vec2(0.10, 0.30), rotation: 0.25*Math.PI, angle: 1, size: 128 * context.resolution,
             colors: [vec4(0.08,0.08,0.08,0.4), vec4(0.06, 0.43, 0.36, 0.6), vec4(0.53, 0.06, 0.29, 0.6)]
         })
         this.healthRadial = new RadialBar(this.context, {
-            index: 1, radius: vec2(0.38, 0.54), rotation: 0.25*Math.PI, angle: 1, size: 128,
+            index: 1, radius: vec2(0.38, 0.54), rotation: 0.25*Math.PI, angle: 1, size: 128 * context.resolution,
             colors: [vec4(0.08,0.08,0.08,0.4), vec4(0.19, 0.31, 0.38, 0.6)]
         })
         this.resourceRadial = new RadialBar(this.context, {
-            index: 2, radius: vec2(0.62, 0.72), rotation: 0*Math.PI, angle: 4/3, size: 128,
+            index: 2, radius: vec2(0.62, 0.72), rotation: 0*Math.PI, angle: 4/3, size: 128 * context.resolution,
             colors: [vec4(0.08,0.08,0.08,0.4), vec4(0.74, 0.73, 0.56, 0.6)]
         })
         this.skillRadial = new RadialBar(this.context, {
-            index: 3, radius: vec2(0.80, 0.92), rotation: -0.25*Math.PI, angle: 2, size: 128,
+            index: 3, radius: vec2(0.80, 0.92), rotation: -0.25*Math.PI, angle: 2, size: 128 * context.resolution,
             colors: [vec4(0.08,0.08,0.08,0.4), vec4(0.81, 0.48, 0.11, 0.6)]
         })
     }

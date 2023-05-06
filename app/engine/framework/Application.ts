@@ -14,6 +14,7 @@ export class Application {
     private static readonly timestep = 2 * 1000/60
     public readonly canvas: HTMLCanvasElement = document.createElement('canvas')
     public readonly gl: WebGL2RenderingContext
+    public readonly resolution: number
     private readonly loader: Loader = new Loader
     private readonly systems: ISystem[] = []
 
@@ -22,9 +23,14 @@ export class Application {
     frame: number = 0
     currentTime: number = 0
     deltaTime: number
-    constructor(systems: SystemType<any>[]){
-        this.canvas.width = 600
-        this.canvas.height = 400
+    constructor(systems: SystemType<any>[], options: {
+        width: number
+        height: number
+        resolution: number
+    }){
+        this.resolution = options.resolution
+        this.canvas.width = options.width * options.resolution
+        this.canvas.height = options.height * options.resolution
         this.gl = new WebGLState(this.canvas.getContext('webgl2', {
             alpha: false, antialias: false, depth: true, stencil: false,
             premultipliedAlpha: false, preserveDrawingBuffer: false

@@ -22,6 +22,8 @@ import { DebugSystem } from './engine/debug'
 import { SharedSystem, TurnBasedSystem, TerrainSystem, EconomySystem, PlayerSystem, AISystem } from './world'
 import manifest from './manifest.json'
 
+const settings = new URLSearchParams(location.search)
+
 new Application([
     KeyboardSystem,
     AnimationSystem,
@@ -47,5 +49,7 @@ new Application([
     AISystem,
 
     DebugSystem
-])
-.load(manifest)
+], {
+    width: 600, height: 400,
+    resolution: parseInt(settings.get('resolution')) || 1
+}).load(manifest)
